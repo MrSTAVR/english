@@ -1,5 +1,3 @@
-.secret_key
-__pycache__/
-*.pyc
-*.db
 *.log
+server.log
+*.db

@@ -10,3 +10,5 @@ WARNING: This is a development server. Do not use it in a production deployment.
 Press CTRL+C to quit
 127.0.0.1 - - [19/Oct/2026 12:37:38] "POST /login HTTP/1.1" 404 -
 127.0.0.1 - - [19/Oct/2026 12:38:05] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 12:49:58] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [19/Oct/2026 12:50:00] "GET /static/mascot.js HTTP/1.1" 200 -
