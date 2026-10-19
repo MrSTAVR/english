@@ -161,4 +161,17 @@ if mistakes:
     check("в ошибке есть вопрос/ответ/правильный ответ",
           all(k in m0 for k in ("question", "given", "correct", "date", "lesson_title")))
 
+# --- проверка коробки-подарка и новых ачивок ---
+import json as _json
+with open("static/mascot.js", encoding="utf-8") as f:
+    mjs = f.read()
+check("помощник умеет вручать коробку", "celebrateAchievements" in mjs and "gift-box" in mjs)
+check("конфетти при открытии", "confettiBurst" in mjs)
+from app import ACHIEVEMENTS
+keys = {a["key"] for a in ACHIEVEMENTS}
+for k in ("five_lessons", "half_way", "streak10", "words100", "attempts5",
+          "time180", "diamond", "first_try_perfect"):
+    check(f"ачивка {k} в каталоге", k in keys)
+check("всего ачивок >= 16", len(ACHIEVEMENTS) >= 16)
+
 print("\nALL TESTS PASSED ✔")
