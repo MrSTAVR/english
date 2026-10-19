@@ -281,7 +281,7 @@ LESSONS = [
             {"type": "type_in", "q": "Переведи: «Она»", "answer": "she",
              "explain": "She — она."},
             {"type": "order", "q": "Составь предложение: «Я ученица»",
-             "words": ["am", "I", "student", "a"], "answer": "I am a student",
+             "words": ["am", "I", "a", "student"], "answer": "I am a student",
              "explain": "I am a student — Я ученица."},
             {"type": "choice", "q": "Что значит «He is»?",
              "options": ["Он ...", "Она ...", "Они ..."], "answer": 0,

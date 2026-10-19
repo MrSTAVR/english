@@ -132,8 +132,12 @@ def grade_question(q, given):
     """Возвращает (is_correct, correct_display)."""
     qtype = q.get("type", "choice")
     if qtype == "choice":
-        idx = given
-        ok = isinstance(idx, int) and 0 <= idx < len(q["options"]) and idx == q["answer"]
+        # ответ приходит из формы строкой ("2") или как -1 (пусто) — приводим к int
+        try:
+            idx = int(given)
+        except (TypeError, ValueError):
+            idx = -1
+        ok = 0 <= idx < len(q["options"]) and idx == q["answer"]
         return ok, q["options"][q["answer"]]
     if qtype == "order":
         expected = norm_answer(q["answer"])
@@ -242,13 +246,38 @@ app.jinja_env.filters["human_time"] = human_time
 
 
 def shuffle_words(words):
-    """Перемешиваем слова в задании 'собери предложение'."""
+    """Перемешиваем слова в задании 'собери предложение' (стабильно для одной страницы)."""
     w = list(words)
-    random.shuffle(w)
+    rng = random.Random(hash(tuple(w)))  # одно и то же перемешивание при повторном рендере
+    rng.shuffle(w)
+    if w == list(words):                # чтобы не было соблазна читать по порядку
+        w.reverse()
     return w
 
 
 app.jinja_env.filters["shuffle_words"] = shuffle_words
+
+
+def validate_lessons():
+    """Проверка целостности банка уроков: индексы ответов, полнота слов для 'order'."""
+    errors = []
+    for l in LESSONS:
+        for section in ("exercises", "test"):
+            for q in l.get(section, []):
+                t = q.get("type", "choice")
+                ref = f"урок {l['id']} ({section}): {q.get('q', '?')[:40]}"
+                if t == "choice":
+                    a = q.get("answer")
+                    if not isinstance(a, int) or not 0 <= a < len(q.get("options", [])):
+                        errors.append(f"{ref} — некорректный индекс answer={a!r}")
+                elif t == "order":
+                    need = [w.lower().strip(" .!?,;:") for w in q["answer"].split()]
+                    bank = sorted(w.lower().strip(" .!?,;:") for w in q.get("words", []))
+                    if sorted(need) != bank:
+                        errors.append(f"{ref} — слова в банке не совпадают с ответом")
+                elif t != "type_in":
+                    errors.append(f"{ref} — неизвестный тип задания {t!r}")
+    return errors
 
 
 def mistakes_count(mistakes_json):
@@ -372,6 +401,9 @@ def lesson_page(lesson_id):
 
 @app.route("/lesson/<int:lesson_id>/submit", methods=["POST"])
 def submit_test(lesson_id):
+    err = require_role("student")
+    if err:
+        return err
     lesson = LESSONS_BY_ID.get(lesson_id) or abort(404)
     attempt_id = request.form.get("attempt_id", type=int)
     seconds = request.form.get("seconds", type=int) or 0

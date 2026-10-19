@@ -56,7 +56,7 @@ for i, q in enumerate(lesson["test"]):
     else:
         data[f"q{i}"] = "xyz"
         expected_mistakes += 1
-r = client.post("/lesson/1/submit?x=1", data=data)
+r = client.post("/lesson/1/submit?x=1", data=data)  # сессия ученицы уже установлена
 # submit требует session role? submit_test не проверяет роль — ок для теста
 body = r.get_data(as_text=True)
 check("тест 1 провален (<70%)", "Почти получилось" in body)
