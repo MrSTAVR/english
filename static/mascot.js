@@ -198,22 +198,19 @@
   balloon.addEventListener('click', function () { if (collapsed) expandLast(); });
 
   /* ---------- 🎁 вручение коробки с подарком за ачивку ---------- */
-  /* Все полученные в этом тесте ачивки складываются в ОДНУ коробку —
-     раньше при нескольких наградах показывалась только первая, и ученица
-     не видела, какие именно ачивки получила. Теперь после открытия
-     коробки показывается карточка со списком всех наград. */
   var giftEl = null;
   function celebrateAchievements(list) {
-    if (giftEl || !list || !list.length) return;   // уже идёт вручение / пусто
-    root.classList.add('mascot-off');              // чик «прячется», чтобы вынести коробку
-    showReopen();                                  // кнопка возврата всё ещё доступна
+    if (giftEl) return;                    // уже идёт вручение
+    root.classList.add('mascot-off');      // чик «прячется», чтобы вынести коробку
+    showReopen();                          // кнопка возврата всё ещё доступна
     say(pick(T.achIntro), { persist: true });
 
+    var first = list[0];
+    var extra = list.length - 1;
     giftEl = document.createElement('div');
     giftEl.className = 'gift-stage';
     giftEl.innerHTML =
-      '<div class="gift-hint">Нажми на коробку! 🐣 принёс тебе ' +
-        (list.length > 1 ? list.length + ' подарка' : 'подарок') + '</div>' +
+      '<div class="gift-hint">Нажми на коробку! 🐣 принёс тебе подарок</div>' +
       '<button class="gift-box" aria-label="Открыть подарок">' +
       '  <svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">' +
       '    <g class="gb-lid"><rect x="8" y="26" width="124" height="26" rx="7" fill="#FF5D8F"/>' +
@@ -232,49 +229,17 @@
       giftEl.classList.add('gift-open');
       jump(3);
       setTimeout(function () {
+        var title = fmt(pick(T.achOpen), { title: first.title, emoji: first.emoji });
+        if (extra > 0) title += ' И ещё ' + extra + ' шт.';
         root.classList.remove('mascot-off');
         if (reopenBtn) { reopenBtn.remove(); reopenBtn = null; }
+        say(title, { strong: true, persist: true });
         confettiBurst();
-        showGiftCard(list);
+        setTimeout(function () {
+          giftEl.remove(); giftEl = null;
+          setTimeout(function () { say(pick(T.achAfter)); }, 2500);
+        }, 4200);
       }, 900);
-    });
-  }
-
-  /* Карточка со ВСЕМИ полученными ачивками — её видно до закрытия или клика */
-  function showGiftCard(list) {
-    if (!giftEl) return;
-    var items = list.map(function (a) {
-      return '<li class="gc-item">' +
-               '<span class="gc-emoji">' + a.emoji + '</span>' +
-               '<span class="gc-text"><b>' + esc(a.title) + '</b>' +
-               '<small>' + esc(a.desc || '') + '</small></span>' +
-             '</li>';
-    }).join('');
-    giftEl.innerHTML =
-      '<div class="gift-card">' +
-        '<div class="gc-title">🎊 ' +
-          (list.length > 1 ? 'Тебе открыли целых ' + list.length + ' награды!'
-                           : 'Это твоя новая награда!') + '</div>' +
-        '<ul class="gc-list">' + items + '</ul>' +
-        '<button class="gc-close btn btn-primary">Забрать подарки! 🤩</button>' +
-      '</div>';
-    giftEl.classList.remove('gift-open');
-    giftEl.classList.add('gift-reveal');
-    var first = list[0];
-    say(fmt(pick(T.achOpen), { title: first.title, emoji: first.emoji }),
-        { strong: true, persist: true });
-    giftEl.querySelector('.gc-close').addEventListener('click', closeGift);
-  }
-
-  function closeGift() {
-    if (!giftEl) return;
-    giftEl.remove(); giftEl = null;
-    setTimeout(function () { say(pick(T.achAfter)); }, 1200);
-  }
-
-  function esc(s) {
-    return String(s).replace(/[&<>"]/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
     });
   }
   function confettiBurst() {
@@ -341,14 +306,10 @@
                 p >= 50 ? T.resultNear : T.resultLow;
       say(msg, { strong: true, persist: true });
       if (truthy(S.newAchievements)) {
-        /* Совместимость со старым форматом (был список ключей-строк):
-           превращаем строки в объекты вида {key} */
-        var raw = Array.isArray(S.newAchievements) ? S.newAchievements : [];
-        var list = raw.map(function (a) {
-          return typeof a === 'string' ? { key: a, emoji: '🏅', title: a, desc: '' } : a;
-        });
+        var list = Array.isArray(S.newAchievements) ? S.newAchievements : [];
         setTimeout(function () {
           if (list.length) celebrateAchievements(list);
+          else say(pick(T.achIntro), { persist: true });   // совместимость со старым форматом
         }, 1800);
       }
     }, 700);
