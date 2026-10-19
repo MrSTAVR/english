@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>🇬🇧 Английский язык — это весело! 🎉</h1>
+  <p class="subtitle">Выбери, кто пришёл заниматься:</p>
+
+  <div class="login-cards">
+    <div class="card login-card">
+      <div class="big-emoji">🎒</div>
+      <h2>Я ученик(ца)!</h2>
+      <p>Войди в свой аккаунт — его создали родители в кабинете.</p>
+      <form method="post" action="{{ url_for('login_student') }}">
+        <input type="text" name="username" placeholder="Логин (например masha)" maxlength="20" required autocapitalize="off" autocomplete="username">
+        <input type="password" name="password" placeholder="Пароль" required autocomplete="current-password">
+        <button type="submit" class="btn btn-primary">Начать занятия 🚀</button>
+      </form>
+    </div>
+
+    <div class="card login-card">
+      <div class="big-emoji">👨‍👩‍👧</div>
+      <h2>Я родитель</h2>
+      <p>Аккаунты детей, прогресс, время и все ошибки.</p>
+      <form method="post" action="{{ url_for('login_parent') }}">
+        <input type="password" name="password" placeholder="Пароль (по умолчанию 1234)" required>
+        <button type="submit" class="btn btn-secondary">Войти в кабинет 📊</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
