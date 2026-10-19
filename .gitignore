@@ -1,3 +1,6 @@
 *.log
 server.log
 *.db
+__pycache__/
+*.pyc
+.secret_key
