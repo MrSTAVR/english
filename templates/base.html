@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Английский для дочки 🇬🇧{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <a href="/" class="logo">🐣 English Fun</a>
+  <nav>
+    {% if session.get('role') == 'student' %}
+      <a href="{{ url_for('student_home') }}">🎓 Мои уроки</a>
+      <a href="{{ url_for('logout') }}">Выйти</a>
+    {% elif session.get('role') == 'parent' %}
+      <a href="{{ url_for('parent_dashboard') }}">📊 Кабинет родителя</a>
+      <a href="{{ url_for('logout') }}">Выйти</a>
+    {% endif %}
+  </nav>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+    <div class="flash flash-{{ cat }}">{{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+
+<main class="container">
+{% block content %}{% endblock %}
+</main>
+
+<footer class="footer">Сделано с ❤️ для изучения английского</footer>
+
+{# ---------- Анимированный помощник Чик-чик (правый нижний угол) ---------- #}
+<script>window.MASCOT_SETTINGS = {{ mascot|tojson }};</script>
+<script src="{{ url_for('static', filename='mascot.js') }}"></script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
