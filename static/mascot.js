@@ -11,8 +11,8 @@
   if (S.enabled === false) return;
 
   var NAME = S.name || 'Чик-чик';
-  var MSG_TIMEOUT = 30000;       // авто-скрытие balloon (30 сек)       // авто-скрытие balloon
-  var IDLE_AFTER = 25000;        // balloon висит ~25 сек, потом сворачивается в "чаты"         // через 6 сек balloon сворачивается в "чаты"
+  var MSG_TIMEOUT = 30000;       // авто-скрытие balloon (30 сек)
+  var IDLE_AFTER = 25000;        // balloon висит ~25 сек, потом сворачивается в "чаты"
   var NEXT_BTN = '.btn-primary, .btn-big';
 
   /* ---------- тексты ---------- */
