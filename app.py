@@ -481,11 +481,47 @@ def unlocked_lesson_ids(stats):
 
 
 # ---------------------------------------------------------------------------
+# Анимированный помощник «Чик-чик» — настройки для шаблона base.html
+# ---------------------------------------------------------------------------
+
+MASCOT_NAME = "Чик-чик"        # имя помощника (можно поменять)
+MASCOT_ENABLED = True          # False — полностью отключить помощника
+
+
+def build_mascot_ctx():
+    """Собирает базовые настройки помощника для текущей страницы."""
+    role = session.get("role")
+    page = "anon" if not role else ("parent" if role == "parent" else "student")
+    endpoint = request.endpoint or ""
+    mascot = {"enabled": MASCOT_ENABLED, "name": MASCOT_NAME, "page": page}
+    if page != "student":
+        return mascot
+    if endpoint == "index":
+        mascot["page"] = "index"
+    elif endpoint == "student_home":
+        mascot["page"] = "home"
+    elif endpoint == "lesson_page":
+        mascot["page"] = "lesson"
+    elif endpoint == "submit_test":
+        mascot["page"] = "result"
+    return mascot
+
+
+@app.context_processor
+def inject_mascot():
+    """Добавляет переменную `mascot` во все шаблоны: кто на какой странице,
+    чтобы JS-помощник знал, что говорить и когда."""
+    return {"mascot": build_mascot_ctx()}
+
+
+# ---------------------------------------------------------------------------
 # Маршруты
 # ---------------------------------------------------------------------------
 
 @app.route("/")
 def index():
+    if session.get("role") == "student":
+        return redirect(url_for("student_home"))
     return render_template("index.html")
 
 
@@ -636,7 +672,10 @@ def student_home():
     achievements = [{**a, "earned": a["key"] in earned,
                      "earned_at": earned.get(a["key"])} for a in ACHIEVEMENTS]
     new_badge = session.pop("new_achievements", None)
-    return render_template("student_home.html",
+    mascot = build_mascot_ctx()
+    mascot["alreadyStarted"] = bool(stats["attempts"])
+    mascot["allDone"] = len(stats["completed_ids"]) == len(LESSONS)
+    return render_template("student_home.html", mascot=mascot,
                            name=student["display_name"],
                            emoji=student["emoji"],
                            lessons=lessons_info,
@@ -667,9 +706,13 @@ def lesson_page(lesson_id):
         "INSERT INTO attempts (student_id, lesson_id, started_at) VALUES (?, ?, ?)",
         (student["id"], lesson_id, started.isoformat(timespec="seconds")))
     db.commit()
+    mascot = build_mascot_ctx()
+    mascot["lessonId"] = lesson_id
+    mascot["lessonTitle"] = lesson["title"]
     return render_template("lesson.html", lesson=lesson,
                            attempt_id=cur.lastrowid,
-                           started_ts=started.timestamp())
+                           started_ts=started.timestamp(),
+                           mascot=mascot)
 
 
 @app.route("/lesson/<int:lesson_id>/submit", methods=["POST"])
@@ -734,7 +777,11 @@ def submit_test(lesson_id):
     if new_achievements:
         session["new_achievements"] = [a["key"] for a in new_achievements]
 
-    return render_template("result.html",
+    mascot = build_mascot_ctx()
+    mascot["percent"] = percent
+    mascot["passed"] = passed
+    mascot["newAchievements"] = bool(new_achievements)
+    return render_template("result.html", mascot=mascot,
                            lesson=lesson, percent=percent, passed=passed,
                            correct=correct, total=total,
                            seconds=seconds, results=results,

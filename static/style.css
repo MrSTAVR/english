@@ -227,3 +227,73 @@ h1 { color: #6a2fbf; } h2 { color: #4a4a9e; }
 .theory-block i { color: #0e7490; }
 .theory-tip { background: #fff8e1; border: 2px dashed #f6c445; border-radius: 14px;
               padding: 10px 14px; margin-top: 12px; font-size: .95rem; }
+
+/* ============================================================
+   🐣 Анимированный помощник «Чик-чик» (правый нижний угол)
+   ============================================================ */
+.mascot { position: fixed; right: 18px; bottom: 14px; z-index: 999;
+          display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.mascot-off .mascot-body, .mascot-off .mascot-balloon { display: none; }
+
+.mascot-body { background: none; border: none; padding: 0; cursor: pointer;
+               width: 86px; height: 92px; filter: drop-shadow(0 4px 8px rgba(0,0,0,.18)); }
+.mascot-body svg { width: 100%; height: 100%; overflow: visible; transform-origin: 50% 92%; }
+
+/* дыхание + покачивание в покое */
+@keyframes m-breathe { 0%,100% { transform: translateY(0) rotate(-1.5deg); scale: 1; }
+                       50%      { transform: translateY(-3px) rotate(1.5deg); scale: 1.02; } }
+.mascot-body svg { animation: m-breathe 3.2s ease-in-out infinite; }
+
+/* крылышки машут */
+@keyframes m-flap-l { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-18deg); } }
+@keyframes m-flap-r { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(18deg); } }
+.m-wing-l { transform-origin: 24px 48px; animation: m-flap-l 2.6s ease-in-out infinite; }
+.m-wing-r { transform-origin: 68px 48px; animation: m-flap-r 2.6s ease-in-out infinite; }
+
+/* моргание глазами */
+.m-blink { opacity: 0; }
+@keyframes m-blink-anim { 0%,88%,100% { opacity: 0; } 92%,96% { opacity: 1; } }
+.m-eyes { transform-origin: 46px 30px; animation: m-eyes-close 4.5s infinite; }
+@keyframes m-eyes-close { 0%,90%,100% { transform: scaleY(1); } 94% { transform: scaleY(.12); } }
+
+/* прыжок при реакции */
+@keyframes m-jump-kf { 0% { transform: translateY(0); } 30% { transform: translateY(-16px); }
+                       55% { transform: translateY(0); } 70% { transform: translateY(-7px); }
+                       100% { transform: translateY(0); } }
+.m-jump { animation: m-jump-kf .7s ease !important; }
+@keyframes m-spin-kf { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.m-spin { animation: m-spin-kf .8s cubic-bezier(.45,.05,.55,.95) !important; }
+
+/* подмигивание */
+.m-wink .m-eyes circle:nth-child(1), .m-wink .m-eyes circle:nth-child(3) { visibility: hidden; }
+.m-wink .m-blink { opacity: 1; }
+
+/* реплика — облачко как у Clash of Clans */
+.mascot-balloon { position: relative; max-width: min(320px, 72vw); background: #fff;
+                  border: 3px solid #ffd54f; border-radius: 18px; padding: 10px 30px 10px 14px;
+                  box-shadow: 0 6px 18px rgba(0,0,0,.16); font-size: .95rem; line-height: 1.35;
+                  color: #3b3355; cursor: pointer; text-wrap: pretty;
+                  opacity: 0; transform: translateY(14px) scale(.85); pointer-events: none;
+                  transition: opacity .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1); }
+.mascot-balloon.visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.mascot-balloon::after { content: ""; position: absolute; bottom: -12px; right: 34px;
+                         width: 20px; height: 20px; background: #fff;
+                         border-right: 3px solid #ffd54f; border-bottom: 3px solid #ffd54f;
+                         transform: rotate(45deg) skew(6deg, 6deg); border-radius: 0 0 6px 0; }
+.mascot-balloon.collapsed { opacity: 0; transform: translateY(10px) scale(.8); pointer-events: none; }
+
+.mascot-close { position: absolute; top: 4px; right: 6px; border: none; background: none;
+                font-size: 1rem; color: #b9aecf; cursor: pointer; padding: 2px 4px; }
+.mascot-close:hover { color: #e05d5d; }
+
+/* кнопка вернуть помощника, если скрыли */
+.mascot-reopen { position: fixed; right: 18px; bottom: 14px; z-index: 998;
+                 width: 46px; height: 46px; border-radius: 50%; border: 3px solid #ffd54f;
+                 background: #fff; font-size: 1.4rem; cursor: pointer;
+                 box-shadow: 0 4px 10px rgba(0,0,0,.15); }
+.mascot-reopen:hover { transform: scale(1.1); }
+
+@media (max-width: 640px) {
+  .mascot-body { width: 64px; height: 70px; }
+  .mascot-balloon { font-size: .85rem; max-width: 60vw; }
+}

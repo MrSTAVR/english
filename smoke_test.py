@@ -42,6 +42,15 @@ def correct_fields(q, i):
 r = client.get("/")
 check("индекс открывается", r.status_code == 200 and "Я ученик" in r.get_data(as_text=True))
 
+# 1b. Анимированный помощник Чик-чик подключён на всех страницах
+body = r.get_data(as_text=True)
+check("настройки помощника на индексе",
+      'MASCOT_SETTINGS' in body and '"page": "anon"' in body)
+check("скрипт помощника подключён", "mascot.js" in body)
+check("стили помощника", ".mascot-balloon" in open("static/style.css").read())
+import os as _os
+check("файл mascot.js существует", _os.path.exists("static/mascot.js"))
+
 # 2. Родитель создаёт аккаунт ученицы, вход по логину/паролю
 r = client.post("/login/parent", data={"password": "1234"}, follow_redirects=True)
 check("вход родителя", "Кабинет родителя" in r.get_data(as_text=True))
@@ -56,6 +65,13 @@ r = client.post("/login/student", data={"username": "masha", "password": "secret
 body = r.get_data(as_text=True)
 check("вход ученицы", r.status_code == 200 and "Привет, Маша" in body)
 check("урок 2 заблокирован", "Закрой предыдущий урок" in body)
+check("помощник на главной ученицы (home)", '"page": "home"' in body)
+
+# 2b. Помощник знает контекст урока и результата
+r = client.get("/lesson/1")
+lb = r.get_data(as_text=True)
+check("помощник на странице урока",
+      '"page": "lesson"' in lb and '"lessonTitle"' in lb)
 
 # 3. Урок заблокирован — нельзя открыть напрямую
 r = client.get("/lesson/2", follow_redirects=True)
@@ -98,6 +114,7 @@ for i, q in enumerate(lesson["test"]):
 r = client.post("/lesson/1/submit", data=data)
 body = r.get_data(as_text=True)
 check("идеальный тест 100%", "Идеально! 100%" in body)
+check("помощник на странице результата", '"page": "result"' in body and '"percent": 100' in body)
 check("ачивка Первый шаг", "Первый шаг" in body)
 
 # 6. Урок 2 теперь открыт

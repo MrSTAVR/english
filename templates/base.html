@@ -31,6 +31,11 @@
 </main>
 
 <footer class="footer">Сделано с ❤️ для изучения английского</footer>
+
+{# ---------- Анимированный помощник Чик-чик (правый нижний угол) ---------- #}
+<script>window.MASCOT_SETTINGS = {{ mascot|tojson }};</script>
+<script src="{{ url_for('static', filename='mascot.js') }}"></script>
+
 {% block scripts %}{% endblock %}
 </body>
 </html>

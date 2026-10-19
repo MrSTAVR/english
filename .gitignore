@@ -1,4 +1,1 @@
-english_app.db
-*.log
-__pycache__/
-server.log
+.secret_key
