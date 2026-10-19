@@ -5,9 +5,29 @@
 <h1>{{ lesson.emoji }} Урок {{ lesson.id }}: {{ lesson.title }}</h1>
 <p class="subtitle">{{ lesson.description }}</p>
 
-<!-- Шаг 1: материал -->
-<section class="card step" id="step-material">
-  <h2>Шаг 1 — Изучи слова 🧠</h2>
+<!-- Шаг 1: теория -->
+<section class="card step" id="step-theory">
+  <h2>Шаг 1 — Теория 📖</h2>
+  {% if lesson.theory %}
+    <p class="theory-intro">{{ lesson.theory.intro }}</p>
+    {% for b in lesson.theory.blocks %}
+      <div class="theory-block card-inner">
+        <h3>{{ b.title }}</h3>
+        <p>{{ b.text | safe }}</p>
+      </div>
+    {% endfor %}
+    {% if lesson.theory.tip %}
+      <div class="theory-tip">💡 <b>Совет:</b> {{ lesson.theory.tip }}</div>
+    {% endif %}
+  {% else %}
+    <p>Теории в этом уроке пока нет — переходи сразу к словам!</p>
+  {% endif %}
+  <button class="btn btn-primary" onclick="goStep('step-material')">Прочитал(а)! Изучаем слова ➡️</button>
+</section>
+
+<!-- Шаг 2: материал (карточки) -->
+<section class="card step hidden" id="step-material">
+  <h2>Шаг 2 — Изучи слова 🧠</h2>
   <p>Читай слово вслух (подсказка произношения в скобках). Нажимай на карточку, чтобы перевернуть её и увидеть перевод.</p>
   <div class="flashcards">
     {% for w in lesson.material %}
@@ -24,9 +44,9 @@
   <button class="btn btn-primary" onclick="goStep('step-exercises')">Я выучил(а)! Переходим к упражнениям ➡️</button>
 </section>
 
-<!-- Шаг 2: упражнения -->
+<!-- Шаг 3: упражнения -->
 <section class="card step hidden" id="step-exercises">
-  <h2>Шаг 2 — Потренируйся 💪</h2>
+  <h2>Шаг 3 — Потренируйся 💪</h2>
   <p>Это тренировка — ошибки здесь не считаются. Проверяй себя кнопкой!</p>
   {% for ex in lesson.exercises %}
     {% set outer_loop = loop %}
@@ -90,9 +110,9 @@
   <button class="btn btn-primary" onclick="goStep('step-test')">Всё понятно! Открываю тест 📝</button>
 </section>
 
-<!-- Шаг 3: тест -->
+<!-- Шаг 4: тест -->
 <section class="card step hidden" id="step-test">
-  <h2>Шаг 3 — Итоговый тест 📝</h2>
+  <h2>Шаг 4 — Итоговый тест 📝</h2>
   <p>Ответь на {{ lesson.test|length }} вопросов. Чтобы урок считался пройденным, нужно набрать минимум 70%. Не торопись!</p>
   <form method="post" action="{{ url_for('submit_test', lesson_id=lesson.id) }}" id="test-form">
     <input type="hidden" name="attempt_id" value="{{ attempt_id }}">

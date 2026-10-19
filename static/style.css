@@ -216,3 +216,14 @@ h1 { color: #6a2fbf; } h2 { color: #4a4a9e; }
 .mini-fill { background: linear-gradient(90deg, #8a4fd3, #ff8fab); height: 100%; border-radius: 99px; }
 .hint { color: #6b7280; font-style: italic; }
 .login-card input { margin-bottom: 10px; }
+
+/* --- Теория в уроке --- */
+.theory-intro { font-size: 1.05rem; color: #4b5563; margin-bottom: 12px; }
+.theory-block { background: linear-gradient(135deg, #f6f9ff, #fdf6ff); border-left: 5px solid #8a4fd3;
+                border-radius: 14px; padding: 12px 16px; margin: 10px 0; }
+.theory-block h3 { margin: 0 0 6px; color: #6d3bb5; font-size: 1.05rem; }
+.theory-block p { margin: 0; line-height: 1.55; }
+.theory-block b { color: #3730a3; }
+.theory-block i { color: #0e7490; }
+.theory-tip { background: #fff8e1; border: 2px dashed #f6c445; border-radius: 14px;
+              padding: 10px 14px; margin-top: 12px; font-size: .95rem; }

@@ -446,6 +446,15 @@ def validate_lessons():
                             errors.append(f"{ref} — слово '{item}' ссылается на неизвестную категорию '{c}'")
                 elif t != "type_in":
                     errors.append(f"{ref} — неизвестный тип задания {t!r}")
+        # теория: если есть — проверяем структуру
+        th = l.get("theory")
+        if th is not None:
+            if not isinstance(th, dict) or not th.get("blocks"):
+                errors.append(f"урок {l['id']} — theory без блоков 'blocks'")
+            else:
+                for b in th["blocks"]:
+                    if not isinstance(b, dict) or not b.get("title") or not b.get("text"):
+                        errors.append(f"урок {l['id']} — блок теории без title/text")
     return errors
 
 

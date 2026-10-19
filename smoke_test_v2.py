@@ -145,7 +145,7 @@ client.post("/login/parent", data={"password": "1234"})
 r = client.get("/parent")
 body = r.get_data(as_text=True)
 check("родитель видит Машу и Петю", "Маша" in body and "Петя" in body and "🦄" in body)
-check("в истории есть обе попытки", body.count("Первые слова") >= 2)
+check("в истории есть обе попытки", body.count("Знакомство и первые слова") >= 2)
 m = re.search(r'<span class="stat-num">(\d+)/8</span>', body)
 check("общий прогресс считается по лучшему (1/8)", m and m.group(1) == "1")
 
@@ -187,7 +187,8 @@ check("удаление не родителем не сработало", r.stat
       client.get("/student").get_data(as_text=True))
 client.get("/logout")
 client.post("/login/parent", data={"password": "1234"})
-client.post("/parent/students/1/delete", follow_redirects=True)
+del_resp = client.post("/parent/students/1/delete")  # флэш «удалён» остаётся в сессии
+check("родитель удалил Машу (флэш об удалении)", "удалён" in del_resp.get_data(as_text=True))
 client.get("/logout")
 client.post("/login/student", data={"username": "masha", "password": "secret1"},
             follow_redirects=True)
@@ -197,6 +198,8 @@ check("Маша удалена и не входит", "Я ученик" in r.get
 client.post("/login/parent", data={"password": "1234"})
 r = client.get("/parent")
 body = r.get_data(as_text=True)
-check("прогресс Маши стёрт из истории", "Маша" not in body)
+body_noph = re.sub(r'placeholder="[^"]*"', "", body)
+check("прогресс Маши стёрт из истории (аккаунтов и попыток 0)",
+      "Маша" not in body_noph and "masha" not in body_noph)
 
 print("\nALL TESTS PASSED ✔")
