@@ -714,6 +714,13 @@ def student_home():
     mascot = build_mascot_ctx()
     mascot["alreadyStarted"] = bool(stats["attempts"])
     mascot["allDone"] = len(stats["completed_ids"]) == len(LESSONS)
+    # Следующий непройденный доступный урок (для крупной кнопки «Продолжить»)
+    next_lesson = None
+    for l in LESSONS:
+        if l["id"] in unlocked and l["id"] not in stats["completed_ids"]:
+            next_lesson = l
+            break
+    earned_count = sum(1 for a in achievements if a["earned"])
     return render_template("student_home.html", mascot=mascot,
                            name=student["display_name"],
                            emoji=student["emoji"],
@@ -721,7 +728,9 @@ def student_home():
                            stats=stats,
                            achievements=achievements,
                            total_lessons=len(LESSONS),
-                           new_badge=new_badge)
+                           new_badge=new_badge,
+                           next_lesson=next_lesson,
+                           earned_count=earned_count)
 
 
 @app.route("/lesson/<int:lesson_id>")
