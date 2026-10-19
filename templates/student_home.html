@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Мои уроки — English Fun{% endblock %}
+{% block content %}
+
+{% if new_badge %}
+  {% for key in new_badge %}
+    {% for a in achievements if a.key == key %}
+    <div class="badge-popup">🎉 Новая ачивка: {{ a.emoji }} <b>{{ a.title }}</b>!</div>
+    {% endfor %}
+  {% endfor %}
+{% endif %}
+
+<h1>Привет, {{ name }}! 👋</h1>
+
+<!-- Трекер успеваемости -->
+<section class="card tracker">
+  <h2>📈 Мой трекер успеваемости</h2>
+  <div class="stats-grid">
+    <div class="stat"><span class="stat-num">{{ stats.lessons_completed }}/{{ total_lessons }}</span><span class="stat-label">уроков пройдено</span></div>
+    <div class="stat"><span class="stat-num">{% if stats.avg_score %}{{ "%.0f"|format(stats.avg_score) }}%{% else %}—{% endif %}</span><span class="stat-label">средний балл тестов</span></div>
+    <div class="stat"><span class="stat-num">{{ stats.words_learned }}</span><span class="stat-label">слов выучено</span></div>
+    <div class="stat"><span class="stat-num">{{ stats.total_seconds|human_time }}</span><span class="stat-label">время занятий</span></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" style="width: {{ 100 * stats.lessons_completed / total_lessons }}%"></div></div>
+</section>
+
+<!-- Ачивки -->
+<section class="card">
+  <h2>🏅 Мои достижения</h2>
+  <div class="ach-grid">
+    {% for a in achievements %}
+      <div class="ach {{ 'ach-earned' if a.earned else 'ach-locked' }}" title="{{ a.desc }}">
+        <div class="ach-emoji">{{ a.emoji }}</div>
+        <div class="ach-title">{{ a.title }}</div>
+        <div class="ach-desc">{{ a.desc }}</div>
+        {% if a.earned %}<div class="ach-date">получено {{ a.earned_at[:10] }}</div>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Уроки -->
+<section>
+  <h2>📚 Мои уроки</h2>
+  <div class="lesson-grid">
+    {% for info in lessons %}
+      {% set l = info.lesson %}
+      <div class="lesson-card card {{ 'lesson-done' if info.done }} {{ 'lesson-locked' if info.locked }}">
+        <div class="lesson-emoji">{{ l.emoji if info.locked is false or info.done else '🔒' }}</div>
+        <div class="lesson-body">
+          <div class="lesson-num">Урок {{ l.id }}</div>
+          <h3>{{ l.title }}</h3>
+          <p>{{ l.description }}</p>
+          <div class="lesson-meta">
+            ⏱️ ~15 минут · 🧠 {{ l.material|length }} слов · ✅ тест из {{ l.test|length }} вопросов
+          </div>
+          {% if info.done %}
+            <div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '🌟' if info.best_score >= 90 }}</div>
+          {% endif %}
+          {% if info.locked %}
+            <button class="btn btn-locked" disabled>🔒 Закрой предыдущий урок</button>
+          {% elif info.done %}
+            <a class="btn btn-secondary" href="{{ url_for('lesson_page', lesson_id=l.id) }}">Повторить ещё раз 🔁</a>
+          {% else %}
+            <a class="btn btn-primary" href="{{ url_for('lesson_page', lesson_id=l.id) }}">Начать урок ▶️</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

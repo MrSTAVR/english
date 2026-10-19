@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }} — English Fun{% endblock %}
+{% block content %}
+
+<h1>{{ lesson.emoji }} Урок {{ lesson.id }}: {{ lesson.title }}</h1>
+<p class="subtitle">{{ lesson.description }}</p>
+
+<!-- Шаг 1: материал -->
+<section class="card step" id="step-material">
+  <h2>Шаг 1 — Изучи слова 🧠</h2>
+  <p>Читай слово вслух (подсказка произношения в скобках). Нажимай на карточку, чтобы перевернуть её и увидеть перевод.</p>
+  <div class="flashcards">
+    {% for w in lesson.material %}
+      <div class="flashcard" onclick="this.classList.toggle('flipped')">
+        <div class="fc-front">
+          <div class="fc-en">{{ w.en }}</div>
+          <div class="fc-hint">[{{ w.hint }}]</div>
+          <div class="fc-tap">нажми 👆</div>
+        </div>
+        <div class="fc-back">{{ w.ru }}</div>
+      </div>
+    {% endfor %}
+  </div>
+  <button class="btn btn-primary" onclick="goStep('step-exercises')">Я выучил(а)! Переходим к упражнениям ➡️</button>
+</section>
+
+<!-- Шаг 2: упражнения -->
+<section class="card step hidden" id="step-exercises">
+  <h2>Шаг 2 — Потренируйся 💪</h2>
+  <p>Это тренировка — ошибки здесь не считаются. Проверяй себя кнопкой!</p>
+  {% for ex in lesson.exercises %}
+    {% set outer_loop = loop %}
+    <div class="exercise card-inner" data-answer="{{ ex.answer }}" data-type="{{ ex.type }}">
+      <p class="q"><b>Задание {{ loop.index }}.</b> {{ ex.q }}</p>
+      {% if ex.type == 'choice' %}
+        <div class="options">
+          {% for opt in ex.options %}
+            <label class="opt"><input type="radio" name="ex{{ outer_loop.index0 }}" value="{{ loop.index0 }}"> {{ opt }}</label>
+          {% endfor %}
+        </div>
+      {% else %}
+        <input type="text" class="typein" placeholder="Напиши ответ по-английски">
+      {% endif %}
+      <button class="btn btn-small" onclick="checkExercise(this)">Проверить ✔️</button>
+      <span class="ex-result"></span>
+      <div class="explain hidden">💡 {{ ex.explain }}</div>
+    </div>
+  {% endfor %}
+  <button class="btn btn-primary" onclick="goStep('step-test')">Всё понятно! Открываю тест 📝</button>
+</section>
+
+<!-- Шаг 3: тест -->
+<section class="card step hidden" id="step-test">
+  <h2>Шаг 3 — Итоговый тест 📝</h2>
+  <p>Ответь на {{ lesson.test|length }} вопросов. Чтобы урок считался пройденным, нужно набрать минимум 70%. Не торопись!</p>
+  <form method="post" action="{{ url_for('submit_test', lesson_id=lesson.id) }}" id="test-form">
+    <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
+    <input type="hidden" name="seconds" id="seconds-input" value="0">
+
+    {% for q in lesson.test %}
+      <div class="question card-inner" data-qindex="{{ loop.index0 }}">
+        <p class="q"><b>Вопрос {{ loop.index }}.</b> {{ q.q }}</p>
+        {% if q.type == 'choice' %}
+          <div class="options">
+            {% for opt in q.options %}
+              <label class="opt"><input type="radio" name="q{{ loop.index0 }}" value="{{ loop.index0 }}" required> {{ opt }}</label>
+            {% endfor %}
+          </div>
+        {% elif q.type == 'order' %}
+          <div class="order-area">
+            <div class="word-bank" id="bank-{{ loop.index0 }}">
+              {% for w in q.words %}
+                <button type="button" class="word-chip" onclick="pickWord(this, {{ loop.index0 }})">{{ w }}</button>
+              {% endfor %}
+            </div>
+            <div class="answer-line" id="line-{{ loop.index0 }}"></div>
+            <input type="hidden" name="q{{ loop.index0 }}_order" id="order-{{ loop.index0 }}">
+            <button type="button" class="btn btn-small" onclick="clearLine({{ loop.index0 }})">Очистить 🧽</button>
+          </div>
+        {% else %}
+          <input type="text" class="typein" name="q{{ loop.index0 }}" placeholder="Напиши ответ по-английски" autocomplete="off">
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-big">Закончить тест и проверить 🎯</button>
+  </form>
+</section>
+
+<a href="{{ url_for('student_home') }}" class="back-link">⬅️ Вернуться к урокам</a>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const START_TS = {{ started_ts }};
+
+function goStep(id) {
+  document.querySelectorAll('.step').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function checkExercise(btn) {
+  const box = btn.closest('.exercise');
+  const type = box.dataset.type;
+  const answer = box.dataset.answer.toLowerCase().trim();
+  let given = '';
+  if (type === 'choice') {
+    const sel = box.querySelector('input:checked');
+    given = sel ? sel.value : '';
+    // для choice в упражнениях храним индекс, сравниваем с data-answer
+    if (given !== '' && parseInt(given) === parseInt(box.dataset.answer)) given = 'OK';
+  } else {
+    given = box.querySelector('.typein').value.toLowerCase().trim();
+  }
+  const res = box.querySelector('.ex-result');
+  const ok = (type === 'choice') ? (given === 'OK') : (given === answer);
+  res.textContent = ok ? ' ✅ Правильно!' : ' ❌ Пока нет, попробуй ещё!';
+  res.className = 'ex-result ' + (ok ? 'ok' : 'bad');
+  if (ok) box.querySelector('.explain').classList.remove('hidden');
+}
+
+// --- задания на порядок слов ---
+function pickWord(chip, qi) {
+  chip.style.display = 'none';
+  const line = document.getElementById('line-' + qi);
+  const copy = document.createElement('button');
+  copy.type = 'button';
+  copy.className = 'word-chip chosen';
+  copy.textContent = chip.textContent;
+  copy.onclick = () => { // убрать из ответа и вернуть в банк
+    const bank = document.getElementById('bank-' + qi);
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'word-chip';
+    back.textContent = copy.textContent;
+    back.onclick = () => pickWord(back, qi);
+    bank.appendChild(back);
+    copy.remove();
+    updateOrder(qi);
+  };
+  line.appendChild(copy);
+  updateOrder(qi);
+}
+function clearLine(qi) {
+  const line = document.getElementById('line-' + qi);
+  const bank = document.getElementById('bank-' + qi);
+  line.querySelectorAll('.word-chip').forEach(c => {
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'word-chip';
+    back.textContent = c.textContent;
+    back.onclick = () => pickWord(back, qi);
+    bank.appendChild(back);
+  });
+  line.innerHTML = '';
+  updateOrder(qi);
+}
+function updateOrder(qi) {
+  const words = [...document.getElementById('line-' + qi).querySelectorAll('.word-chip')].map(w => w.textContent);
+  document.getElementById('order-' + qi).value = words.join(' ');
+}
+
+// защита от ухода без сохранения времени
+document.getElementById('test-form').addEventListener('submit', function () {
+  document.getElementById('seconds-input').value = Math.round(Date.now() / 1000 - START_TS);
+});
+</script>
+{% endblock %}

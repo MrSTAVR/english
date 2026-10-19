@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>🇬🇧 Английский язык — это весело! 🎉</h1>
+  <p class="subtitle">Выбери, кто пришёл заниматься:</p>
+
+  <div class="login-cards">
+    <div class="card login-card">
+      <div class="big-emoji">🎒</div>
+      <h2>Я ученица!</h2>
+      <p>Уроки по 15–20 минут, тесты и медали за успехи.</p>
+      <form method="post" action="{{ url_for('login_student') }}">
+        <input type="text" name="name" placeholder="Твоё имя" maxlength="40" required>
+        <button type="submit" class="btn btn-primary">Начать занятия 🚀</button>
+      </form>
+    </div>
+
+    <div class="card login-card">
+      <div class="big-emoji">👨‍👩‍👧</div>
+      <h2>Я родитель</h2>
+      <p>Прогресс, потраченное время и все ошибки в таблицах.</p>
+      <form method="post" action="{{ url_for('login_parent') }}">
+        <input type="password" name="password" placeholder="Пароль (по умолчанию 1234)" required>
+        <button type="submit" class="btn btn-secondary">Войти в кабинет 📊</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

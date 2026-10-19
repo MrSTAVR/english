@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+english_app.db
+.secret_key
