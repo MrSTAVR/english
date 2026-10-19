@@ -162,10 +162,28 @@
     setTimeout(function () { svg.classList.remove('m-wink'); }, 700);
   }
 
+  /* ---------- скрытие / возврат помощника ---------- */
+  var reopenBtn = null;
+  function showReopen() {
+    if (reopenBtn) return;
+    reopenBtn = document.createElement('button');
+    reopenBtn.className = 'mascot-reopen';
+    reopenBtn.textContent = '🐣';
+    reopenBtn.title = 'Вернуть помощника';
+    reopenBtn.addEventListener('click', function () {
+      try { sessionStorage.removeItem('mascot_hidden_' + location.pathname); } catch (e) {}
+      root.classList.remove('mascot-off');
+      reopenBtn.remove();
+      reopenBtn = null;
+      say(pick(T.hiAgain), { strong: true });
+    });
+    document.body.appendChild(reopenBtn);
+  }
   closeBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     try { sessionStorage.setItem('mascot_hidden_' + location.pathname, '1'); } catch (err) {}
     root.classList.add('mascot-off');
+    showReopen();   // кнопка возврата появляется сразу, без перезагрузки страницы
   });
   balloon.addEventListener('click', function () { if (collapsed) expandLast(); });
 
@@ -192,18 +210,7 @@
   try { hiddenHere = !!sessionStorage.getItem('mascot_hidden_' + location.pathname); } catch (e) {}
   if (hiddenHere) {
     root.classList.add('mascot-off');
-    // маленькая кнопка-возврат
-    var re = document.createElement('button');
-    re.className = 'mascot-reopen';
-    re.textContent = '🐣';
-    re.title = 'Вернуть помощника';
-    re.addEventListener('click', function () {
-      try { sessionStorage.removeItem('mascot_hidden_' + location.pathname); } catch (e) {}
-      root.classList.remove('mascot-off');
-      re.remove();
-      say(pick(T.hello), { strong: true });
-    });
-    document.body.appendChild(re);
+    showReopen();   // кнопка возврата при уже скрытом помощнике
   }
 
   if (S.page === 'index') {
