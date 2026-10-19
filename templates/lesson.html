@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }} — English Fun{% endblock %}
+{% block content %}
+
+<h1>{{ lesson.emoji }} Урок {{ lesson.id }}: {{ lesson.title }}</h1>
+<p class="subtitle">{{ lesson.description }}</p>
+
+<!-- Шаг 1: теория -->
+<section class="card step" id="step-theory">
+  <h2>Шаг 1 — Теория 📖</h2>
+  {% if lesson.theory %}
+    <p class="theory-intro">{{ lesson.theory.intro }}</p>
+    {% for b in lesson.theory.blocks %}
+      <div class="theory-block card-inner">
+        <h3>{{ b.title }}</h3>
+        <p>{{ b.text | safe }}</p>
+      </div>
+    {% endfor %}
+    {% if lesson.theory.tip %}
+      <div class="theory-tip">💡 <b>Совет:</b> {{ lesson.theory.tip }}</div>
+    {% endif %}
+  {% else %}
+    <p>Теории в этом уроке пока нет — переходи сразу к словам!</p>
+  {% endif %}
+  <button class="btn btn-primary" onclick="goStep('step-material')">Прочитал(а)! Изучаем слова ➡️</button>
+</section>
+
+<!-- Шаг 2: материал (карточки) -->
+<section class="card step hidden" id="step-material">
+  <h2>Шаг 2 — Изучи слова 🧠</h2>
+  <p>Читай слово вслух (подсказка произношения в скобках). Нажимай на карточку, чтобы перевернуть её и увидеть перевод.</p>
+  <div class="flashcards">
+    {% for w in lesson.material %}
+      <div class="flashcard" onclick="this.classList.toggle('flipped')">
+        <div class="fc-front">
+          <div class="fc-en">{{ w.en }}</div>
+          <div class="fc-hint">[{{ w.hint }}]</div>
+          <div class="fc-tap">нажми 👆</div>
+        </div>
+        <div class="fc-back">{{ w.ru }}</div>
+      </div>
+    {% endfor %}
+  </div>
+  <button class="btn btn-primary" onclick="goStep('step-exercises')">Я выучил(а)! Переходим к упражнениям ➡️</button>
+</section>
+
+<!-- Шаг 3: упражнения -->
+<section class="card step hidden" id="step-exercises">
+  <h2>Шаг 3 — Потренируйся 💪</h2>
+  <p>Это тренировка — ошибки здесь не считаются. Проверяй себя кнопкой!</p>
+  {% for ex in lesson.exercises %}
+    {% set outer_loop = loop %}
+    <div class="exercise card-inner" data-answer="{{ ex.answer if ex.type in ('choice','type_in') else '' }}" data-type="{{ ex.type }}">
+      <p class="q"><b>Задание {{ loop.index }}.</b> {{ ex.q }}</p>
+      {% if ex.type == 'choice' %}
+        <div class="options">
+          {% for opt in ex.options %}
+            <label class="opt"><input type="radio" name="ex{{ outer_loop.index0 }}" value="{{ loop.index0 }}"> {{ opt }}</label>
+          {% endfor %}
+        </div>
+      {% elif ex.type == 'match' %}
+        {# drag&drop: тянем левую карточку на правую слот-пару; эталон скрыт (data-answer) #}
+        <div class="dnd dnd-match" data-ex data-answer='{{ ex.pairs | tojson }}'>
+          <div class="match-cols">
+            <div class="match-col match-left">
+              {% for item in ex.left %}
+                <div class="match-tile" draggable="true" data-left="{{ loop.index0 }}">{{ item }}</div>
+              {% endfor %}
+            </div>
+            <div class="match-col match-right">
+              {% for ri, text in ex | shuffle_match %}
+                <div class="match-slot" data-right="{{ ri }}"><span class="slot-hint">⬅ сюда пару</span><span class="slot-text">{{ text }}</span></div>
+              {% endfor %}
+            </div>
+          </div>
+          <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить 🧽</button>
+          <button type="button" class="btn btn-small" onclick="checkDndExercise(this)">Проверить ✔️</button>
+          <span class="ex-result"></span>
+        </div>
+      {% elif ex.type == 'sort' %}
+        {# drag&drop: тянем слово в корзину-категорию; эталон скрыт (data-answer) #}
+        <div class="dnd dnd-sort" data-ex data-answer='{{ ex.words | tojson }}'>
+          <div class="sort-tray">
+            {% for w, c in ex | shuffle_sort %}
+              <div class="word-chip sort-word" draggable="true" data-word="{{ w }}">{{ w }}</div>
+            {% endfor %}
+          </div>
+          <div class="sort-bins">
+            {% for cat in ex.categories %}
+              <div class="bin" data-cat="{{ cat.id }}">
+                <div class="bin-head">{{ cat.emoji }} {{ cat.title }}</div>
+                <div class="bin-body"></div>
+              </div>
+            {% endfor %}
+          </div>
+          <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить 🧽</button>
+          <button type="button" class="btn btn-small" onclick="checkDndExercise(this)">Проверить ✔️</button>
+          <span class="ex-result"></span>
+        </div>
+      {% else %}
+        <input type="text" class="typein" placeholder="Напиши ответ по-английски">
+      {% endif %}
+      {% if ex.type not in ('match', 'sort') %}
+        <button class="btn btn-small" onclick="checkExercise(this)">Проверить ✔️</button>
+        <span class="ex-result"></span>
+      {% endif %}
+      <div class="explain hidden">💡 {{ ex.explain }}</div>
+    </div>
+  {% endfor %}
+  <button class="btn btn-primary" onclick="goStep('step-test')">Всё понятно! Открываю тест 📝</button>
+</section>
+
+<!-- Шаг 4: тест -->
+<section class="card step hidden" id="step-test">
+  <h2>Шаг 4 — Итоговый тест 📝</h2>
+  <p>Ответь на {{ lesson.test|length }} вопросов. Чтобы урок считался пройденным, нужно набрать минимум 70%. Не торопись!</p>
+  <form method="post" action="{{ url_for('submit_test', lesson_id=lesson.id) }}" id="test-form">
+    <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
+    <input type="hidden" name="seconds" id="seconds-input" value="0">
+
+    {% for q in lesson.test %}
+      {% set outer_loop = loop %}
+      <div class="question card-inner" data-qindex="{{ loop.index0 }}">
+        <p class="q"><b>Вопрос {{ loop.index }}.</b> {{ q.q }}</p>
+        {% if q.type == 'choice' %}
+          <div class="options">
+            {% for opt in q.options %}
+              {# value = реальный индекс варианта (outer_loop.index0), а не счётчик вложенного цикла #}
+              <label class="opt"><input type="radio" name="q{{ outer_loop.index0 }}" value="{{ loop.index0 }}"> {{ opt }}</label>
+            {% endfor %}
+          </div>
+        {% elif q.type == 'order' %}
+          <div class="order-area">
+            <div class="word-bank" id="bank-{{ outer_loop.index0 }}">
+              {% for w in q.words | shuffle_words %}
+                <button type="button" class="word-chip" onclick="pickWord(this, {{ outer_loop.index0 }})">{{ w }}</button>
+              {% endfor %}
+            </div>
+            <div class="answer-line" id="line-{{ outer_loop.index0 }}"></div>
+            <input type="hidden" name="q{{ outer_loop.index0 }}_order" id="order-{{ outer_loop.index0 }}">
+            <button type="button" class="btn btn-small" onclick="clearLine({{ outer_loop.index0 }})">Очистить 🧽</button>
+          </div>
+        {% elif q.type == 'match' %}
+          {# Итоговый тест: drag&drop пары; скрытое поле заполняет скрипт #}
+          <div class="dnd dnd-match" data-q="{{ outer_loop.index0 }}"
+               data-pairs='{{ q.pairs | tojson }}'>
+            <div class="match-cols">
+              <div class="match-col match-left">
+                {% for item in q.left %}
+                  <div class="match-tile" draggable="true" data-left="{{ loop.index0 }}">{{ item }}</div>
+                {% endfor %}
+              </div>
+              <div class="match-col match-right">
+                {% for ri, text in q | shuffle_match %}
+                  <div class="match-slot" data-right="{{ ri }}"><span class="slot-hint">⬅ сюда пару</span><span class="slot-text">{{ text }}</span></div>
+                {% endfor %}
+              </div>
+            </div>
+            <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить 🧽</button>
+            <input type="hidden" name="q{{ outer_loop.index0 }}_match" id="match-{{ outer_loop.index0 }}">
+          </div>
+        {% elif q.type == 'sort' %}
+          {# Итоговый тест: drag&drop слов по корзинам категорий #}
+          <div class="dnd dnd-sort" data-q="{{ outer_loop.index0 }}"
+               data-cats='{{ q.categories | tojson }}' data-words='{{ q.words | tojson }}'>
+            <div class="sort-tray">
+              {% for w, c in q | shuffle_sort %}
+                <div class="word-chip sort-word" draggable="true" data-word="{{ w }}">{{ w }}</div>
+              {% endfor %}
+            </div>
+            <div class="sort-bins">
+              {% for cat in q.categories %}
+                <div class="bin" data-cat="{{ cat.id }}">
+                  <div class="bin-head">{{ cat.emoji }} {{ cat.title }}</div>
+                  <div class="bin-body"></div>
+                </div>
+              {% endfor %}
+            </div>
+            <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить 🧽</button>
+            <input type="hidden" name="q{{ outer_loop.index0 }}_sort" id="sort-{{ outer_loop.index0 }}">
+          </div>
+        {% else %}
+          <input type="text" class="typein" name="q{{ outer_loop.index0 }}" placeholder="Напиши ответ по-английски" autocomplete="off">
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-big">Закончить тест и проверить 🎯</button>
+  </form>
+</section>
+
+<a href="{{ url_for('student_home') }}" class="back-link">⬅️ Вернуться к урокам</a>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const START_TS = {{ started_ts }};
+
+function goStep(id) {
+  document.querySelectorAll('.step').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function checkExercise(btn) {
+  const box = btn.closest('.exercise');
+  const type = box.dataset.type;
+  const answer = box.dataset.answer.toLowerCase().trim();
+  let given = '';
+  if (type === 'choice') {
+    const sel = box.querySelector('input:checked');
+    given = sel ? sel.value : '';
+    // для choice в упражнениях храним индекс, сравниваем с data-answer
+    if (given !== '' && parseInt(given) === parseInt(box.dataset.answer)) given = 'OK';
+  } else {
+    given = box.querySelector('.typein').value.toLowerCase().trim();
+  }
+  const res = box.querySelector('.ex-result');
+  const ok = (type === 'choice') ? (given === 'OK') : (given === answer);
+  res.textContent = ok ? ' ✅ Правильно!' : ' ❌ Пока нет, попробуй ещё!';
+  res.className = 'ex-result ' + (ok ? 'ok' : 'bad');
+  if (ok) box.querySelector('.explain').classList.remove('hidden');
+}
+
+// --- задания на порядок слов ---
+function pickWord(chip, qi) {
+  chip.style.display = 'none';
+  const line = document.getElementById('line-' + qi);
+  const copy = document.createElement('button');
+  copy.type = 'button';
+  copy.className = 'word-chip chosen';
+  copy.textContent = chip.textContent;
+  copy.onclick = () => { // убрать из ответа и вернуть в банк
+    const bank = document.getElementById('bank-' + qi);
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'word-chip';
+    back.textContent = copy.textContent;
+    back.onclick = () => pickWord(back, qi);
+    bank.appendChild(back);
+    copy.remove();
+    updateOrder(qi);
+  };
+  line.appendChild(copy);
+  updateOrder(qi);
+}
+function clearLine(qi) {
+  const line = document.getElementById('line-' + qi);
+  const bank = document.getElementById('bank-' + qi);
+  line.querySelectorAll('.word-chip').forEach(c => {
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'word-chip';
+    back.textContent = c.textContent;
+    back.onclick = () => pickWord(back, qi);
+    bank.appendChild(back);
+  });
+  line.innerHTML = '';
+  updateOrder(qi);
+}
+function updateOrder(qi) {
+  const words = [...document.getElementById('line-' + qi).querySelectorAll('.word-chip')].map(w => w.textContent);
+  document.getElementById('order-' + qi).value = words.join(' ');
+}
+
+// --- drag & drop: match (пары) и sort (категории) ---
+let dragged = null;
+
+function dndState(root) { return root._pairs || (root._pairs = {}); }
+
+function fillHidden(root) {
+  if (root.classList.contains('dnd-match')) {
+    const st = dndState(root);
+    const hidden = root.querySelector('input[type=hidden]');
+    if (hidden) hidden.value = Object.entries(st).map(([l, r]) => l + ':' + r).join(',');
+  } else {
+    const parts = [];
+    root.querySelectorAll('.bin').forEach(bin => {
+      bin.querySelectorAll('.sort-word').forEach(w => parts.push(w.dataset.word + '|' + bin.dataset.cat));
+    });
+    const hidden = root.querySelector('input[type=hidden]');
+    if (hidden) hidden.value = parts.join(';');
+  }
+}
+
+function refreshMatchFeedback(root) {
+  const pairsRaw = root.dataset.pairs;
+  if (!pairsRaw) return;                 // упражнение без эталона — не подсвечиваем
+  let expected; try { expected = JSON.parse(pairsRaw); } catch (e) { return; }
+  const st = dndState(root);
+  root.querySelectorAll('.match-slot').forEach(slot => {
+    const li = slot.dataset.filledLeft;
+    slot.classList.remove('slot-ok', 'slot-bad');
+    if (li !== undefined && expected[li] !== undefined) {
+      slot.classList.add(expected[li] === Number(slot.dataset.right) ? 'slot-ok' : 'slot-bad');
+    }
+  });
+}
+
+function wireDnd(root) {
+  // перетаскиваемые элементы
+  root.querySelectorAll('.match-tile, .sort-word').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      dragged = el;
+      el.classList.add('dragging');
+      try { e.dataTransfer.setData('text/plain', ''); } catch (err) {}
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => { el.classList.remove('dragging'); dragged = null; });
+    // клик как резервный способ для тач-устройств: выбрать, затем коснуться цели
+    el.addEventListener('click', () => {
+      if (root.classList.contains('dnd-sort') && el.parentElement.classList.contains('sort-tray')) {
+        const sel = root.querySelector('.tap-selected');
+        if (sel) sel.classList.remove('tap-selected');
+        el.classList.add('tap-selected');
+      } else if (el.classList.contains('match-tile')) {
+        const sel = root.querySelector('.tap-selected');
+        if (sel) sel.classList.remove('tap-selected');
+        el.classList.add('tap-selected');
+      }
+    });
+  });
+
+  if (root.classList.contains('dnd-match')) {
+    root.querySelectorAll('.match-slot').forEach(slot => {
+      slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('hover'); });
+      slot.addEventListener('dragleave', () => slot.classList.remove('hover'));
+      slot.addEventListener('drop', e => {
+        e.preventDefault(); slot.classList.remove('hover');
+        if (dragged && dragged.classList.contains('match-tile')) placePair(root, slot, dragged);
+      });
+      slot.addEventListener('click', () => {
+        const sel = root.querySelector('.match-tile.tap-selected');
+        if (sel) { placePair(root, slot, sel); sel.classList.remove('tap-selected'); }
+      });
+    });
+  } else {
+    root.querySelectorAll('.bin').forEach(bin => {
+      const body = bin.querySelector('.bin-body');
+      const target = bin;
+      target.addEventListener('dragover', e => { e.preventDefault(); bin.classList.add('hover'); });
+      target.addEventListener('dragleave', () => bin.classList.remove('hover'));
+      target.addEventListener('drop', e => {
+        e.preventDefault(); bin.classList.remove('hover');
+        if (dragged && dragged.classList.contains('sort-word')) {
+          dragged.classList.remove('tap-selected');
+          body.appendChild(dragged);
+          fillHidden(root);
+        }
+      });
+      target.addEventListener('click', () => {
+        const sel = root.querySelector('.sort-word.tap-selected');
+        if (sel) { sel.classList.remove('tap-selected'); body.appendChild(sel); fillHidden(root); }
+      });
+    });
+    // клик по слову внутри корзины возвращает его в лоток
+    root.querySelectorAll('.bin-body').forEach(body => {
+      body.addEventListener('click', e => {
+        if (e.target.classList.contains('sort-word')) {
+          root.querySelector('.sort-tray').appendChild(e.target);
+          fillHidden(root);
+        }
+      });
+    });
+  }
+}
+
+function placePair(root, slot, tile) {
+  // если в слоте уже была пара — вернуть её карточку в левый столбик
+  if (slot.dataset.filledLeft !== undefined) {
+    const old = root.querySelector(`.match-tile[data-left="${slot.dataset.filledLeft}"]`);
+    if (old) { old.classList.remove('placed'); root.querySelector('.match-left').prepend(old); }
+  }
+  slot.dataset.filledLeft = tile.dataset.left;
+  const chip = document.createElement('span');
+  chip.className = 'pair-chip';
+  chip.textContent = tile.textContent;
+  const oldChip = slot.querySelector('.pair-chip');
+  if (oldChip) oldChip.remove();
+  slot.prepend(chip);
+  tile.classList.add('placed');
+  dndState(root)[tile.dataset.left] = Number(slot.dataset.right);
+  fillHidden(root);
+  refreshMatchFeedback(root);
+}
+
+function resetDnd(root) {
+  if (root.classList.contains('dnd-match')) {
+    root.querySelectorAll('.match-slot').forEach(slot => {
+      delete slot.dataset.filledLeft;
+      slot.classList.remove('slot-ok', 'slot-bad');
+      const chip = slot.querySelector('.pair-chip');
+      if (chip) chip.remove();
+    });
+    root.querySelectorAll('.match-tile').forEach(t => t.classList.remove('placed', 'tap-selected'));
+    root._pairs = {};
+    fillHidden(root);
+  } else {
+    const tray = root.querySelector('.sort-tray');
+    root.querySelectorAll('.bin-body .sort-word').forEach(w => { w.classList.remove('tap-selected'); tray.appendChild(w); });
+    fillHidden(root);
+  }
+}
+
+document.querySelectorAll('.dnd').forEach(wireDnd);
+
+// проверка упражнений с drag&drop (не на оценку); эталон — в data-answer
+function checkDndExercise(btn) {
+  const box = btn.closest('.exercise');
+  const root = box.querySelector('.dnd');
+  const res = box.querySelector('.ex-result');
+  let expected; try { expected = JSON.parse(root.dataset.answer); } catch (e) { return; }
+  if (root.classList.contains('dnd-match')) {
+    const tiles = root.querySelectorAll('.match-tile').length;
+    const st = dndState(root);
+    if (Object.keys(st).length < tiles) { res.textContent = ' 🧩 Соедини все пары!'; res.className = 'ex-result bad'; return; }
+    let wrong = 0;
+    for (const [l, r] of Object.entries(st)) {
+      if (String(expected[l]) !== String(r)) wrong++;
+    }
+    const ok = wrong === 0;
+    res.textContent = ok ? ' ✅ Все пары правильные!' : ` ❌ Неправильных пар: ${wrong}. Попробуй ещё!`;
+    res.className = 'ex-result ' + (ok ? 'ok' : 'bad');
+    if (ok) box.querySelector('.explain').classList.remove('hidden');
+  } else {
+    const total = root.querySelectorAll('.sort-word').length;
+    const placed = root.querySelectorAll('.bin-body .sort-word').length;
+    if (placed < total) { res.textContent = ' 🧺 Разложи все слова по корзинам!'; res.className = 'ex-result bad'; return; }
+    // expected: список "слово|категория"
+    const want = expected.map(s => s.toLowerCase());
+    const got = [];
+    root.querySelectorAll('.bin').forEach(bin => {
+      bin.querySelectorAll('.sort-word').forEach(w => got.push((w.dataset.word + '|' + bin.dataset.cat).toLowerCase()));
+    });
+    const wrong = got.filter(p => !want.includes(p)).length;
+    const ok = wrong === 0 && got.length === want.length;
+    res.textContent = ok ? ' ✅ Всё разложено верно!' : ` ❌ Ошибок: ${wrong}. Посмотри внимательно!`;
+    res.className = 'ex-result ' + (ok ? 'ok' : 'bad');
+    if (ok) box.querySelector('.explain').classList.remove('hidden');
+  }
+}
+
+// защита от ухода без сохранения времени + проверка, что ответ на каждый вопрос выбран
+document.getElementById('test-form').addEventListener('submit', function (e) {
+  document.getElementById('seconds-input').value = Math.round(Date.now() / 1000 - START_TS);
+  const unanswered = [];
+  document.querySelectorAll('.question').forEach(qDiv => {
+    const qi = qDiv.dataset.qindex;
+    if (qDiv.querySelector('.options')) {               // выбор ответа
+      if (!qDiv.querySelector(`input[name="q${qi}"]:checked`)) unanswered.push(+qi + 1);
+    } else if (qDiv.querySelector('.order-area')) {     // собери предложение
+      if (!(document.getElementById('order-' + qi).value || '').trim()) unanswered.push(+qi + 1);
+    } else if (qDiv.querySelector('.dnd-match')) {      // пары
+      const root = qDiv.querySelector('.dnd-match');
+      const total = root.querySelectorAll('.match-tile').length;
+      if (Object.keys(dndState(root)).length < total) unanswered.push(+qi + 1);
+    } else if (qDiv.querySelector('.dnd-sort')) {       // категории
+      const root = qDiv.querySelector('.dnd-sort');
+      const total = root.querySelectorAll('.sort-word').length;
+      const placed = root.querySelectorAll('.bin-body .sort-word').length;
+      if (placed < total) unanswered.push(+qi + 1);
+    } else {                                            // ввод слова
+      const inp = qDiv.querySelector('.typein');
+      if (inp && !inp.value.trim()) unanswered.push(+qi + 1);
+    }
+  });
+  if (unanswered.length > 0) {
+    e.preventDefault();
+    alert('Остались вопросы без ответа: ' + unanswered.join(', ') + ' 🙂\nОтветь на все — тогда проверим!');
+    const first = document.querySelector(`.question[data-qindex="${unanswered[0] - 1}"]`);
+    if (first) first.scrollIntoView({behavior: 'smooth', block: 'center'});
+  }
+});
+</script>
+{% endblock %}
