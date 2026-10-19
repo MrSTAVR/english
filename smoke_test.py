@@ -121,7 +121,7 @@ check("ачивка Первый шаг", "Первый шаг" in body)
 r = client.get("/student")
 body = r.get_data(as_text=True)
 check("урок 2 разблокирован", "Начать урок" in body)
-check("трекер показывает 1/8", "1/8" in body)
+check(f"трекер показывает 1/{len(LESSONS_BY_ID)}", f"1/{len(LESSONS_BY_ID)}" in body)
 
 # 7. Пройдём все оставшиеся уроки идеально, чтобы проверить ачивки
 for lid in range(2, len(LESSONS_BY_ID) + 1):
