@@ -453,9 +453,15 @@ def validate_lessons():
                     if not isinstance(a, int) or not 0 <= a < len(q.get("options", [])):
                         errors.append(f"{ref} — некорректный индекс answer={a!r}")
                 elif t == "order":
-                    need = [w.lower().strip(" .!?,;:") for w in q["answer"].split()]
-                    bank = sorted(w.lower().strip(" .!?,;:") for w in q.get("words", []))
-                    if sorted(need) != bank:
+                    # сравнение по «кушкам» слов (без учёта пунктуации), чтобы
+                    # многословные фишки банков ("in the bedroom") тоже сходились
+                    def _keys(s):
+                        return sorted(w.lower().strip(" .!?,;:") for w in s.split())
+                    need = _keys(q["answer"])
+                    bank = []
+                    for w in q.get("words", []):
+                        bank.extend(_keys(w))
+                    if need != sorted(bank):
                         errors.append(f"{ref} — слова в банке не совпадают с ответом")
                 elif t == "match":
                     left, right, pairs = q.get("left", []), q.get("right", []), q.get("pairs", {})
