@@ -1800,7 +1800,7 @@ LESSONS = [
              "answer": "next to",
              "explain": "Next to — рядом с."},
             {"type": "order", "q": "Составь предложение: «Мяч под стулом»",
-             "words": ["the", "ball", "under", "is", "chair"], "answer": "The ball is under the chair",
+             "words": ["The", "ball", "is", "under", "the chair"], "answer": "The ball is under the chair",
              "explain": "The ball is under the chair — Мяч под стулом."},
             {"type": "choice", "q": "Как спросить «Где мои носки?»",
              "options": ["What are my socks?", "Where are my socks?", "Who are my socks?"], "answer": 1,
@@ -2116,7 +2116,5 @@ LESSONS = [
              "accept": ["i like playing football"],
              "explain": "I like playing football."},
         ],
-    }
-]
-
+    },
 ]
