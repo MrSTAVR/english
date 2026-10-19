@@ -9,7 +9,12 @@
 Типы заданий:
   choice  - выбрать правильный вариант
   type_in - вписать ответ словами
-  order   - составить предложение из слов
+  order   - составить предложение из слов (клик по словам)
+  match   - установить правильные пары (drag&drop: тянем пару на место)
+            {"left": [...], "right": [...], "pairs": {0: 2, ...}}
+            pairs: индекс левого элемента -> индекс правого
+  sort    - разделить слова по категориям (drag&drop: перетаскиваем слово в корзину)
+            {"categories": [{"id", "title", "emoji"}, ...], "words": ["слово|cat_id", ...]}
 """
 
 LESSONS = [
@@ -36,6 +41,11 @@ LESSONS = [
              "explain": "Thank you — «Спасибо». Вежливое слово!"},
             {"type": "type_in", "q": "Переведи на английский: Пока 👋",
              "answer": "goodbye", "explain": "Goodbye — «Пока, до свидания»."},
+            {"type": "match", "q": "Соедини слово с его переводом: перетащи английскую карточку на русскую пару 🤝",
+             "left": ["Hello", "Thank you", "Please", "Goodbye"],
+             "right": ["Привет", "Спасибо", "Пожалуйста", "Пока"],
+             "pairs": {0: 0, 1: 1, 2: 2, 3: 3},
+             "explain": "Hello — привет, Thank you — спасибо, Please — пожалуйста, Goodbye — пока."},
         ],
         "test": [
             {"type": "choice", "q": "Как по-английски «Привет»?",
@@ -81,6 +91,13 @@ LESSONS = [
              "answer": "seven", "explain": "Seven — семь."},
         ],
         "test": [
+            {"type": "sort", "q": "Разложи числа по корзинам: чётные или нечётные? Перетаскивай слова в корзину 🧺",
+             "categories": [
+                 {"id": "even", "title": "Чётные", "emoji": "2️⃣"},
+                 {"id": "odd", "title": "Нечётные", "emoji": "1️⃣"},
+             ],
+             "words": ["two|even", "three|odd", "five|odd", "six|even", "eight|even", "nine|odd"],
+             "explain": "two, six, eight — чётные; three, five, nine — нечётные."},
             {"type": "choice", "q": "Что значит «Five»?",
              "options": ["5", "9", "4"], "answer": 0, "explain": "Five — пять."},
             {"type": "choice", "q": "Как по-английски «десять»?",
@@ -117,6 +134,13 @@ LESSONS = [
              "options": ["Cat", "Dog", "Cow"], "answer": 1, "explain": "Dog — собака. Гав-гав!"},
             {"type": "type_in", "q": "Переведи: Кошка", "answer": "cat",
              "explain": "Cat — кошка. Мяу!"},
+            {"type": "sort", "q": "Разложи животных по корзинам: домашние или дикие 🧺",
+             "categories": [
+                 {"id": "home", "title": "Домашние", "emoji": "🏡"},
+                 {"id": "wild", "title": "Дикие", "emoji": "🌲"},
+             ],
+             "words": ["dog|home", "bear|wild", "cat|home", "pig|home", "horse|home", "bird|wild"],
+             "explain": "dog, cat, pig, horse живут рядом с людьми; bear и bird — дикие животные."},
         ],
         "test": [
             {"type": "choice", "q": "Что значит «Horse»?",
@@ -154,6 +178,11 @@ LESSONS = [
              "options": ["Синий", "Красный", "Зелёный"], "answer": 1, "explain": "Red — красный, как яблоко 🍎"},
             {"type": "type_in", "q": "Переведи: Зелёный", "answer": "green",
              "explain": "Green — зелёный, как трава 🌿"},
+            {"type": "match", "q": "Соедини цвет с его переводом: тяни карточку на нужное место 🤝",
+             "left": ["Red", "Green", "Blue", "Yellow"],
+             "right": ["Красный", "Зелёный", "Синий", "Жёлтый"],
+             "pairs": {0: 0, 1: 1, 2: 2, 3: 3},
+             "explain": "Red — красный, Green — зелёный, Blue — синий, Yellow — жёлтый."},
         ],
         "test": [
             {"type": "choice", "q": "Как по-английски «синий»?",
@@ -191,8 +220,21 @@ LESSONS = [
              "options": ["Dad", "Mom", "Sister"], "answer": 1, "explain": "Mom — мама ❤️"},
             {"type": "type_in", "q": "Переведи: Брат", "answer": "brother",
              "explain": "Brother — брат."},
+            {"type": "match", "q": "Соедини членов семьи с переводом: перетащи карточку со словом на её пару 🤝",
+             "left": ["Mother", "Father", "Sister", "Brother"],
+             "right": ["Мама", "Папа", "Сестра", "Брат"],
+             "pairs": {0: 0, 1: 1, 2: 2, 3: 3},
+             "explain": "Mother — мама, Father — папа, Sister — сестра, Brother — брат."},
         ],
         "test": [
+            {"type": "sort", "q": "Разложи слова по корзинам: перетащи каждое слово в нужную категорию 🧺",
+             "categories": [
+                 {"id": "fam", "title": "Семья", "emoji": "👨‍👩‍👧"},
+                 {"id": "num", "title": "Цифры", "emoji": "🔢"},
+             ],
+             "words": ["mother|fam", "three|num", "sister|fam", "seven|num",
+                       "brother|fam", "ten|num"],
+             "explain": "mother, sister, brother — это семья; three, seven, ten — цифры."},
             {"type": "choice", "q": "Что значит «Sister»?",
              "options": ["Сестра", "Брат", "Мама"], "answer": 0, "explain": "Sister — сестра."},
             {"type": "choice", "q": "Как по-английски «папа»?",
@@ -227,6 +269,11 @@ LESSONS = [
              "options": ["Торт 🎂", "Молоко 🥛", "Яблоко 🍎"], "answer": 0, "explain": "Cake — торт. Ммм, вкусно!"},
             {"type": "type_in", "q": "Переведи: Яблоко", "answer": "apple",
              "explain": "Apple — яблоко 🍎"},
+            {"type": "match", "q": "Соедини слово с картинкой: перетащи слово на нужный эмодзи 🤝",
+             "left": ["Apple", "Banana", "Cake", "Ice cream"],
+             "right": ["🍰 Торт", "🍎 Яблоко", "🍦 Мороженое", "🍌 Банан"],
+             "pairs": {0: 1, 1: 3, 2: 0, 3: 2},
+             "explain": "Apple — яблоко 🍎, Banana — банан 🍌, Cake — торт 🍰, Ice cream — мороженое 🍦."},
         ],
         "test": [
             {"type": "choice", "q": "Как по-английски «банан»?",
@@ -241,6 +288,11 @@ LESSONS = [
              "options": ["Виноград", "Груша", "Вишня"], "answer": 0, "explain": "Grape — виноград 🍇"},
             {"type": "type_in", "q": "Переведи: Мороженое", "answer": "ice cream",
              "explain": "Ice cream — мороженое 🍦"},
+            {"type": "match", "q": "Соедини еду с переводом: перетащи слово на нужное место 🤝",
+             "left": ["Bread", "Milk", "Apple", "Grape"],
+             "right": ["Виноград", "Хлеб", "Яблоко", "Молоко"],
+             "pairs": {0: 1, 1: 3, 2: 2, 3: 0},
+             "explain": "Bread — хлеб, Milk — молоко, Apple — яблоко, Grape — виноград."},
         ],
     },
     {
@@ -265,6 +317,13 @@ LESSONS = [
              "explain": "She is — «она есть». She is funny — она весёлая."},
             {"type": "choice", "q": "Какое слово подходит: «Мы друзья» — ... are friends.",
              "options": ["We", "They", "You"], "answer": 0, "explain": "We — мы. We are friends!"},
+            {"type": "sort", "q": "Разложи местоимения: о ком мы говорим — о человеке или о зверюшке/предмете? 🧺",
+             "categories": [
+                 {"id": "people", "title": "Люди", "emoji": "👧"},
+                 {"id": "it", "title": "Не люди", "emoji": "🐱"},
+             ],
+             "words": ["she|people", "it|it", "he|people", "they|people", "it|it"],
+             "explain": "I, you, he, she, we, they — про людей; it — про животное или предмет."},
         ],
         "test": [
             {"type": "choice", "q": "Дополни: I ... a girl.",
@@ -280,7 +339,14 @@ LESSONS = [
              "explain": "We — мы."},
             {"type": "type_in", "q": "Переведи: «Она»", "answer": "she",
              "explain": "She — она."},
-            {"type": "order", "q": "Составь предложение: «Я ученица»",
+            {"type": "sort", "q": "Разложи слова по корзинам: человек или число? 🧺",
+             "categories": [
+                 {"id": "who", "title": "Человек", "emoji": "👤"},
+                 {"id": "num", "title": "Число", "emoji": "🔢"},
+             ],
+             "words": ["sister|who", "seven|num", "dad|who", "four|num", "grandma|who", "ten|num"],
+             "explain": "sister, dad, grandma — это люди; seven, four, ten — числа."},
+            {"type": "order", "q": "Составь предложение: «I am a student»",
              "words": ["am", "I", "a", "student"], "answer": "I am a student",
              "explain": "I am a student — Я ученица."},
             {"type": "choice", "q": "Что значит «He is»?",
@@ -308,6 +374,11 @@ LESSONS = [
              "options": ["Ears", "Eyes", "Nose"], "answer": 1, "explain": "Eyes — глаза. Ими мы смотрим!"},
             {"type": "type_in", "q": "Переведи: Нос", "answer": "nose",
              "explain": "Nose — нос 👃"},
+            {"type": "match", "q": "Соедини часть тела с переводом: тяни карточку на её пару 🤝",
+             "left": ["Head", "Eye", "Nose", "Ear"],
+             "right": ["Глаз", "Ухо", "Голова", "Нос"],
+             "pairs": {0: 2, 1: 0, 2: 3, 3: 1},
+             "explain": "Head — голова, Eye — глаз, Nose — нос, Ear — ухо."},
         ],
         "test": [
             {"type": "choice", "q": "Чем мы слышим? 👂",

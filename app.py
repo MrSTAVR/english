@@ -128,6 +128,31 @@ def norm_answer(text):
     return " ".join(str(text or "").lower().replace("’", "'").split()).strip(" .!?,;:")
 
 
+def parse_pairs(raw):
+    """Разбирает ответ match-задания из формы: 'leftIdx:rightIdx,leftIdx:rightIdx,...'
+    Возвращает dict {int: int} (только полные пары)."""
+    pairs = {}
+    for part in str(raw or "").split(","):
+        if ":" not in part:
+            continue
+        a, _, b = part.partition(":")
+        try:
+            pairs[int(a)] = int(b)
+        except ValueError:
+            continue
+    return pairs
+
+
+def parse_sort(raw):
+    """Разбирает ответ sort-задания: 'word|catId;word|catId;...' -> list[(word, cat)]."""
+    out = []
+    for part in str(raw or "").split(";"):
+        if "|" in part:
+            w, _, c = part.partition("|")
+            out.append((w.strip(), c.strip()))
+    return out
+
+
 def grade_question(q, given):
     """Возвращает (is_correct, correct_display)."""
     qtype = q.get("type", "choice")
@@ -143,6 +168,28 @@ def grade_question(q, given):
         expected = norm_answer(q["answer"])
         ok = norm_answer(given) == expected
         return ok, q["answer"]
+    if qtype == "match":
+        expected = {int(k): int(v) for k, v in q["pairs"].items()}
+        got = parse_pairs(given)
+        ok = got == expected
+        disp = ", ".join(f"{q['left'][li]} ↔ {q['right'][ri]}"
+                         for li, ri in sorted(expected.items()))
+        return ok, disp
+    if qtype == "sort":
+        expected = {}
+        for item in q["words"]:
+            w, _, c = item.partition("|")
+            expected.setdefault(c.lower(), []).append(w.lower())
+        got = {}
+        for w, c in parse_sort(given):
+            got.setdefault(c.lower(), []).append(w.lower())
+        ok = {k: sorted(v) for k, v in got.items()} == \
+             {k: sorted(v) for k, v in expected.items()}
+        disp = "; ".join(f"{c}: {', '.join(w)}" for c, w in
+                         ((cat["title"], [x.partition("|")[0] for x in q["words"]
+                                          if x.endswith("|" + cat["id"])])
+                          for cat in q["categories"]))
+        return ok, disp
     # type_in
     accepted = [norm_answer(q["answer"])] + [norm_answer(a) for a in q.get("accept", [])]
     ok = norm_answer(given) in accepted
@@ -258,6 +305,41 @@ def shuffle_words(words):
 app.jinja_env.filters["shuffle_words"] = shuffle_words
 
 
+def _stable_shuffle(items, seed):
+    items = list(items)
+    rng = random.Random(seed)
+    rng.shuffle(items)
+    return items
+
+
+def shuffle_match(q):
+    """Для задания 'match': правый столбик перемешиваем стабильно.
+    Возвращает список [(right_idx, text)] — порядок отображения."""
+    rights = list(range(len(q["right"])))
+    order = _stable_shuffle(rights, "m" + "".join(map(str, rights)) + str(len(q["left"])))
+    if order == rights:
+        order = order[::-1]
+    return [(i, q["right"][i]) for i in order]
+
+
+def shuffle_sort(q):
+    """Для задания 'sort': карточки слов перемешиваем стабильно.
+    Возвращает список [(word, cat_id)]."""
+    items = []
+    for raw in q["words"]:
+        w, _, c = raw.partition("|")
+        items.append((w, c))
+    order = _stable_shuffle(list(range(len(items))), "s" + str(sorted(q["words"])))
+    res = [items[i] for i in order]
+    if res == items:
+        res = res[::-1]
+    return res
+
+
+app.jinja_env.filters["shuffle_match"] = shuffle_match
+app.jinja_env.filters["shuffle_sort"] = shuffle_sort
+
+
 def validate_lessons():
     """Проверка целостности банка уроков: индексы ответов, полнота слов для 'order'."""
     errors = []
@@ -275,6 +357,26 @@ def validate_lessons():
                     bank = sorted(w.lower().strip(" .!?,;:") for w in q.get("words", []))
                     if sorted(need) != bank:
                         errors.append(f"{ref} — слова в банке не совпадают с ответом")
+                elif t == "match":
+                    left, right, pairs = q.get("left", []), q.get("right", []), q.get("pairs", {})
+                    if len(left) != len(right) or not left:
+                        errors.append(f"{ref} — разная длина колонок в match")
+                    norm = {}
+                    for k, v in pairs.items():
+                        ki, vi = int(k), int(v)
+                        if not 0 <= ki < len(left) or not 0 <= vi < len(right):
+                            errors.append(f"{ref} — выход индекса пары за пределы {ki}:{vi}")
+                        norm[ki] = vi
+                    if len(norm) != len(left) or sorted(norm.values()) != list(range(len(right))):
+                        errors.append(f"{ref} — пары должны быть полным взаимно-однозначным соответствием")
+                elif t == "sort":
+                    cats = {c["id"] for c in q.get("categories", [])}
+                    if not cats or not q.get("words"):
+                        errors.append(f"{ref} — sort без категорий или слов")
+                    for item in q.get("words", []):
+                        _, _, c = item.partition("|")
+                        if c not in cats:
+                            errors.append(f"{ref} — слово '{item}' ссылается на неизвестную категорию '{c}'")
                 elif t != "type_in":
                     errors.append(f"{ref} — неизвестный тип задания {t!r}")
     return errors
@@ -422,6 +524,9 @@ def submit_test(lesson_id):
         elif q["type"] == "order":
             raw = request.form.get(f"q{i}_order", "")
             given = raw
+        elif q["type"] in ("match", "sort"):
+            # скрытые поля заполняет drag&drop-скрипт перед отправкой
+            given = request.form.get(f"q{i}_{q['type']}", "")
         else:
             given = request.form.get(f"q{i}", "")
         ok, correct_disp = grade_question(q, given)
