@@ -12,6 +12,7 @@ import json
 import os
 import random
 import sqlite3
+import sys
 from datetime import datetime
 
 from flask import (Flask, abort, flash, g, jsonify, redirect,
@@ -498,4 +499,8 @@ def api_mistakes():
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Порт можно менять: python3 app.py 8080  (или PORT=8080 python3 app.py)
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else int(os.environ.get("PORT", 5000))
+    print(f"==> Приложение запущено: http://localhost:{port}")
+    print("    Режим ученика: вход по имени. Кабинет родителя: пароль 1234")
+    app.run(host="0.0.0.0", port=port, debug=False)
