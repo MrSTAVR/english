@@ -203,3 +203,16 @@ h1 { color: #6a2fbf; } h2 { color: #4a4a9e; }
   .login-cards { flex-direction: column; align-items: center; }
   .lesson-card { flex-direction: column; }
 }
+
+/* --- Аккаунты учеников (кабинет родителя) --- */
+.student-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-top: 8px; }
+.student-form label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: #6b7280; }
+.student-form input, .student-form select { padding: 8px 10px; border: 2px solid #e5e9ff; border-radius: 10px; font-size: .95rem; }
+.inline-form { display: inline-flex; gap: 6px; align-items: center; margin: 2px 6px 2px 0; }
+.inline-form input { padding: 5px 8px; border: 2px solid #e5e9ff; border-radius: 8px; width: 110px; }
+.btn-danger { background: #ff5d73; color: #fff; padding: 6px 12px; font-size: .85rem; }
+.actions-cell { min-width: 220px; }
+.mini-progress { background: #eee9ff; border-radius: 99px; height: 8px; width: 120px; overflow: hidden; margin-bottom: 4px; }
+.mini-fill { background: linear-gradient(90deg, #8a4fd3, #ff8fab); height: 100%; border-radius: 99px; }
+.hint { color: #6b7280; font-style: italic; }
+.login-card input { margin-bottom: 10px; }

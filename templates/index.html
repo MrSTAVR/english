@@ -7,10 +7,11 @@
   <div class="login-cards">
     <div class="card login-card">
       <div class="big-emoji">🎒</div>
-      <h2>Я ученица!</h2>
-      <p>Уроки по 15–20 минут, тесты и медали за успехи.</p>
+      <h2>Я ученик(ца)!</h2>
+      <p>Войди в свой аккаунт — его создали родители в кабинете.</p>
       <form method="post" action="{{ url_for('login_student') }}">
-        <input type="text" name="name" placeholder="Твоё имя" maxlength="40" required>
+        <input type="text" name="username" placeholder="Логин (например masha)" maxlength="20" required autocapitalize="off" autocomplete="username">
+        <input type="password" name="password" placeholder="Пароль" required autocomplete="current-password">
         <button type="submit" class="btn btn-primary">Начать занятия 🚀</button>
       </form>
     </div>
@@ -18,7 +19,7 @@
     <div class="card login-card">
       <div class="big-emoji">👨‍👩‍👧</div>
       <h2>Я родитель</h2>
-      <p>Прогресс, потраченное время и все ошибки в таблицах.</p>
+      <p>Аккаунты детей, прогресс, время и все ошибки.</p>
       <form method="post" action="{{ url_for('login_parent') }}">
         <input type="password" name="password" placeholder="Пароль (по умолчанию 1234)" required>
         <button type="submit" class="btn btn-secondary">Войти в кабинет 📊</button>

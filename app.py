@@ -8,6 +8,8 @@
     с правильными ответами, прогресс и достижения.
 """
 
+import hashlib
+import hmac
 import json
 import os
 import random
@@ -37,6 +39,32 @@ LESSONS_BY_ID = {l["id"]: l for l in LESSONS}
 PASS_MARK = 70          # минимальный процент, чтобы тест считаться сданным
 PARENT_PASSWORD = "1234"  # пароль для входа в режим родителя (можно поменять)
 
+
+# ---------------------------------------------------------------------------
+# Пароли: хешируем PBKDF2 + случайная соль (в базе хранится только хеш)
+# ---------------------------------------------------------------------------
+
+PBKDF2_ROUNDS = 120_000
+
+
+def hash_password(password):
+    salt = os.urandom(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"),
+                                 salt, PBKDF2_ROUNDS)
+    return f"pbkdf2${salt.hex()}${digest.hex()}"
+
+
+def verify_password(stored, password):
+    try:
+        algo, salt_hex, digest_hex = str(stored).split("$")
+        if algo != "pbkdf2":
+            return False
+        digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"),
+                                     bytes.fromhex(salt_hex), PBKDF2_ROUNDS)
+        return hmac.compare_digest(digest.hex(), digest_hex)
+    except Exception:
+        return False
+
 # ---------------------------------------------------------------------------
 # База данных
 # ---------------------------------------------------------------------------
@@ -57,8 +85,17 @@ def close_db(exc=None):
 
 
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS students (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    username     TEXT NOT NULL UNIQUE COLLATE NOCASE,  -- логин для входа
+    display_name TEXT NOT NULL,                        -- имя на странице урока
+    password_hash TEXT NOT NULL,                       -- PBKDF2-хеш пароля
+    emoji        TEXT DEFAULT '🎒',                    -- аватарка для ребёнка
+    created_at   TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS attempts (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id    INTEGER,                         -- за кем попытка (NULL = старые данные)
     lesson_id     INTEGER NOT NULL,
     started_at    TEXT NOT NULL,             -- ISO, когда открыли урок
     finished_at   TEXT,                      -- ISO, когда сдали тест
@@ -71,8 +108,10 @@ CREATE TABLE IF NOT EXISTS attempts (
     details_json  TEXT DEFAULT '{}'          -- полные результаты по каждому вопросу
 );
 CREATE TABLE IF NOT EXISTS achievements (
-    key        TEXT PRIMARY KEY,
-    earned_at  TEXT NOT NULL
+    student_id   INTEGER NOT NULL,
+    key          TEXT NOT NULL,
+    earned_at    TEXT NOT NULL,
+    PRIMARY KEY (student_id, key)
 );
 """
 
@@ -80,6 +119,16 @@ CREATE TABLE IF NOT EXISTS achievements (
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     conn.executescript(SCHEMA)
+    # Миграция старых баз: добавляем недостающие колонки/таблицы
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(attempts)")}
+    if "student_id" not in cols:
+        conn.execute("ALTER TABLE attempts ADD COLUMN student_id INTEGER")
+    ach_cols = [r[1] for r in conn.execute("PRAGMA table_info(achievements)")]
+    if ach_cols and "student_id" not in ach_cols:
+        # старая таблица ачивок без привязки к ученику — пересоздаём
+        conn.execute("DROP TABLE achievements")
+        conn.executescript(SCHEMA)
+    # индекс уникальности для новой таблицы ачивок уже задан PRIMARY KEY
     conn.commit()
     conn.close()
 
@@ -196,11 +245,20 @@ def grade_question(q, given):
     return ok, q["answer"]
 
 
-def compute_stats(db):
-    """Общая статистика по всем попыткам — используется для ачивок и трекера."""
-    rows = db.execute(
-        "SELECT * FROM attempts WHERE finished_at IS NOT NULL ORDER BY finished_at ASC, id ASC"
-    ).fetchall()
+def compute_stats(db, student_id=None):
+    """Статистика по попыткам — используется для ачивок и трекера.
+
+    student_id=None — общая статистика (кабинет родителя),
+    student_id=<id> — статистика конкретного ученика.
+    """
+    if student_id is None:
+        rows = db.execute(
+            "SELECT * FROM attempts WHERE finished_at IS NOT NULL "
+            "ORDER BY finished_at ASC, id ASC").fetchall()
+    else:
+        rows = db.execute(
+            "SELECT * FROM attempts WHERE finished_at IS NOT NULL AND student_id=? "
+            "ORDER BY finished_at ASC, id ASC", (student_id,)).fetchall()
 
     best_by_lesson = {}   # лучший результат по каждому уроку
     max_streak = 0
@@ -264,18 +322,27 @@ def compute_stats(db):
     }
 
 
-def update_achievements(db, stats):
-    """Проверяет ачивки; возвращает список новых (чтобы показать поздравление)."""
-    existing = {r["key"] for r in db.execute("SELECT key FROM achievements").fetchall()}
+def update_achievements(db, stats, student_id):
+    """Проверяет ачивки ученика; возвращает список новых (чтобы показать поздравление)."""
+    existing = {r["key"] for r in db.execute(
+        "SELECT key FROM achievements WHERE student_id=?", (student_id,)).fetchall()}
     new_earned = []
     now = datetime.now().isoformat(timespec="seconds")
     for ach in ACHIEVEMENTS:
         if ach["key"] not in existing and ach["check"](stats):
-            db.execute("INSERT INTO achievements (key, earned_at) VALUES (?, ?)",
-                       (ach["key"], now))
+            db.execute("INSERT INTO achievements (student_id, key, earned_at) VALUES (?, ?, ?)",
+                       (student_id, ach["key"], now))
             new_earned.append(ach)
     db.commit()
     return new_earned
+
+
+def get_student_or_none(db):
+    """Текущий ученик из сессии (или None)."""
+    sid = session.get("student_id")
+    if not sid:
+        return None
+    return db.execute("SELECT * FROM students WHERE id=?", (sid,)).fetchone()
 
 
 def human_time(seconds):
@@ -415,12 +482,18 @@ def index():
 
 @app.route("/login/student", methods=["POST"])
 def login_student():
-    name = (request.form.get("name") or "").strip()
-    if not name:
-        flash("Напиши, как тебя зовут! 😊", "error")
+    """Вход ученика по логину и паролю (аккаунты создаёт родитель)."""
+    username = (request.form.get("username") or "").strip()
+    password = request.form.get("password") or ""
+    db = get_db()
+    student = db.execute("SELECT * FROM students WHERE username=?",
+                         (username,)).fetchone()
+    if not student or not verify_password(student["password_hash"], password):
+        flash("Такого аккаунта нет или пароль неверный. Попроси родителей проверить в кабинете 👀", "error")
         return redirect(url_for("index"))
     session["role"] = "student"
-    session["student_name"] = name[:40]
+    session["student_id"] = student["id"]
+    session["student_name"] = student["display_name"]
     return redirect(url_for("student_home"))
 
 
@@ -446,6 +519,84 @@ def require_role(role):
     return None
 
 
+# ------------------------- Управление аккаунтами (родитель) -----------------
+
+STUDENT_EMOJIS = ["🦄", "🐱", "🐰", "🦊", "🐼", "🐥", "🦋", "🌈", "🚀", "🎀", "🐢", "🦁"]
+
+
+def valid_username(name):
+    import re
+    return bool(re.fullmatch(r"[a-zA-Z0-9_.\-]{2,20}", name or ""))
+
+
+@app.route("/parent/students/add", methods=["POST"])
+def add_student():
+    err = require_role("parent")
+    if err:
+        return err
+    username = (request.form.get("username") or "").strip().lower()
+    display_name = (request.form.get("display_name") or "").strip()[:40]
+    password = request.form.get("password") or ""
+    emoji = request.form.get("emoji") or "🎒"
+    if emoji not in STUDENT_EMOJIS:
+        emoji = "🎒"
+    db = get_db()
+    if not valid_username(username):
+        flash("Логин: только английские буквы, цифры, точка/дефис/подчёркивание, 2–20 символов.", "error")
+    elif not display_name:
+        flash("Нужно указать имя ученика.", "error")
+    elif len(password) < 4:
+        flash("Пароль должен быть не короче 4 символов.", "error")
+    elif db.execute("SELECT id FROM students WHERE username=?", (username,)).fetchone():
+        flash(f"Логин «{username}» уже занят.", "error")
+    else:
+        db.execute(
+            "INSERT INTO students (username, display_name, password_hash, emoji, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (username, display_name, hash_password(password), emoji,
+             datetime.now().isoformat(timespec="seconds")))
+        db.commit()
+        flash(f"Аккаунт для {display_name} создан! 🎉", "success")
+    return redirect(url_for("parent_dashboard") + "#students")
+
+
+@app.route("/parent/students/<int:sid>/delete", methods=["POST"])
+def delete_student(sid):
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    student = db.execute("SELECT * FROM students WHERE id=?", (sid,)).fetchone()
+    if not student:
+        abort(404)
+    db.execute("DELETE FROM attempts WHERE student_id=?", (sid,))
+    db.execute("DELETE FROM achievements WHERE student_id=?", (sid,))
+    db.execute("DELETE FROM students WHERE id=?", (sid,))
+    db.commit()
+    flash(f"Аккаунт {student['display_name']} удалён вместе с его прогрессом.", "success")
+    return redirect(url_for("parent_dashboard") + "#students")
+
+
+@app.route("/parent/students/<int:sid>/reset_password", methods=["POST"])
+def reset_student_password(sid):
+    err = require_role("parent")
+    if err:
+        return err
+    password = request.form.get("password") or ""
+    if len(password) < 4:
+        flash("Новый пароль должен быть не короче 4 символов.", "error")
+        return redirect(url_for("parent_dashboard") + "#students")
+    db = get_db()
+    student = db.execute("SELECT * FROM students WHERE id=?", (sid,)).fetchone()
+    if not student:
+        abort(404)
+    db.execute("UPDATE students SET password_hash=? WHERE id=?",
+               (hash_password(password), sid))
+    db.commit()
+    flash(f"Пароль для {student['display_name']} обновлён 🔑", "success")
+    return redirect(url_for("parent_dashboard") + "#students")
+
+
 # ---------------------------- Ученик ---------------------------------------
 
 @app.route("/student")
@@ -454,7 +605,12 @@ def student_home():
     if err:
         return err
     db = get_db()
-    stats = compute_stats(db)
+    student = get_student_or_none(db)
+    if not student:
+        session.clear()
+        flash("Аккаунт был удалён родителем. Войди заново 🙂", "error")
+        return redirect(url_for("index"))
+    stats = compute_stats(db, student["id"])
     unlocked = unlocked_lesson_ids(stats)
     lessons_info = []
     for l in LESSONS:
@@ -465,13 +621,15 @@ def student_home():
             "done": l["id"] in stats["completed_ids"],
             "best_score": best["score_percent"] if best else None,
         })
-    earned = {r["key"]: r["earned_at"] for r in
-              db.execute("SELECT key, earned_at FROM achievements").fetchall()}
+    earned = {r["key"]: r["earned_at"] for r in db.execute(
+        "SELECT key, earned_at FROM achievements WHERE student_id=?",
+        (student["id"],)).fetchall()}
     achievements = [{**a, "earned": a["key"] in earned,
                      "earned_at": earned.get(a["key"])} for a in ACHIEVEMENTS]
     new_badge = session.pop("new_achievements", None)
     return render_template("student_home.html",
-                           name=session["student_name"],
+                           name=student["display_name"],
+                           emoji=student["emoji"],
                            lessons=lessons_info,
                            stats=stats,
                            achievements=achievements,
@@ -486,15 +644,19 @@ def lesson_page(lesson_id):
         return err
     lesson = LESSONS_BY_ID.get(lesson_id) or abort(404)
     db = get_db()
-    stats = compute_stats(db)
+    student = get_student_or_none(db)
+    if not student:
+        session.clear()
+        return redirect(url_for("index"))
+    stats = compute_stats(db, student["id"])
     if lesson_id not in unlocked_lesson_ids(stats):
         flash("Сначала пройди предыдущий урок! 😉", "error")
         return redirect(url_for("student_home"))
     # Создаём новую попытку (начало занятия)
     started = datetime.now()
     cur = db.execute(
-        "INSERT INTO attempts (lesson_id, started_at) VALUES (?, ?)",
-        (lesson_id, started.isoformat(timespec="seconds")))
+        "INSERT INTO attempts (student_id, lesson_id, started_at) VALUES (?, ?, ?)",
+        (student["id"], lesson_id, started.isoformat(timespec="seconds")))
     db.commit()
     return render_template("lesson.html", lesson=lesson,
                            attempt_id=cur.lastrowid,
@@ -510,8 +672,12 @@ def submit_test(lesson_id):
     attempt_id = request.form.get("attempt_id", type=int)
     seconds = request.form.get("seconds", type=int) or 0
     db = get_db()
+    student = get_student_or_none(db)
+    if not student:
+        session.clear()
+        return redirect(url_for("index"))
     attempt = db.execute("SELECT * FROM attempts WHERE id=?", (attempt_id,)).fetchone()
-    if not attempt or attempt["finished_at"]:
+    if not attempt or attempt["finished_at"] or attempt["student_id"] != student["id"]:
         abort(400)
 
     test = lesson["test"]
@@ -554,8 +720,8 @@ def submit_test(lesson_id):
          json.dumps({"results": results}, ensure_ascii=False), attempt_id))
     db.commit()
 
-    stats = compute_stats(db)
-    new_achievements = update_achievements(db, stats)
+    stats = compute_stats(db, student["id"])
+    new_achievements = update_achievements(db, stats, student["id"])
     if new_achievements:
         session["new_achievements"] = [a["key"] for a in new_achievements]
 
@@ -575,7 +741,19 @@ def parent_dashboard():
     if err:
         return err
     db = get_db()
-    stats = compute_stats(db)
+
+    # Аккаунты учеников + их персональная статистика
+    students = db.execute(
+        "SELECT * FROM students ORDER BY created_at ASC").fetchall()
+    student_cards = []
+    for st in students:
+        sstats = compute_stats(db, st["id"])
+        earned = {r["key"] for r in db.execute(
+            "SELECT key FROM achievements WHERE student_id=?", (st["id"],)).fetchall()}
+        student_cards.append({"student": st, "stats": sstats,
+                              "earned_count": len(earned)})
+
+    stats = compute_stats(db)  # общая сводка по всем детям
     attempts = list(reversed(stats["attempts"]))  # свежие сверху
 
     # Сводка по урокам
@@ -592,14 +770,27 @@ def parent_dashboard():
             "time_spent": time_spent,
         })
 
-    earned = {r["key"]: r["earned_at"] for r in
-              db.execute("SELECT key, earned_at FROM achievements").fetchall()}
-    achievements = [{**a, "earned": a["key"] in earned,
-                     "earned_at": earned.get(a["key"])} for a in ACHIEVEMENTS]
+    earned = {}
+    for r in db.execute(
+            "SELECT a.student_id, a.key, a.earned_at, s.display_name, s.emoji "
+            "FROM achievements a JOIN students s ON s.id = a.student_id").fetchall():
+        earned[(r["student_id"], r["key"])] = r
+    achievements = [{**a, "earned": any(k[1] == a["key"] for k in earned),
+                     "who": ", ".join(f"{v['emoji']} {v['display_name']}"
+                                      for k, v in earned.items() if k[1] == a["key"]),
+                     "earned_at": next((v["earned_at"] for k, v in earned.items()
+                                        if k[1] == a["key"]), None)}
+                    for a in ACHIEVEMENTS]
+
+    names_by_id = {st["id"]: st["display_name"] for st in students}
+    emojis_by_id = {st["id"]: st["emoji"] for st in students}
 
     return render_template("parent_dashboard.html",
                            stats=stats, lessons=lesson_rows,
                            attempts=attempts, achievements=achievements,
+                           students=students, student_cards=student_cards,
+                           names_by_id=names_by_id, emojis_by_id=emojis_by_id,
+                           student_emojis=STUDENT_EMOJIS,
                            lesson_titles={l["id"]: l["title"] for l in LESSONS},
                            total_lessons=len(LESSONS))
 
@@ -611,6 +802,8 @@ def api_mistakes():
     if err:
         return jsonify([])
     db = get_db()
+    names = {r["id"]: r["display_name"] for r in
+             db.execute("SELECT id, display_name FROM students").fetchall()}
     rows = db.execute(
         "SELECT * FROM attempts WHERE finished_at IS NOT NULL ORDER BY finished_at DESC").fetchall()
     out = []
@@ -624,6 +817,7 @@ def api_mistakes():
             if not res["correct"]:
                 out.append({
                     "date": (r["finished_at"] or "")[:16].replace("T", " "),
+                    "student": names.get(r["student_id"], "—"),
                     "lesson_title": lesson.get("title", f"Урок {r['lesson_id']}"),
                     "question": res["q"],
                     "given": res["given"] or "(пусто)",

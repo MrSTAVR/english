@@ -21,12 +21,38 @@ def check(name, cond):
     if not cond:
         raise SystemExit(f"TEST FAILED: {name}")
 
+def correct_fields(q, i):
+    """Возвращает dict полей формы с ПРАВИЛЬНЫМ ответом на вопрос q."""
+    t = q["type"]
+    if t == "choice":
+        return {f"q{i}": q["answer"]}
+    if t == "order":
+        return {f"q{i}_order": q["answer"]}
+    if t == "match":
+        pairs = ",".join(f"{k}:{v}" for k, v in sorted(
+            (int(a), int(b)) for a, b in q["pairs"].items()))
+        return {f"q{i}_match": pairs}
+    if t == "sort":
+        s = ";".join(x.partition("|")[0] + "|" + x.partition("|")[2] for x in q["words"])
+        return {f"q{i}_sort": s}
+    return {f"q{i}": q["answer"]}
+
+
 # 1. Индекс
 r = client.get("/")
-check("индекс открывается", r.status_code == 200 and "Я ученица".encode() in r.data or "Я ученица" in r.get_data(as_text=True))
+check("индекс открывается", r.status_code == 200 and "Я ученик" in r.get_data(as_text=True))
 
-# 2. Вход ученика
-r = client.post("/login/student", data={"name": "Маша"}, follow_redirects=True)
+# 2. Родитель создаёт аккаунт ученицы, вход по логину/паролю
+r = client.post("/login/parent", data={"password": "1234"}, follow_redirects=True)
+check("вход родителя", "Кабинет родителя" in r.get_data(as_text=True))
+r = client.post("/parent/students/add", data={
+    "display_name": "Маша", "username": "masha", "password": "secret1", "emoji": "🦄"},
+    follow_redirects=True)
+check("аккаунт создан", "Аккаунт для Маша создан" in r.get_data(as_text=True))
+client.get("/logout")
+
+r = client.post("/login/student", data={"username": "masha", "password": "secret1"},
+                follow_redirects=True)
 body = r.get_data(as_text=True)
 check("вход ученицы", r.status_code == 200 and "Привет, Маша" in body)
 check("урок 2 заблокирован", "Закрой предыдущий урок" in body)
@@ -68,12 +94,7 @@ body = r.get_data(as_text=True)
 attempt_id = re.search(r'name="attempt_id" value="(\d+)"', body).group(1)
 data = {"attempt_id": attempt_id, "seconds": 600}
 for i, q in enumerate(lesson["test"]):
-    if q["type"] == "choice":
-        data[f"q{i}"] = q["answer"]
-    elif q["type"] == "order":
-        data[f"q{i}_order"] = q["answer"]
-    else:
-        data[f"q{i}"] = q["answer"]
+    data.update(correct_fields(q, i))
 r = client.post("/lesson/1/submit", data=data)
 body = r.get_data(as_text=True)
 check("идеальный тест 100%", "Идеально! 100%" in body)
@@ -93,12 +114,7 @@ for lid in range(2, len(LESSONS_BY_ID) + 1):
     attempt_id = re.search(r'name="attempt_id" value="(\d+)"', body).group(1)
     data = {"attempt_id": attempt_id, "seconds": 700}
     for i, q in enumerate(les["test"]):
-        if q["type"] == "choice":
-            data[f"q{i}"] = q["answer"]
-        elif q["type"] == "order":
-            data[f"q{i}_order"] = q["answer"]
-        else:
-            data[f"q{i}"] = q["answer"]
+        data.update(correct_fields(q, i))
     r = client.post(f"/lesson/{lid}/submit", data=data)
     check(f"урок {lid} сдан на 100%", "Идеально" in r.get_data(as_text=True))
 
