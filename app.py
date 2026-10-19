@@ -165,6 +165,30 @@ ACHIEVEMENTS = [
     {"key": "time60", "emoji": "⏰", "title": "Час упорства",
      "desc": "Суммарно час занятий английским.",
      "check": lambda s: s["total_minutes"] >= 60},
+    {"key": "five_lessons", "emoji": "🚂", "title": "Паровозик",
+     "desc": "Пройдено пять уроков — полный ход!",
+     "check": lambda s: s["lessons_completed"] >= 5},
+    {"key": "half_way", "emoji": "🌗", "title": "Половинка пути",
+     "desc": "Пройдена половина всех уроков.",
+     "check": lambda s: len(LESSONS) and s["lessons_completed"] * 2 >= len(LESSONS)},
+    {"key": "streak10", "emoji": "☄️", "title": "Комета",
+     "desc": "Подряд 10 правильных ответов в тесте!",
+     "check": lambda s: s["max_streak"] >= 10},
+    {"key": "words100", "emoji": "🦉", "title": "Мудрая сова",
+     "desc": "Выучено 100+ слов из пройденных уроков.",
+     "check": lambda s: s["words_learned"] >= 100},
+    {"key": "attempts5", "emoji": "🔄", "title": "Упорный бобрик",
+     "desc": "Пятая попытка теста — не сдаёшься, молодец!",
+     "check": lambda s: len(s["attempts"]) >= 5},
+    {"key": "time180", "emoji": "🧘", "title": "Три часа труда",
+     "desc": "Суммарно три часа занятий английским.",
+     "check": lambda s: s["total_minutes"] >= 180},
+    {"key": "diamond", "emoji": "💎", "title": "Алмазная коллекция",
+     "desc": "Идеальных тестов (100%) уже пять штук!",
+     "check": lambda s: s["perfect_count"] >= 5},
+    {"key": "first_try_perfect", "emoji": "✨", "title": "Безупречный урок",
+     "desc": "Урок сдан с первой попытки и без единой ошибки.",
+     "check": lambda s: s["first_try_perfect"]},
 ]
 
 
@@ -265,8 +289,11 @@ def compute_stats(db, student_id=None):
     best_clean_run = 0
     current_clean_run = 0
     has_perfect = False
+    perfect_count = 0
+    first_try_perfect = False
     total_seconds = 0
     total_mistakes = 0
+    attempts_by_lesson = {}
 
     for r in rows:
         total_seconds += r["seconds_spent"] or 0
@@ -284,12 +311,16 @@ def compute_stats(db, student_id=None):
                 cur = 0
         max_streak = max(max_streak, streak)
 
+        lid = r["lesson_id"]
+        attempts_by_lesson[lid] = attempts_by_lesson.get(lid, 0) + 1
         if r["passed"]:
-            lid = r["lesson_id"]
             if lid not in best_by_lesson or r["score_percent"] > best_by_lesson[lid]["score_percent"]:
                 best_by_lesson[lid] = r
             if r["mistakes_json"] and len(json.loads(r["mistakes_json"])) == 0:
                 has_perfect = True
+                perfect_count += 1
+                if attempts_by_lesson[lid] == 1:
+                    first_try_perfect = True
                 best_clean_run += 1
                 current_clean_run = max(current_clean_run, best_clean_run)
             else:
@@ -317,6 +348,8 @@ def compute_stats(db, student_id=None):
         "max_streak": max_streak,
         "best_clean_run": current_clean_run,
         "has_perfect": has_perfect,
+        "perfect_count": perfect_count,
+        "first_try_perfect": first_try_perfect,
         "words_learned": words_learned,
         "total_mistakes": total_mistakes,
     }
@@ -780,7 +813,9 @@ def submit_test(lesson_id):
     mascot = build_mascot_ctx()
     mascot["percent"] = percent
     mascot["passed"] = passed
-    mascot["newAchievements"] = bool(new_achievements)
+    mascot["newAchievements"] = [
+        {"key": a["key"], "emoji": a["emoji"], "title": a["title"], "desc": a["desc"]}
+        for a in new_achievements]
     return render_template("result.html", mascot=mascot,
                            lesson=lesson, percent=percent, passed=passed,
                            correct=correct, total=total,

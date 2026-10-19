@@ -56,13 +56,23 @@
     resultPass: 'Урок пройден! 🎉 Отличная работа! Мама с папой будут гордиться 😊',
     resultNear: 'Очень близко к финишу! Ещё чуть-чуть — и урок твой 🌈',
     resultLow: 'Ничего страшного! Давай повторим слова и попробуем ещё раз 🤗',
-    ach: 'Новая ачивка! 🏅 Посмотри на неё — ты её заслужил(а)!',
+    achIntro: ['СТОП! Стой смирно 🫡 У меня для тебя кое-что есть...',
+               'Так-так-так... *нюхает носиком* Чую, тут пахнет подарком! 🎁',
+               'Ты даже не представляешь, что я для тебя приготовил! 😲'],
+    achOpen: ['Ура!! Это твоя награда: «{title}» {emoji} Ты её честно заслужил(а)! 🎊',
+              'Смотри какой клад! Ачивка «{title}» {emoji} — так и сияет! ✨',
+              '«{title}» {emoji} — теперь в твоей коллекции! Я тобой горжусь! 💛'],
+    achAfter: ['Запомни: каждая ачивка — это шажок к большому английскому 🇬🇧',
+               'Откроешь все ачивки — устроим целый салют! 🎆',
+               'Показал(а)? Мама с папой будут в восторге! 👨‍👩‍👧'],
+
     doneAll: 'ТЫ ПРОШЛА ВСЕ УРОКИ!!! 🏆🎆 Мы самая крутая команда!',
     welcomeBack: 'С возвращением! Продолжаем с того места, где остановились 🚀',
     hiAgain: 'А, это снова ты! Привет-привет 👋 Нажми на меня, если нужна подсказка.'
   };
 
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function truthy(v) { return Array.isArray(v) ? v.length > 0 : !!v; }
   function fmt(tpl, vars) {
     return tpl.replace(/\{(\w+)\}/g, function (_, k) { return (vars && vars[k]) || ''; });
   }
@@ -187,6 +197,101 @@
   });
   balloon.addEventListener('click', function () { if (collapsed) expandLast(); });
 
+  /* ---------- 🎁 вручение коробки с подарком за ачивку ---------- */
+  /* Все полученные в этом тесте ачивки складываются в ОДНУ коробку —
+     раньше при нескольких наградах показывалась только первая, и ученица
+     не видела, какие именно ачивки получила. Теперь после открытия
+     коробки показывается карточка со списком всех наград. */
+  var giftEl = null;
+  function celebrateAchievements(list) {
+    if (giftEl || !list || !list.length) return;   // уже идёт вручение / пусто
+    root.classList.add('mascot-off');              // чик «прячется», чтобы вынести коробку
+    showReopen();                                  // кнопка возврата всё ещё доступна
+    say(pick(T.achIntro), { persist: true });
+
+    giftEl = document.createElement('div');
+    giftEl.className = 'gift-stage';
+    giftEl.innerHTML =
+      '<div class="gift-hint">Нажми на коробку! 🐣 принёс тебе ' +
+        (list.length > 1 ? list.length + ' подарка' : 'подарок') + '</div>' +
+      '<button class="gift-box" aria-label="Открыть подарок">' +
+      '  <svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">' +
+      '    <g class="gb-lid"><rect x="8" y="26" width="124" height="26" rx="7" fill="#FF5D8F"/>' +
+      '      <rect x="60" y="26" width="20" height="26" fill="#FFD54F"/>' +
+      '      <path d="M70 30 Q52 6 42 16 Q38 26 70 30 Z" fill="#FFD54F"/>' +
+      '      <path d="M70 30 Q88 6 98 16 Q102 26 70 30 Z" fill="#FFD54F"/></g>' +
+      '    <rect x="16" y="52" width="108" height="70" rx="8" fill="#FF8FB8"/>' +
+      '    <rect x="60" y="52" width="20" height="70" fill="#FFD54F"/>' +
+      '    <rect x="16" y="52" width="108" height="10" fill="rgba(0,0,0,.08)"/>' +
+      '  </svg></button>';
+    document.body.appendChild(giftEl);
+
+    var boxBtn = giftEl.querySelector('.gift-box');
+    boxBtn.addEventListener('click', function () {
+      if (giftEl.classList.contains('gift-open')) return;
+      giftEl.classList.add('gift-open');
+      jump(3);
+      setTimeout(function () {
+        root.classList.remove('mascot-off');
+        if (reopenBtn) { reopenBtn.remove(); reopenBtn = null; }
+        confettiBurst();
+        showGiftCard(list);
+      }, 900);
+    });
+  }
+
+  /* Карточка со ВСЕМИ полученными ачивками — её видно до закрытия или клика */
+  function showGiftCard(list) {
+    if (!giftEl) return;
+    var items = list.map(function (a) {
+      return '<li class="gc-item">' +
+               '<span class="gc-emoji">' + a.emoji + '</span>' +
+               '<span class="gc-text"><b>' + esc(a.title) + '</b>' +
+               '<small>' + esc(a.desc || '') + '</small></span>' +
+             '</li>';
+    }).join('');
+    giftEl.innerHTML =
+      '<div class="gift-card">' +
+        '<div class="gc-title">🎊 ' +
+          (list.length > 1 ? 'Тебе открыли целых ' + list.length + ' награды!'
+                           : 'Это твоя новая награда!') + '</div>' +
+        '<ul class="gc-list">' + items + '</ul>' +
+        '<button class="gc-close btn btn-primary">Забрать подарки! 🤩</button>' +
+      '</div>';
+    giftEl.classList.remove('gift-open');
+    giftEl.classList.add('gift-reveal');
+    var first = list[0];
+    say(fmt(pick(T.achOpen), { title: first.title, emoji: first.emoji }),
+        { strong: true, persist: true });
+    giftEl.querySelector('.gc-close').addEventListener('click', closeGift);
+  }
+
+  function closeGift() {
+    if (!giftEl) return;
+    giftEl.remove(); giftEl = null;
+    setTimeout(function () { say(pick(T.achAfter)); }, 1200);
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function confettiBurst() {
+    var colors = ['#FF5D8F', '#FFD54F', '#4FC3F7', '#AED581', '#BA68C8', '#FB8C00'];
+    for (var i = 0; i < 34; i++) {
+      var c = document.createElement('i');
+      c.className = 'confetti';
+      c.style.left = (10 + Math.random() * 80) + 'vw';
+      c.style.background = colors[i % colors.length];
+      c.style.animationDuration = (1.4 + Math.random() * 1.6) + 's';
+      c.style.animationDelay = (Math.random() * 0.35) + 's';
+      c.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+      document.body.appendChild(c);
+      (function (el) { setTimeout(function () { el.remove(); }, 3600); })(c);
+    }
+  }
+
   /* ---------- очередь подсказок при переходе между шагами ---------- */
   var pending = null;
   function queue(msg, ms) {
@@ -235,7 +340,17 @@
                 p >= 70 ? fmt(T.resultPass, { name: NAME }) :
                 p >= 50 ? T.resultNear : T.resultLow;
       say(msg, { strong: true, persist: true });
-      if (S.newAchievements) say(T.ach, { persist: true });
+      if (truthy(S.newAchievements)) {
+        /* Совместимость со старым форматом (был список ключей-строк):
+           превращаем строки в объекты вида {key} */
+        var raw = Array.isArray(S.newAchievements) ? S.newAchievements : [];
+        var list = raw.map(function (a) {
+          return typeof a === 'string' ? { key: a, emoji: '🏅', title: a, desc: '' } : a;
+        });
+        setTimeout(function () {
+          if (list.length) celebrateAchievements(list);
+        }, 1800);
+      }
     }, 700);
   }
 
