@@ -454,3 +454,50 @@ h2 { color: var(--primary-dark); font-weight: 800; }
 .gc-text b { color: #6a2fbf; font-size: 1.05rem; }
 .gc-text small { color: #7a6a3a; font-size: .82rem; }
 .gc-close { width: 100%; }
+
+/* ============ 🌳 Сад-дерево ============ */
+.garden-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; margin-bottom: 18px; }
+@media (max-width: 760px) { .garden-grid { grid-template-columns: 1fr; } }
+.tree-panel { text-align: center; overflow: hidden; }
+.tree-sky { position: relative; height: 300px; border-radius: 20px; margin: 10px 0;
+  background: linear-gradient(180deg, #bfe9ff 0%, #e8fbff 60%, #d6f5d0 100%); overflow: hidden; }
+.tree-sky.is-broken { filter: grayscale(.8); }
+.tree-ground { position: absolute; bottom: 0; left: 0; right: 0; height: 46px;
+  background: linear-gradient(180deg, #8fd66f, #6cbf4e); border-radius: 50% 50% 0 0 / 30px; }
+.tree-stage { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%) scale(var(--tree-size, 1));
+  transition: transform 1.2s cubic-bezier(.2,.9,.3,1.4); transform-origin: bottom center; }
+.tree-emoji { font-size: 110px; line-height: 1; display: inline-block; animation: treeSway 4s ease-in-out infinite; }
+@keyframes treeSway { 0%,100% { transform: rotate(-2deg);} 50% { transform: rotate(2deg);} }
+.tree-deco { position: absolute; font-size: 30px; animation: decoDrop .8s cubic-bezier(.2,.9,.3,1.4) both, decoSwing 3s ease-in-out infinite; }
+.deco-slot-0 { top: -6px; left: 34%; }
+.deco-slot-1 { top: 26px; left: 8%; }
+.deco-slot-2 { top: 34px; left: 62%; }
+@keyframes decoDrop { from { transform: translateY(-90px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes decoSwing { 0%,100% { rotate: -4deg; } 50% { rotate: 4deg; } }
+.tree-wilt { font-size: 40px; }
+.tree-broken-note { color: #a05a00; background: #fff3df; border-radius: 12px; padding: 8px 12px; display: inline-block; }
+.tree-info h2 { margin-bottom: 4px; }
+.stage-msg { color: var(--text-soft, #555); font-style: italic; }
+.next-stage { margin-top: 8px; background: #eef6ff; border-radius: 12px; padding: 8px 12px; display: inline-block; }
+.garden-side { display: flex; flex-direction: column; gap: 14px; }
+.mini-card { text-align: center; padding: 16px; }
+.mini-num { font-size: 30px; font-weight: 900; }
+.mini-label { color: var(--text-soft, #666); font-size: 14px; }
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+.shop-item { text-align: center; padding: 14px 10px; }
+.shop-emoji { font-size: 42px; }
+.shop-name { font-weight: 800; margin: 4px 0 2px; }
+.shop-price { margin-bottom: 8px; color: #b8860b; font-weight: 800; }
+.worn-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.worn-item { display: flex; align-items: center; gap: 8px; background: #f2fbff; border-radius: 14px; padding: 8px 12px; }
+.worn-emoji { font-size: 26px; }
+.pill-warn { background: #ffe3c2; color: #9a5b00; }
+.garden-edit input { width: 90px; }
+.garden-teaser { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit;
+  border-radius: 18px; padding: 12px 18px; margin: 14px 0; background: linear-gradient(90deg, #eaffea, #f0fbff);
+  box-shadow: 0 4px 16px rgba(30,120,60,.12); transition: transform .15s ease; }
+.garden-teaser:hover { transform: translateY(-2px); }
+.gt-tree { font-size: 38px; }
+.gt-text { flex: 1; }
+.gt-btn { font-weight: 800; color: #1c8a4c; }
+.coins-card { text-align: center; }

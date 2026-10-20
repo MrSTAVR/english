@@ -17,6 +17,14 @@
   {% endif %}
 </section>
 
+{% if coins_earned %}
+<section class="card coins-card">
+  <h2>🪙 Монетки!</h2>
+  <p>Получено <b>+{{ coins_earned }}</b> монеток · теперь у тебя <b>{{ coins_total }}</b> 🪙<br>
+     Загляни в <a href="{{ url_for('garden_page') }}">🌳 свой сад</a> — дерево выросло на {{ streak_days }} дн. серии!</p>
+</section>
+{% endif %}
+
 {% if new_achievements %}
 <section class="card new-ach">
   <h2>🏅 Новые достижения!</h2>
