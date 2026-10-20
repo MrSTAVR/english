@@ -60,10 +60,11 @@
         </div>
       {% elif ex.type == 'match' %}
         {# drag&drop: тянем левую карточку на правую слот-пару; эталон скрыт (data-answer) #}
-        <div class="dnd dnd-match" data-ex data-answer='{{ ex.pairs | tojson }}'>
+        <div class="dnd dnd-match" data-ex data-answer='{{ ex | match_expected }}'>
+          {% set mleft = ex.left if ex.left is defined and ex.left else (ex.pairs | map(attribute=0) | list) %}
           <div class="match-cols">
             <div class="match-col match-left">
-              {% for item in ex.left %}
+              {% for item in mleft %}
                 <div class="match-tile" draggable="true" data-left="{{ loop.index0 }}">{{ item }}</div>
               {% endfor %}
             </div>
@@ -143,10 +144,11 @@
         {% elif q.type == 'match' %}
           {# Итоговый тест: drag&drop пары; скрытое поле заполняет скрипт #}
           <div class="dnd dnd-match" data-q="{{ outer_loop.index0 }}"
-               data-pairs='{{ q.pairs | tojson }}'>
+               data-pairs='{{ q | match_expected }}'>
+            {% set mleft = q.left if q.left is defined and q.left else (q.pairs | map(attribute=0) | list) %}
             <div class="match-cols">
               <div class="match-col match-left">
-                {% for item in q.left %}
+                {% for item in mleft %}
                   <div class="match-tile" draggable="true" data-left="{{ loop.index0 }}">{{ item }}</div>
                 {% endfor %}
               </div>
