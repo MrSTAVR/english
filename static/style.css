@@ -459,8 +459,8 @@ h2 { color: var(--primary-dark); font-weight: 800; }
 .garden-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; margin-bottom: 18px; }
 @media (max-width: 760px) { .garden-grid { grid-template-columns: 1fr; } }
 .tree-panel { text-align: center; overflow: hidden; }
-.garden-scene { position: relative; height: 320px; border-radius: 20px; margin: 10px 0;
-  background: linear-gradient(180deg, #bfe9ff 0%, #e8fbff 60%, #d6f5d0 100%); overflow: hidden; }
+.garden-scene { position: relative; height: 340px; border-radius: 20px; margin: 10px 0;
+  overflow: hidden; transition: background .8s ease; }
 .garden-scene.is-broken { filter: grayscale(.8); }
 .garden-ground { position: absolute; bottom: 0; left: 0; right: 0; height: 46px;
   background: linear-gradient(180deg, #8fd66f, #6cbf4e); border-radius: 50% 50% 0 0 / 30px; }
@@ -476,20 +476,93 @@ h2 { color: var(--primary-dark); font-weight: 800; }
 @keyframes treeSway { 0%,100% { transform: rotate(-2deg);} 50% { transform: rotate(2deg);} }
 .tree-pot { width: 34px; height: 12px; border-radius: 6px 6px 10px 10px;
   background: linear-gradient(180deg, #a56a2f, #7c4a1d); margin-top: -4px; }
-/* украшения — позиции внутри всей сцены сада */
-.deco-hang, .deco-sky, .deco-ground { position: absolute; font-size: 30px; z-index: 3;
-  animation: decoDrop .8s cubic-bezier(.2,.9,.3,1.4) both, decoSwing 3s ease-in-out infinite; }
-.deco-hang.deco-slot-0 { top: 10px; left: 20%; }
-.deco-hang.deco-slot-1 { top: 26px; left: 48%; }
-.deco-hang.deco-slot-2 { top: 12px; left: 74%; }
-.deco-sky.deco-slot-0 { top: 8px;  left: 12%; }
-.deco-sky.deco-slot-1 { top: 30px; left: 55%; }
-.deco-sky.deco-slot-2 { top: 10px; left: 82%; }
-.deco-ground.deco-slot-0 { bottom: 30px; left: 8%; }
-.deco-ground.deco-slot-1 { bottom: 34px; left: 45%; }
-.deco-ground.deco-slot-2 { bottom: 30px; right: 8%; }
+/* ===== УКРАШЕНИЯ САДА: каждое действует на ВЕСЬ сад ===== */
+.deco-scatter, .deco-sky, .deco-object, .deco-span, .deco-effect { position: absolute; z-index: 3; pointer-events: none; }
+
+/* россыпь по поляне (бабочки, грибочки, цветы, ёжики) — 5 штук на весь сад */
+.deco-scatter { bottom: 26px; font-size: 22px; animation: decoDrop .8s cubic-bezier(.2,.9,.3,1.4) both, decoFloat 3.2s ease-in-out infinite; }
+.deco-slot-1.deco-scatter { bottom: 34px; }
+.deco-slot-2.deco-scatter { bottom: 22px; }
 @keyframes decoDrop { from { transform: translateY(-90px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes decoFloat { 0%,100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+
+/* украшения неба */
+.deco-sky { top: 10px; right: 14px; font-size: 40px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.15));
+  animation: decoDrop .8s cubic-bezier(.2,.9,.3,1.4) both; }
+.sky-rainbow { left: 50%; right: auto; top: 8px; transform: translateX(-50%); font-size: 90px;
+  opacity: .85; width: 80%; text-align: center; letter-spacing: -8px; }
+.sky-stars { right: auto; left: 0; top: 0; width: 100%; height: 45%; font-size: 0; }
+.sky-stars::before, .sky-stars::after { content: "✨ ✨ ✨ ✨"; position: absolute; inset: 0;
+  font-size: 16px; color: #fff7c9; text-shadow: 0 0 8px #ffe97a; animation: twinkle 2.4s ease-in-out infinite alternate; }
+.sky-stars::after { content: "✨ ✨ ✨"; top: 26px; left: 30%; animation-delay: 1.2s; font-size: 13px; }
+@keyframes twinkle { from { opacity: .35; } to { opacity: 1; } }
+.sky-moon { top: 12px; right: 60px; }
+.sky-clouds { top: 44px; right: auto; left: 18%; font-size: 30px; opacity: .9;
+  animation: decoDrop .8s both, cloudDrift 26s linear infinite; }
+@keyframes cloudDrift { from { translate: -60px 0; } to { translate: 320px 0; } }
+
+/* крупные объекты в саду */
+.deco-object { bottom: 24px; font-size: 44px; z-index: 4; animation: decoDrop .8s cubic-bezier(.2,.9,.3,1.4) both;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,.2)); }
+.obj-center { left: 50%; transform: translateX(-50%); }
+.obj-left   { left: 12%; }
+.obj-right  { right: 12%; }
+
+/* эффекты на весь сад: снег / лепестки / светлячки */
+.deco-effect { inset: 0; z-index: 5; overflow: hidden; }
+.fx-particle { position: absolute; font-size: 18px; opacity: .9; }
+.effect-snow .fx-particle { animation: fxFall 7s linear infinite; }
+.effect-petals .fx-particle { animation: fxFall 9s linear infinite, fxSway 3s ease-in-out infinite alternate; font-size: 16px; }
+.effect-fireflies .fx-particle { color: #ffe97a; text-shadow: 0 0 10px #ffd84d; animation: fxBlink 2.6s ease-in-out infinite, decoFloat 4s ease-in-out infinite; bottom: 30%; }
+.fx-particle.p0{left:5%;animation-delay:0s}.fx-particle.p1{left:15%;animation-delay:.7s}.fx-particle.p2{left:25%;animation-delay:1.4s}
+.fx-particle.p3{left:35%;animation-delay:2.1s}.fx-particle.p4{left:45%;animation-delay:2.8s}.fx-particle.p5{left:55%;animation-delay:3.5s}
+.fx-particle.p6{left:65%;animation-delay:4.2s}.fx-particle.p7{left:75%;animation-delay:4.9s}.fx-particle.p8{left:85%;animation-delay:5.6s}
+.fx-particle.p9{left:94%;animation-delay:6.3s}
+@keyframes fxFall { from { top: -8%; } to { top: 108%; } }
+@keyframes fxSway { from { margin-left: -14px; } to { margin-left: 14px; } }
+@keyframes fxBlink { 0%,100% { opacity: .15; } 50% { opacity: 1; } }
+
+/* растянутые на весь сад гирлянды/огни/флажки/забор */
+.deco-span { left: 0; right: 0; width: 100%; }
+.garland-row-0, .lights-row-0 { top: 4px; }
+.garland-row-1, .lights-row-1 { top: 26px; }
+.garland-row-2, .lights-row-2 { top: 48px; }
+.deco-garland, .deco-lights { height: 46px; }
+.garland-wire { position: absolute; inset: 0; width: 100%; height: 36px; }
+.glamp { position: absolute; top: 10px; font-size: 20px; transform-origin: top center;
+  animation: decoSwing 3s ease-in-out infinite; filter: drop-shadow(0 0 6px rgba(255,220,100,.9)); }
+.g0{color:#ff6b6b}.g1{color:#ffd166}.g2{color:#6fd47f}.g3{color:#74c0fc}
+.bulb { position: absolute; top: 12px; width: 12px; height: 12px; border-radius: 50%;
+  left: calc(3% + var(--i, 0) * 7%); animation: bulbGlow 2s ease-in-out infinite; }
+.deco-lights .bulb:nth-child(odd){--i:0}
+.deco-lights .bulb:nth-child(1){left:4%}.deco-lights .bulb:nth-child(2){left:11%}.deco-lights .bulb:nth-child(3){left:18%}
+.deco-lights .bulb:nth-child(4){left:25%}.deco-lights .bulb:nth-child(5){left:32%}.deco-lights .bulb:nth-child(6){left:39%}
+.deco-lights .bulb:nth-child(7){left:46%}.deco-lights .bulb:nth-child(8){left:53%}.deco-lights .bulb:nth-child(9){left:60%}
+.deco-lights .bulb:nth-child(10){left:67%}.deco-lights .bulb:nth-child(11){left:74%}.deco-lights .bulb:nth-child(12){left:81%}
+.deco-lights .bulb:nth-child(13){left:88%}.deco-lights .bulb:nth-child(14){left:95%}
+.b0{background:#ff6b6b;box-shadow:0 0 10px #ff6b6b}.b1{background:#ffd166;box-shadow:0 0 10px #ffd166}
+.b2{background:#6fd47f;box-shadow:0 0 10px #6fd47f}.b3{background:#74c0fc;box-shadow:0 0 10px #74c0fc}
+.b4{background:#e599f7;box-shadow:0 0 10px #e599f7}
+@keyframes bulbGlow { 0%,100% { opacity: .45; } 50% { opacity: 1; } }
+.deco-flags { top: 8px; height: 34px; display: flex; justify-content: space-between; padding: 0 4px; align-items: flex-start; }
+.deco-flags::before { content: ""; position: absolute; left: 0; right: 0; top: 2px; height: 2px; background: #8a5a2b; border-radius: 2px; }
+.flag { width: 0; height: 0; border-left: 11px solid transparent; border-right: 11px solid transparent;
+  border-top: 16px solid #ff6b6b; margin-top: 3px; animation: decoSwing 2.6s ease-in-out infinite; transform-origin: top center; }
+.f1{border-top-color:#ffd166}.f2{border-top-color:#6fd47f}.f3{border-top-color:#74c0fc}
+.flags-row-1 { top: 30px; }
+.deco-fence { bottom: 0; height: 26px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 2px; z-index: 6; }
+.fence-post { width: 9px; height: 22px; background: linear-gradient(180deg,#c99a5b,#9c6f3a);
+  border-radius: 3px 3px 0 0; box-shadow: inset 0 0 0 1px rgba(90,58,30,.35); }
+.deco-fence::before { content: ""; position: absolute; left: 0; right: 0; bottom: 14px; height: 4px; background: #b3854d; border-radius: 2px; }
 @keyframes decoSwing { 0%,100% { rotate: -4deg; } 50% { rotate: 4deg; } }
+
+/* фоны сада */
+.theme-day    { background: linear-gradient(180deg, #bfe9ff 0%, #e8fbff 60%, #d6f5d0 100%); }
+.theme-night  { background: linear-gradient(180deg, #1b2a5e 0%, #2c3e77 55%, #35507a 100%); }
+.theme-sunset { background: linear-gradient(180deg, #ffb56b 0%, #ffd9a0 45%, #ffeecf 100%); }
+.theme-night .garden-ground { background: linear-gradient(180deg, #3d6b4f, #2c5040); }
+.theme-sunset .garden-ground { background: linear-gradient(180deg, #a8cf7a, #7fae58); }
+.theme-night .tree-svg { filter: brightness(.85) saturate(.9); }
 .tree-wilt { font-size: 40px; }
 .tree-broken-note { color: #a05a00; background: #fff3df; border-radius: 12px; padding: 8px 12px; display: inline-block; }
 .tree-info h2 { margin-bottom: 4px; }
