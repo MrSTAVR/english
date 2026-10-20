@@ -65,6 +65,15 @@ r = client.post("/login/student", data={"username": "masha", "password": "secret
 body = r.get_data(as_text=True)
 check("вход ученицы", r.status_code == 200 and "Привет, Маша" in body)
 check("урок 2 заблокирован", "Закрой предыдущий урок" in body)
+check("блок «Дополнительные уроки» на главной", "Дополнительные уроки" in body)
+check("доп. уроки не заблокированы", "Бонус-урок" in body)
+# 1b. Дополнительные уроки доступны ВСЕГДА (сразу после входа, id 101..105)
+for eid in (101, 102, 103, 104, 105):
+    re_ = client.get(f"/lesson/{eid}")
+    check(f"доп. урок {eid} открывается без блокировки",
+          re_.status_code == 200 and "Начать" not in re_.get_data(as_text=True)[:200])
+r = client.get("/student/garden")
+check("страница сада открывается без ошибки", r.status_code == 200)
 check("помощник на главной ученицы (home)", '"page": "home"' in body)
 
 # 2b. Помощник знает контекст урока и результата
