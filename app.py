@@ -1211,11 +1211,29 @@ def student_home():
         if l["id"] in unlocked and l["id"] not in stats["completed_ids"]:
             next_lesson = l
             break
+    # Компактный вид блока «Мои уроки»: последний пройденный, следующий
+    # доступный и первый закрытый. Остальные — за кнопкой «показать все».
+    last_done_id = None
+    for info in reversed(lessons_info):
+        if info["done"]:
+            last_done_id = info["lesson"]["id"]
+            break
+    next_id = next_lesson["id"] if next_lesson else None
+    first_locked_id = None
+    for info in lessons_info:
+        if info["locked"]:
+            first_locked_id = info["lesson"]["id"]
+            break
+    highlight_ids = {i for i in (last_done_id, next_id, first_locked_id) if i}
+    for info in lessons_info:
+        info["highlight"] = info["lesson"]["id"] in highlight_ids
+    hidden_count = sum(1 for info in lessons_info if not info["highlight"])
     earned_count = sum(1 for a in achievements if a["earned"])
     return render_template("student_home.html", mascot=mascot,
                            name=student["display_name"],
                            emoji=student["emoji"],
                            lessons=lessons_info,
+                           hidden_lessons_count=hidden_count,
                            extra_lessons=extra_info,
                            extras_done=extras_done,
                            total_extras=len(EXTRA_LESSONS),

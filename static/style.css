@@ -642,3 +642,11 @@ h2 { color: var(--primary-dark); font-weight: 800; }
 @keyframes ttsPulse { 0% { box-shadow: 0 0 0 0 rgba(109,74,255,.45);} 100% { box-shadow: 0 0 0 14px rgba(109,74,255,0);} }
 .tts-pulse { animation: ttsPulse .7s ease-out; }
 .tts-listen { margin-left: 6px; }
+
+/* Компактный блок «Мои уроки»: скрытые карточки + кнопка «показать все» */
+.lesson-extra-hidden { display: none; }
+#lessonGrid.lessons-expanded .lesson-extra-hidden { display: block; animation: cardPop .35s ease; }
+@keyframes cardPop { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
+.show-all-wrap { text-align: center; margin-top: 14px; }
+.show-all-btn { padding: 10px 26px; border-radius: 999px; font-weight: 700; }
+.ribbon-now { background: linear-gradient(135deg, var(--violet, #6d4aff), #a78bff); }

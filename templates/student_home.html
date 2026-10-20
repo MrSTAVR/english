@@ -67,17 +67,21 @@
   </div>
 {% endif %}
 
-<!-- 3. Все уроки -->
+<!-- 3. Мои уроки (компактный вид: последний пройденный, следующий и первый закрытый) -->
 <section>
-  <h2 class="section-title">📚 Мои уроки</h2>
-  <div class="lesson-grid">
+  <div class="section-head">
+    <h2 class="section-title">📚 Мои уроки</h2>
+    <span class="pill pill-soft">{{ stats.lessons_completed }}/{{ total_lessons }} пройдено</span>
+  </div>
+  <div class="lesson-grid" id="lessonGrid">
     {% for info in lessons %}
       {% set l = info.lesson %}
-      <div class="lesson-card card {{ 'lesson-done' if info.done }} {{ 'lesson-locked' if info.locked }}">
+      <div class="lesson-card card {{ 'lesson-done' if info.done }} {{ 'lesson-locked' if info.locked }} {{ 'lesson-extra-hidden' if not info.highlight }}">
         <div class="lesson-top">
           <div class="lesson-emoji">{{ l.emoji if info.locked is false or info.done else '🔒' }}</div>
           <div class="lesson-num">Урок {{ l.id }}</div>
           {% if info.done %}<div class="ribbon">✅ Пройден</div>{% endif %}
+          {% if l.id == (next_lesson.id if next_lesson else None) %}<div class="ribbon ribbon-now">▶ Сейчас</div>{% endif %}
         </div>
         <h3>{{ l.title }}</h3>
         <p>{{ l.description }}</p>
@@ -97,6 +101,15 @@
       </div>
     {% endfor %}
   </div>
+  {% if hidden_lessons_count %}
+    <div class="show-all-wrap">
+      <button type="button" class="btn btn-secondary show-all-btn" id="showAllLessonsBtn"
+              data-more="Показать все уроки ({{ hidden_lessons_count }} скрыто) ⬇️"
+              data-less="Свернуть уроки ⬆️">
+        Показать все уроки ({{ hidden_lessons_count }} скрыто) ⬇️
+      </button>
+    </div>
+  {% endif %}
 </section>
 
 <!-- 3б. Дополнительные уроки — всегда открыты -->
@@ -148,4 +161,18 @@
     {% endfor %}
   </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var btn = document.getElementById('showAllLessonsBtn');
+  var grid = document.getElementById('lessonGrid');
+  if (!btn || !grid) return;
+  btn.addEventListener('click', function () {
+    var expanded = grid.classList.toggle('lessons-expanded');
+    btn.textContent = expanded ? btn.dataset.less : btn.dataset.more;
+  });
+})();
+</script>
 {% endblock %}

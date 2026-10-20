@@ -139,7 +139,10 @@ r = client.post("/lesson/1/submit", data=data)
 body = r.get_data(as_text=True)
 check("идеальный тест 100%", "Идеально! 100%" in body)
 check("помощник на странице результата", '"page": "result"' in body and '"percent": 100' in body)
-check("ачивка Первый шаг", "Первый шаг" in body)
+# Ачивки показываются на главной (всплывающая плашка + сетка достижений),
+# а не на странице результата теста.
+home_body = client.get("/student").get_data(as_text=True)
+check("ачивка Первый шаг", "Первый шаг" in home_body)
 
 # 6. Урок 2 теперь открыт
 r = client.get("/student")
