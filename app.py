@@ -379,34 +379,59 @@ def compute_stats(db, student_id=None):
 # ---------------------------------------------------------------------------
 
 MAX_SLOTS = 3      # сколько украшений можно разместить в саду
+STREAK_CAP = 30    # серия ограничена 30 днями: дальше сад не растёт
 COIN_PASS = 5      # монеток за сданный тест
 COIN_PERFECT = 5   # бонусных монеток за идеальный тест (100%)
 TREES_START = 1    # стартовое число деревьев в саду
-TREES_MAX = 8      # максимум деревьев
-TREES_PER_DAYS = 3 # каждое новое дерево — за каждые N дней серии
+TREES_MAX = 6      # максимум деревьев
+TREES_PER_DAYS = 5 # каждое новое дерево — за каждые N дней серии
 
 
 def tree_count_for(streak_days):
-    """Сколько деревьев в саду при данной серии дней."""
+    """Сколько деревьев в саду при данной серии дней (серия <= STREAK_CAP)."""
     return min(TREES_MAX, TREES_START + streak_days // TREES_PER_DAYS)
 
 
-# category: hang (подвесные над садом) / ground (на траве) / sky (на небе)
+# category:
+#   span   — растягивается на ВЕСЬ сад (гирлянда, флажки, забор, гирлянда-огни)
+#   sky    — украшение неба над всем садом (солнце, радуга, звёзды, луна, облака)
+#   effect — погодный/сказочный эффект на весь сад (снег, лепестки, светлячки)
+#   theme  — фон сада (ночь, закат)
+#   scatter— россыпь по всей поляне (бабочки, грибочки, цветочки, ёжики)
+#   object — один заметный объект в центре сада (фонтан, беседка, скамейка)
 DECORATIONS = [
-    {"key": "garland",   "emoji": "🎐", "name": "Гирлянда",       "cost": 10, "category": "hang"},
-    {"key": "lanterns",  "emoji": "🏮", "name": "Фонарики",       "cost": 18, "category": "hang"},
-    {"key": "flags",     "emoji": "🚩", "name": "Флажки",         "cost": 12, "category": "hang"},
-    {"key": "swing",     "emoji": "🪀", "name": "Качели",         "cost": 22, "category": "hang"},
-    {"key": "rainbow",   "emoji": "🌈", "name": "Радуга",         "cost": 30, "category": "sky"},
-    {"key": "sun",       "emoji": "☀️", "name": "Солнышко",       "cost": 8,  "category": "sky"},
-    {"key": "stars",     "emoji": "✨", "name": "Звёзды",         "cost": 15, "category": "sky"},
-    {"key": "birds",     "emoji": "🐦", "name": "Птички",         "cost": 12, "category": "sky"},
-    {"key": "butterfly", "emoji": "🦋", "name": "Бабочки",        "cost": 10, "category": "ground"},
-    {"key": "mushrooms", "emoji": "🍄", "name": "Грибочки",       "cost": 14, "category": "ground"},
-    {"key": "bench",     "emoji": "🪑", "name": "Лавочка",        "cost": 20, "category": "ground"},
-    {"key": "fence",     "emoji": "🚧", "name": "Заборчик",       "cost": 6,  "category": "ground"},
+    {"key": "garland",   "emoji": "💡", "name": "Гирлянда",        "cost": 10, "category": "span"},
+    {"key": "flags",     "emoji": "🚩", "name": "Флажки",          "cost": 12, "category": "span"},
+    {"key": "lights",    "emoji": "🎊", "name": "Огни-бусы",       "cost": 16, "category": "span"},
+    {"key": "fence",     "emoji": "🪵", "name": "Заборчик",        "cost": 8,  "category": "span"},
+    {"key": "sun",       "emoji": "☀️", "name": "Солнышко",        "cost": 8,  "category": "sky"},
+    {"key": "rainbow",   "emoji": "🌈", "name": "Радуга",          "cost": 30, "category": "sky"},
+    {"key": "stars",     "emoji": "✨", "name": "Звёздное небо",   "cost": 15, "category": "sky"},
+    {"key": "moon",      "emoji": "🌙", "name": "Луна",            "cost": 18, "category": "sky"},
+    {"key": "clouds",    "emoji": "☁️", "name": "Облачка",         "cost": 10, "category": "sky"},
+    {"key": "snow",      "emoji": "❄️", "name": "Снежинки",        "cost": 20, "category": "effect"},
+    {"key": "petals",    "emoji": "🌸", "name": "Лепестки сакуры", "cost": 22, "category": "effect"},
+    {"key": "fireflies", "emoji": "🧚", "name": "Светлячки",       "cost": 25, "category": "effect"},
+    {"key": "night",     "emoji": "🌌", "name": "Ночной фон",      "cost": 28, "category": "theme"},
+    {"key": "sunset",    "emoji": "🌇", "name": "Закат",           "cost": 28, "category": "theme"},
+    {"key": "butterfly", "emoji": "🦋", "name": "Бабочки",         "cost": 12, "category": "scatter"},
+    {"key": "mushrooms", "emoji": "🍄", "name": "Грибочки",        "cost": 14, "category": "scatter"},
+    {"key": "flowers",   "emoji": "🌷", "name": "Цветочная поляна","cost": 16, "category": "scatter"},
+    {"key": "hedgehog",  "emoji": "🦔", "name": "Ёжики",           "cost": 18, "category": "scatter"},
+    {"key": "fountain",  "emoji": "⛲", "name": "Фонтан",          "cost": 35, "category": "object"},
+    {"key": "gazebo",    "emoji": "🏯", "name": "Беседка",         "cost": 32, "category": "object"},
+    {"key": "bench",     "emoji": "🪑", "name": "Скамейка",        "cost": 20, "category": "object"},
 ]
 DECOS_BY_KEY = {d["key"]: d for d in DECORATIONS}
+
+CATEGORY_NAMES = {
+    "span": "на весь сад", "sky": "украшение неба", "effect": "эффект",
+    "theme": "фон сада", "scatter": "россыпь по поляне", "object": "объект в саду",
+}
+
+# позиции «россыпи» и одиночных объектов внутри сцены (left/top/bottom в %)
+SCATTER_POS = ["7%", "24%", "44%", "63%", "82%"]
+OBJECT_POS = {"fountain": "center", "gazebo": "right", "bench": "left"}
 
 # SVG-глифы стадий дерева (видны на всех платформах, в отличие от emoji)
 TREE_GLYPHS = {
@@ -423,30 +448,44 @@ TREE_GLYPHS = {
     "legendary": '''<g><path d="M40 48V14" stroke="#5a3a1e" stroke-width="10" stroke-linecap="round"/><path d="M40 26l-18-10M40 20l18-10M40 36l14 6M40 36l-14 6" stroke="#5a3a1e" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="8" r="18" fill="#2f9e44"/><circle cx="18" cy="16" r="13" fill="#5cc46f"/><circle cx="62" cy="16" r="13" fill="#41b257"/><circle cx="40" cy="20" r="12" fill="#6fd47f"/><path d="M33 -2l3 5 3-5 3 5 3-5v7h-12z" fill="#ffd166" transform="translate(2,6)"/><circle cx="28" cy="6" r="2.5" fill="#fff3bf"/><circle cx="52" cy="10" r="2.5" fill="#fff3bf"/></g>''',
 }
 
-TREE_STAGES = [
-    {"min": 0,  "size": 0.55, "glyph": "acorn", "emoji": "🌰", "name": "Жёлудь",
-     "msg": "Всё большое начинается с маленького зёрнышка!"},
-    {"min": 1,  "size": 0.65, "glyph": "sprout", "emoji": "🌱", "name": "Росток",
-     "msg": "Твой первый день занятий — росток проклюнулся!"},
-    {"min": 2,  "size": 0.72, "glyph": "seedling", "emoji": "🌿", "name": "Отросток",
-     "msg": "Два дня подряд — стебелек тянется к солнцу!"},
-    {"min": 3,  "size": 0.80, "glyph": "bushy", "emoji": "🪴", "name": "Саженец",
-     "msg": "Три дня серии — саженец крепчает, и в саду появляется второе дерево!"},
-    {"min": 5,  "size": 0.88, "glyph": "young", "emoji": "🌳", "name": "Молодое деревце",
-     "msg": "Пять дней подряд! Деревце уже гордится тобой."},
-    {"min": 7,  "size": 0.95, "glyph": "tree", "emoji": "🌳", "name": "Крепкое дерево",
-     "msg": "Целая неделя занятий — дерево стало настоящим!"},
-    {"min": 10, "size": 1.0,  "glyph": "lush", "emoji": "🌳", "name": "Сильное дерево",
-     "msg": "Десять дней! Такое дерево не сломает ни один ветер."},
-    {"min": 14, "size": 1.05, "glyph": "blooming", "emoji": "🌸", "name": "Цветущее дерево",
-     "msg": "Две недели подряд — твой сад начинает цвести!"},
-    {"min": 21, "size": 1.12, "glyph": "big", "emoji": "🌳", "name": "Раскидистое дерево",
-     "msg": "ТРИ НЕДЕЛИ! Это уже настоящая магия ✨"},
-    {"min": 30, "size": 1.2,  "glyph": "huge", "emoji": "🌳", "name": "Огромное дерево",
-     "msg": "Месяц каждый день — такое дерево видно издалека!"},
-    {"min": 45, "size": 1.28, "glyph": "legendary", "emoji": "👑", "name": "Легендарное дерево",
-     "msg": "Ты — легенда! Твой сад невозможно забыть! 👑"},
-]
+# 31 стадия: по одной на каждый день серии (0..30) — изменения заметны КАЖДЫЙ день.
+# size растёт равномерно; новые деревья появляются каждые TREES_PER_DAYS дней.
+_STAGE_GLYPHS = ["acorn", "sprout", "seedling", "bushy", "young", "tree",
+                 "lush", "blooming", "big", "huge", "legendary"]
+
+def _stage_glyph(day):
+    """Глиф дерева для дня серии: от жёлудя до легендарного дерева."""
+    idx = round(day / STREAK_CAP * (len(_STAGE_GLYPHS) - 1))
+    return _STAGE_GLYPHS[idx]
+
+TREE_STAGES = []
+for _d in range(STREAK_CAP + 1):
+    if _d == 0:
+        _name, _msg = "Жёлудь", "Всё большое начинается с маленького зёрнышка!"
+    elif _d == 1:
+        _name, _msg = "Росток", "Первый день занятий — росток проклюнулся! 🌱"
+    elif _d % TREES_PER_DAYS == 0:
+        _n = tree_count_for(_d)
+        _name, _msg = f"Сад день {_d}", f"Новое дерево в саду — теперь их {_n}! 🎉"
+    elif _d == STREAK_CAP:
+        _name, _msg = "Легендарный сад", "ТРИДЦАТЬ дней подряд! Ты — легенда! 👑"
+    else:
+        _pct = int(_d / STREAK_CAP * 100)
+        _name, _msg = f"День {_d}", f"Ещё на чуть-чуть выше и крепче — сад вырос на {_pct}%!"
+    TREE_STAGES.append({
+        "min": _d,
+        "size": round(0.5 + _d * 0.025, 3),   # 0.5 → 1.25 за 30 дней
+        "glyph": _stage_glyph(_d),
+        "emoji": "🌳",
+        "name": _name,
+        "msg": _msg,
+    })
+# emoji стадии подбираем по глифу
+_EMOJI_BY_GLYPH = {"acorn": "🌰", "sprout": "🌱", "seedling": "🌿", "bushy": "🪴",
+                   "young": "🌳", "tree": "🌳", "lush": "🌳", "blooming": "🌸",
+                   "big": "🌳", "huge": "🌳", "legendary": "👑"}
+for _s in TREE_STAGES:
+    _s["emoji"] = _EMOJI_BY_GLYPH[_s["glyph"]]
 
 
 def get_garden(db, student_id):
@@ -467,6 +506,11 @@ def tree_stage(streak_days):
         if streak_days >= s["min"]:
             stage = s
     return stage
+
+
+def cap_streak(days):
+    """Серия не может превышать STREAK_CAP дней."""
+    return max(0, min(int(days), STREAK_CAP))
 
 
 def compute_streak_from_history(db, student_id):
@@ -509,18 +553,18 @@ def refresh_garden(db, student_id):
 
     if hist_streak > 0:
         # есть свежие занятия: берём максимум из реального и «ручного» значения
-        streak = max(hist_streak, stored)
+        streak = cap_streak(max(hist_streak, stored))
         broken = 0
     elif stored > 0 and last_day is None:
-        # истории нет, но родитель выставил серию вручную — доверяем
-        streak, broken = stored, 0
+        # истории нет, но родитель выставил серию вручную — доверяем (не выше 30)
+        streak, broken = cap_streak(stored), 0
     else:
         streak = 0
         broken = 1 if stored > 0 or bool(g["broken"]) else 0
         if broken:
             db.execute("DELETE FROM decorations WHERE student_id=?", (student_id,))
 
-    best = max(int(g["best_streak"]), streak)
+    best = cap_streak(max(int(g["best_streak"]), streak))
     db.execute("UPDATE garden SET streak_days=?, best_streak=?, broken=?, "
                "last_study_day=? WHERE student_id=?",
                (streak, best, broken, last_day, student_id))
@@ -558,8 +602,9 @@ def touch_streak(db, student_id):
     else:
         # истории занятий ещё нет (или сад правили вручную) — просто фиксируем день
         streak = max(int(g["streak_days"]), 1)
+    streak = cap_streak(streak)
     broken = 0                       # начала заниматься — сад «оживает»
-    best = max(int(g["best_streak"]), streak)
+    best = cap_streak(max(int(g["best_streak"]), streak))
     db.execute("UPDATE garden SET streak_days=?, best_streak=?, broken=?, "
                "last_study_day=? WHERE student_id=?",
                (streak, best, broken, today, student_id))
@@ -570,31 +615,48 @@ def touch_streak(db, student_id):
 def garden_view(db, student_id):
     """Всё нужное для рендера страницы сада."""
     g = get_garden(db, student_id)
-    stage = tree_stage(g["streak_days"])
-    next_stage = next((s for s in TREE_STAGES if s["min"] > g["streak_days"]), None)
+    streak = cap_streak(g["streak_days"])
+    stage = tree_stage(streak)
+    next_stage = next((s for s in TREE_STAGES if s["min"] > streak), None)
     owned = db.execute(
         "SELECT deco_key, slot FROM decorations WHERE student_id=? ORDER BY slot",
         (student_id,)).fetchall()
-    hanging = {r["slot"]: r["deco_key"] for r in owned}
+    active = {r["slot"]: r["deco_key"] for r in owned}
+    # группируем активные украшения по категориям — каждое действует на ВЕСЬ сад
+    by_cat = {}
+    for slot, key in active.items():
+        d = DECOS_BY_KEY.get(key)
+        if not d:
+            continue
+        item = {"key": key, "slot": slot, "name": d["name"],
+                "emoji": d["emoji"], "cost": d["cost"]}
+        by_cat.setdefault(d["category"], []).append(item)
+    theme = by_cat.get("theme", [None])[0]  # фон: первый купленный тематический
     counts = {}
     for r in owned:
         counts[r["deco_key"]] = counts.get(r["deco_key"], 0) + 1
-    tcount = tree_count_for(g["streak_days"])
+    tcount = tree_count_for(streak)
     trees = [{"i": i, "coin_bonus": (i + 1) * 2} for i in range(tcount)]
     return {
         "garden": g,
         "stage": stage,
         "next_stage": next_stage,
-        "hanging": hanging,
+        "active": active,
+        "by_cat": by_cat,
+        "theme": theme,
+        "cat_names": CATEGORY_NAMES,
+        "scatter_pos": SCATTER_POS,
+        "object_pos": OBJECT_POS,
         "owned_counts": counts,
         "decorations": DECORATIONS,
         "max_slots": MAX_SLOTS,
+        "streak_cap": STREAK_CAP,
         "coin_pass": COIN_PASS,
         "coin_perfect": COIN_PERFECT,
         "tree_count": tcount,
         "trees": trees,
         "per_tree": TREES_PER_DAYS,
-        "to_next_tree": (tcount - TREES_START + 1) * TREES_PER_DAYS - g["streak_days"]
+        "to_next_tree": (tcount - TREES_START + 1) * TREES_PER_DAYS - streak
                         if tcount < TREES_MAX else 0,
     }
 
@@ -964,6 +1026,7 @@ def parent_update_garden(sid):
         flash("Ничего не изменено — заполни хотя бы одно поле.", "error")
         return redirect(url_for("parent_dashboard") + "#students")
     if streak is not None:
+        streak = cap_streak(streak)  # серия ограничена STREAK_CAP днями
         # синхронизируем last_study_day с реальностью, чтобы refresh не сбросил серию
         if streak > 0:
             db.execute("UPDATE garden SET streak_days=?, broken=0, manual=1 WHERE student_id=?",
@@ -974,7 +1037,7 @@ def parent_update_garden(sid):
             db.execute("UPDATE garden SET streak_days=0, broken=1, manual=1 WHERE student_id=?",
                        (sid,))
             db.execute("DELETE FROM decorations WHERE student_id=?", (sid,))
-        best = max(int(g["best_streak"]), streak or 0)
+        best = cap_streak(max(int(g["best_streak"]), streak or 0))
         db.execute("UPDATE garden SET best_streak=? WHERE student_id=?", (best, sid))
     if coins is not None:
         db.execute("UPDATE garden SET coins=? WHERE student_id=?", (coins, sid))
@@ -1195,19 +1258,19 @@ def garden_buy():
         "SELECT slot FROM decorations WHERE student_id=?", (student["id"],)).fetchall()}
     free_slots = [s for s in range(MAX_SLOTS) if s not in used]
     if bool(g["broken"]) or g["streak_days"] <= 0:
-        session["garden_flash"] = "Серия прервана — сначала позанимайся сегодня, чтобы дерево ожило! 🍂"
+        session["garden_flash"] = "Серия прервана — сначала позанимайся сегодня, чтобы сад ожил! 🍂"
     elif not free_slots:
-        session["garden_flash"] = f"На дереве нет свободных мест (максимум {MAX_SLOTS}). Сними одно украшение 😉"
+        session["garden_flash"] = f"В саду уже максимум украшений ({MAX_SLOTS}). Сними одно 😉"
     elif g["coins"] < deco["cost"]:
         session["garden_flash"] = (f"Не хватает монеток: нужно {deco['cost']}, "
-                                   f"а у тебя {g['coins']}. Пройди ещё пару тестов! 0001FA99 (МОНЕТКИ)")
+                                   f"а у тебя {g['coins']}. Пройди ещё пару тестов!")
     else:
         db.execute("UPDATE garden SET coins=coins-? WHERE student_id=?",
                    (deco["cost"], student["id"]))
         db.execute("INSERT INTO decorations (student_id, deco_key, slot) VALUES (?, ?, ?)",
                    (student["id"], key, free_slots[0]))
         db.commit()
-        session["garden_flash"] = f"{deco['emoji']} «{deco['name']}» повешено на дерево!"
+        session["garden_flash"] = f"{deco['emoji']} «{deco['name']}» украсило весь сад!"
     return redirect(url_for("garden_page"))
 
 
@@ -1231,7 +1294,7 @@ def garden_remove(slot):
         db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?",
                    (refund, student["id"]))
         db.commit()
-        session["garden_flash"] = (f"{deco['emoji']} «{deco['name']}» снято с дерева, "
+        session["garden_flash"] = (f"{deco['emoji']} «{deco['name']}» снято из сада, "
                                    f"вернулось {refund} монеток")
     return redirect(url_for("garden_page"))
 
