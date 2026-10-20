@@ -7,9 +7,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=6">
 </head>
 <body>
+{# SVG-спрайт: надёжные иконки (emoji 🪙 на Windows не отображается) #}
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-coin" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" fill="#f6c445" stroke="#d9a520" stroke-width="2"/>
+    <circle cx="12" cy="12" r="6.5" fill="none" stroke="#d9a520" stroke-width="1.5"/>
+    <path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#fff3bf" stroke-width="2" stroke-linecap="round" opacity=".85"/>
+  </symbol>
+</svg>
 <header class="topbar">
   <a href="/" class="logo">🐣 English Fun</a>
   <nav>
@@ -38,7 +46,7 @@
 
 {# ---------- Анимированный помощник Чик-чик (правый нижний угол) ---------- #}
 <script>window.MASCOT_SETTINGS = {{ mascot|tojson }};</script>
-<script src="{{ url_for('static', filename='mascot.js') }}?v=5"></script>
+<script src="{{ url_for('static', filename='mascot.js') }}?v=6"></script>
 
 {% block scripts %}{% endblock %}
 </body>

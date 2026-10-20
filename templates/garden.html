@@ -1,30 +1,49 @@
 {% extends "base.html" %}
-{% block title %}Моё дерево — English Fun{% endblock %}
+{% block title %}Мой сад — English Fun{% endblock %}
 {% block content %}
 
-<h1>🌳 Мой сад-дерево</h1>
-<p class="welcome-sub">Занимайся каждый день — твоё дерево растёт, а монетки позволяют его украшать! ✨</p>
+<h1>🌳 Мой сад</h1>
+<p class="welcome-sub">Занимайся каждый день — в саду вырастают новые деревья, а на монетки можно украсить весь сад! ✨</p>
 
 {% if flash_msg %}<div class="flash flash-success garden-flash">{{ flash_msg }}</div>{% endif %}
 
 <div class="garden-grid">
-  <!-- Дерево -->
+  <!-- Сад -->
   <section class="card glass tree-panel">
     {% if garden.broken %}
       <div class="tree-wilt">🍂</div>
-      <p class="tree-broken-note">Ой… серия дней прервана, и дерево загрустило 🥺<br>
-        Начни заниматься снова — и оно оживёт!</p>
+      <p class="tree-broken-note">Ой… серия дней прервана, и сад опустел 🥺<br>
+        Начни заниматься снова — и деревья вернутся!</p>
     {% endif %}
-    <div class="tree-sky {{ 'is-broken' if garden.broken }}">
-      <div class="tree-stage" style="--tree-size: {{ stage.size }};">
-        <span class="tree-emoji">{{ stage.emoji }}</span>
-        {% for slot in range(max_slots) %}
-          {% if slot in hanging %}
-            <span class="tree-deco deco-slot-{{ slot }}">{{ deco_emojis.get(hanging[slot], '✨') }}</span>
-          {% endif %}
+    <div class="garden-scene {{ 'is-broken' if garden.broken }}">
+      {# Подвесные украшения — над всем садом #}
+      {% for slot in range(max_slots) %}
+        {% if slot in hanging and deco_by_key[hanging[slot]].category == 'hang' %}
+          <span class="deco-hang deco-slot-{{ slot }}">{{ deco_emojis.get(hanging[slot], '✨') }}</span>
+        {% endif %}
+      {% endfor %}
+      {# Украшения на небе #}
+      {% for slot in range(max_slots) %}
+        {% if slot in hanging and deco_by_key[hanging[slot]].category == 'sky' %}
+          <span class="deco-sky deco-slot-{{ slot }}">{{ deco_emojis.get(hanging[slot], '✨') }}</span>
+        {% endif %}
+      {% endfor %}
+      {# Деревья сада #}
+      <div class="trees-row">
+        {% for t in trees %}
+          <div class="tree-cell" style="--tree-size: {{ stage.size }}; animation-delay: {{ t.i * 0.12 }}s;">
+            <div class="tree-stage">{{ stage.glyph | tree_glyph }}</div>
+            <div class="tree-pot"></div>
+          </div>
         {% endfor %}
       </div>
-      <div class="tree-ground"></div>
+      {# Украшения на земле #}
+      {% for slot in range(max_slots) %}
+        {% if slot in hanging and deco_by_key[hanging[slot]].category == 'ground' %}
+          <span class="deco-ground deco-slot-{{ slot }}">{{ deco_emojis.get(hanging[slot], '✨') }}</span>
+        {% endif %}
+      {% endfor %}
+      <div class="garden-ground"></div>
     </div>
     <div class="tree-info">
       <h2>{{ stage.name }}</h2>
@@ -34,6 +53,11 @@
           <b>{{ next_stage.min - garden.streak_days }}</b> дн. серии</p>
       {% else %}
         <p class="next-stage">👑 Это максимальная стадия! Так держать!</p>
+      {% endif %}
+      {% if to_next_tree > 0 %}
+        <p class="next-stage">🌱 Ещё <b>{{ to_next_tree }}</b> дн. серии — и в саду появится новое дерево!</p>
+      {% elif tree_count >= 8 %}
+        <p class="next-stage">🌳 В твоём саду уже {{ tree_count }} деревьев — целый лес!</p>
       {% endif %}
     </div>
   </section>
@@ -49,8 +73,12 @@
       <div class="mini-label">лучшая серия</div>
     </div>
     <div class="card glass mini-card">
-      <div class="mini-num">🪙 {{ garden.coins }}</div>
+      <div class="mini-num"><svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ garden.coins }}</div>
       <div class="mini-label">монеток (+{{ coin_pass }} за сданный тест, +{{ coin_perfect }} бонус за 100%)</div>
+    </div>
+    <div class="card glass mini-card">
+      <div class="mini-num">🌳 {{ tree_count }}</div>
+      <div class="mini-label">деревьев в саду (новое каждые {{ per_tree }} дн.)</div>
     </div>
     <a class="btn btn-secondary" href="{{ url_for('student_home') }}">← К урокам</a>
   </aside>
@@ -59,15 +87,16 @@
 <!-- Магазин украшений -->
 <section class="card glass shop">
   <div class="section-head">
-    <h2>🛍️ Магазин украшений</h2>
-    <span class="pill pill-soft">на дереве: {{ hanging|length }}/{{ max_slots }}</span>
+    <h2>🛍️ Магазин украшений для сада</h2>
+    <span class="pill pill-soft">в саду: {{ hanging|length }}/{{ max_slots }}</span>
   </div>
   <div class="shop-grid">
     {% for d in decorations %}
       <div class="shop-item card">
         <div class="shop-emoji">{{ d.emoji }}</div>
         <div class="shop-name">{{ d.name }}</div>
-        <div class="shop-price">🪙 {{ d.cost }}</div>
+        <div class="shop-cat">{{ {'hang':'подвесное','sky':'на небе','ground':'на траве'}[d.category] }}</div>
+        <div class="shop-price"><svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ d.cost }}</div>
         {% if garden.coins >= d.cost and not garden.broken and garden.streak_days > 0 and hanging|length < max_slots %}
           <form method="post" action="{{ url_for('garden_buy') }}">
             <input type="hidden" name="deco_key" value="{{ d.key }}">
@@ -76,19 +105,19 @@
         {% elif garden.broken or garden.streak_days <= 0 %}
           <button class="btn btn-locked" disabled>Сначала позанимайся 🍂</button>
         {% elif hanging|length >= max_slots %}
-          <button class="btn btn-locked" disabled>Дерево убрано ✨</button>
+          <button class="btn btn-locked" disabled>Сад уже убран ✨</button>
         {% else %}
-          <button class="btn btn-locked" disabled>Не хватает 🪙</button>
+          <button class="btn btn-locked" disabled>Не хватает <svg class="icon icon-coin"><use href="#i-coin"/></svg></button>
         {% endif %}
       </div>
     {% endfor %}
   </div>
 </section>
 
-<!-- Висящие украшения -->
+<!-- Активные украшения сада -->
 {% if hanging %}
 <section class="card glass worn">
-  <h2>🎊 Висящее на дереве</h2>
+  <h2>🎊 Украшения сада</h2>
   <div class="worn-row">
     {% for slot, key in hanging.items() %}
       {% set d = deco_by_key[key] %}
@@ -96,7 +125,7 @@
         <span class="worn-emoji">{{ d.emoji }}</span>
         <span class="worn-name">{{ d.name }}</span>
         <form method="post" action="{{ url_for('garden_remove', slot=slot) }}">
-          <button class="btn btn-small btn-danger" type="submit">Снять (вернётся 🪙 {{ d.cost // 2 }})</button>
+          <button class="btn btn-small btn-danger" type="submit">Снять (вернётся <svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ d.cost // 2 }})</button>
         </form>
       </div>
     {% endfor %}

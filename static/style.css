@@ -455,23 +455,39 @@ h2 { color: var(--primary-dark); font-weight: 800; }
 .gc-text small { color: #7a6a3a; font-size: .82rem; }
 .gc-close { width: 100%; }
 
-/* ============ 🌳 Сад-дерево ============ */
+/* ============ 🌳 Сад (несколько деревьев + украшения для всего сада) ============ */
 .garden-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; margin-bottom: 18px; }
 @media (max-width: 760px) { .garden-grid { grid-template-columns: 1fr; } }
 .tree-panel { text-align: center; overflow: hidden; }
-.tree-sky { position: relative; height: 300px; border-radius: 20px; margin: 10px 0;
+.garden-scene { position: relative; height: 320px; border-radius: 20px; margin: 10px 0;
   background: linear-gradient(180deg, #bfe9ff 0%, #e8fbff 60%, #d6f5d0 100%); overflow: hidden; }
-.tree-sky.is-broken { filter: grayscale(.8); }
-.tree-ground { position: absolute; bottom: 0; left: 0; right: 0; height: 46px;
+.garden-scene.is-broken { filter: grayscale(.8); }
+.garden-ground { position: absolute; bottom: 0; left: 0; right: 0; height: 46px;
   background: linear-gradient(180deg, #8fd66f, #6cbf4e); border-radius: 50% 50% 0 0 / 30px; }
-.tree-stage { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%) scale(var(--tree-size, 1));
-  transition: transform 1.2s cubic-bezier(.2,.9,.3,1.4); transform-origin: bottom center; }
-.tree-emoji { font-size: 110px; line-height: 1; display: inline-block; animation: treeSway 4s ease-in-out infinite; }
+.trees-row { position: absolute; bottom: 26px; left: 0; right: 0; display: flex;
+  justify-content: space-evenly; align-items: flex-end; z-index: 2; padding: 0 8px; }
+.tree-cell { position: relative; display: flex; flex-direction: column; align-items: center;
+  animation: treePop .7s cubic-bezier(.2,.9,.3,1.4) both; }
+@keyframes treePop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.tree-stage { transform: scale(var(--tree-size, 1)); transform-origin: bottom center;
+  transition: transform 1.2s cubic-bezier(.2,.9,.3,1.4); }
+.tree-svg { width: clamp(48px, 14vw, 96px); height: auto; display: block;
+  animation: treeSway 4s ease-in-out infinite; }
 @keyframes treeSway { 0%,100% { transform: rotate(-2deg);} 50% { transform: rotate(2deg);} }
-.tree-deco { position: absolute; font-size: 30px; animation: decoDrop .8s cubic-bezier(.2,.9,.3,1.4) both, decoSwing 3s ease-in-out infinite; }
-.deco-slot-0 { top: -6px; left: 34%; }
-.deco-slot-1 { top: 26px; left: 8%; }
-.deco-slot-2 { top: 34px; left: 62%; }
+.tree-pot { width: 34px; height: 12px; border-radius: 6px 6px 10px 10px;
+  background: linear-gradient(180deg, #a56a2f, #7c4a1d); margin-top: -4px; }
+/* украшения — позиции внутри всей сцены сада */
+.deco-hang, .deco-sky, .deco-ground { position: absolute; font-size: 30px; z-index: 3;
+  animation: decoDrop .8s cubic-bezier(.2,.9,.3,1.4) both, decoSwing 3s ease-in-out infinite; }
+.deco-hang.deco-slot-0 { top: 10px; left: 20%; }
+.deco-hang.deco-slot-1 { top: 26px; left: 48%; }
+.deco-hang.deco-slot-2 { top: 12px; left: 74%; }
+.deco-sky.deco-slot-0 { top: 8px;  left: 12%; }
+.deco-sky.deco-slot-1 { top: 30px; left: 55%; }
+.deco-sky.deco-slot-2 { top: 10px; left: 82%; }
+.deco-ground.deco-slot-0 { bottom: 30px; left: 8%; }
+.deco-ground.deco-slot-1 { bottom: 34px; left: 45%; }
+.deco-ground.deco-slot-2 { bottom: 30px; right: 8%; }
 @keyframes decoDrop { from { transform: translateY(-90px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes decoSwing { 0%,100% { rotate: -4deg; } 50% { rotate: 4deg; } }
 .tree-wilt { font-size: 40px; }
@@ -481,23 +497,33 @@ h2 { color: var(--primary-dark); font-weight: 800; }
 .next-stage { margin-top: 8px; background: #eef6ff; border-radius: 12px; padding: 8px 12px; display: inline-block; }
 .garden-side { display: flex; flex-direction: column; gap: 14px; }
 .mini-card { text-align: center; padding: 16px; }
-.mini-num { font-size: 30px; font-weight: 900; }
+.mini-num { font-size: 30px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .mini-label { color: var(--text-soft, #666); font-size: 14px; }
+.icon { width: 1em; height: 1em; vertical-align: -0.12em; flex: none; }
+.icon-coin { filter: drop-shadow(0 1px 1px rgba(150,110,0,.35)); }
 .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
 .shop-item { text-align: center; padding: 14px 10px; }
 .shop-emoji { font-size: 42px; }
 .shop-name { font-weight: 800; margin: 4px 0 2px; }
-.shop-price { margin-bottom: 8px; color: #b8860b; font-weight: 800; }
+.shop-cat { font-size: 12px; color: #7c8aa0; margin-bottom: 2px; }
+.shop-price { margin-bottom: 8px; color: #b8860b; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 4px; }
 .worn-row { display: flex; flex-wrap: wrap; gap: 12px; }
-.worn-item { display: flex; align-items: center; gap: 8px; background: #f2fbff; border-radius: 14px; padding: 8px 12px; }
+.worn-item { display: flex; align-items: center; gap: 8px; background: #f2fbff; border-radius: 14px; padding: 8px 12px; flex-wrap: wrap; }
 .worn-emoji { font-size: 26px; }
 .pill-warn { background: #ffe3c2; color: #9a5b00; }
-.garden-edit input { width: 90px; }
+/* панель редактирования сада в кабинете родителя */
+.garden-edit { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.garden-edit input[type="number"] { width: 84px; padding: 6px 8px; border-radius: 10px;
+  border: 1.5px solid #d7e3f2; font: inherit; font-weight: 700; }
+.garden-edit .btn { white-space: nowrap; }
+.garden-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+@media (max-width: 1100px) { .garden-edit { flex-direction: column; align-items: stretch; } .garden-edit input[type="number"] { width: 100%; } }
 .garden-teaser { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit;
   border-radius: 18px; padding: 12px 18px; margin: 14px 0; background: linear-gradient(90deg, #eaffea, #f0fbff);
   box-shadow: 0 4px 16px rgba(30,120,60,.12); transition: transform .15s ease; }
 .garden-teaser:hover { transform: translateY(-2px); }
-.gt-tree { font-size: 38px; }
+.gt-tree { width: 46px; height: 30px; flex: none; }
+.gt-tree .tree-svg { width: 46px; animation: none; }
 .gt-text { flex: 1; }
 .gt-btn { font-weight: 800; color: #1c8a4c; }
 .coins-card { text-align: center; }
