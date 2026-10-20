@@ -30,7 +30,8 @@ ALL_LESSONS = LESSONS + EXTRA_LESSONS
 MAIN_COUNT = len(LESSONS)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "english_app.db")
+# Путь к БД можно переопределить (так тесты не трогают настоящую базу)
+DB_PATH = os.environ.get("ENGLISH_APP_DB") or os.path.join(BASE_DIR, "english_app.db")
 
 app = Flask(__name__)
 
