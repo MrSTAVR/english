@@ -16,6 +16,7 @@ import random
 import sqlite3
 import sys
 from datetime import datetime
+from markupsafe import Markup
 
 from flask import (Flask, abort, flash, g, jsonify, redirect,
                    render_template, request, session, url_for)
@@ -129,9 +130,6 @@ CREATE TABLE IF NOT EXISTS decorations (
 );
 """
 
-MAX_SLOTS = 3      # сколько украшений можно повесить на дерево
-COIN_PASS = 5      # монеток за сданный тест
-COIN_PERFECT = 5   # бонусных монеток за идеальный тест (100%)
 
 
 def init_db():
@@ -377,44 +375,77 @@ def compute_stats(db, student_id=None):
 
 
 # ---------------------------------------------------------------------------
-# 🌳 Сад-дерево: рост от серии дней занятий, монетки, украшения
+# 🌳 Сад: деревья растут от серии дней, монетки, украшения для всего сада
 # ---------------------------------------------------------------------------
 
+MAX_SLOTS = 3      # сколько украшений можно разместить в саду
+COIN_PASS = 5      # монеток за сданный тест
+COIN_PERFECT = 5   # бонусных монеток за идеальный тест (100%)
+TREES_START = 1    # стартовое число деревьев в саду
+TREES_MAX = 8      # максимум деревьев
+TREES_PER_DAYS = 3 # каждое новое дерево — за каждые N дней серии
+
+
+def tree_count_for(streak_days):
+    """Сколько деревьев в саду при данной серии дней."""
+    return min(TREES_MAX, TREES_START + streak_days // TREES_PER_DAYS)
+
+
+# category: hang (подвесные над садом) / ground (на траве) / sky (на небе)
 DECORATIONS = [
-    {"key": "bow",       "emoji": "🎀", "name": "Бантик",          "cost": 5},
-    {"key": "star",      "emoji": "⭐", "name": "Звёздочка",        "cost": 8},
-    {"key": "butterfly", "emoji": "🦋", "name": "Бабочка",          "cost": 10},
-    {"key": "ladybug",   "emoji": "🐞", "name": "Божья коровка",    "cost": 12},
-    {"key": "bell",      "emoji": "🔔", "name": "Колокольчик",      "cost": 15},
-    {"key": "heart",     "emoji": "💖", "name": "Сердечко",         "cost": 18},
-    {"key": "lantern",   "emoji": "🏮", "name": "Фонарик",          "cost": 20},
-    {"key": "crown",     "emoji": "👑", "name": "Корона",           "cost": 25},
-    {"key": "rainbow",   "emoji": "🌈", "name": "Радуга",           "cost": 30},
-    {"key": "unicorn",   "emoji": "🦄", "name": "Единорог",         "cost": 40},
+    {"key": "garland",   "emoji": "🎐", "name": "Гирлянда",       "cost": 10, "category": "hang"},
+    {"key": "lanterns",  "emoji": "🏮", "name": "Фонарики",       "cost": 18, "category": "hang"},
+    {"key": "flags",     "emoji": "🚩", "name": "Флажки",         "cost": 12, "category": "hang"},
+    {"key": "swing",     "emoji": "🪀", "name": "Качели",         "cost": 22, "category": "hang"},
+    {"key": "rainbow",   "emoji": "🌈", "name": "Радуга",         "cost": 30, "category": "sky"},
+    {"key": "sun",       "emoji": "☀️", "name": "Солнышко",       "cost": 8,  "category": "sky"},
+    {"key": "stars",     "emoji": "✨", "name": "Звёзды",         "cost": 15, "category": "sky"},
+    {"key": "birds",     "emoji": "🐦", "name": "Птички",         "cost": 12, "category": "sky"},
+    {"key": "butterfly", "emoji": "🦋", "name": "Бабочки",        "cost": 10, "category": "ground"},
+    {"key": "mushrooms", "emoji": "🍄", "name": "Грибочки",       "cost": 14, "category": "ground"},
+    {"key": "bench",     "emoji": "🪑", "name": "Лавочка",        "cost": 20, "category": "ground"},
+    {"key": "fence",     "emoji": "🚧", "name": "Заборчик",       "cost": 6,  "category": "ground"},
 ]
 DECOS_BY_KEY = {d["key"]: d for d in DECORATIONS}
 
+# SVG-глифы стадий дерева (видны на всех платформах, в отличие от emoji)
+TREE_GLYPHS = {
+    "acorn": '''<g><path d="M30 26c0-8 4-12 10-12s10 4 10 12-4 16-10 16-10-8-10-16z" fill="#a56a2f"/><path d="M28 26q12-10 24 0-4 6-12 6-8 0-12-6z" fill="#6d4322"/></g>''',
+    "sprout": '''<g><path d="M40 46V28" stroke="#3fae5a" stroke-width="4" stroke-linecap="round"/><path d="M40 32C32 30 28 24 28 18c8 0 13 6 12 14z" fill="#5cc46f"/><path d="M40 32c8-2 12-8 12-14-8 0-13 6-12 14z" fill="#41b257"/></g>''',
+    "seedling": '''<g><path d="M40 48V22" stroke="#3fae5a" stroke-width="4" stroke-linecap="round"/><path d="M40 30C30 28 24 20 24 12c12 0 18 8 16 18z" fill="#5cc46f"/><path d="M40 30c10-2 16-10 16-18-12 0-18 8-16 18z" fill="#41b257"/><path d="M40 22c-3-5-2-10 0-14 3 4 3 9 0 14z" fill="#6fd47f"/></g>''',
+    "bushy": '''<g><path d="M40 48V26" stroke="#8a5a2b" stroke-width="5" stroke-linecap="round"/><circle cx="30" cy="26" r="10" fill="#5cc46f"/><circle cx="50" cy="26" r="10" fill="#5cc46f"/><circle cx="40" cy="18" r="11" fill="#6fd47f"/></g>''',
+    "young": '''<g><path d="M40 48V24" stroke="#8a5a2b" stroke-width="5" stroke-linecap="round"/><path d="M40 32l-8-6M40 28l8-6" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><circle cx="40" cy="16" r="13" fill="#5cc46f"/><circle cx="30" cy="22" r="8" fill="#41b257"/><circle cx="50" cy="22" r="8" fill="#6fd47f"/></g>''',
+    "tree": '''<g><path d="M40 48V22" stroke="#8a5a2b" stroke-width="6" stroke-linecap="round"/><path d="M40 30l-10-8M40 26l10-8" stroke="#8a5a2b" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="15" r="14" fill="#41b257"/><circle cx="27" cy="22" r="9" fill="#5cc46f"/><circle cx="53" cy="22" r="9" fill="#3fae5a"/></g>''',
+    "lush": '''<g><path d="M40 48V20" stroke="#7a4d22" stroke-width="7" stroke-linecap="round"/><path d="M40 30l-12-9M40 24l12-9" stroke="#7a4d22" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="14" r="15" fill="#3fae5a"/><circle cx="25" cy="20" r="10" fill="#5cc46f"/><circle cx="55" cy="20" r="10" fill="#41b257"/><circle cx="40" cy="24" r="10" fill="#6fd47f"/></g>''',
+    "blooming": '''<g><path d="M40 48V20" stroke="#7a4d22" stroke-width="7" stroke-linecap="round"/><path d="M40 30l-12-9M40 24l12-9" stroke="#7a4d22" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="14" r="15" fill="#41b257"/><circle cx="25" cy="20" r="10" fill="#5cc46f"/><circle cx="55" cy="20" r="10" fill="#3fae5a"/><circle cx="34" cy="10" r="3" fill="#ff8fb3"/><circle cx="47" cy="15" r="3" fill="#ffd166"/><circle cx="40" cy="22" r="3" fill="#ff8fb3"/></g>''',
+    "big": '''<g><path d="M40 48V18" stroke="#6d4322" stroke-width="8" stroke-linecap="round"/><path d="M40 30l-14-10M40 24l14-10M40 36l10 6" stroke="#6d4322" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="12" r="16" fill="#3fae5a"/><circle cx="22" cy="20" r="11" fill="#5cc46f"/><circle cx="58" cy="20" r="11" fill="#41b257"/><circle cx="40" cy="24" r="10" fill="#6fd47f"/></g>''',
+    "huge": '''<g><path d="M40 48V16" stroke="#6d4322" stroke-width="9" stroke-linecap="round"/><path d="M40 28l-16-10M40 22l16-10M40 36l12 6M40 36l-12 6" stroke="#6d4322" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="10" r="17" fill="#3fae5a"/><circle cx="20" cy="18" r="12" fill="#5cc46f"/><circle cx="60" cy="18" r="12" fill="#41b257"/><circle cx="40" cy="22" r="11" fill="#6fd47f"/><circle cx="30" cy="8" r="3" fill="#ffd166"/><circle cx="50" cy="12" r="3" fill="#ff8fb3"/></g>''',
+    "legendary": '''<g><path d="M40 48V14" stroke="#5a3a1e" stroke-width="10" stroke-linecap="round"/><path d="M40 26l-18-10M40 20l18-10M40 36l14 6M40 36l-14 6" stroke="#5a3a1e" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="8" r="18" fill="#2f9e44"/><circle cx="18" cy="16" r="13" fill="#5cc46f"/><circle cx="62" cy="16" r="13" fill="#41b257"/><circle cx="40" cy="20" r="12" fill="#6fd47f"/><path d="M33 -2l3 5 3-5 3 5 3-5v7h-12z" fill="#ffd166" transform="translate(2,6)"/><circle cx="28" cy="6" r="2.5" fill="#fff3bf"/><circle cx="52" cy="10" r="2.5" fill="#fff3bf"/></g>''',
+}
+
 TREE_STAGES = [
-    {"min": 0,  "size": 0.45, "emoji": "🌰", "name": "Жёлудь",
+    {"min": 0,  "size": 0.55, "glyph": "acorn", "emoji": "🌰", "name": "Жёлудь",
      "msg": "Всё большое начинается с маленького зёрнышка!"},
-    {"min": 1,  "size": 0.55, "emoji": "🌱", "name": "Росток",
+    {"min": 1,  "size": 0.65, "glyph": "sprout", "emoji": "🌱", "name": "Росток",
      "msg": "Твой первый день занятий — росток проклюнулся!"},
-    {"min": 2,  "size": 0.65, "emoji": "🌿", "name": "Отросток",
+    {"min": 2,  "size": 0.72, "glyph": "seedling", "emoji": "🌿", "name": "Отросток",
      "msg": "Два дня подряд — стебелек тянется к солнцу!"},
-    {"min": 3,  "size": 0.75, "emoji": "🪴", "name": "Саженец",
-     "msg": "Три дня серии — саженец крепчает!"},
-    {"min": 5,  "size": 0.85, "emoji": "🌳", "name": "Молодое деревце",
+    {"min": 3,  "size": 0.80, "glyph": "bushy", "emoji": "🪴", "name": "Саженец",
+     "msg": "Три дня серии — саженец крепчает, и в саду появляется второе дерево!"},
+    {"min": 5,  "size": 0.88, "glyph": "young", "emoji": "🌳", "name": "Молодое деревце",
      "msg": "Пять дней подряд! Деревце уже гордится тобой."},
-    {"min": 7,  "size": 0.92, "emoji": "🌳", "name": "Крепкое дерево",
+    {"min": 7,  "size": 0.95, "glyph": "tree", "emoji": "🌳", "name": "Крепкое дерево",
      "msg": "Целая неделя занятий — дерево стало настоящим!"},
-    {"min": 10, "size": 1.0,  "emoji": "🌳", "name": "Сильное дерево",
+    {"min": 10, "size": 1.0,  "glyph": "lush", "emoji": "🌳", "name": "Сильное дерево",
      "msg": "Десять дней! Такое дерево не сломает ни один ветер."},
-    {"min": 14, "size": 1.08, "emoji": "🌳", "name": "Мудрое дерево",
-     "msg": "Две недели подряд — в ветвях живёт мудрость."},
-    {"min": 21, "size": 1.16, "emoji": "🌳", "name": "Волшебное дерево",
+    {"min": 14, "size": 1.05, "glyph": "blooming", "emoji": "🌸", "name": "Цветущее дерево",
+     "msg": "Две недели подряд — твой сад начинает цвести!"},
+    {"min": 21, "size": 1.12, "glyph": "big", "emoji": "🌳", "name": "Раскидистое дерево",
      "msg": "ТРИ НЕДЕЛИ! Это уже настоящая магия ✨"},
-    {"min": 30, "size": 1.25, "emoji": "🌳", "name": "Легендарное дерево",
-     "msg": "Месяц каждый день. Ты — легенда! 👑"},
+    {"min": 30, "size": 1.2,  "glyph": "huge", "emoji": "🌳", "name": "Огромное дерево",
+     "msg": "Месяц каждый день — такое дерево видно издалека!"},
+    {"min": 45, "size": 1.28, "glyph": "legendary", "emoji": "👑", "name": "Легендарное дерево",
+     "msg": "Ты — легенда! Твой сад невозможно забыть! 👑"},
 ]
 
 
@@ -548,6 +579,8 @@ def garden_view(db, student_id):
     counts = {}
     for r in owned:
         counts[r["deco_key"]] = counts.get(r["deco_key"], 0) + 1
+    tcount = tree_count_for(g["streak_days"])
+    trees = [{"i": i, "coin_bonus": (i + 1) * 2} for i in range(tcount)]
     return {
         "garden": g,
         "stage": stage,
@@ -558,6 +591,11 @@ def garden_view(db, student_id):
         "max_slots": MAX_SLOTS,
         "coin_pass": COIN_PASS,
         "coin_perfect": COIN_PERFECT,
+        "tree_count": tcount,
+        "trees": trees,
+        "per_tree": TREES_PER_DAYS,
+        "to_next_tree": (tcount - TREES_START + 1) * TREES_PER_DAYS - g["streak_days"]
+                        if tcount < TREES_MAX else 0,
     }
 
 
@@ -711,6 +749,16 @@ def mistakes_count(mistakes_json):
 
 
 app.jinja_env.filters["mistakes_count"] = mistakes_count
+
+
+@app.template_filter("tree_glyph")
+def tree_glyph(glyph_key):
+    """SVG-стадия дерева (надёжнее emoji: не зависит от шрифта системы)."""
+    inner = TREE_GLYPHS.get(glyph_key) or TREE_GLYPHS["sprout"]
+    return Markup(
+        '<svg class="tree-svg" viewBox="0 0 80 52" xmlns="http://www.w3.org/2000/svg">'
+        f'{inner}</svg>'
+    )
 
 # ---------------------------------------------------------------------------
 # Доступность уроков: следующий открыт, если предыдущий сдан
@@ -988,7 +1036,8 @@ def student_home():
                            next_lesson=next_lesson,
                            earned_count=earned_count,
                            garden=garden,
-                           tree_stage=tree_stage(garden["streak_days"]))
+                           tree_stage=tree_stage(garden["streak_days"]),
+                           tree_count=tree_count_for(garden["streak_days"]))
 
 
 @app.route("/lesson/<int:lesson_id>")
@@ -1151,7 +1200,7 @@ def garden_buy():
         session["garden_flash"] = f"На дереве нет свободных мест (максимум {MAX_SLOTS}). Сними одно украшение 😉"
     elif g["coins"] < deco["cost"]:
         session["garden_flash"] = (f"Не хватает монеток: нужно {deco['cost']}, "
-                                   f"а у тебя {g['coins']}. Пройди ещё пару тестов! 🪙")
+                                   f"а у тебя {g['coins']}. Пройди ещё пару тестов! 0001FA99 (МОНЕТКИ)")
     else:
         db.execute("UPDATE garden SET coins=coins-? WHERE student_id=?",
                    (deco["cost"], student["id"]))
@@ -1183,7 +1232,7 @@ def garden_remove(slot):
                    (refund, student["id"]))
         db.commit()
         session["garden_flash"] = (f"{deco['emoji']} «{deco['name']}» снято с дерева, "
-                                   f"вернулось {refund} 🪙")
+                                   f"вернулось {refund} монеток")
     return redirect(url_for("garden_page"))
 
 
@@ -1209,6 +1258,7 @@ def parent_dashboard():
                               "earned_count": len(earned),
                               "garden": sgarden,
                               "tree_stage": tree_stage(sgarden["streak_days"]),
+                              "tree_count": tree_count_for(sgarden["streak_days"]),
                               "deco_count": db.execute(
                                   "SELECT COUNT(*) c FROM decorations WHERE student_id=?",
                                   (st["id"],)).fetchone()["c"]})

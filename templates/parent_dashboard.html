@@ -26,9 +26,12 @@
           <td>{{ sst.total_seconds|human_time }}</td>
           <td>🏅 {{ card.earned_count }}</td>
           <td>
-            {{ card.tree_stage.emoji }} серия <b>{{ card.garden.streak_days }}</b> дн. ·
-            🪙 <b>{{ card.garden.coins }}</b> · украшений {{ card.deco_count }}
-            {% if card.garden.broken %}<span class="pill pill-warn">🍂 прервана</span>{% endif %}
+            <div class="garden-summary">
+              {{ card.tree_stage.emoji }} серия <b>{{ card.garden.streak_days }}</b> дн. ·
+              <svg class="icon icon-coin"><use href="#i-coin"/></svg> <b>{{ card.garden.coins }}</b> ·
+              🌳 <b>{{ card.tree_count }}</b> дер. · украшений {{ card.deco_count }}
+              {% if card.garden.broken %}<span class="pill pill-warn">🍂 прервана</span>{% endif %}
+            </div>
             <form method="post" action="{{ url_for('parent_update_garden', sid=st.id) }}" class="inline-form garden-edit">
               <input type="number" name="streak_days" min="0" max="999" placeholder="дней серии" title="Дней непрерывных занятий">
               <input type="number" name="coins" min="0" max="9999" placeholder="монеты" title="Количество монеток">
