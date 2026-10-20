@@ -10,12 +10,13 @@ os.environ["ENGLISH_APP_DB"] = os.path.join(
 import pytest  # noqa: E402
 
 import app as appmod  # noqa: E402
+from tests.helpers import dbmod  # noqa: E402
 
 
 @pytest.fixture
 def flask_app(tmp_path, monkeypatch):
     """Приложение со свежей пустой БД на каждый тест."""
-    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "test.db"))
+    monkeypatch.setattr(dbmod(), "DB_PATH", str(tmp_path / "test.db"))
     appmod.init_db()
     appmod.app.config.update(TESTING=True)
     return appmod.app
