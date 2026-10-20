@@ -29,8 +29,9 @@ def correct_fields(q, i):
     if t == "order":
         return {f"q{i}_order": q["answer"]}
     if t == "match":
-        pairs = ",".join(f"{k}:{v}" for k, v in sorted(
-            (int(a), int(b)) for a, b in q["pairs"].items()))
+        from app import match_columns
+        _, _, expected = match_columns(q)
+        pairs = ",".join(f"{k}:{v}" for k, v in sorted(expected.items()))
         return {f"q{i}_match": pairs}
     if t == "sort":
         s = ";".join(x.partition("|")[0] + "|" + x.partition("|")[2] for x in q["words"])
@@ -68,10 +69,24 @@ check("урок 2 заблокирован", "Закрой предыдущий 
 check("блок «Дополнительные уроки» на главной", "Дополнительные уроки" in body)
 check("доп. уроки не заблокированы", "Бонус-урок" in body)
 # 1b. Дополнительные уроки доступны ВСЕГДА (сразу после входа, id 101..105)
-for eid in (101, 102, 103, 104, 105):
+from data.extra_lessons import EXTRA_LESSONS as _EXTRAS
+for les_x in _EXTRAS:
+    eid = les_x["id"]
     re_ = client.get(f"/lesson/{eid}")
+    body_x = re_.get_data(as_text=True)
     check(f"доп. урок {eid} открывается без блокировки",
-          re_.status_code == 200 and "Начать" not in re_.get_data(as_text=True)[:200])
+          re_.status_code == 200 and "Дополнительный урок" not in body_x[:200])
+    # match в формате пар должен отдавать корректный эталон JS
+    if any(q.get("type") == "match" and "left" not in q for q in les_x["exercises"] + les_x["test"]):
+        check(f"доп. урок {eid}: match-эталон в формате dict",
+              "&#34;0&#34;: 0" in body_x or '"0": 0' in body_x)
+    # сдаём тест доп. урока идеально (включая парный match)
+    attempt_id = re.search(r'name="attempt_id" value="(\d+)"', body_x).group(1)
+    data = {"attempt_id": attempt_id, "seconds": 300}
+    for i, q in enumerate(les_x["test"]):
+        data.update(correct_fields(q, i))
+    r2 = client.post(f"/lesson/{eid}/submit", data=data)
+    check(f"доп. урок {eid} сдаётся на 100%", "Идеально" in r2.get_data(as_text=True))
 r = client.get("/student/garden")
 check("страница сада открывается без ошибки", r.status_code == 200)
 check("помощник на главной ученицы (home)", '"page": "home"' in body)
@@ -130,10 +145,12 @@ check("ачивка Первый шаг", "Первый шаг" in body)
 r = client.get("/student")
 body = r.get_data(as_text=True)
 check("урок 2 разблокирован", "Начать урок" in body)
-check(f"трекер показывает 1/{len(LESSONS_BY_ID)}", f"1/{len(LESSONS_BY_ID)}" in body)
+from app import MAIN_COUNT
+check(f"трекер показывает 1/{MAIN_COUNT}", f"1/{MAIN_COUNT}" in body)
 
 # 7. Пройдём все оставшиеся уроки идеально, чтобы проверить ачивки
-for lid in range(2, len(LESSONS_BY_ID) + 1):
+from data.lessons import LESSONS as MAIN_LESSONS
+for lid in [l['id'] for l in MAIN_LESSONS if l['id'] != 1]:
     les = LESSONS_BY_ID[lid]
     r = client.get(f"/lesson/{lid}")
     body = r.get_data(as_text=True)
