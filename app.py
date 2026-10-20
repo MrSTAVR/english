@@ -251,6 +251,23 @@ def parse_sort(raw):
     return out
 
 
+def match_columns(q):
+    """Столбцы match-задания в обоих форматах:
+    - колоночный: {"left": [...], "right": [...], "pairs": {0:1,...}}
+    - парный:     {"pairs": [["слово", "перевод"], ...]}
+    Возвращает (left, right, expected), где expected — dict {left_idx: right_idx}.
+    """
+    if q.get("left") and q.get("right"):
+        left, right = list(q["left"]), list(q["right"])
+        expected = {int(k): int(v) for k, v in q.get("pairs", {}).items()}
+    else:
+        prs = [tuple(p) for p in q.get("pairs", [])]
+        left = [l for l, _ in prs]
+        right = [r for _, r in prs]
+        expected = {i: i for i in range(len(prs))}
+    return left, right, expected
+
+
 def grade_question(q, given):
     """Возвращает (is_correct, correct_display)."""
     qtype = q.get("type", "choice")
@@ -269,7 +286,7 @@ def grade_question(q, given):
     if qtype == "match":
         left, right, expected = match_columns(q)
         got = parse_pairs(given)
-        ok = got == expected
+        ok = got == expected and len(got) == len(left)
         disp = ", ".join(f"{left[li]} ↔ {right[ri]}"
                          for li, ri in sorted(expected.items()))
         return ok, disp
@@ -793,6 +810,7 @@ def match_columns(q):
 
 def shuffle_match(q):
     """Для задания 'match': правый столбик перемешиваем стабильно.
+    Работает с обоими форматами (left/right и пары [[l, r], ...]).
     Возвращает список [(right_idx, text)] — порядок отображения."""
     _, right, _ = match_columns(q)
     rights = list(range(len(right)))
@@ -831,6 +849,15 @@ def match_answer_json(q):
 app.jinja_env.filters["match_cols"] = match_cols
 app.jinja_env.filters["match_answer"] = match_answer_json
 app.jinja_env.filters["shuffle_match"] = shuffle_match
+
+
+def match_expected_json(q):
+    """Эталон пар для JS (data-pairs/data-answer) в обоих форматах: {left_idx: right_idx}."""
+    _, _, expected = match_columns(q)
+    return json.dumps(expected, ensure_ascii=False)
+
+
+app.jinja_env.filters["match_expected"] = match_expected_json
 app.jinja_env.filters["shuffle_sort"] = shuffle_sort
 
 
@@ -858,19 +885,12 @@ def validate_lessons():
                     if need != sorted(bank):
                         errors.append(f"{ref} — слова в банке не совпадают с ответом")
                 elif t == "match":
-                    try:
-                        left, right, pairs = match_columns(q)
-                    except Exception:
-                        errors.append(f"{ref} — нераспознанный формат match")
-                        continue
-                    if len(left) != len(right) or not left:
-                        errors.append(f"{ref} — разная длина колонок в match")
-                    norm = {}
-                    for k, v in pairs.items():
-                        ki, vi = int(k), int(v)
+                    left, right, norm = match_columns(q)
+                    if not left or len(left) != len(right):
+                        errors.append(f"{ref} — пустые или разной длины столбцы в match")
+                    for ki, vi in norm.items():
                         if not 0 <= ki < len(left) or not 0 <= vi < len(right):
                             errors.append(f"{ref} — выход индекса пары за пределы {ki}:{vi}")
-                        norm[ki] = vi
                     if len(norm) != len(left) or sorted(norm.values()) != list(range(len(right))):
                         errors.append(f"{ref} — пары должны быть полным взаимно-однозначным соответствием")
                 elif t == "sort":
