@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Мои уроки — English Fun{% endblock %}
+{% block content %}
+
+{% if new_badge %}
+  {% for key in new_badge %}
+    {% for a in achievements if a.key == key %}
+    <div class="badge-popup">🎉 Новая ачивка: {{ a.emoji }} <b>{{ a.title }}</b>!</div>
+    {% endfor %}
+  {% endfor %}
+{% endif %}
+
+<div class="welcome-row">
+  <div class="welcome-avatar">{{ emoji or '🎒' }}</div>
+  <div>
+    <h1>Привет, {{ name }}! 👋</h1>
+    <p class="welcome-sub">Учим английский весело — шаг за шагом 🐣</p>
+  </div>
+</div>
+
+<!-- 1. Трекер успеваемости -->
+<section class="card tracker glass">
+  <div class="section-head">
+    <h2>📈 Мой трекер успеваемости</h2>
+    <span class="pill pill-soft">{{ earned_count }}/{{ achievements|length }} 🏅 наград</span>
+  </div>
+  <div class="stats-grid">
+    <div class="stat stat-c1"><span class="stat-icon">📚</span><span class="stat-num">{{ stats.lessons_completed }}/{{ total_lessons }}</span><span class="stat-label">уроков пройдено</span></div>
+    <div class="stat stat-c2"><span class="stat-icon">⭐</span><span class="stat-num">{% if stats.avg_score %}{{ "%.0f"|format(stats.avg_score) }}%{% else %}—{% endif %}</span><span class="stat-label">средний балл тестов</span></div>
+    <div class="stat stat-c3"><span class="stat-icon">🧠</span><span class="stat-num">{{ stats.words_learned }}</span><span class="stat-label">слов выучено</span></div>
+    <div class="stat stat-c4"><span class="stat-icon">⏰</span><span class="stat-num">{{ stats.total_seconds|human_time }}</span><span class="stat-label">время занятий</span></div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" style="width: {{ 100 * stats.lessons_completed / total_lessons }}%"><span class="progress-knob">🐣</span></div></div>
+    <span class="progress-pct">{{ "%.0f"|format(100 * stats.lessons_completed / total_lessons) }}%</span>
+  </div>
+</section>
+
+<!-- Сад: короткий тизер -->
+<a class="garden-teaser glass" href="{{ url_for('garden_page') }}">
+  <span class="gt-tree">{{ tree_stage.glyph | tree_glyph }}</span>
+  <span class="gt-text">
+    <b>{{ tree_stage.name }}</b> · 🔥 серия {{ garden.streak_days }} дн. · <svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ garden.coins }} монеток · 🌳 {{ tree_count }} дер.
+  </span>
+  <span class="gt-btn">Открыть сад →</span>
+</a>
+
+<!-- 2. Кнопка «Следующий урок» -->
+{% if next_lesson %}
+  <a class="next-cta" href="{{ url_for('lesson_page', lesson_id=next_lesson.id) }}">
+    <span class="next-cta-emoji">{{ next_lesson.emoji }}</span>
+    <span class="next-cta-text">
+      <span class="next-cta-kicker">Твой следующий урок</span>
+      <span class="next-cta-title">Урок {{ next_lesson.id }} — {{ next_lesson.title }}</span>
+      <span class="next-cta-sub">~15 минут · тест из {{ next_lesson.test|length }} вопросов</span>
+    </span>
+    <span class="next-cta-btn">Продолжить ▶️</span>
+  </a>
+{% elif stats.lessons_completed and stats.lessons_completed >= total_lessons %}
+  <div class="next-cta next-cta-done">
+    <span class="next-cta-emoji">🏆</span>
+    <span class="next-cta-text">
+      <span class="next-cta-kicker">Финиш!</span>
+      <span class="next-cta-title">Все уроки пройдены!</span>
+      <span class="next-cta-sub">Можно повторять любимые уроки и улучшать результат 🔁</span>
+    </span>
+  </div>
+{% endif %}
+
+<!-- 3. Мои уроки (компактный вид: последний пройденный, следующий и первый закрытый) -->
+<section>
+  <div class="section-head">
+    <h2 class="section-title">📚 Мои уроки</h2>
+    <span class="pill pill-soft">{{ stats.lessons_completed }}/{{ total_lessons }} пройдено</span>
+  </div>
+  <div class="lesson-grid" id="lessonGrid">
+    {% for info in lessons %}
+      {% set l = info.lesson %}
+      <div class="lesson-card card {{ 'lesson-done' if info.done }} {{ 'lesson-locked' if info.locked }} {{ 'lesson-extra-hidden' if not info.highlight }}">
+        <div class="lesson-top">
+          <div class="lesson-emoji">{{ l.emoji if info.locked is false or info.done else '🔒' }}</div>
+          <div class="lesson-num">Урок {{ l.id }}</div>
+          {% if info.done %}<div class="ribbon">✅ Пройден</div>{% endif %}
+          {% if l.id == (next_lesson.id if next_lesson else None) %}<div class="ribbon ribbon-now">▶ Сейчас</div>{% endif %}
+        </div>
+        <h3>{{ l.title }}</h3>
+        <p>{{ l.description }}</p>
+        <div class="lesson-meta">
+          <span>⏱️ ~15 мин</span><span>🧠 {{ l.material|length }} слов</span><span>✅ тест {{ l.test|length }}</span>
+        </div>
+        {% if info.done %}
+          <div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '🌟' if info.best_score >= 90 }}</div>
+        {% endif %}
+        {% if info.locked %}
+          <button class="btn btn-locked" disabled>🔒 Закрой предыдущий урок</button>
+        {% elif info.done %}
+          <a class="btn btn-secondary" href="{{ url_for('lesson_page', lesson_id=l.id) }}">Повторить ещё раз 🔁</a>
+        {% else %}
+          <a class="btn btn-primary" href="{{ url_for('lesson_page', lesson_id=l.id) }}">Начать урок ▶️</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  {% if hidden_lessons_count %}
+    <div class="show-all-wrap">
+      <button type="button" class="btn btn-secondary show-all-btn" id="showAllLessonsBtn"
+              data-more="Показать все уроки ({{ hidden_lessons_count }} скрыто) ⬇️"
+              data-less="Свернуть уроки ⬆️">
+        Показать все уроки ({{ hidden_lessons_count }} скрыто) ⬇️
+      </button>
+    </div>
+  {% endif %}
+</section>
+
+<!-- 3б. Дополнительные уроки — всегда открыты -->
+<section>
+  <div class="section-head">
+    <h2 class="section-title">🎁 Дополнительные уроки</h2>
+    <span class="pill pill-soft">{{ extras_done }} из {{ total_extras }} пройдено · открыты всегда 🔓</span>
+  </div>
+  <p class="section-sub">Иди в любом порядке и в любое время — они не блокируются основным курсом и помогают учить полезные слова.</p>
+  <div class="lesson-grid">
+    {% for info in extra_lessons %}
+      {% set l = info.lesson %}
+      <div class="lesson-card card {{ 'lesson-done' if info.done }}">
+        <div class="lesson-top">
+          <div class="lesson-emoji">{{ l.emoji }}</div>
+          <div class="lesson-num">Бонус-урок</div>
+          {% if info.done %}<div class="ribbon">✅ Пройден</div>{% endif %}
+        </div>
+        <h3>{{ l.title }}</h3>
+        <p>{{ l.description }}</p>
+        <div class="lesson-meta">
+          <span>⏱️ ~10 мин</span><span>🧠 {{ l.material|length }} слов</span><span>✅ тест {{ l.test|length }}</span>
+        </div>
+        {% if info.done %}
+          <div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '🌟' if info.best_score >= 90 }}</div>
+          <a class="btn btn-secondary" href="{{ url_for('lesson_page', lesson_id=l.id) }}">Повторить ещё раз 🔁</a>
+        {% else %}
+          <a class="btn btn-primary" href="{{ url_for('lesson_page', lesson_id=l.id) }}">Начать урок ▶️</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- 4. Ачивки (теперь внизу) -->
+<section class="card glass ach-panel">
+  <div class="section-head">
+    <h2>🏅 Мои достижения</h2>
+    <span class="pill pill-soft">{{ earned_count }} из {{ achievements|length }}</span>
+  </div>
+  <div class="ach-grid">
+    {% for a in achievements %}
+      <div class="ach {{ 'ach-earned' if a.earned else 'ach-locked' }}" title="{{ a.desc }}">
+        <div class="ach-emoji">{{ a.emoji if a.earned else '❔' }}</div>
+        <div class="ach-title">{{ a.title }}</div>
+        <div class="ach-desc">{{ a.desc }}</div>
+        {% if a.earned %}<div class="ach-date">🎁 {{ a.earned_at[:10] }}</div>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var btn = document.getElementById('showAllLessonsBtn');
+  var grid = document.getElementById('lessonGrid');
+  if (!btn || !grid) return;
+  btn.addEventListener('click', function () {
+    var expanded = grid.classList.toggle('lessons-expanded');
+    btn.textContent = expanded ? btn.dataset.less : btn.dataset.more;
+  });
+})();
+</script>
+{% endblock %}
