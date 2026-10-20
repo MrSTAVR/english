@@ -10,7 +10,7 @@
   {% if student_cards %}
   <table class="tbl">
     <thead>
-      <tr><th>Ученик</th><th>Логин</th><th>Прогресс</th><th>Средний балл</th><th>Время занятий</th><th>Ачивок</th><th>Действия</th></tr>
+      <tr><th>Ученик</th><th>Логин</th><th>Прогресс</th><th>Средний балл</th><th>Время занятий</th><th>Ачивок</th><th>🌳 Сад (серия / монеты)</th><th>Действия</th></tr>
     </thead>
     <tbody>
       {% for card in student_cards %}
@@ -25,6 +25,16 @@
           <td>{% if sst.avg_score %}{{ "%.0f"|format(sst.avg_score) }}%{% else %}—{% endif %}</td>
           <td>{{ sst.total_seconds|human_time }}</td>
           <td>🏅 {{ card.earned_count }}</td>
+          <td>
+            {{ card.tree_stage.emoji }} серия <b>{{ card.garden.streak_days }}</b> дн. ·
+            🪙 <b>{{ card.garden.coins }}</b> · украшений {{ card.deco_count }}
+            {% if card.garden.broken %}<span class="pill pill-warn">🍂 прервана</span>{% endif %}
+            <form method="post" action="{{ url_for('parent_update_garden', sid=st.id) }}" class="inline-form garden-edit">
+              <input type="number" name="streak_days" min="0" max="999" placeholder="дней серии" title="Дней непрерывных занятий">
+              <input type="number" name="coins" min="0" max="9999" placeholder="монеты" title="Количество монеток">
+              <button class="btn btn-small" type="submit">💾 Обновить сад</button>
+            </form>
+          </td>
           <td class="actions-cell">
             <form method="post" action="{{ url_for('reset_student_password', sid=st.id) }}" class="inline-form">
               <input type="password" name="password" placeholder="новый пароль" minlength="4" required>

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=4">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
 </head>
 <body>
 <header class="topbar">
@@ -15,6 +15,7 @@
   <nav>
     {% if session.get('role') == 'student' %}
       <a href="{{ url_for('student_home') }}">🎓 Мои уроки</a>
+      <a href="{{ url_for('garden_page') }}">🌳 Моё дерево</a>
       <a href="{{ url_for('logout') }}">Выйти</a>
     {% elif session.get('role') == 'parent' %}
       <a href="{{ url_for('parent_dashboard') }}">📊 Кабинет родителя</a>
@@ -37,7 +38,7 @@
 
 {# ---------- Анимированный помощник Чик-чик (правый нижний угол) ---------- #}
 <script>window.MASCOT_SETTINGS = {{ mascot|tojson }};</script>
-<script src="{{ url_for('static', filename='mascot.js') }}?v=4"></script>
+<script src="{{ url_for('static', filename='mascot.js') }}?v=5"></script>
 
 {% block scripts %}{% endblock %}
 </body>

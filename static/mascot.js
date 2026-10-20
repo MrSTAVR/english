@@ -52,6 +52,12 @@
     dragHint: 'Перетащи карточку мышкой на пару ей 🖱️ или просто кликни карточку, потом цель ✋',
     allMatched: 'Все пары соединены! Жми «Проверить ✔️» 😊',
     allSorted: 'Все слова в корзинах! Проверяй — удачи! 🍀',
+    coinsEarned: 'И не забудь: тебе начислено {n} монеток 🪙 — можно купить украшение для дерева!',
+    gardenHello: ['Ого, какой у тебя сад! 🌳 Растёт не по дням, а по урокам!',
+                  'Привет в твоём саду! 👋 Видишь, какого размера стало дерево? Это всё твоя серия занятий!'],
+    gardenBroken: 'Твоя серия прервалась, и дерево сдулось до зёрнышка 🍂 Начни урок сегодня — и оно оживёт!',
+    gardenStreak: 'Серия {n} дн. подряд — дерево растёт как на дрожжах! 🌱➡️🌳',
+    gardenShop: 'Кстати, за монетки 🪙 можно нарядить дерево. Чем больше занимаешься — тем красивее сад!',
     resultPass100: 'ВОСХИТИТЕЛЬНО! 100%! 🎆🎆 Я знал(а), что ты сможешь!',
     resultPass: 'Урок пройден! 🎉 Отличная работа! Мама с папой будут гордиться 😊',
     resultNear: 'Очень близко к финишу! Ещё чуть-чуть — и урок твой 🌈',
@@ -333,6 +339,17 @@
         say(pick(T.hiAgain));
       }
     }, 800);
+  } else if (S.page === 'garden') {
+    setTimeout(function () {
+      if (S.streak <= 0) {
+        say(T.gardenBroken, { strong: true });
+      } else {
+        var msg = fmt(pick(T.gardenHello));
+        if (S.streak >= 2) msg += ' ' + fmt(T.gardenStreak, { n: S.streak });
+        say(msg, { strong: true });
+        setTimeout(function () { say(T.gardenShop); }, 5200);
+      }
+    }, 800);
   } else if (S.page === 'result') {
     setTimeout(function () {
       var p = S.percent || 0;
@@ -340,6 +357,9 @@
                 p >= 70 ? fmt(T.resultPass, { name: NAME }) :
                 p >= 50 ? T.resultNear : T.resultLow;
       say(msg, { strong: true, persist: true });
+      if (S.coinsEarned) {
+        setTimeout(function () { say(fmt(T.coinsEarned, { n: S.coinsEarned })); }, 2600);
+      }
       if (truthy(S.newAchievements)) {
         /* Совместимость со старым форматом (был список ключей-строк):
            превращаем строки в объекты вида {key} */

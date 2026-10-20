@@ -36,6 +36,15 @@
   </div>
 </section>
 
+<!-- Сад-дерево: короткий тизер -->
+<a class="garden-teaser glass" href="{{ url_for('garden_page') }}">
+  <span class="gt-tree">{{ tree_stage.emoji }}</span>
+  <span class="gt-text">
+    <b>{{ tree_stage.name }}</b> · 🔥 серия {{ garden.streak_days }} дн. · 🪙 {{ garden.coins }} монеток
+  </span>
+  <span class="gt-btn">Открыть сад →</span>
+</a>
+
 <!-- 2. Кнопка «Следующий урок» -->
 {% if next_lesson %}
   <a class="next-cta" href="{{ url_for('lesson_page', lesson_id=next_lesson.id) }}">

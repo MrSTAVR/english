@@ -113,7 +113,25 @@ CREATE TABLE IF NOT EXISTS achievements (
     earned_at    TEXT NOT NULL,
     PRIMARY KEY (student_id, key)
 );
+CREATE TABLE IF NOT EXISTS garden (
+    student_id     INTEGER PRIMARY KEY,        -- сад принадлежит ученику
+    coins          INTEGER DEFAULT 0,          -- монетки за уроки
+    streak_days    INTEGER DEFAULT 0,          -- серия дней занятий
+    best_streak    INTEGER DEFAULT 0,          -- рекорд серии (для дерева)
+    last_study_day TEXT,                       -- ISO-дата последнего занятия
+    broken         INTEGER DEFAULT 0           -- 1 = серия прервана, сад «опустел»
+);
+CREATE TABLE IF NOT EXISTS decorations (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,               -- кому принадлежит украшение
+    deco_key   TEXT NOT NULL,                  -- ключ из DECORATIONS
+    slot       INTEGER NOT NULL                 -- слот на дереве (0..MAX_SLOTS-1)
+);
 """
+
+MAX_SLOTS = 3      # сколько украшений можно повесить на дерево
+COIN_PASS = 5      # монеток за сданный тест
+COIN_PERFECT = 5   # бонусных монеток за идеальный тест (100%)
 
 
 def init_db():
@@ -123,6 +141,9 @@ def init_db():
     cols = {r[1] for r in conn.execute("PRAGMA table_info(attempts)")}
     if "student_id" not in cols:
         conn.execute("ALTER TABLE attempts ADD COLUMN student_id INTEGER")
+    g_cols = {r[1] for r in conn.execute("PRAGMA table_info(garden)")}
+    if g_cols and "manual" not in g_cols:
+        conn.execute("ALTER TABLE garden ADD COLUMN manual INTEGER DEFAULT 0")
     ach_cols = [r[1] for r in conn.execute("PRAGMA table_info(achievements)")]
     if ach_cols and "student_id" not in ach_cols:
         # старая таблица ачивок без привязки к ученику — пересоздаём
@@ -355,6 +376,191 @@ def compute_stats(db, student_id=None):
     }
 
 
+# ---------------------------------------------------------------------------
+# 🌳 Сад-дерево: рост от серии дней занятий, монетки, украшения
+# ---------------------------------------------------------------------------
+
+DECORATIONS = [
+    {"key": "bow",       "emoji": "🎀", "name": "Бантик",          "cost": 5},
+    {"key": "star",      "emoji": "⭐", "name": "Звёздочка",        "cost": 8},
+    {"key": "butterfly", "emoji": "🦋", "name": "Бабочка",          "cost": 10},
+    {"key": "ladybug",   "emoji": "🐞", "name": "Божья коровка",    "cost": 12},
+    {"key": "bell",      "emoji": "🔔", "name": "Колокольчик",      "cost": 15},
+    {"key": "heart",     "emoji": "💖", "name": "Сердечко",         "cost": 18},
+    {"key": "lantern",   "emoji": "🏮", "name": "Фонарик",          "cost": 20},
+    {"key": "crown",     "emoji": "👑", "name": "Корона",           "cost": 25},
+    {"key": "rainbow",   "emoji": "🌈", "name": "Радуга",           "cost": 30},
+    {"key": "unicorn",   "emoji": "🦄", "name": "Единорог",         "cost": 40},
+]
+DECOS_BY_KEY = {d["key"]: d for d in DECORATIONS}
+
+TREE_STAGES = [
+    {"min": 0,  "size": 0.45, "emoji": "🌰", "name": "Жёлудь",
+     "msg": "Всё большое начинается с маленького зёрнышка!"},
+    {"min": 1,  "size": 0.55, "emoji": "🌱", "name": "Росток",
+     "msg": "Твой первый день занятий — росток проклюнулся!"},
+    {"min": 2,  "size": 0.65, "emoji": "🌿", "name": "Отросток",
+     "msg": "Два дня подряд — стебелек тянется к солнцу!"},
+    {"min": 3,  "size": 0.75, "emoji": "🪴", "name": "Саженец",
+     "msg": "Три дня серии — саженец крепчает!"},
+    {"min": 5,  "size": 0.85, "emoji": "🌳", "name": "Молодое деревце",
+     "msg": "Пять дней подряд! Деревце уже гордится тобой."},
+    {"min": 7,  "size": 0.92, "emoji": "🌳", "name": "Крепкое дерево",
+     "msg": "Целая неделя занятий — дерево стало настоящим!"},
+    {"min": 10, "size": 1.0,  "emoji": "🌳", "name": "Сильное дерево",
+     "msg": "Десять дней! Такое дерево не сломает ни один ветер."},
+    {"min": 14, "size": 1.08, "emoji": "🌳", "name": "Мудрое дерево",
+     "msg": "Две недели подряд — в ветвях живёт мудрость."},
+    {"min": 21, "size": 1.16, "emoji": "🌳", "name": "Волшебное дерево",
+     "msg": "ТРИ НЕДЕЛИ! Это уже настоящая магия ✨"},
+    {"min": 30, "size": 1.25, "emoji": "🌳", "name": "Легендарное дерево",
+     "msg": "Месяц каждый день. Ты — легенда! 👑"},
+]
+
+
+def get_garden(db, student_id):
+    """Строка сада (создаётся при первом обращении)."""
+    row = db.execute("SELECT * FROM garden WHERE student_id=?",
+                     (student_id,)).fetchone()
+    if not row:
+        db.execute("INSERT INTO garden (student_id) VALUES (?)", (student_id,))
+        db.commit()
+        row = db.execute("SELECT * FROM garden WHERE student_id=?",
+                         (student_id,)).fetchone()
+    return row
+
+
+def tree_stage(streak_days):
+    stage = TREE_STAGES[0]
+    for s in TREE_STAGES:
+        if streak_days >= s["min"]:
+            stage = s
+    return stage
+
+
+def compute_streak_from_history(db, student_id):
+    """Реальная серия дней по датам попыток (для синхронизации после ручных правок)."""
+    from datetime import timedelta
+    rows = db.execute(
+        "SELECT DISTINCT substr(started_at, 1, 10) AS d FROM attempts "
+        "WHERE student_id=?", (student_id,)).fetchall()
+    days = sorted({r["d"] for r in rows if r["d"]}, reverse=True)
+    if not days:
+        return 0, None
+    today = datetime.now().date()
+    last = datetime.strptime(days[0], "%Y-%m-%d").date()
+    if (today - last).days > 1:      # последний заход был позавчера или раньше
+        return 0, days[0]
+    streak, expected = 1, last - timedelta(days=1)
+    for d in days[1:]:
+        if datetime.strptime(d, "%Y-%m-%d").date() == expected:
+            streak += 1
+            expected -= timedelta(days=1)
+        else:
+            break
+    return streak, days[0]
+
+
+def refresh_garden(db, student_id):
+    """Синхронизирует сад с реальностью.
+
+    Правила:
+      • если сегодня/вчера были занятия — streak = реальная серия по истории;
+      • если между последним занятием и сегодняшним днём пропущен хотя бы
+        один день — серия считается прерванной: дерево возвращается к
+        начальному размеру (жёлудь), украшения пропадают (монетки остаются);
+      • родитель может вручную выставить streak/coins для теста — эти значения
+        живут, пока ребёнок реально занимается (история попыток их подтверждает).
+    """
+    g = get_garden(db, student_id)
+    hist_streak, last_day = compute_streak_from_history(db, student_id)
+    stored = int(g["streak_days"])
+
+    if hist_streak > 0:
+        # есть свежие занятия: берём максимум из реального и «ручного» значения
+        streak = max(hist_streak, stored)
+        broken = 0
+    elif stored > 0 and last_day is None:
+        # истории нет, но родитель выставил серию вручную — доверяем
+        streak, broken = stored, 0
+    else:
+        streak = 0
+        broken = 1 if stored > 0 or bool(g["broken"]) else 0
+        if broken:
+            db.execute("DELETE FROM decorations WHERE student_id=?", (student_id,))
+
+    best = max(int(g["best_streak"]), streak)
+    db.execute("UPDATE garden SET streak_days=?, best_streak=?, broken=?, "
+               "last_study_day=? WHERE student_id=?",
+               (streak, best, broken, last_day, student_id))
+    db.commit()
+    return get_garden(db, student_id)
+
+
+def award_coins(db, student_id, percent, passed):
+    """Начисляет монетки за тест. Возвращает число полученных монет."""
+    earned = 0
+    if passed:
+        earned += COIN_PASS
+    if percent >= 100:
+        earned += COIN_PERFECT
+    if earned:
+        g = get_garden(db, student_id)
+        db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?",
+                   (earned, student_id))
+        db.commit()
+    return earned
+
+
+def touch_streak(db, student_id):
+    """Вызывается при открытии урока: продлевает/обнуляет серию дней."""
+    g = get_garden(db, student_id)
+    today = datetime.now().date().isoformat()
+    last = g["last_study_day"]
+    if last == today:
+        return g
+    from datetime import timedelta
+    if last:
+        delta = (datetime.now().date() -
+                 datetime.strptime(last, "%Y-%m-%d").date()).days
+        streak = g["streak_days"] + 1 if delta == 1 else 1
+    else:
+        # истории занятий ещё нет (или сад правили вручную) — просто фиксируем день
+        streak = max(int(g["streak_days"]), 1)
+    broken = 0                       # начала заниматься — сад «оживает»
+    best = max(int(g["best_streak"]), streak)
+    db.execute("UPDATE garden SET streak_days=?, best_streak=?, broken=?, "
+               "last_study_day=? WHERE student_id=?",
+               (streak, best, broken, today, student_id))
+    db.commit()
+    return get_garden(db, student_id)
+
+
+def garden_view(db, student_id):
+    """Всё нужное для рендера страницы сада."""
+    g = get_garden(db, student_id)
+    stage = tree_stage(g["streak_days"])
+    next_stage = next((s for s in TREE_STAGES if s["min"] > g["streak_days"]), None)
+    owned = db.execute(
+        "SELECT deco_key, slot FROM decorations WHERE student_id=? ORDER BY slot",
+        (student_id,)).fetchall()
+    hanging = {r["slot"]: r["deco_key"] for r in owned}
+    counts = {}
+    for r in owned:
+        counts[r["deco_key"]] = counts.get(r["deco_key"], 0) + 1
+    return {
+        "garden": g,
+        "stage": stage,
+        "next_stage": next_stage,
+        "hanging": hanging,
+        "owned_counts": counts,
+        "decorations": DECORATIONS,
+        "max_slots": MAX_SLOTS,
+        "coin_pass": COIN_PASS,
+        "coin_perfect": COIN_PERFECT,
+    }
+
+
 def update_achievements(db, stats, student_id):
     """Проверяет ачивки ученика; возвращает список новых (чтобы показать поздравление)."""
     existing = {r["key"] for r in db.execute(
@@ -543,6 +749,8 @@ def build_mascot_ctx():
         mascot["page"] = "lesson"
     elif endpoint == "submit_test":
         mascot["page"] = "result"
+    elif endpoint == "garden_page":
+        mascot["page"] = "garden"
     return mascot
 
 
@@ -681,6 +889,53 @@ def reset_student_password(sid):
     return redirect(url_for("parent_dashboard") + "#students")
 
 
+@app.route("/parent/students/<int:sid>/garden", methods=["POST"])
+def parent_update_garden(sid):
+    """Тестовая настройка сада ребёнка: серия дней и монетки."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    student = db.execute("SELECT * FROM students WHERE id=?", (sid,)).fetchone()
+    if not student:
+        abort(404)
+    g = get_garden(db, sid)
+
+    def _num(name, default=None):
+        raw = request.form.get(name)
+        if raw is None or raw.strip() == "":
+            return default
+        try:
+            return max(0, min(9999, int(raw)))
+        except ValueError:
+            return default
+
+    streak = _num("streak_days")
+    coins = _num("coins")
+    if streak is None and coins is None:
+        flash("Ничего не изменено — заполни хотя бы одно поле.", "error")
+        return redirect(url_for("parent_dashboard") + "#students")
+    if streak is not None:
+        # синхронизируем last_study_day с реальностью, чтобы refresh не сбросил серию
+        if streak > 0:
+            db.execute("UPDATE garden SET streak_days=?, broken=0, manual=1 WHERE student_id=?",
+                       (streak, sid))
+        else:
+            # «прерываем» серию — как будто пропущен день: дерево возвращается
+            # к начальному размеру, украшения снимаются (монетки остаются)
+            db.execute("UPDATE garden SET streak_days=0, broken=1, manual=1 WHERE student_id=?",
+                       (sid,))
+            db.execute("DELETE FROM decorations WHERE student_id=?", (sid,))
+        best = max(int(g["best_streak"]), streak or 0)
+        db.execute("UPDATE garden SET best_streak=? WHERE student_id=?", (best, sid))
+    if coins is not None:
+        db.execute("UPDATE garden SET coins=? WHERE student_id=?", (coins, sid))
+    db.commit()
+    flash(f"Сад для {student['display_name']} обновлён: серия {streak if streak is not None else g['streak_days']} дн., "
+          f"монет {coins if coins is not None else g['coins']} 🌳", "success")
+    return redirect(url_for("parent_dashboard") + "#students")
+
+
 # ---------------------------- Ученик ---------------------------------------
 
 @app.route("/student")
@@ -695,6 +950,7 @@ def student_home():
         flash("Аккаунт был удалён родителем. Войди заново 🙂", "error")
         return redirect(url_for("index"))
     stats = compute_stats(db, student["id"])
+    garden = refresh_garden(db, student["id"])
     unlocked = unlocked_lesson_ids(stats)
     lessons_info = []
     for l in LESSONS:
@@ -730,7 +986,9 @@ def student_home():
                            total_lessons=len(LESSONS),
                            new_badge=new_badge,
                            next_lesson=next_lesson,
-                           earned_count=earned_count)
+                           earned_count=earned_count,
+                           garden=garden,
+                           tree_stage=tree_stage(garden["streak_days"]))
 
 
 @app.route("/lesson/<int:lesson_id>")
@@ -748,6 +1006,7 @@ def lesson_page(lesson_id):
     if lesson_id not in unlocked_lesson_ids(stats):
         flash("Сначала пройди предыдущий урок! 😉", "error")
         return redirect(url_for("student_home"))
+    touch_streak(db, student["id"])   # занялись сегодня — серия дня продлевается
     # Создаём новую попытку (начало занятия)
     started = datetime.now()
     cur = db.execute(
@@ -825,9 +1084,13 @@ def submit_test(lesson_id):
     if new_achievements:
         session["new_achievements"] = [a["key"] for a in new_achievements]
 
+    coins_earned = award_coins(db, student["id"], percent, passed)
+    garden = get_garden(db, student["id"])
+
     mascot = build_mascot_ctx()
     mascot["percent"] = percent
     mascot["passed"] = passed
+    mascot["coinsEarned"] = coins_earned
     mascot["newAchievements"] = [
         {"key": a["key"], "emoji": a["emoji"], "title": a["title"], "desc": a["desc"]}
         for a in new_achievements]
@@ -835,8 +1098,93 @@ def submit_test(lesson_id):
                            lesson=lesson, percent=percent, passed=passed,
                            correct=correct, total=total,
                            seconds=seconds, results=results,
+                           coins_earned=coins_earned,
+                           coins_total=garden["coins"],
+                           streak_days=garden["streak_days"],
                            new_achievements=[a for a in ACHIEVEMENTS
                                              if a["key"] in [n["key"] for n in new_achievements]])
+
+
+# ---------------------------- Сад-дерево -----------------------------------
+
+@app.route("/student/garden")
+def garden_page():
+    err = require_role("student")
+    if err:
+        return err
+    db = get_db()
+    student = get_student_or_none(db)
+    if not student:
+        session.clear()
+        return redirect(url_for("index"))
+    refresh_garden(db, student["id"])
+    view = garden_view(db, student["id"])
+    mascot = build_mascot_ctx()
+    mascot["page"] = "garden"
+    mascot["streak"] = view["garden"]["streak_days"]
+    flash_msg = session.pop("garden_flash", None)
+    return render_template("garden.html", mascot=mascot, name=student["display_name"],
+                           deco_by_key=DECOS_BY_KEY,
+                           deco_emojis={k: d["emoji"] for k, d in DECOS_BY_KEY.items()},
+                           flash_msg=flash_msg, **view)
+
+
+@app.route("/student/garden/buy", methods=["POST"])
+def garden_buy():
+    err = require_role("student")
+    if err:
+        return err
+    db = get_db()
+    student = get_student_or_none(db)
+    if not student:
+        session.clear()
+        return redirect(url_for("index"))
+    key = request.form.get("deco_key")
+    deco = DECOS_BY_KEY.get(key) or abort(400)
+    g = get_garden(db, student["id"])
+    used = {r["slot"] for r in db.execute(
+        "SELECT slot FROM decorations WHERE student_id=?", (student["id"],)).fetchall()}
+    free_slots = [s for s in range(MAX_SLOTS) if s not in used]
+    if bool(g["broken"]) or g["streak_days"] <= 0:
+        session["garden_flash"] = "Серия прервана — сначала позанимайся сегодня, чтобы дерево ожило! 🍂"
+    elif not free_slots:
+        session["garden_flash"] = f"На дереве нет свободных мест (максимум {MAX_SLOTS}). Сними одно украшение 😉"
+    elif g["coins"] < deco["cost"]:
+        session["garden_flash"] = (f"Не хватает монеток: нужно {deco['cost']}, "
+                                   f"а у тебя {g['coins']}. Пройди ещё пару тестов! 🪙")
+    else:
+        db.execute("UPDATE garden SET coins=coins-? WHERE student_id=?",
+                   (deco["cost"], student["id"]))
+        db.execute("INSERT INTO decorations (student_id, deco_key, slot) VALUES (?, ?, ?)",
+                   (student["id"], key, free_slots[0]))
+        db.commit()
+        session["garden_flash"] = f"{deco['emoji']} «{deco['name']}» повешено на дерево!"
+    return redirect(url_for("garden_page"))
+
+
+@app.route("/student/garden/remove/<int:slot>", methods=["POST"])
+def garden_remove(slot):
+    err = require_role("student")
+    if err:
+        return err
+    db = get_db()
+    student = get_student_or_none(db)
+    if not student:
+        session.clear()
+        return redirect(url_for("index"))
+    row = db.execute("SELECT * FROM decorations WHERE student_id=? AND slot=?",
+                     (student["id"], slot)).fetchone()
+    if row:
+        db.execute("DELETE FROM decorations WHERE id=?", (row["id"],))
+        # возвращаем половину стоимости — сняли украшение с дерева
+        deco = DECOS_BY_KEY.get(row["deco_key"], {"cost": 0, "name": "", "emoji": ""})
+        refund = deco["cost"] // 2
+        db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?",
+                   (refund, student["id"]))
+        db.commit()
+        session["garden_flash"] = (f"{deco['emoji']} «{deco['name']}» снято с дерева, "
+                                   f"вернулось {refund} 🪙")
+    return redirect(url_for("garden_page"))
 
 
 # ---------------------------- Родитель -------------------------------------
@@ -856,8 +1204,14 @@ def parent_dashboard():
         sstats = compute_stats(db, st["id"])
         earned = {r["key"] for r in db.execute(
             "SELECT key FROM achievements WHERE student_id=?", (st["id"],)).fetchall()}
+        sgarden = get_garden(db, st["id"])
         student_cards.append({"student": st, "stats": sstats,
-                              "earned_count": len(earned)})
+                              "earned_count": len(earned),
+                              "garden": sgarden,
+                              "tree_stage": tree_stage(sgarden["streak_days"]),
+                              "deco_count": db.execute(
+                                  "SELECT COUNT(*) c FROM decorations WHERE student_id=?",
+                                  (st["id"],)).fetchone()["c"]})
 
     stats = compute_stats(db)  # общая сводка по всем детям
     attempts = list(reversed(stats["attempts"]))  # свежие сверху
