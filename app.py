@@ -378,30 +378,35 @@ def compute_stats(db, student_id=None):
 # 🌳 Сад: деревья растут от серии дней, монетки, украшения для всего сада
 # ---------------------------------------------------------------------------
 
-MAX_SLOTS = 3      # сколько украшений можно разместить в саду
+MAX_SLOTS = 5      # сколько украшений можно разместить в саду одновременно
 STREAK_CAP = 30    # серия ограничена 30 днями: дальше сад не растёт
 COIN_PASS = 5      # монеток за сданный тест
 COIN_PERFECT = 5   # бонусных монеток за идеальный тест (100%)
 TREES_START = 1    # стартовое число деревьев в саду
 TREES_MAX = 6      # максимум деревьев
-TREES_PER_DAYS = 5 # каждое новое дерево — за каждые N дней серии
+# день серии -> сколько деревьев (каждое новое дерево — заметное событие)
+TREES_EVERY = {5: 2, 10: 3, 15: 4, 22: 5, 28: 6}
 
 
 def tree_count_for(streak_days):
     """Сколько деревьев в саду при данной серии дней (серия <= STREAK_CAP)."""
-    return min(TREES_MAX, TREES_START + streak_days // TREES_PER_DAYS)
+    count = TREES_START
+    for day, n in sorted(TREES_EVERY.items()):
+        if streak_days >= day:
+            count = n
+    return count
 
 
 # category:
-#   span   — растягивается на ВЕСЬ сад (гирлянда, флажки, огни, заборчик)
+#   span   — растягивается на ВЕСЬ сад (гирлянда, флажки, забор, огни-бусы)
 #   sky    — украшение неба над всем садом (солнце, радуга, звёзды, луна, облака)
 #   effect — погодный/сказочный эффект на весь сад (снег, лепестки, светлячки)
-#   theme  — фон сада; можно выбрать только ОДИН (покупка нового заменяет старый)
+#   theme  — фон сада (ночь, закат, рассвет) — активен только ОДИН фон за раз
 DECORATIONS = [
     {"key": "garland",   "emoji": "💡", "name": "Гирлянда",        "cost": 10, "category": "span"},
     {"key": "flags",     "emoji": "🚩", "name": "Флажки",          "cost": 12, "category": "span"},
     {"key": "lights",    "emoji": "🎊", "name": "Огни-бусы",       "cost": 16, "category": "span"},
-    {"key": "fence",     "emoji": None,  "name": "Заборчик",       "cost": 8,  "category": "span"},
+    {"key": "fence",     "emoji": "🪵", "name": "Заборчик",        "cost": 8,  "category": "span"},
     {"key": "sun",       "emoji": "☀️", "name": "Солнышко",        "cost": 8,  "category": "sky"},
     {"key": "rainbow",   "emoji": "🌈", "name": "Радуга",          "cost": 30, "category": "sky"},
     {"key": "stars",     "emoji": "✨", "name": "Звёздное небо",   "cost": 15, "category": "sky"},
@@ -412,22 +417,13 @@ DECORATIONS = [
     {"key": "fireflies", "emoji": "🧚", "name": "Светлячки",       "cost": 25, "category": "effect"},
     {"key": "night",     "emoji": "🌌", "name": "Ночной фон",      "cost": 28, "category": "theme"},
     {"key": "sunset",    "emoji": "🌇", "name": "Закат",           "cost": 28, "category": "theme"},
+    {"key": "dawn",      "emoji": "🌅", "name": "Рассвет",         "cost": 28, "category": "theme"},
 ]
 DECOS_BY_KEY = {d["key"]: d for d in DECORATIONS}
 
 CATEGORY_NAMES = {
     "span": "на весь сад", "sky": "украшение неба", "effect": "эффект",
-    "theme": "фон сада (можно выбрать только один)",
-}
-
-# SVG-иконки для магазина вместо emoji, которые плохо рисуются на Windows
-DECO_ICONS = {
-    "fence": '''<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg">'''
-             '''<rect x="4" y="4" width="7" height="26" rx="3" fill="#c99a5b"/>'''
-             '''<rect x="20.5" y="4" width="7" height="26" rx="3" fill="#c99a5b"/>'''
-             '''<rect x="37" y="4" width="7" height="26" rx="3" fill="#c99a5b"/>'''
-             '''<rect x="0" y="10" width="48" height="5" rx="2.5" fill="#a87941"/>'''
-             '''<rect x="0" y="21" width="48" height="5" rx="2.5" fill="#a87941"/></svg>''',
+    "theme": "фон сада",
 }
 
 # SVG-глифы стадий дерева (видны на всех платформах, в отличие от emoji)
@@ -435,97 +431,94 @@ TREE_GLYPHS = {
     "acorn": '''<g><path d="M30 26c0-8 4-12 10-12s10 4 10 12-4 16-10 16-10-8-10-16z" fill="#a56a2f"/><path d="M28 26q12-10 24 0-4 6-12 6-8 0-12-6z" fill="#6d4322"/></g>''',
     "sprout": '''<g><path d="M40 46V28" stroke="#3fae5a" stroke-width="4" stroke-linecap="round"/><path d="M40 32C32 30 28 24 28 18c8 0 13 6 12 14z" fill="#5cc46f"/><path d="M40 32c8-2 12-8 12-14-8 0-13 6-12 14z" fill="#41b257"/></g>''',
     "seedling": '''<g><path d="M40 48V22" stroke="#3fae5a" stroke-width="4" stroke-linecap="round"/><path d="M40 30C30 28 24 20 24 12c12 0 18 8 16 18z" fill="#5cc46f"/><path d="M40 30c10-2 16-10 16-18-12 0-18 8-16 18z" fill="#41b257"/><path d="M40 22c-3-5-2-10 0-14 3 4 3 9 0 14z" fill="#6fd47f"/></g>''',
+    "twoleaf": '''<g><path d="M40 48V20" stroke="#3fae5a" stroke-width="4" stroke-linecap="round"/><path d="M40 30C28 28 20 20 20 10c12 0 22 8 20 20z" fill="#5cc46f"/><path d="M40 30c12-2 20-10 20-20-12 0-22 8-20 20z" fill="#41b257"/><circle cx="40" cy="14" r="4" fill="#6fd47f"/></g>''',
     "bushy": '''<g><path d="M40 48V26" stroke="#8a5a2b" stroke-width="5" stroke-linecap="round"/><circle cx="30" cy="26" r="10" fill="#5cc46f"/><circle cx="50" cy="26" r="10" fill="#5cc46f"/><circle cx="40" cy="18" r="11" fill="#6fd47f"/></g>''',
+    "tripod": '''<g><path d="M40 48V24" stroke="#8a5a2b" stroke-width="5" stroke-linecap="round"/><path d="M40 34l-10 8M40 34l10 8" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><circle cx="40" cy="18" r="12" fill="#5cc46f"/><circle cx="29" cy="26" r="8" fill="#41b257"/><circle cx="51" cy="26" r="8" fill="#6fd47f"/></g>''',
     "young": '''<g><path d="M40 48V24" stroke="#8a5a2b" stroke-width="5" stroke-linecap="round"/><path d="M40 32l-8-6M40 28l8-6" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><circle cx="40" cy="16" r="13" fill="#5cc46f"/><circle cx="30" cy="22" r="8" fill="#41b257"/><circle cx="50" cy="22" r="8" fill="#6fd47f"/></g>''',
+    "oval": '''<g><path d="M40 48V22" stroke="#8a5a2b" stroke-width="6" stroke-linecap="round"/><ellipse cx="40" cy="16" rx="18" ry="13" fill="#41b257"/><circle cx="30" cy="14" r="7" fill="#5cc46f"/><circle cx="50" cy="18" r="7" fill="#3fae5a"/></g>''',
     "tree": '''<g><path d="M40 48V22" stroke="#8a5a2b" stroke-width="6" stroke-linecap="round"/><path d="M40 30l-10-8M40 26l10-8" stroke="#8a5a2b" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="15" r="14" fill="#41b257"/><circle cx="27" cy="22" r="9" fill="#5cc46f"/><circle cx="53" cy="22" r="9" fill="#3fae5a"/></g>''',
+    "tiered": '''<g><path d="M40 48V20" stroke="#7a4d22" stroke-width="6" stroke-linecap="round"/><path d="M40 34l-12-6M40 28l12-6" stroke="#7a4d22" stroke-width="3" stroke-linecap="round"/><ellipse cx="40" cy="26" rx="20" ry="7" fill="#3fae5a"/><ellipse cx="40" cy="17" rx="15" ry="6" fill="#5cc46f"/><ellipse cx="40" cy="9" rx="10" ry="5" fill="#6fd47f"/></g>''',
     "lush": '''<g><path d="M40 48V20" stroke="#7a4d22" stroke-width="7" stroke-linecap="round"/><path d="M40 30l-12-9M40 24l12-9" stroke="#7a4d22" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="14" r="15" fill="#3fae5a"/><circle cx="25" cy="20" r="10" fill="#5cc46f"/><circle cx="55" cy="20" r="10" fill="#41b257"/><circle cx="40" cy="24" r="10" fill="#6fd47f"/></g>''',
     "blooming": '''<g><path d="M40 48V20" stroke="#7a4d22" stroke-width="7" stroke-linecap="round"/><path d="M40 30l-12-9M40 24l12-9" stroke="#7a4d22" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="14" r="15" fill="#41b257"/><circle cx="25" cy="20" r="10" fill="#5cc46f"/><circle cx="55" cy="20" r="10" fill="#3fae5a"/><circle cx="34" cy="10" r="3" fill="#ff8fb3"/><circle cx="47" cy="15" r="3" fill="#ffd166"/><circle cx="40" cy="22" r="3" fill="#ff8fb3"/></g>''',
     "big": '''<g><path d="M40 48V18" stroke="#6d4322" stroke-width="8" stroke-linecap="round"/><path d="M40 30l-14-10M40 24l14-10M40 36l10 6" stroke="#6d4322" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="12" r="16" fill="#3fae5a"/><circle cx="22" cy="20" r="11" fill="#5cc46f"/><circle cx="58" cy="20" r="11" fill="#41b257"/><circle cx="40" cy="24" r="10" fill="#6fd47f"/></g>''',
+    "fruity": '''<g><path d="M40 48V18" stroke="#6d4322" stroke-width="8" stroke-linecap="round"/><path d="M40 30l-14-10M40 24l14-10" stroke="#6d4322" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="12" r="16" fill="#3fae5a"/><circle cx="22" cy="20" r="11" fill="#5cc46f"/><circle cx="58" cy="20" r="11" fill="#41b257"/><circle cx="32" cy="14" r="3" fill="#ff6b6b"/><circle cx="48" cy="10" r="3" fill="#ff6b6b"/><circle cx="42" cy="22" r="3" fill="#ff6b6b"/></g>''',
     "huge": '''<g><path d="M40 48V16" stroke="#6d4322" stroke-width="9" stroke-linecap="round"/><path d="M40 28l-16-10M40 22l16-10M40 36l12 6M40 36l-12 6" stroke="#6d4322" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="10" r="17" fill="#3fae5a"/><circle cx="20" cy="18" r="12" fill="#5cc46f"/><circle cx="60" cy="18" r="12" fill="#41b257"/><circle cx="40" cy="22" r="11" fill="#6fd47f"/><circle cx="30" cy="8" r="3" fill="#ffd166"/><circle cx="50" cy="12" r="3" fill="#ff8fb3"/></g>''',
     "legendary": '''<g><path d="M40 48V14" stroke="#5a3a1e" stroke-width="10" stroke-linecap="round"/><path d="M40 26l-18-10M40 20l18-10M40 36l14 6M40 36l-14 6" stroke="#5a3a1e" stroke-width="4" stroke-linecap="round"/><circle cx="40" cy="8" r="18" fill="#2f9e44"/><circle cx="18" cy="16" r="13" fill="#5cc46f"/><circle cx="62" cy="16" r="13" fill="#41b257"/><circle cx="40" cy="20" r="12" fill="#6fd47f"/><path d="M33 -2l3 5 3-5 3 5 3-5v7h-12z" fill="#ffd166" transform="translate(2,6)"/><circle cx="28" cy="6" r="2.5" fill="#fff3bf"/><circle cx="52" cy="10" r="2.5" fill="#fff3bf"/></g>''',
 }
 
-# 31 стадия: по одной на каждый день серии (0..30).
-# Правила «заметных изменений»:
-#   • новое дерево появляется каждые TREES_PER_DAYS дней серии;
-#   • в оставшиеся дни у ВСЕХ деревьев меняется форма кроны (глиф) и/или
-#     заметно подрастает ствол (размер +7% в день);
-#   • глифы чередуются так, что соседние дни никогда не выглядят одинаково.
-_STAGE_GLYPHS = ["acorn", "sprout", "seedling", "bushy", "young", "tree",
-                 "lush", "blooming", "big", "huge", "legendary"]
+# 31 стадия — по одной на каждый день серии (0..30).
+# Каждый день ЗНАЧИТЕЛЬНЫЕ изменения: размер деревьев растёт скачками ~10%
+# (к финалу сад занимает больше половины окна), форма кроны меняется каждые
+# 2 дня, а в особые дни появляется новое дерево или открывается новый этап.
+_STAGE_GLYPHS = ["acorn", "sprout", "seedling", "twoleaf", "bushy", "tripod",
+                 "young", "oval", "tree", "tiered", "lush", "blooming",
+                 "big", "fruity", "huge", "legendary"]
 
 def _stage_glyph(day):
-    """Глиф дерева для дня серии: от жёлудя до легендарного дерева.
-
-    Каждый новый глиф — это видимое изменение формы кроны. Чтобы форма
-    менялась буквально каждый день, к основному «взрослому» глифу дня
-    добавляется ежедневная деталь (цветки/плоды/сияние), см. DAY_ACCENTS.
-    """
-    idx = round(day / STREAK_CAP * (len(_STAGE_GLYPHS) - 1))
+    """Форма кроны для дня серии: новая форма каждые 2 дня, к 30-му — легендарная."""
+    idx = min(len(_STAGE_GLYPHS) - 1, day // 2)
     return _STAGE_GLYPHS[idx]
 
-
-# Ежедневные детали кроны — гарантируют, что день ко дню дерево выглядит иначе.
-# Цикл из 7 деталей: в любой день серии хотя бы одна деталь активна.
-DAY_ACCENTS = [
-    (" blossoms", "#ff8fb3"),   # розовые цветки
-    ("fruits", "#ffd166"),      # золотые плоды
-    ("berries", "#e4572e"),     # ягодки
-    ("sparkles", "#fff3bf"),    # искорки
-    ("leaves-gold", "#f4a259"), # золотая листва
-    ("snow-dust", "#e0f7ff"),   # снежная пыль
-    ("glow", "#b7f7c7"),        # зелёное сияние
-]
-
-def day_accent(day):
-    """Деталь дня None на нулевом дне и в день появления нового дерева."""
-    if day <= 0 or day % TREES_PER_DAYS == 0:
-        return None
-    return DAY_ACCENTS[day % len(DAY_ACCENTS)]
-
-
-def tree_glyphs_for(streak, count):
-    """Форма кроны для каждого дерева сада.
-
-    Главное дерево (i=0) показывает «общую» стадию сада; соседние деревья
-    отстают на несколько дней — визуально сад выглядит живым и разным,
-    а не рядом одинаковых копий.
-    """
-    return [_stage_glyph(max(0, streak - i * 2)) for i in range(count)]
+def _stage_size(day):
+    """Множитель размера дерева: каждый день +~8% (экспоненциально).
+    0.5 → ~5.0 к 30-му дню: финальные деревья занимают больше половины сцены."""
+    return round(0.5 * (1.08 ** day), 3)      # 0.5 → 5.03
 
 TREE_STAGES = []
 for _d in range(STREAK_CAP + 1):
-    new_tree = _d > 0 and _d % TREES_PER_DAYS == 0
+    _trees = tree_count_for(_d)
+    _prev_trees = tree_count_for(_d - 1) if _d else 1
     if _d == 0:
         _name, _msg = "Жёлудь", "Всё большое начинается с маленького зёрнышка!"
     elif _d == 1:
-        _name, _msg = "Росток", "Первый день занятий — росток проклюнулся! 🌱"
-    elif new_tree:
-        _n = tree_count_for(_d)
-        _name, _msg = f"Новое дерево!", f"В саду появилось дерево — теперь их {_n}! 🎉"
+        _name, _msg = "Росток", "Первый день занятий — из жёлудя вырос росток! 🌱"
+    elif _trees > _prev_trees:
+        _name, _msg = f"Новое дерево! День {_d}", \
+            f"В саду выросло ещё одно дерево — теперь их {_trees}! 🎉"
+    elif _d == 7:
+        _name, _msg = "Крепкое деревце", "Неделя подряд! Деревья стали выше тебя в два раза 💪"
+    elif _d == 14:
+        _name, _msg = "Цветущий сад", "Две недели! Кроны распушились и зацвели 🌸"
+    elif _d == 21:
+        _name, _msg = "Сад-гигант", "Три недели! Деревья смотрят тебе прямо в небо 🌍"
     elif _d == STREAK_CAP:
-        _name, _msg = "Легендарный сад", "ТРИДЦАТЬ дней подряд! Ты — легенда! 👑"
+        _name, _msg = "Легендарный сад", "ТРИДЦАТЬ дней подряд! Целый лес под окном — ты легенда! 👑"
+    elif _d % 2 == 0:
+        _name, _msg = f"День {_d}", "Сегодня у деревьев изменилась форма кроны — посмотри, какая стала пышнее! ✨"
     else:
-        acc = day_accent(_d)
-        _name = f"День {_d}"
-        _msg = (f"Деревья меняют форму: {acc[0].strip()}! Ещё +7% роста 🌿"
-                if acc else f"Сад стал выше и крепче — ещё на чуть-чуть! 🌿")
+        _name, _msg = f"День {_d}", f"Деревья подросли ещё на шаг — прирост сегодня целых 10%! 📏"
     TREE_STAGES.append({
         "min": _d,
-        "size": round(0.5 + _d * 0.035, 3),   # 0.5 → ~1.55 за 30 дней (+7%/день)
+        "size": _stage_size(_d),
         "glyph": _stage_glyph(_d),
-        "accent": day_accent(_d),
-        "new_tree": bool(new_tree),
         "emoji": "🌳",
         "name": _name,
         "msg": _msg,
     })
 # emoji стадии подбираем по глифу
-_EMOJI_BY_GLYPH = {"acorn": "🌰", "sprout": "🌱", "seedling": "🌿", "bushy": "🪴",
-                   "young": "🌳", "tree": "🌳", "lush": "🌳", "blooming": "🌸",
-                   "big": "🌳", "huge": "🌳", "legendary": "👑"}
+_EMOJI_BY_GLYPH = {"acorn": "🌰", "sprout": "🌱", "seedling": "🌿", "twoleaf": "🌿",
+                   "bushy": "🪴", "tripod": "🪴", "young": "🌳", "oval": "🌳",
+                   "tree": "🌳", "tiered": "🌲", "lush": "🌳", "blooming": "🌸",
+                   "big": "🌳", "fruity": "🍎", "huge": "🌳", "legendary": "👑"}
 for _s in TREE_STAGES:
     _s["emoji"] = _EMOJI_BY_GLYPH[_s["glyph"]]
+
+_GLYPH_VARIANTS = {"sprout": "seedling", "seedling": "twoleaf", "twoleaf": "bushy",
+                   "bushy": "tripod", "tripod": "young", "young": "oval", "oval": "tree",
+                   "tree": "tiered", "tiered": "lush", "lush": "blooming",
+                   "blooming": "big", "big": "fruity", "fruity": "huge",
+                   "huge": "legendary"}
+
+
+def variant_glyph(glyph_key, name):
+    """Небольшая вариация формы кроны для конкретного дерева (по хешу имени),
+    чтобы соседние деревья в саду не выглядели клонами. Детерминированно."""
+    h = sum(ord(c) for c in (name or ""))
+    shift = h % 3           # 0 — базовая форма, 1/2 — чуть другая
+    g = glyph_key
+    for _ in range(shift):
+        g = _GLYPH_VARIANTS.get(g, g)
+    return g
 
 
 def get_garden(db, student_id):
@@ -664,19 +657,35 @@ def garden_view(db, student_id):
     active = {r["slot"]: r["deco_key"] for r in owned}
     # группируем активные украшения по категориям — каждое действует на ВЕСЬ сад
     by_cat = {}
-    for slot, key in active.items():
+    for slot, key in sorted(active.items()):
         d = DECOS_BY_KEY.get(key)
         if not d:
             continue
         item = {"key": key, "slot": slot, "name": d["name"],
                 "emoji": d["emoji"], "cost": d["cost"]}
         by_cat.setdefault(d["category"], []).append(item)
-    theme = by_cat.get("theme", [None])[0]  # фон: единственный активный (см. garden_buy)
+    # фон сада: активен только ПОСЛЕДНИЙ купленный тематический фон
+    theme = (by_cat.get("theme") or [None])[-1]
     counts = {}
     for r in owned:
         counts[r["deco_key"]] = counts.get(r["deco_key"], 0) + 1
     tcount = tree_count_for(streak)
-    trees = [{"i": i, "coin_bonus": (i + 1) * 2} for i in range(tcount)]
+    student_row = db.execute("SELECT name FROM students WHERE id=?",
+                             (student_id,)).fetchone()
+    sname = student_row["name"] if student_row else str(student_id)
+    trees = []
+    for i in range(tcount):
+        g = stage["glyph"]
+        trees.append({"i": i, "coin_bonus": (i + 1) * 2,
+                      "glyph": variant_glyph(g, f"{sname}-{i}"),
+                      "scale": round(stage["size"] * (1 - 0.07 * (i % 3)), 3)})
+    # сколько дней до следующего дерева
+    to_next = 0
+    if tcount < TREES_MAX:
+        nxt_day = min((d for d, n in sorted(TREES_EVERY.items()) if n > tcount),
+                      default=None)
+        if nxt_day is not None:
+            to_next = max(0, nxt_day - streak)
     return {
         "garden": g,
         "stage": stage,
@@ -685,7 +694,6 @@ def garden_view(db, student_id):
         "by_cat": by_cat,
         "theme": theme,
         "cat_names": CATEGORY_NAMES,
-        "tree_glyphs": tree_glyphs_for(streak, tcount),
         "owned_counts": counts,
         "decorations": DECORATIONS,
         "max_slots": MAX_SLOTS,
@@ -694,9 +702,8 @@ def garden_view(db, student_id):
         "coin_perfect": COIN_PERFECT,
         "tree_count": tcount,
         "trees": trees,
-        "per_tree": TREES_PER_DAYS,
-        "to_next_tree": (tcount - TREES_START + 1) * TREES_PER_DAYS - streak
-                        if tcount < TREES_MAX else 0,
+        "trees_every": TREES_EVERY,
+        "to_next_tree": to_next,
     }
 
 
@@ -852,55 +859,19 @@ def mistakes_count(mistakes_json):
 app.jinja_env.filters["mistakes_count"] = mistakes_count
 
 
-def tree_glyph_svg(glyph_key, accent=None):
-    """SVG-стадия дерева (надёжнее emoji: не зависит от шрифта системы).
-
-    accent — ежедневная деталь кроны (name, color): guarantees, что дерево
-    выглядит иначе почти каждый день серии.
-    """
-    inner = TREE_GLYPHS.get(glyph_key) or TREE_GLYPHS["sprout"]
-    if accent:
-        name, color = accent
-        extra = {
-            " blossoms": f'<circle cx="30" cy="14" r="2.6" fill="{color}"/>'
-                         f'<circle cx="48" cy="10" r="2.6" fill="{color}"/>'
-                         f'<circle cx="40" cy="20" r="2.2" fill="{color}"/>',
-            "fruits":    f'<circle cx="27" cy="18" r="2.8" fill="{color}"/>'
-                         f'<circle cx="52" cy="14" r="2.8" fill="{color}"/>',
-            "berries":   f'<circle cx="34" cy="8" r="2.2" fill="{color}"/>'
-                         f'<circle cx="46" cy="18" r="2.2" fill="{color}"/>'
-                         f'<circle cx="24" cy="22" r="2" fill="{color}"/>',
-            "sparkles":  f'<path d="M22 6l1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5z" fill="{color}"/>'
-                         f'<path d="M56 10l1.2 2.4 2.4 1.2-2.4 1.2-1.2 2.4-1.2-2.4-2.4-1.2 2.4-1.2z" fill="{color}"/>',
-            "leaves-gold": f'<path d="M20 26c4-6 10-6 14-2-4 6-12 6-14 2z" fill="{color}" opacity=".85"/>'
-                           f'<path d="M58 22c-4-4-10-3-13 1 4 4 11 3 13-1z" fill="{color}" opacity=".85"/>',
-            "snow-dust": f'<circle cx="26" cy="10" r="1.8" fill="{color}"/>'
-                         f'<circle cx="40" cy="6" r="1.8" fill="{color}"/>'
-                         f'<circle cx="54" cy="12" r="1.8" fill="{color}"/>',
-            "glow":      f'<circle cx="40" cy="16" r="20" fill="{color}" opacity=".28"/>',
-        }.get(name, "")
-        inner += extra
-    return Markup(
-        '<svg class="tree-svg" viewBox="0 0 80 52" xmlns="http://www.w3.org/2000/svg">'
-        f'{inner}</svg>'
-    )
-
-
 @app.template_filter("tree_glyph")
-def tree_glyph(glyph_key, accent=None):
-    return tree_glyph_svg(glyph_key, accent)
-
-
-@app.template_filter("deco_icon")
-def deco_icon(deco):
-    """Иконка украшения для магазина: SVG там, где emoji плохо рисуется."""
-    key = deco["key"] if isinstance(deco, dict) else deco
-    svg = DECO_ICONS.get(key)
-    if svg:
-        return Markup(f'<span class="shop-icon">{svg}</span>')
-    e = deco.get("emoji") if isinstance(deco, dict) else None
-    return Markup(f'<span class="shop-emoji">{e}</span>') if e else Markup(
-        '<span class="shop-icon shop-icon-dot"></span>')
+def tree_glyph(glyph_key, scale=None):
+    """SVG-стадия дерева (надёжнее emoji: не зависит от шрифта системы).
+    scale — множитель размера в % от базового (CSS clamp), чтобы сад мог
+    занимать больше половины окна к финальной стадии."""
+    inner = TREE_GLYPHS.get(glyph_key) or TREE_GLYPHS["sprout"]
+    s = scale if scale is not None else 1
+    return Markup(
+        f'<span class="tree-sizer" style="--tree-scale: {s};">'
+        f'<svg class="tree-svg" viewBox="0 0 80 52" '
+        'xmlns="http://www.w3.org/2000/svg">'
+        f'{inner}</svg></span>'
+    )
 
 # ---------------------------------------------------------------------------
 # Доступность уроков: следующий открыт, если предыдущий сдан
@@ -1344,42 +1315,38 @@ def garden_buy():
     elif g["coins"] < deco["cost"]:
         session["garden_flash"] = (f"Не хватает монеток: нужно {deco['cost']}, "
                                    f"а у тебя {g['coins']}. Пройди ещё пару тестов!")
+    elif deco["category"] == "theme":
+        # фон может быть только ОДИН: старый снимается, деньги возвращаются
+        theme_keys = {d["key"] for d in DECORATIONS if d["category"] == "theme"}
+        old_theme = [r for r in db.execute(
+            "SELECT id, slot, deco_key FROM decorations WHERE student_id=?",
+            (student["id"],)).fetchall() if r["deco_key"] in theme_keys]
+        refund = sum(DECOS_BY_KEY.get(r["deco_key"], {"cost": 0})["cost"] // 2
+                     for r in old_theme)
+        for r in old_theme:
+            db.execute("DELETE FROM decorations WHERE id=?", (r["id"],))
+        used2 = {r["slot"] for r in db.execute(
+            "SELECT slot FROM decorations WHERE student_id=?", (student["id"],)).fetchall()}
+        free2 = [s for s in range(MAX_SLOTS) if s not in used2]
+        if not free2:
+            # все слоты заняты не-фонами — снимаем самый первый слот под фон
+            db.execute("DELETE FROM decorations WHERE student_id=? AND slot=0",
+                       (student["id"],))
+            free2 = [0]
+        db.execute("UPDATE garden SET coins=coins-?+? WHERE student_id=?",
+                   (deco["cost"], refund, student["id"]))
+        db.execute("INSERT INTO decorations (student_id, deco_key, slot) VALUES (?, ?, ?)",
+                   (student["id"], key, free2[0]))
+        db.commit()
+        note = f" (старый фон снят, вернулось {refund} монеток)" if refund else ""
+        session["garden_flash"] = f"{deco['emoji']} Новый фон сада «{deco['name']}»!{note}"
     else:
-        # фон сада — только один: покупка нового заменяет старый (стоимость возвращается)
-        replacing = None
-        if deco["category"] == "theme":
-            for r in db.execute(
-                    "SELECT deco_key, slot FROM decorations WHERE student_id=?",
-                    (student["id"],)).fetchall():
-                od = DECOS_BY_KEY.get(r["deco_key"])
-                if od and od["category"] == "theme" and r["deco_key"] != key:
-                    replacing = r
-                    break
-        if replacing:
-            od = DECOS_BY_KEY[replacing["deco_key"]]
-            db.execute("DELETE FROM decorations WHERE student_id=? AND slot=?",
-                       (student["id"], replacing["slot"]))
-            db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?",
-                       (od["cost"], student["id"]))
-            db.execute("UPDATE garden SET coins=coins-? WHERE student_id=?",
-                       (deco["cost"], student["id"]))
-            db.execute("INSERT INTO decorations (student_id, deco_key, slot) VALUES (?, ?, ?)",
-                       (student["id"], key, replacing["slot"]))
-            db.commit()
-            session["garden_flash"] = (f"{deco['emoji']} «{deco['name']}» заменил фон "
-                                       f"«{od['name']}» (его цена вернулась монетками). "
-                                       f"Фон в саду может быть только один!")
-        else:
-            free_slots = [s for s in range(MAX_SLOTS) if s not in used]
-            if not free_slots:
-                session["garden_flash"] = f"В саду уже максимум украшений ({MAX_SLOTS}). Сними одно 😉"
-                return redirect(url_for("garden_page"))
-            db.execute("UPDATE garden SET coins=coins-? WHERE student_id=?",
-                       (deco["cost"], student["id"]))
-            db.execute("INSERT INTO decorations (student_id, deco_key, slot) VALUES (?, ?, ?)",
-                       (student["id"], key, free_slots[0]))
-            db.commit()
-            session["garden_flash"] = f"{deco['emoji'] or '🎨'} «{deco['name']}» украсило весь сад!"
+        db.execute("UPDATE garden SET coins=coins-? WHERE student_id=?",
+                   (deco["cost"], student["id"]))
+        db.execute("INSERT INTO decorations (student_id, deco_key, slot) VALUES (?, ?, ?)",
+                   (student["id"], key, free_slots[0]))
+        db.commit()
+        session["garden_flash"] = f"{deco['emoji']} «{deco['name']}» украсило весь сад!"
     return redirect(url_for("garden_page"))
 
 
