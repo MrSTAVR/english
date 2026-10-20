@@ -12,7 +12,7 @@ os.environ.setdefault("FLASK_DEBUG", "0")
 if os.path.exists("english_app.db"):
     os.remove("english_app.db")
 
-from app import app, LESSONS_BY_ID  # noqa: E402
+from app import app, LESSONS_BY_ID, MAIN_COUNT  # noqa: E402
 
 client = app.test_client()
 

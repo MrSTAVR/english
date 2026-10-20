@@ -787,6 +787,27 @@ def _stable_shuffle(items, seed):
     return items
 
 
+def match_columns(q):
+    """Нормализует match-задание к колоночному виду (left, right, pairs{int:int}).
+
+    Поддерживаются два формата банка уроков:
+      A) колонки:  {"left": [...], "right": [...], "pairs": {0: 2, ...}}
+      B) пары:     {"pairs": [["en", "ru"], ...]}  (парный формат доп. уроков)
+    Возвращает (left, right, pairs_dict)."""
+    raw = q.get("pairs", {})
+    if isinstance(raw, dict) and q.get("left") and q.get("right"):
+        left = list(q["left"])
+        right = list(q["right"])
+        pairs = {int(k): int(v) for k, v in raw.items()}
+        return left, right, pairs
+    # парный формат: [["cat", "кошка"], ...] -> левая колонка en, правая ru
+    seq = list(raw)
+    left = [p[0] for p in seq]
+    right = [p[1] for p in seq]
+    pairs = {i: i for i in range(len(seq))}
+    return left, right, pairs
+
+
 def shuffle_match(q):
     """Для задания 'match': правый столбик перемешиваем стабильно.
     Работает с обоими форматами (left/right и пары [[l, r], ...]).
@@ -813,6 +834,20 @@ def shuffle_sort(q):
     return res
 
 
+def match_cols(q):
+    """Фильтр шаблона: список левой колонки match-задания (любой формат)."""
+    left, _, _ = match_columns(q)
+    return left
+
+
+def match_answer_json(q):
+    """Фильтр шаблона: эталон ответов match-задания в JSON (ключи — индексы слева)."""
+    _, _, pairs = match_columns(q)
+    return json.dumps({str(k): v for k, v in pairs.items()})
+
+
+app.jinja_env.filters["match_cols"] = match_cols
+app.jinja_env.filters["match_answer"] = match_answer_json
 app.jinja_env.filters["shuffle_match"] = shuffle_match
 
 

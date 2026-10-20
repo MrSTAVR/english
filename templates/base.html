@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=8">
 </head>
 <body>
 {# SVG-спрайт: надёжные иконки (emoji 🪙 на Windows не отображается) #}
@@ -16,6 +16,10 @@
     <circle cx="12" cy="12" r="10" fill="#f6c445" stroke="#d9a520" stroke-width="2"/>
     <circle cx="12" cy="12" r="6.5" fill="none" stroke="#d9a520" stroke-width="1.5"/>
     <path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#fff3bf" stroke-width="2" stroke-linecap="round" opacity=".85"/>
+  </symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24">
+    <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/>
+    <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
   </symbol>
 </svg>
 <header class="topbar">
@@ -47,6 +51,7 @@
 {# ---------- Анимированный помощник Чик-чик (правый нижний угол) ---------- #}
 <script>window.MASCOT_SETTINGS = {{ mascot|tojson }};</script>
 <script src="{{ url_for('static', filename='mascot.js') }}?v=6"></script>
+<script src="{{ url_for('static', filename='tts.js') }}?v=1"></script>
 
 {% block scripts %}{% endblock %}
 </body>
