@@ -17,7 +17,9 @@
     {% endif %}
 
     {% set theme_key = theme.key if theme else '' %}
-    <div class="garden-scene theme-{{ theme_key or 'day' }} {{ 'is-broken' if garden.broken }}">
+    <div class="garden-scene scene-grow-{{ garden.streak_days }} theme-{{ theme_key or 'day' }} {{ 'is-broken' if garden.broken }}">
+
+
 
       {# Эффекты на весь сад (снег, лепестки, светлячки) #}
       {% for item in by_cat.get('effect', []) %}
@@ -26,25 +28,20 @@
         </div>
       {% endfor %}
 
-      {# Деревья сада: каждое — со своей формой кроны этого дня #}
+      {# Деревья сада: каждое со своей формой кроны и размером #}
       <div class="trees-row">
         {% for t in trees %}
-          {% set gk = tree_glyphs[t.i] %}
-          <div class="tree-cell" style="--tree-size: {{ stage.size }}; animation-delay: {{ t.i * 0.12 }}s;">
-            <div class="tree-stage">{{ gk | tree_glyph(stage.accent) }}</div>
+          <div class="tree-cell" style="animation-delay: {{ t.i * 0.12 }}s;">
+            <div class="tree-stage">{{ t.glyph | tree_glyph(t.scale) }}</div>
           </div>
         {% endfor %}
       </div>
 
-      {# Украшения неба: облака плывут по небу стайкой из трёх #}
+
+
+      {# Украшения неба #}
       {% for item in by_cat.get('sky', []) %}
-        {% if item.key == 'clouds' %}
-          <div class="deco-sky sky-clouds cloud-flock">
-            <span class="cloud c1">☁️</span><span class="cloud c2">☁️</span><span class="cloud c3">⛅</span>
-          </div>
-        {% else %}
-          <span class="deco-sky sky-{{ item.key }}">{{ item.emoji }}</span>
-        {% endif %}
+        <span class="deco-sky sky-{{ item.key }}">{{ item.emoji }}</span>
       {% endfor %}
 
       {# Растянутые на ВЕСЬ сад гирлянды/флажки/огни/забор #}
@@ -108,7 +105,7 @@
     </div>
     <div class="card glass mini-card">
       <div class="mini-num">🌳 {{ tree_count }}</div>
-      <div class="mini-label">деревьев в саду (новое каждые {{ per_tree }} дн.)</div>
+      <div class="mini-label">деревьев в саду — каждое новое заметное событие!</div>
     </div>
     <a class="btn btn-secondary" href="{{ url_for('student_home') }}">← К урокам</a>
   </aside>
@@ -123,23 +120,19 @@
   <p class="shop-hint">Каждое украшение действует на <b>весь сад</b>: гирлянда растянется от дерева до дерева, снежинки полетят над всей поляной, а фон полностью изменит небо 🌌</p>
   <div class="shop-grid">
     {% for d in decorations %}
-      {% set is_theme = d.category == 'theme' %}
-      {% set theme_active = is_theme and theme and theme.key == d.key %}
-      <div class="shop-item card {{ 'shop-owned' if owned_counts.get(d.key) or theme_active }}">
-        {{ d | deco_icon }}
+      <div class="shop-item card">
+        <div class="shop-emoji">{{ d.emoji }}</div>
         <div class="shop-name">{{ d.name }}</div>
         <div class="shop-cat">{{ cat_names[d.category] }}</div>
         <div class="shop-price"><svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ d.cost }}</div>
-        {% if theme_active %}
-          <button class="btn btn-locked" disabled>Этот фон активен ✅</button>
-        {% elif garden.coins >= d.cost and not garden.broken and garden.streak_days > 0 and (is_theme or active|length < max_slots) %}
+        {% if garden.coins >= d.cost and not garden.broken and garden.streak_days > 0 and active|length < max_slots %}
           <form method="post" action="{{ url_for('garden_buy') }}">
             <input type="hidden" name="deco_key" value="{{ d.key }}">
-            <button class="btn btn-primary btn-small" type="submit">{{ 'Выбрать фон 🖼️' if is_theme else 'Купить 🎁' }}</button>
+            <button class="btn btn-primary btn-small" type="submit">Купить 🎁</button>
           </form>
         {% elif garden.broken or garden.streak_days <= 0 %}
           <button class="btn btn-locked" disabled>Сначала позанимайся 🍂</button>
-        {% elif not is_theme and active|length >= max_slots %}
+        {% elif active|length >= max_slots %}
           <button class="btn btn-locked" disabled>Сад уже убран ✨</button>
         {% else %}
           <button class="btn btn-locked" disabled>Не хватает <svg class="icon icon-coin"><use href="#i-coin"/></svg></button>
@@ -157,7 +150,7 @@
     {% for slot, key in active.items() %}
       {% set d = deco_by_key[key] %}
       <div class="worn-item">
-        {{ d | deco_icon }}
+        <span class="worn-emoji">{{ d.emoji }}</span>
         <span class="worn-name">{{ d.name }}</span>
         <span class="worn-cat">{{ cat_names[d.category] }}</span>
         <form method="post" action="{{ url_for('garden_remove', slot=slot) }}">

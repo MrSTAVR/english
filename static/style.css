@@ -459,25 +459,63 @@ h2 { color: var(--primary-dark); font-weight: 800; }
 .garden-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; margin-bottom: 18px; }
 @media (max-width: 760px) { .garden-grid { grid-template-columns: 1fr; } }
 .tree-panel { text-align: center; overflow: hidden; }
-.garden-scene { position: relative; height: 340px; border-radius: 20px; margin: 10px 0;
-  overflow: hidden; transition: background .8s ease; }
+/* Высота сада растёт каждый день вместе с деревьями: к 30-му дню сцена
+   занимает больше половины окна (52vh + запас на шапку/карточки ≈ 65%) */
+.garden-scene { position: relative; height: min(70vh, 640px); border-radius: 20px; margin: 10px 0;
+  overflow: hidden; transition: height 1.2s cubic-bezier(.2,.9,.3,1.2), background .8s ease; }
+.garden-scene.scene-grow-0  { height: 300px; }
+.garden-scene.scene-grow-1  { height: 320px; }
+.garden-scene.scene-grow-2  { height: 340px; }
+.garden-scene.scene-grow-3  { height: 360px; }
+.garden-scene.scene-grow-4  { height: 380px; }
+.garden-scene.scene-grow-5  { height: 400px; }
+.garden-scene.scene-grow-6  { height: 415px; }
+.garden-scene.scene-grow-7  { height: 430px; }
+.garden-scene.scene-grow-8  { height: 445px; }
+.garden-scene.scene-grow-9  { height: 460px; }
+.garden-scene.scene-grow-10 { height: 475px; }
+.garden-scene.scene-grow-11 { height: 490px; }
+.garden-scene.scene-grow-12 { height: 500px; }
+.garden-scene.scene-grow-13 { height: 510px; }
+.garden-scene.scene-grow-14 { height: 520px; }
+.garden-scene.scene-grow-15 { height: 530px; }
+.garden-scene.scene-grow-16 { height: 540px; }
+.garden-scene.scene-grow-17 { height: 545px; }
+.garden-scene.scene-grow-18 { height: 550px; }
+.garden-scene.scene-grow-19 { height: 555px; }
+.garden-scene.scene-grow-20 { height: 560px; }
+.garden-scene.scene-grow-21 { height: 565px; }
+.garden-scene.scene-grow-22 { height: 570px; }
+.garden-scene.scene-grow-23 { height: 575px; }
+.garden-scene.scene-grow-24 { height: 580px; }
+.garden-scene.scene-grow-25 { height: 585px; }
+.garden-scene.scene-grow-26 { height: 590px; }
+.garden-scene.scene-grow-27 { height: 595px; }
+.garden-scene.scene-grow-28 { height: 600px; }
+.garden-scene.scene-grow-29 { height: 605px; }
+.garden-scene.scene-grow-30 { height: 610px; }
 .garden-scene.is-broken { filter: grayscale(.8); }
-.garden-ground { position: absolute; bottom: 0; left: 0; right: 0; height: 46px;
-  background: linear-gradient(180deg, #8fd66f, #6cbf4e); border-radius: 50% 50% 0 0 / 30px; }
+.garden-ground { position: absolute; bottom: 0; left: 0; right: 0; height: 56px;
+  background: linear-gradient(180deg, #8fd66f, #6cbf4e); border-radius: 50% 50% 0 0 / 34px; }
 .trees-row { position: absolute; bottom: 26px; left: 0; right: 0; display: flex;
   justify-content: space-evenly; align-items: flex-end; z-index: 2; padding: 0 8px; }
 .tree-cell { position: relative; display: flex; flex-direction: column; align-items: center;
   animation: treePop .7s cubic-bezier(.2,.9,.3,1.4) both; }
 @keyframes treePop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.tree-stage { transform: scale(var(--tree-size, 1)); transform-origin: bottom center;
-  transition: transform 1.2s cubic-bezier(.2,.9,.3,1.4); }
-.tree-svg { width: clamp(48px, 14vw, 96px); height: auto; display: block;
-  animation: treeSway 4s ease-in-out infinite; }
+.tree-sizer { display: flex; align-items: flex-end; justify-content: center;
+  transition: all 1.2s cubic-bezier(.2,.9,.3,1.4); }
+.tree-svg { width: calc(clamp(40px, 10vw, 72px) * var(--tree-scale, 1)); height: auto; display: block;
+  max-width: 30vw; animation: treeSway 4s ease-in-out infinite; }
 @keyframes treeSway { 0%,100% { transform: rotate(-2deg);} 50% { transform: rotate(2deg);} }
 .tree-pot { width: 34px; height: 12px; border-radius: 6px 6px 10px 10px;
   background: linear-gradient(180deg, #a56a2f, #7c4a1d); margin-top: -4px; }
 /* ===== УКРАШЕНИЯ САДА: каждое действует на ВЕСЬ сад ===== */
-.deco-sky, .deco-span, .deco-effect { position: absolute; z-index: 3; pointer-events: none; }
+.deco-scatter, .deco-sky, .deco-object, .deco-span, .deco-effect { position: absolute; z-index: 3; pointer-events: none; }
+
+/* россыпь по поляне (бабочки, грибочки, цветы, ёжики) — 5 штук на весь сад */
+.deco-scatter { bottom: 26px; font-size: 22px; animation: decoDrop .8s cubic-bezier(.2,.9,.3,1.4) both, decoFloat 3.2s ease-in-out infinite; }
+.deco-slot-1.deco-scatter { bottom: 34px; }
+.deco-slot-2.deco-scatter { bottom: 22px; }
 @keyframes decoDrop { from { transform: translateY(-90px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes decoFloat { 0%,100% { translate: 0 0; } 50% { translate: 0 -7px; } }
 
@@ -492,13 +530,16 @@ h2 { color: var(--primary-dark); font-weight: 800; }
 .sky-stars::after { content: "✨ ✨ ✨"; top: 26px; left: 30%; animation-delay: 1.2s; font-size: 13px; }
 @keyframes twinkle { from { opacity: .35; } to { opacity: 1; } }
 .sky-moon { top: 12px; right: 60px; }
-/* облака — стайка из трёх, плывёт по всему небу сада */
-.cloud-flock { display: flex; gap: 34px; top: 34px; right: auto; left: 8%; font-size: 0; opacity: .95;
-  animation: decoDrop .8s both, cloudDrift 30s linear infinite; }
-.cloud-flock .cloud { font-size: 30px; filter: drop-shadow(0 3px 4px rgba(70,120,180,.18)); }
-.cloud-flock .c2 { font-size: 22px; transform: translateY(-14px); }
-.cloud-flock .c3 { font-size: 34px; transform: translateY(6px); }
-@keyframes cloudDrift { from { translate: -80px 0; } to { translate: calc(100vw + 80px) 0; } }
+.sky-clouds { top: 44px; right: auto; left: 18%; font-size: 30px; opacity: .9;
+  animation: decoDrop .8s both, cloudDrift 26s linear infinite; }
+@keyframes cloudDrift { from { translate: -60px 0; } to { translate: 320px 0; } }
+
+/* крупные объекты в саду */
+.deco-object { bottom: 24px; font-size: 44px; z-index: 4; animation: decoDrop .8s cubic-bezier(.2,.9,.3,1.4) both;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,.2)); }
+.obj-center { left: 50%; transform: translateX(-50%); }
+.obj-left   { left: 12%; }
+.obj-right  { right: 12%; }
 
 /* эффекты на весь сад: снег / лепестки / светлячки */
 .deco-effect { inset: 0; z-index: 5; overflow: hidden; }
@@ -569,19 +610,12 @@ h2 { color: var(--primary-dark); font-weight: 800; }
 .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
 .shop-item { text-align: center; padding: 14px 10px; }
 .shop-emoji { font-size: 42px; }
-.shop-icon { display: inline-flex; align-items: center; justify-content: center; height: 46px; }
-.shop-icon svg { width: 52px; height: auto; }
-.shop-icon-dot { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe97a, #d9a400); box-shadow: inset -2px -3px 6px rgba(0,0,0,.15); }
-.shop-owned { outline: 3px solid #b7f7c7; }
 .shop-name { font-weight: 800; margin: 4px 0 2px; }
 .shop-cat { font-size: 12px; color: #7c8aa0; margin-bottom: 2px; }
 .shop-price { margin-bottom: 8px; color: #b8860b; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 4px; }
 .worn-row { display: flex; flex-wrap: wrap; gap: 12px; }
 .worn-item { display: flex; align-items: center; gap: 8px; background: #f2fbff; border-radius: 14px; padding: 8px 12px; flex-wrap: wrap; }
 .worn-emoji { font-size: 26px; }
-.worn-item .shop-icon { height: 30px; }
-.worn-item .shop-icon svg { width: 34px; }
-.worn-item .shop-emoji { font-size: 26px; }
 .pill-warn { background: #ffe3c2; color: #9a5b00; }
 /* панель редактирования сада в кабинете родителя */
 .garden-edit { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
