@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Кабинет родителя — English Fun{% endblock %}
+{% block content %}
+
+<h1>👨‍👩‍👧 Кабинет родителя</h1>
+
+<!-- Аккаунты учеников -->
+<section class="card" id="students">
+  <h2>👶 Аккаунты учеников ({{ students|length }})</h2>
+  {% if student_cards %}
+  <table class="tbl">
+    <thead>
+      <tr><th>Ученик</th><th>Логин</th><th>Прогресс</th><th>Средний балл</th><th>Время занятий</th><th>Ачивок</th><th>Действия</th></tr>
+    </thead>
+    <tbody>
+      {% for card in student_cards %}
+        {% set st = card.student %}{% set sst = card.stats %}
+        <tr>
+          <td>{{ st.emoji }} <b>{{ st.display_name }}</b></td>
+          <td><code>{{ st.username }}</code></td>
+          <td>
+            <div class="mini-progress"><div class="mini-fill" style="width: {{ 100 * sst.lessons_completed / total_lessons }}%"></div></div>
+            {{ sst.lessons_completed }}/{{ total_lessons }} уроков
+          </td>
+          <td>{% if sst.avg_score %}{{ "%.0f"|format(sst.avg_score) }}%{% else %}—{% endif %}</td>
+          <td>{{ sst.total_seconds|human_time }}</td>
+          <td>🏅 {{ card.earned_count }}</td>
+          <td class="actions-cell">
+            <form method="post" action="{{ url_for('reset_student_password', sid=st.id) }}" class="inline-form">
+              <input type="password" name="password" placeholder="новый пароль" minlength="4" required>
+              <button class="btn btn-small" type="submit">🔑 Сбросить пароль</button>
+            </form>
+            <form method="post" action="{{ url_for('delete_student', sid=st.id) }}" class="inline-form"
+                  onsubmit="return confirm('Удалить аккаунт {{ st.display_name }} и весь его прогресс?');">
+              <button class="btn btn-danger" type="submit">🗑 Удалить</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="hint">Аккаунтов пока нет — создайте первый ниже, и ребёнок сможет войти по логину и паролю. 😉</p>
+  {% endif %}
+
+  <h3>➕ Новый ученик</h3>
+  <form method="post" action="{{ url_for('add_student') }}" class="student-form">
+    <label>Имя (как увидит ребёнок):
+      <input type="text" name="display_name" placeholder="Маша" maxlength="40" required></label>
+    <label>Логин для входа:
+      <input type="text" name="username" placeholder="masha" maxlength="20" required
+             pattern="[a-zA-Z0-9_.\-]{2,20}" autocapitalize="off"></label>
+    <label>Пароль (мин. 4 символа):
+      <input type="password" name="password" placeholder="••••" minlength="4" required></label>
+    <label>Аватарка:
+      <select name="emoji">
+        {% for e in student_emojis %}<option value="{{ e }}">{{ e }}</option>{% endfor %}
+      </select></label>
+    <button type="submit" class="btn btn-primary">Создать аккаунт 🎉</button>
+  </form>
+</section>
+
+<!-- Общая сводка -->
+<section class="card tracker">
+  <h2>📊 Общая статистика (все ученики)</h2>
+  <div class="stats-grid">
+    <div class="stat"><span class="stat-num">{{ stats.lessons_completed }}/{{ total_lessons }}</span><span class="stat-label">уроков пройдено</span></div>
+    <div class="stat"><span class="stat-num">{% if stats.attempts %}{{ "%.0f"|format(stats.avg_score) }}%{% else %}—{% endif %}</span><span class="stat-label">средний балл (лучшие попытки)</span></div>
+    <div class="stat"><span class="stat-num">{{ stats.total_seconds|human_time }}</span><span class="stat-label">всего времени в занятиях</span></div>
+    <div class="stat"><span class="stat-num">{{ stats.attempts|length }}</span><span class="stat-label">тестов сдано всего</span></div>
+    <div class="stat"><span class="stat-num">{{ stats.total_mistakes }}</span><span class="stat-label">ошибок за всё время</span></div>
+    <div class="stat"><span class="stat-num">{{ stats.words_learned }}</span><span class="stat-label">слов пройдено</span></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" style="width: {{ 100 * stats.lessons_completed / total_lessons }}%"></div></div>
+</section>
+
+<!-- Прогресс по урокам -->
+<section class="card">
+  <h2>📚 Прогресс и время по урокам</h2>
+  <table class="tbl">
+    <thead>
+      <tr><th>Урок</th><th>Статус</th><th>Попыток</th><th>Лучший результат</th><th>Время на урок (суммарно)</th></tr>
+    </thead>
+    <tbody>
+      {% for row in lessons %}
+        <tr class="{{ 'row-done' if row.passed }}">
+          <td>{{ row.lesson.emoji }} {{ row.lesson.title }}</td>
+          <td>{{ '✅ пройден' if row.passed else ('🟡 пыталась' if row.tries else '⬜ не начат') }}</td>
+          <td>{{ row.tries }}</td>
+          <td>{% if row.best_score is not none %}{{ "%.0f"|format(row.best_score) }}%{% else %}—{% endif %}</td>
+          <td>{{ row.time_spent|human_time }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<!-- История попыток -->
+<section class="card">
+  <h2>🕒 История занятий (кто, когда и сколько времени)</h2>
+  {% if attempts %}
+  <table class="tbl">
+    <thead>
+      <tr><th>Ученик</th><th>Дата начала</th><th>Дата окончания</th><th>Урок</th><th>Время</th><th>Результат</th><th>Ошибок</th></tr>
+    </thead>
+    <tbody>
+      {% for a in attempts %}
+        <tr class="{{ 'row-fail' if not a.passed }}">
+          <td>{{ emojis_by_id.get(a.student_id, '') }} {{ names_by_id.get(a.student_id, 'гость') }}</td>
+          <td>{{ a.started_at[:16].replace('T', ' ') }}</td>
+          <td>{{ a.finished_at[:16].replace('T', ' ') }}</td>
+          <td>{{ a.lesson_id }} · {{ lesson_titles.get(a.lesson_id, '') }}</td>
+          <td>{{ a.seconds_spent|human_time }}</td>
+          <td>{{ "%.0f"|format(a.score_percent) }}% {{ '✅' if a.passed else '❌' }}</td>
+          <td>{{ a.mistakes_json | mistakes_count }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p>Занятий пока не было.</p>
+  {% endif %}
+</section>
+
+<!-- Все ошибки -->
+<section class="card">
+  <h2>❌ Все ошибки (чтобы разобрать дома)</h2>
+  <div id="mistakes-box"><p>Загрузка…</p></div>
+</section>
+
+<!-- Достижения -->
+<section class="card">
+  <h2>🏅 Достижения</h2>
+  <div class="ach-grid">
+    {% for a in achievements %}
+      <div class="ach {{ 'ach-earned' if a.earned else 'ach-locked' }}">
+        <div class="ach-emoji">{{ a.emoji }}</div>
+        <div class="ach-title">{{ a.title }}</div>
+        <div class="ach-desc">{{ a.desc }}</div>
+        {% if a.earned %}<div class="ach-date">🏅 у: {{ a.who }} · {{ a.earned_at[:10] }}</div>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+fetch('/api/mistakes').then(r => r.json()).then(data => {
+  const box = document.getElementById('mistakes-box');
+  if (!data.length) { box.innerHTML = '<p>Ошибок нет — молодцы! 🌟</p>'; return; }
+  let html = '<table class="tbl"><thead><tr><th>Дата</th><th>Ученик</th><th>Урок</th><th>Вопрос</th><th>Ответ ученика</th><th>Правильно</th><th>Подсказка</th></tr></thead><tbody>';
+  for (const m of data) {
+    html += `<tr><td>${m.date}</td><td>${m.student}</td><td>${m.lesson_title}</td><td>${m.question}</td>
+             <td class="wrong-answer">${m.given}</td><td class="right-answer">${m.correct}</td><td>${m.explain}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  box.innerHTML = html;
+});
+</script>
+{% endblock %}
