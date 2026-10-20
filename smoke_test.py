@@ -12,7 +12,7 @@ os.environ.setdefault("FLASK_DEBUG", "0")
 if os.path.exists("english_app.db"):
     os.remove("english_app.db")
 
-from app import app, LESSONS_BY_ID  # noqa: E402
+from app import app, LESSONS_BY_ID, MAIN_COUNT  # noqa: E402
 
 client = app.test_client()
 
@@ -67,8 +67,9 @@ check("вход ученицы", r.status_code == 200 and "Привет, Маш�
 check("урок 2 заблокирован", "Закрой предыдущий урок" in body)
 check("блок «Дополнительные уроки» на главной", "Дополнительные уроки" in body)
 check("доп. уроки не заблокированы", "Бонус-урок" in body)
-# 1b. Дополнительные уроки доступны ВСЕГДА (сразу после входа, id 101..105)
-for eid in (101, 102, 103, 104, 105):
+# 1b. Дополнительные уроки доступны ВСЕГДА (сразу после входа)
+from data.extra_lessons import EXTRA_LESSONS as _EL
+for eid in tuple(l["id"] for l in _EL):
     re_ = client.get(f"/lesson/{eid}")
     check(f"доп. урок {eid} открывается без блокировки",
           re_.status_code == 200 and "Начать" not in re_.get_data(as_text=True)[:200])
@@ -130,10 +131,10 @@ check("ачивка Первый шаг", "Первый шаг" in body)
 r = client.get("/student")
 body = r.get_data(as_text=True)
 check("урок 2 разблокирован", "Начать урок" in body)
-check(f"трекер показывает 1/{len(LESSONS_BY_ID)}", f"1/{len(LESSONS_BY_ID)}" in body)
+check("трекер показывает 1/основных", f"1/{MAIN_COUNT}" in body)
 
 # 7. Пройдём все оставшиеся уроки идеально, чтобы проверить ачивки
-for lid in range(2, len(LESSONS_BY_ID) + 1):
+for lid in range(2, MAIN_COUNT + 1):
     les = LESSONS_BY_ID[lid]
     r = client.get(f"/lesson/{lid}")
     body = r.get_data(as_text=True)

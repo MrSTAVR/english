@@ -267,10 +267,10 @@ def grade_question(q, given):
         ok = norm_answer(given) == expected
         return ok, q["answer"]
     if qtype == "match":
-        expected = {int(k): int(v) for k, v in q["pairs"].items()}
+        left, right, expected = match_columns(q)
         got = parse_pairs(given)
         ok = got == expected
-        disp = ", ".join(f"{q['left'][li]} ↔ {q['right'][ri]}"
+        disp = ", ".join(f"{left[li]} ↔ {right[ri]}"
                          for li, ri in sorted(expected.items()))
         return ok, disp
     if qtype == "sort":
@@ -770,14 +770,36 @@ def _stable_shuffle(items, seed):
     return items
 
 
+def match_columns(q):
+    """Нормализует match-задание к колоночному виду (left, right, pairs{int:int}).
+
+    Поддерживаются два формата банка уроков:
+      A) колонки:  {"left": [...], "right": [...], "pairs": {0: 2, ...}}
+      B) пары:     {"pairs": [["en", "ru"], ...]}  (парный формат доп. уроков)
+    Возвращает (left, right, pairs_dict)."""
+    raw = q.get("pairs", {})
+    if isinstance(raw, dict) and q.get("left") and q.get("right"):
+        left = list(q["left"])
+        right = list(q["right"])
+        pairs = {int(k): int(v) for k, v in raw.items()}
+        return left, right, pairs
+    # парный формат: [["cat", "кошка"], ...] -> левая колонка en, правая ru
+    seq = list(raw)
+    left = [p[0] for p in seq]
+    right = [p[1] for p in seq]
+    pairs = {i: i for i in range(len(seq))}
+    return left, right, pairs
+
+
 def shuffle_match(q):
     """Для задания 'match': правый столбик перемешиваем стабильно.
     Возвращает список [(right_idx, text)] — порядок отображения."""
-    rights = list(range(len(q["right"])))
-    order = _stable_shuffle(rights, "m" + "".join(map(str, rights)) + str(len(q["left"])))
+    _, right, _ = match_columns(q)
+    rights = list(range(len(right)))
+    order = _stable_shuffle(rights, "m" + "".join(map(str, rights)) + str(len(right)))
     if order == rights:
         order = order[::-1]
-    return [(i, q["right"][i]) for i in order]
+    return [(i, right[i]) for i in order]
 
 
 def shuffle_sort(q):
@@ -794,6 +816,20 @@ def shuffle_sort(q):
     return res
 
 
+def match_cols(q):
+    """Фильтр шаблона: список левой колонки match-задания (любой формат)."""
+    left, _, _ = match_columns(q)
+    return left
+
+
+def match_answer_json(q):
+    """Фильтр шаблона: эталон ответов match-задания в JSON (ключи — индексы слева)."""
+    _, _, pairs = match_columns(q)
+    return json.dumps({str(k): v for k, v in pairs.items()})
+
+
+app.jinja_env.filters["match_cols"] = match_cols
+app.jinja_env.filters["match_answer"] = match_answer_json
 app.jinja_env.filters["shuffle_match"] = shuffle_match
 app.jinja_env.filters["shuffle_sort"] = shuffle_sort
 
@@ -822,7 +858,11 @@ def validate_lessons():
                     if need != sorted(bank):
                         errors.append(f"{ref} — слова в банке не совпадают с ответом")
                 elif t == "match":
-                    left, right, pairs = q.get("left", []), q.get("right", []), q.get("pairs", {})
+                    try:
+                        left, right, pairs = match_columns(q)
+                    except Exception:
+                        errors.append(f"{ref} — нераспознанный формат match")
+                        continue
                     if len(left) != len(right) or not left:
                         errors.append(f"{ref} — разная длина колонок в match")
                     norm = {}

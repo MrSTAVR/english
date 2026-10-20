@@ -28,7 +28,7 @@
 <!-- Шаг 2: материал (карточки) -->
 <section class="card step hidden" id="step-material">
   <h2>Шаг 2 — Изучи слова 🧠</h2>
-  <p>Читай слово вслух (подсказка произношения в скобках). Нажимай на карточку, чтобы перевернуть её и увидеть перевод.</p>
+  <p>Читай слово вслух (подсказка произношения в скобках). Нажимай на карточку, чтобы перевернуть её и увидеть перевод. Кнопка <b>🔊</b> рядом со словом — послушаешь правильное произношение!</p>
   <div class="flashcards">
     {% for w in lesson.material %}
       <div class="flashcard" onclick="this.classList.toggle('flipped')">
@@ -60,10 +60,10 @@
         </div>
       {% elif ex.type == 'match' %}
         {# drag&drop: тянем левую карточку на правую слот-пару; эталон скрыт (data-answer) #}
-        <div class="dnd dnd-match" data-ex data-answer='{{ ex.pairs | tojson }}'>
+        <div class="dnd dnd-match" data-ex data-answer='{{ ex | match_answer }}'>
           <div class="match-cols">
             <div class="match-col match-left">
-              {% for item in ex.left %}
+              {% for item in ex | match_cols %}
                 <div class="match-tile" draggable="true" data-left="{{ loop.index0 }}">{{ item }}</div>
               {% endfor %}
             </div>
@@ -99,6 +99,7 @@
         </div>
       {% else %}
         <input type="text" class="typein" placeholder="Напиши ответ по-английски">
+        <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ">🔊 Послушать</button>
       {% endif %}
       {% if ex.type not in ('match', 'sort') %}
         <button class="btn btn-small" onclick="checkExercise(this)">Проверить ✔️</button>
@@ -139,14 +140,15 @@
             <div class="answer-line" id="line-{{ outer_loop.index0 }}"></div>
             <input type="hidden" name="q{{ outer_loop.index0 }}_order" id="order-{{ outer_loop.index0 }}">
             <button type="button" class="btn btn-small" onclick="clearLine({{ outer_loop.index0 }})">Очистить 🧽</button>
+            <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakLine({{ outer_loop.index0 }})" title="Послушать, как звучит твоя фраза">🔊 Послушать</button>
           </div>
         {% elif q.type == 'match' %}
           {# Итоговый тест: drag&drop пары; скрытое поле заполняет скрипт #}
           <div class="dnd dnd-match" data-q="{{ outer_loop.index0 }}"
-               data-pairs='{{ q.pairs | tojson }}'>
+               data-pairs='{{ q | match_answer }}'>
             <div class="match-cols">
               <div class="match-col match-left">
-                {% for item in q.left %}
+                {% for item in q | match_cols %}
                   <div class="match-tile" draggable="true" data-left="{{ loop.index0 }}">{{ item }}</div>
                 {% endfor %}
               </div>
@@ -181,6 +183,7 @@
           </div>
         {% else %}
           <input type="text" class="typein" name="q{{ outer_loop.index0 }}" placeholder="Напиши ответ по-английски" autocomplete="off">
+          <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ">🔊 Послушать</button>
         {% endif %}
       </div>
     {% endfor %}
