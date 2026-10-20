@@ -38,14 +38,71 @@
     synth.onvoiceschanged = pickVoice; // список голосов подгружается асинхронно
   }
 
+  // Словарь замен слов с диакритикой/заимствований — чтобы голос читал их правильно
+  // Ключи со звездочкой (*) читаются голосом как есть — это фонетическая подсказка.
+  var SPEAK_MAP = {
+    "café": "coffee", "cafe": "coffee", "crème": "cream", "creme": "cream",
+    "cliché": "*shee shay", "fiancé": "*fee on say", "fiancée": "*fee on say",
+    "croissant": "*kwa son", "crouton": "*crow ton", "pâté": "*pa tay",
+    "résumé": "*rez um ay", "naïve": "*nye eev", "touché": "*too shay",
+    "déjà vu": "*day zha voo", "ballet": "*ba lay", "buffet": "*bu fay",
+    "soufflé": "*soo flay", "entrecôte": "*on tra kot", "hors d'oeuvre": "*or durv",
+    "café au lait": "*ka fey o lay"
+  };
+
   function stripForSpeech(text) {
-    return String(text)
+    var s = String(text)
       .replace(/[«»"'`]/g, '')
-      .replace(/\(.*?\)/g, '')          // убираем транскрипцию [prɪˈpəz]
-      .replace(/\[.*?\]/g, '')
-      .replace(/[^A-Za-z0-9\s.,!?:;-]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+      .replace(/\(.*?\)/g, '')          // убираем транскрипцию (IPA)
+      .replace(/\[.*?\]/g, '');
+    // Сначала снимаем диакритику с текста (NFD -> убрать комбинируемые метки),
+    // затем матчим со словарём по нормализованным ключам — так замена сработает
+    // независимо от формы Unicode, в которой слово пришло из БД/HTML.
+    if (s.normalize) {
+      s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    } else {
+      s = s.replace(/[áàâäãåā]/g, 'a').replace(/[éèêëē]/g, 'e')
+           .replace(/[íìîïī]/g, 'i').replace(/[óòôöõøō]/g, 'o')
+           .replace(/[úùûüū]/g, 'u').replace(/[ç]/g, 's').replace(/[ñ]/g, 'n');
+    }
+    function normKey(k) {
+      if (k.normalize) k = k.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return k.toLowerCase();
+    }
+    var phrases = [], words = [];
+    Object.keys(SPEAK_MAP).forEach(function (k) {
+      (k.indexOf(' ') >= 0 ? phrases : words).push(normKey(k));
+    });
+    phrases.sort(function (a, b) { return b.length - a.length; });
+    function applyMap(list, isPhrase) {
+      list.forEach(function (k) {
+        var repl = SPEAK_MAP[Object.keys(SPEAK_MAP).filter(function (orig) {
+          return normKey(orig) === k;
+        })[0]];
+        if (isPhrase) {
+          s = s.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), repl);
+        } else {
+          var re = new RegExp('(^|[^A-Za-z])' + k + '($|[^A-Za-z])', 'gi');
+          s = s.replace(re, '$1' + repl + '$2');
+        }
+      });
+    }
+    applyMap(phrases, true);
+    applyMap(words, false);
+    s = s.replace(/\*/g, '');   // звёздочки — маркеры фонетических замен, синтезу не нужны
+    // NFD-разложение: é -> e + ́, затем выбрасываем комбинируемые диакритические метки
+    if (s.normalize) {
+      s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    } else {
+      s = s.replace(/[áàâäãåā]/g, 'a').replace(/[éèêëē]/g, 'e')
+           .replace(/[íìîïī]/g, 'i').replace(/[óòôöõøō]/g, 'o')
+           .replace(/[úùûüū]/g, 'u').replace(/[ç]/g, 's').replace(/[ñ]/g, 'n');
+    }
+    // всё, что осталось не-ASCII (например, ø, œ), вырезаем — синтез их не любит
+    s = s.replace(/[^A-Za-z0-9\s.,!?:;-]/g, ' ')
+         .replace(/\s+/g, ' ')
+         .trim();
+    return s;
   }
 
   /* Основной вызов: speak("Hello, how are you?") */
