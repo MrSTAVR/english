@@ -670,14 +670,14 @@ def garden_view(db, student_id):
     for r in owned:
         counts[r["deco_key"]] = counts.get(r["deco_key"], 0) + 1
     tcount = tree_count_for(streak)
-    student_row = db.execute("SELECT name FROM students WHERE id=?",
+    student_row = db.execute("SELECT display_name FROM students WHERE id=?",
                              (student_id,)).fetchone()
-    sname = student_row["name"] if student_row else str(student_id)
+    sname = student_row["display_name"] if student_row else str(student_id)
     trees = []
     for i in range(tcount):
-        g = stage["glyph"]
+        glyph = stage["glyph"]
         trees.append({"i": i, "coin_bonus": (i + 1) * 2,
-                      "glyph": variant_glyph(g, f"{sname}-{i}"),
+                      "glyph": variant_glyph(glyph, f"{sname}-{i}"),
                       "scale": round(stage["size"] * (1 - 0.07 * (i % 3)), 3)})
     # сколько дней до следующего дерева
     to_next = 0
@@ -687,7 +687,7 @@ def garden_view(db, student_id):
         if nxt_day is not None:
             to_next = max(0, nxt_day - streak)
     return {
-        "garden": g,
+        "garden": dict(zip(g.keys(), g)),
         "stage": stage,
         "next_stage": next_stage,
         "active": active,

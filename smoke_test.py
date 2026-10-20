@@ -174,4 +174,14 @@ for k in ("five_lessons", "half_way", "streak10", "words100", "attempts5",
     check(f"ачивка {k} в каталоге", k in keys)
 check("всего ачивок >= 16", len(ACHIEVEMENTS) >= 16)
 
+# --- сад: регрессия на баг "no such column: name" (регистрация #20) ---
+client.get("/logout")
+client.post("/login/student", data={"username": "masha", "password": "secret1"})
+r = client.get("/student/garden")
+gb = r.get_data(as_text=True)
+check("страница сада открывается (200)", r.status_code == 200)
+check("сад не падает на имени ученицы", "OperationalError" not in gb and "Internal Server Error" not in gb)
+check("в саду есть сцена с деревьями", "garden-scene" in gb or "tree-cell" in gb)
+client.get("/logout")
+
 print("\nALL TESTS PASSED ✔")
