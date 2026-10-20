@@ -6,6 +6,16 @@ import app as appmod
 from app import match_columns
 
 
+def dbmod():
+    """Модуль, чей DB_PATH реально использует get_db(): database.py после шага 2,
+    app.py до него. Так тесты работают и до, и после разбиения."""
+    try:
+        import database
+        return database
+    except ImportError:
+        return appmod
+
+
 def attempt_id_from(html):
     m = re.search(r'name="attempt_id" value="(\d+)"', html)
     assert m, "attempt_id не найден на странице урока"
@@ -66,7 +76,7 @@ def submit_lesson(client, lesson_id, wrong=False, seconds=600):
 
 
 def db_all(sql, args=()):
-    conn = sqlite3.connect(appmod.DB_PATH)
+    conn = sqlite3.connect(dbmod().DB_PATH)
     try:
         return conn.execute(sql, args).fetchall()
     finally:
