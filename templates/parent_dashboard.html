@@ -97,7 +97,7 @@
     <tbody>
       {% for row in lessons %}
         <tr class="{{ 'row-done' if row.passed }}">
-          <td>{{ row.lesson.emoji }} {{ row.lesson.title }}</td>
+          <td>{{ row.lesson.emoji }} {{ row.lesson.title }}{% if row.lesson.is_extra %} <span class="pill pill-soft">доп.</span>{% endif %}</td>
           <td>{{ '✅ пройден' if row.passed else ('🟡 пыталась' if row.tries else '⬜ не начат') }}</td>
           <td>{{ row.tries }}</td>
           <td>{% if row.best_score is not none %}{{ "%.0f"|format(row.best_score) }}%{% else %}—{% endif %}</td>

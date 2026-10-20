@@ -99,6 +99,38 @@
   </div>
 </section>
 
+<!-- 3б. Дополнительные уроки — всегда открыты -->
+<section>
+  <div class="section-head">
+    <h2 class="section-title">🎁 Дополнительные уроки</h2>
+    <span class="pill pill-soft">{{ extras_done }} из {{ total_extras }} пройдено · открыты всегда 🔓</span>
+  </div>
+  <p class="section-sub">Иди в любом порядке и в любое время — они не блокируются основным курсом и помогают учить полезные слова.</p>
+  <div class="lesson-grid">
+    {% for info in extra_lessons %}
+      {% set l = info.lesson %}
+      <div class="lesson-card card {{ 'lesson-done' if info.done }}">
+        <div class="lesson-top">
+          <div class="lesson-emoji">{{ l.emoji }}</div>
+          <div class="lesson-num">Бонус-урок</div>
+          {% if info.done %}<div class="ribbon">✅ Пройден</div>{% endif %}
+        </div>
+        <h3>{{ l.title }}</h3>
+        <p>{{ l.description }}</p>
+        <div class="lesson-meta">
+          <span>⏱️ ~10 мин</span><span>🧠 {{ l.material|length }} слов</span><span>✅ тест {{ l.test|length }}</span>
+        </div>
+        {% if info.done %}
+          <div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '🌟' if info.best_score >= 90 }}</div>
+          <a class="btn btn-secondary" href="{{ url_for('lesson_page', lesson_id=l.id) }}">Повторить ещё раз 🔁</a>
+        {% else %}
+          <a class="btn btn-primary" href="{{ url_for('lesson_page', lesson_id=l.id) }}">Начать урок ▶️</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
 <!-- 4. Ачивки (теперь внизу) -->
 <section class="card glass ach-panel">
   <div class="section-head">

@@ -22,6 +22,12 @@ from flask import (Flask, abort, flash, g, jsonify, redirect,
                    render_template, request, session, url_for)
 
 from data.lessons import LESSONS
+from data.extra_lessons import EXTRA_LESSONS
+
+# Все уроки: основные (с последовательной разблокировкой) + дополнительные
+# (всегда открыты, id >= 101, флаг is_extra).
+ALL_LESSONS = LESSONS + EXTRA_LESSONS
+MAIN_COUNT = len(LESSONS)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "english_app.db")
@@ -36,7 +42,7 @@ if not os.path.exists(SECRET_FILE):
 with open(SECRET_FILE) as f:
     app.secret_key = f.read().strip()
 
-LESSONS_BY_ID = {l["id"]: l for l in LESSONS}
+LESSONS_BY_ID = {l["id"]: l for l in ALL_LESSONS}
 PASS_MARK = 70          # минимальный процент, чтобы тест считаться сданным
 PARENT_PASSWORD = "1234"  # пароль для входа в режим родителя (можно поменять)
 
@@ -168,7 +174,7 @@ ACHIEVEMENTS = [
      "check": lambda s: s["lessons_completed"] >= 3},
     {"key": "all_lessons", "emoji": "🏆", "title": "Английский чемпион!",
      "desc": "Пройдены ВСЕ уроки в приложении.",
-     "check": lambda s: s["lessons_completed"] >= len(LESSONS)},
+     "check": lambda s: s["lessons_completed"] >= MAIN_COUNT},
     {"key": "perfect_test", "emoji": "💯", "title": "Идеальный тест",
      "desc": "Тест решён без единой ошибки.",
      "check": lambda s: s["has_perfect"]},
@@ -189,7 +195,7 @@ ACHIEVEMENTS = [
      "check": lambda s: s["lessons_completed"] >= 5},
     {"key": "half_way", "emoji": "🌗", "title": "Половинка пути",
      "desc": "Пройдена половина всех уроков.",
-     "check": lambda s: len(LESSONS) and s["lessons_completed"] * 2 >= len(LESSONS)},
+     "check": lambda s: MAIN_COUNT and s["lessons_completed"] * 2 >= MAIN_COUNT},
     {"key": "streak10", "emoji": "☄️", "title": "Комета",
      "desc": "Подряд 10 правильных ответов в тесте!",
      "check": lambda s: s["max_streak"] >= 10},
@@ -795,7 +801,7 @@ app.jinja_env.filters["shuffle_sort"] = shuffle_sort
 def validate_lessons():
     """Проверка целостности банка уроков: индексы ответов, полнота слов для 'order'."""
     errors = []
-    for l in LESSONS:
+    for l in ALL_LESSONS:
         for section in ("exercises", "test"):
             for q in l.get(section, []):
                 t = q.get("type", "choice")
@@ -879,7 +885,10 @@ def tree_glyph(glyph_key, scale=None):
 
 def unlocked_lesson_ids(stats):
     unlocked = set()
-    for l in LESSONS:
+    for l in ALL_LESSONS:
+        if l.get("is_extra"):
+            unlocked.add(l["id"])
+            continue
         prev = l["id"] - 1
         if prev == 0 or prev in stats["completed_ids"]:
             unlocked.add(l["id"])
@@ -1114,15 +1123,19 @@ def student_home():
     stats = compute_stats(db, student["id"])
     garden = refresh_garden(db, student["id"])
     unlocked = unlocked_lesson_ids(stats)
-    lessons_info = []
-    for l in LESSONS:
+
+    def lesson_info(l):
         best = stats["best_by_lesson"].get(l["id"])
-        lessons_info.append({
+        return {
             "lesson": l,
             "locked": l["id"] not in unlocked,
             "done": l["id"] in stats["completed_ids"],
             "best_score": best["score_percent"] if best else None,
-        })
+        }
+
+    lessons_info = [lesson_info(l) for l in LESSONS]
+    extra_info = [lesson_info(l) for l in EXTRA_LESSONS]
+    extras_done = sum(1 for i in extra_info if i["done"])
     earned = {r["key"]: r["earned_at"] for r in db.execute(
         "SELECT key, earned_at FROM achievements WHERE student_id=?",
         (student["id"],)).fetchall()}
@@ -1143,6 +1156,9 @@ def student_home():
                            name=student["display_name"],
                            emoji=student["emoji"],
                            lessons=lessons_info,
+                           extra_lessons=extra_info,
+                           extras_done=extras_done,
+                           total_extras=len(EXTRA_LESSONS),
                            stats=stats,
                            achievements=achievements,
                            total_lessons=len(LESSONS),
@@ -1405,9 +1421,9 @@ def parent_dashboard():
     stats = compute_stats(db)  # общая сводка по всем детям
     attempts = list(reversed(stats["attempts"]))  # свежие сверху
 
-    # Сводка по урокам
+    # Сводка по урокам (основные + дополнительные)
     lesson_rows = []
-    for l in LESSONS:
+    for l in ALL_LESSONS:
         la = [a for a in stats["attempts"] if a["lesson_id"] == l["id"]]
         best = max(la, key=lambda a: a["score_percent"], default=None)
         time_spent = sum(a["seconds_spent"] or 0 for a in la)
@@ -1440,7 +1456,7 @@ def parent_dashboard():
                            students=students, student_cards=student_cards,
                            names_by_id=names_by_id, emojis_by_id=emojis_by_id,
                            student_emojis=STUDENT_EMOJIS,
-                           lesson_titles={l["id"]: l["title"] for l in LESSONS},
+                           lesson_titles={l["id"]: l["title"] for l in ALL_LESSONS},
                            total_lessons=len(LESSONS))
 
 
