@@ -156,46 +156,5 @@
     ask();
   }
 
-  /* ---------- 🔤 Виселица ---------- */
-  function hangman() {
-    var cand = shuffle(words.filter(function (w) { return /^[a-z]{3,9}$/i.test(w.en); })).slice(0, 5);
-    if (cand.length < 2) { root.innerHTML = '<p>Для этой игры в твоих словах мало подходящих слов — пройди ещё уроки 🌱</p>'; return; }
-    var round = 0, won = 0, lives, word, shown, used;
-    var ALPHA = 'abcdefghijklmnopqrstuvwxyz'.split('');
-    var head = el('div', 'g-bar'), pic = el('div', 'g-big'), ruEl = el('div', 'g-word'), mask = el('div', 'g-mask'), kb = el('div', 'g-kb');
-    root.appendChild(head); root.appendChild(pic); root.appendChild(ruEl); root.appendChild(mask); root.appendChild(kb);
-
-    function start() {
-      if (round >= cand.length) { var s = won >= cand.length ? 3 : won >= Math.ceil(cand.length / 2) ? 2 : won >= 1 ? 1 : 0; end(s, 'Угадано слов: ' + won + ' из ' + cand.length + '.'); return; }
-      var w = cand[round]; word = w.en.toLowerCase(); lives = 6; used = {};
-      pic.textContent = w.pic || '❓'; ruEl.textContent = w.ru;
-      draw(); keys();
-    }
-    function draw() {
-      head.innerHTML = '<span>Слово ' + (round + 1) + ' из ' + cand.length + '</span><span>' + '❤️'.repeat(lives) + '🖤'.repeat(6 - lives) + '</span>';
-      mask.textContent = word.split('').map(function (c) { return used[c] ? c.toUpperCase() : '_'; }).join(' ');
-    }
-    function keys() {
-      kb.innerHTML = '';
-      ALPHA.forEach(function (c) {
-        var b = el('button', 'g-key', c.toUpperCase()); b.type = 'button';
-        b.onclick = function () {
-          if (used[c] || finished) return;
-          used[c] = true; b.disabled = true;
-          if (word.indexOf(c) === -1) { lives--; b.classList.add('bad'); } else b.classList.add('good');
-          draw();
-          var all = word.split('').every(function (x) { return used[x]; });
-          if (all || lives <= 0) {
-            if (all) { won++; say(word); } else { mask.textContent = word.toUpperCase().split('').join(' '); }
-            [].forEach.call(kb.children, function (x) { x.disabled = true; });
-            setTimeout(function () { round++; start(); }, all ? 1100 : 1800);
-          }
-        };
-        kb.appendChild(b);
-      });
-    }
-    start();
-  }
-
-  ({ pairs: pairs, memory: memory, blitz: blitz, hangman: hangman }[game] || function () {})();
+  ({ pairs: pairs, memory: memory, blitz: blitz }[game] || function () {})();
 })();

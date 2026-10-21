@@ -5,6 +5,7 @@ from datetime import datetime
 
 from badges import TIERS, TIER_ORDER, badge_svg
 from curriculum import MAIN_COUNT
+from data.dialogs import DIALOGS
 
 CATEGORIES = [
     ("lessons", "Уроки", "📚"),
@@ -70,10 +71,10 @@ ACHIEVEMENTS = [
     _m("game_1", "🎮", "Первая игра", "Сыграна первая игра со словами.", "bronze", "games", "games_played", 1),
     _m("game_10", "🕹️", "Игроман", "Десять сыгранных игр.", "silver", "games", "games_played", 10),
     _m("game_50", "🎲", "Король игр", "Пятьдесят сыгранных игр!", "gold", "games", "games_played", 50),
-    _m("game_p4", "🏆", "Чемпион игр", "Три звезды во всех четырёх играх.", "legend", "games", "games_perfect", 4),
+    _m("game_p4", "🏆", "Чемпион игр", "Три звезды во всех трёх играх.", "legend", "games", "games_perfect", 3),
     _m("dialog_1", "💬", "Первый разговор", "Пройден первый диалог.", "bronze", "games", "dialogs_done", 1),
     _m("dialog_8", "🗨️", "Собеседница", "Пройдено 8 диалогов.", "silver", "games", "dialogs_done", 8),
-    _m("dialog_15", "🎤", "Мастер общения", "Пройдены все диалоги!", "gold", "games", "dialogs_done", 15),
+    _m("dialog_15", "🎤", "Мастер общения", "Пройдены все диалоги!", "gold", "games", "dialogs_done", len(DIALOGS)),
     # --- Ответы подряд ---
     _m("streak5", "🔥", "Огонь-машина", "Пять правильных ответов подряд.", "bronze", "answers", "max_streak", 5),
     _m("streak10", "☄️", "Комета", "Десять правильных ответов подряд!", "silver", "answers", "max_streak", 10),

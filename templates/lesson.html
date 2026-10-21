@@ -129,7 +129,7 @@
   <p><a class="btn btn-secondary" href="{{ url_for('games.games_hub', lesson=lesson.id) }}">Открыть игры 🎮</a></p>
   {% if lesson_dialogs %}
   <h3 class="pr-title">💬 Диалог</h3>
-  <div class="lesson-dialogs" data-dialogs='{{ lesson_dialogs | tojson }}'></div>
+  <div class="lesson-dialogs" data-dialogs='{{ lesson_dialogs | tojson }}' data-me-emoji="{{ me_emoji }}" data-me-name="{{ me_name }}"></div>
   {% endif %}
   {% if speaking and lesson.speak %}
   <h3 class="pr-title">🎤 Скажи вслух</h3>
@@ -232,7 +232,7 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='practice.js') }}?v=1"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=2"></script>{% endif %}
-{% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=2"></script>{% endif %}
+{% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=3"></script>{% endif %}
 <script>
 const START_TS = {{ started_ts }};
 

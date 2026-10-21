@@ -6,7 +6,7 @@ from datetime import datetime
 
 from achievements import public, update_achievements
 from curriculum import ALL_LESSONS, LESSONS_BY_ID, unlocked_lesson_ids
-from data.dialogs import DIALOGS, DIALOGS_BY_KEY
+from data.dialogs import DIALOGS, DIALOGS_BY_KEY, character
 from database import get_db
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
 from mascot import build_mascot_ctx
@@ -22,7 +22,6 @@ GAMES = {
     "pairs": {"title": "Найди пару", "emoji": "⚡", "desc": "Соедини английское слово с переводом — как можно быстрее."},
     "memory": {"title": "Мемори", "emoji": "🃏", "desc": "Переворачивай карточки и находи одинаковые пары."},
     "blitz": {"title": "Блиц 60 секунд", "emoji": "⏱️", "desc": "Сколько слов успеешь перевести за минуту?"},
-    "hangman": {"title": "Виселица", "emoji": "🔤", "desc": "Угадай слово по буквам, пока не кончились жизни."},
 }
 MIN_WORDS = 4
 
@@ -122,7 +121,7 @@ def api_game():
 
 def _dialog_payload(d, done):
     return {"key": d["key"], "title": d["title"], "partner": d["partner"], "lines": d["lines"],
-            "done": d["key"] in done, "lesson": d["lesson"]}
+            "done": d["key"] in done, "lesson": d["lesson"], "who": character(d["partner"])}
 
 
 def dialogs_for(db, student_id, lesson_ids):
@@ -149,7 +148,8 @@ def dialogs_page():
     mascot["page"] = "dialogs"
     mascot["empty"] = not dialogs
     return render_template("dialogs.html", mascot=mascot, dialogs=dialogs, total=len(DIALOGS),
-                           lesson=LESSONS_BY_ID.get(lesson_id) if lesson_id else None)
+                           lesson=LESSONS_BY_ID.get(lesson_id) if lesson_id else None,
+                           me_emoji=student["emoji"] or "🎒", me_name=student["display_name"])
 
 
 @bp.route("/api/dialog", methods=["POST"])

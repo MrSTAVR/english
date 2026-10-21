@@ -552,3 +552,17 @@ html[data-theme="dark"] .g-key.bad { background: #4a1a1c; color: #ffb4b6; }
 .g-card .g-face { font-size: .9rem; font-weight: 800; }
 .g-card .g-big { font-size: 1.8rem; }
 @media (max-width: 420px) { .g-mem { gap: 6px; } .g-card { font-size: .8rem; border-radius: 12px; } .g-card .g-face { font-size: .78rem; } }
+
+/* Диалоги: портреты говорящих */
+.dlg-row { display: flex; gap: 8px; align-items: flex-end; max-width: 94%; }
+.dlg-row.me { flex-direction: row-reverse; justify-self: end; }
+.dlg-main { display: grid; gap: 2px; min-width: 0; }
+.dlg-ava { flex: none; width: 42px; height: 42px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; line-height: 1; border: 2px solid var(--line-deep); box-shadow: 0 2px 0 var(--line-deep); }
+.dlg-ava.big { width: 48px; height: 48px; font-size: 1.7rem; vertical-align: middle; margin-right: 6px; }
+.dlg-title { display: flex; align-items: center; flex-wrap: wrap; }
+.dlg-role { opacity: .75; }
+.dlg-row.them .dlg-bubble { border-bottom-left-radius: 4px; }
+.dlg-row.me .dlg-bubble { border-bottom-right-radius: 4px; }
+.dlg-row { animation: dlg-pop .25s ease-out; }
+@keyframes dlg-pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

@@ -178,6 +178,7 @@ def lesson_page(lesson_id):
     mascot["lessonTitle"] = lesson["title"]
     return render_template("lesson.html", lesson=lesson, speaking=config.SPEAKING, need=pass_mark(lesson),
                            lesson_dialogs=dialogs_for(db, student["id"], {lesson_id}),
+                           me_emoji=student["emoji"] or "🎒", me_name=student["display_name"],
                            attempt_id=cur.lastrowid,
                            started_ts=started.timestamp(),
                            mascot=mascot)

@@ -7,7 +7,7 @@
 </div>
 {% if dialogs %}
 <p class="subtitle">Поговори по-английски: прочитай реплику и выбери правильный ответ. Всего диалогов в курсе: {{ total }}.</p>
-<div id="dialogs" data-dialogs='{{ dialogs | tojson }}'></div>
+<div id="dialogs" data-dialogs='{{ dialogs | tojson }}' data-me-emoji="{{ me_emoji }}" data-me-name="{{ me_name }}"></div>
 {% else %}
 <section class="card hero">
   <div class="big-emoji">🌱</div>
@@ -17,4 +17,4 @@
 </section>
 {% endif %}
 {% endblock %}
-{% block scripts %}{% if dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=2"></script>{% endif %}{% endblock %}
+{% block scripts %}{% if dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=3"></script>{% endif %}{% endblock %}

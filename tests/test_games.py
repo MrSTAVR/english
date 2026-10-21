@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Игры со словами и мини-диалоги."""
-from curriculum import LESSONS, validate_dialogs
+from curriculum import ALL_LESSONS as LESSONS, validate_dialogs
 from data.dialogs import DIALOGS
 from tests.helpers import N, db_all, db_scalar, submit_lesson
 
@@ -12,7 +12,7 @@ def _credit(parent, n=12):
 
 def test_dialogs_are_valid_and_attached_to_lessons():
     assert validate_dialogs() == []
-    assert len(DIALOGS) == 15
+    assert len(DIALOGS) >= 30
     for d in DIALOGS:
         lesson = next(l for l in LESSONS if l["id"] == d["lesson"])
         assert d in lesson["dialogs"]
@@ -28,9 +28,9 @@ def test_game_pages_open_after_lessons(parent, make_student):
     c = make_student()
     _credit(parent)
     hub = c.get("/student/games").get_data(as_text=True)
-    for title in ("Найди пару", "Мемори", "Блиц", "Виселица", "Диалоги"):
+    for title in ("Найди пару", "Мемори", "Блиц", "Диалоги"):
         assert title in hub
-    for g in ("pairs", "memory", "blitz", "hangman"):
+    for g in ("pairs", "memory", "blitz"):
         html = c.get(f"/student/games/play/{g}").get_data(as_text=True)
         assert 'id="game"' in html and "games.js" in html and "data-words" in html
     assert c.get("/student/games/play/nope").status_code == 404
@@ -57,7 +57,7 @@ def test_game_api_and_achievements(make_student):
 def test_four_perfect_games_give_champion(make_student):
     c = make_student()
     last = None
-    for g in ("pairs", "memory", "blitz", "hangman"):
+    for g in ("pairs", "memory", "blitz"):
         last = c.post("/api/game", json={"game": g, "stars": 3}).get_json()
     assert any(a["key"] == "game_p4" for a in last["newAchievements"])
 
@@ -86,3 +86,9 @@ def test_lesson_page_embeds_its_dialog(make_student, parent):
     _credit(parent, 1)
     html = c.get("/lesson/9").get_data(as_text=True)
     assert "lesson-dialogs" in html and "greet-meet" in html and "dialogs.js" in html
+
+
+def test_dialog_partners_have_portraits():
+    from data.dialogs import CHARACTERS
+    assert {d["partner"] for d in DIALOGS} <= set(CHARACTERS)
+    assert not any(c for c in CHARACTERS.values() if len(c) != 3)

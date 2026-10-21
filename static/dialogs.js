@@ -14,17 +14,20 @@
     }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
   }
 
-  function build(d) {
+  function build(d, me) {
     var card = el('section', 'card dlg');
-    card.appendChild(el('h2', null, '💬 ' + esc(d.title) + (d.done ? ' <span class="pill pill-soft">пройден ✅</span>' : '')));
+    card.appendChild(el('h2', 'dlg-title', '<span class="dlg-ava big" style="background:' + d.who.bg + '">' + esc(d.who.pic) + '</span> ' + esc(d.title) + (d.done ? ' <span class="pill pill-soft">пройден ✅</span>' : '')));
     var chat = el('div', 'dlg-chat'), panel = el('div', 'dlg-panel');
     card.appendChild(chat); card.appendChild(panel);
-    var idx = 0, mistakes = 0;
+    var idx = 0, mistakes = 0, talking = false;
 
     function bubble(who, en, ru, mine) {
       var b = el('div', 'dlg-row ' + (mine ? 'me' : 'them'));
-      b.innerHTML = '<div class="dlg-name">' + esc(who) + '</div><div class="dlg-bubble">' + esc(en) +
-        '<button type="button" class="dlg-say" title="Послушать">🔊</button><div class="dlg-ru">' + esc(ru) + '</div></div>';
+      var pic = mine ? me.emoji : d.who.pic, bg = mine ? '#e3d9ff' : d.who.bg;
+      var role = !mine && d.who.role ? ' <span class="dlg-role">· ' + esc(d.who.role) + '</span>' : '';
+      b.innerHTML = '<div class="dlg-ava' + '" style="background:' + bg + '" aria-hidden="true">' + esc(pic) + '</div>' +
+        '<div class="dlg-main"><div class="dlg-name">' + esc(who) + role + '</div><div class="dlg-bubble">' + esc(en) +
+        '<button type="button" class="dlg-say" title="Послушать">🔊</button><div class="dlg-ru">' + esc(ru) + '</div></div></div>';
       b.querySelector('.dlg-say').onclick = function () { say(en); };
       chat.appendChild(b);
       b.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -48,7 +51,7 @@
         var b = el('button', 'rv-opt', esc(o)); b.type = 'button';
         b.onclick = function () {
           if (i !== turn.answer) { b.classList.add('is-wrong'); b.disabled = true; mistakes++; return; }
-          bubble('Я', o, turn.ru, true);
+          bubble(me.name, o, turn.ru, true);
           idx++;
           setTimeout(next, 450);
         };
@@ -77,7 +80,8 @@
     document.querySelectorAll('#dialogs, .lesson-dialogs').forEach(function (host) {
       var list = [];
       try { list = JSON.parse(host.dataset.dialogs || '[]'); } catch (e) { /* noop */ }
-      list.forEach(function (d) { host.appendChild(build(d)); });
+      var me = { emoji: host.dataset.meEmoji || '🎒', name: host.dataset.meName || 'Я' };
+      list.forEach(function (d) { host.appendChild(build(d, me)); });
     });
   });
 })();
