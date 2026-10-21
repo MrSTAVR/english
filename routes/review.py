@@ -6,7 +6,7 @@ from database import get_db
 from flask import Blueprint, abort, jsonify, redirect, render_template, request, session, url_for
 from mascot import build_mascot_ctx
 import goals
-from review import MASTERED_BOX, build_round, counts, learned_pool, record, state
+from review import MASTERED_BOX, build_hard_round, build_round, counts, hard_words, learned_pool, record, state
 from stats import compute_stats
 
 from routes.common import get_student_or_none, require_role
@@ -29,12 +29,17 @@ def review_page():
     st = state(db, student["id"])
     due, new, mastered = counts(pool, st)
     extra = request.args.get("extra") == "1"
-    questions = build_round(pool, st, extra=extra) if len(pool) >= 4 else []
+    hard = request.args.get("mode") == "hard"
+    hard_count = len(hard_words(pool, st, 0))
+    if hard:
+        questions = build_hard_round(pool, st) if len(pool) >= 4 else []
+    else:
+        questions = build_round(pool, st, extra=extra) if len(pool) >= 4 else []
     mascot = build_mascot_ctx()
     mascot["page"] = "review"
     mascot["empty"] = not pool
     return render_template("review.html", mascot=mascot, questions=questions, pool_size=len(pool),
-                           due=due, new=new, mastered=mastered, extra=extra,
+                           due=due, new=new, mastered=mastered, extra=extra, hard=hard, hard_count=hard_count,
                            all_done=(not questions and len(pool) >= 4))
 
 

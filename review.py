@@ -174,6 +174,20 @@ def build_round(pool, st, today=None, extra=False, rng=None):
     return [make_question(w, pool, st[w["key"]]["box"] if w["key"] in st else 0, rng) for w in words]
 
 
+def hard_words(pool, st, n=ROUND_SIZE):
+    """Слова, в которых были ошибки и которые ещё не выучены надолго (самые сложные — первыми)."""
+    rows = [w for w in pool if w["key"] in st and st[w["key"]]["n_bad"] > 0 and st[w["key"]]["box"] < MASTERED_BOX]
+    rows.sort(key=lambda w: (st[w["key"]]["n_ok"] - st[w["key"]]["n_bad"], st[w["key"]]["box"]))
+    return rows[:n] if n else rows
+
+
+def build_hard_round(pool, st, rng=None):
+    rng = rng or random.Random()
+    words = hard_words(pool, st)
+    rng.shuffle(words)
+    return [make_question(w, pool, st[w["key"]]["box"], rng) for w in words]
+
+
 def word_of_day(pool, st, student_id, today=None):
     """Слово дня: одно и то же весь день; предпочитаем слабые и новые слова."""
     if not pool:

@@ -8,12 +8,15 @@ from curriculum import LESSONS_BY_ID
 
 def _game_stats(db, student_id):
     where, args = ("WHERE student_id=?", (student_id,)) if student_id is not None else ("", ())
-    g = db.execute(f"SELECT COALESCE(SUM(plays),0) p, COALESCE(SUM(best>=3),0) s FROM game_scores {where}", args).fetchone()
+    g = db.execute(f"SELECT COALESCE(SUM(plays),0) p, COALESCE(SUM(best>=3 AND game NOT IN ('build','dictation')),0) s, "
+                   f"COALESCE(SUM(CASE WHEN game IN ('build','dictation') THEN plays END),0) wp, "
+                   f"COALESCE(SUM(game IN ('build','dictation') AND best>=3),0) wperf FROM game_scores {where}", args).fetchone()
     d = db.execute(f"SELECT COUNT(*) FROM dialog_done {where}", args).fetchone()[0]
     w = db.execute(f"SELECT COUNT(*) FROM wardrobe_items {where}", args).fetchone()[0]
     st = db.execute(f"SELECT COUNT(DISTINCT key) a, COALESCE(SUM(mode='listen'),0) b FROM story_done {where}", args).fetchone()
     return {"games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d, "wardrobe_bought": w,
-            "stories_done": st["a"], "stories_listened": st["b"]}
+            "stories_done": st["a"], "stories_listened": st["b"],
+            "writing_played": g["wp"], "writing_perfect": g["wperf"]}
 
 
 def _goal_days(db, student_id):

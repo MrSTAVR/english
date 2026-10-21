@@ -651,3 +651,16 @@ html[data-theme="dark"] .rn-stage { background: linear-gradient(#27306b 0 62%, #
 /* Теория: отступ между советом и кнопкой, чтобы не слипались */
 .step .theory-tip { margin: 14px 0 18px; }
 .step .theory-tip + .btn, .step .theory-block + .btn { margin-top: 14px; }
+
+/* Письмо */
+.wr-line { min-height: 62px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px; margin: 10px 0; border-radius: 16px; border: 2px dashed var(--line-deep); }
+.wr-ph { color: var(--muted); }
+.wr-bank { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; min-height: 48px; }
+.wr-chip { border: 2px solid var(--line-deep); background: var(--surface, #fff); color: var(--ink); border-radius: 14px; padding: 9px 14px; font: inherit; font-weight: 800; font-size: 1.05rem; cursor: pointer; box-shadow: 0 3px 0 var(--line-deep); }
+.wr-chip.on { background: var(--tint); border-color: var(--primary); }
+.wr-fb { min-height: 1.8em; margin: 8px 0; font-weight: 700; font-size: 1.05rem; }
+.wr-acts { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.wr-ru { color: var(--muted); font-weight: 700; text-align: center; }
+.wr-input { width: 100%; box-sizing: border-box; font: inherit; font-size: 1.2rem; font-weight: 700; padding: 12px 14px; border-radius: 14px; border: 2px solid var(--line-deep); background: var(--surface, #fff); color: var(--ink); margin: 8px 0; }
+.wr-ok { color: #1f9d6a; font-weight: 900; }
+.wr-bad { color: #e0475b; font-weight: 900; text-decoration: underline wavy; }

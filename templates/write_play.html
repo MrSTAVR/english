@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ info.title }} — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('writing.writing_hub') }}">⬅ Письмо</a>
+  <h1>{{ info.emoji }} {{ info.title }}</h1>
+</div>
+<p class="subtitle">{{ info.desc }}</p>
+<section class="card"><div id="write" data-mode="{{ mode }}" data-items='{{ items | tojson }}'></div></section>
+<section class="card hero hidden" id="write-end">
+  <div class="big-emoji" id="write-end-emoji">🏅</div>
+  <h2>Готово!</h2>
+  <p id="write-end-text"></p>
+  <p class="sp-stars" id="write-end-stars"></p>
+  <div id="write-end-wrong"></div>
+  <a class="btn btn-primary" href="{{ url_for('writing.writing_play', mode=mode) }}">Ещё раз 🔁</a>
+  <a class="btn btn-secondary" href="{{ url_for('writing.writing_hub') }}">Другое задание</a>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='writing.js') }}?v=1"></script>{% endblock %}

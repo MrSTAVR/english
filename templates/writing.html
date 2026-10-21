@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Письмо — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
+  <h1>✍️ Письмо</h1>
+</div>
+{% if not enough %}
+<section class="card hero">
+  <div class="big-emoji">🌱</div>
+  <h2>Пока мало фраз</h2>
+  <p>Пройди ещё пару уроков — и здесь появятся задания на письмо (нужно хотя бы {{ need }} фразы).</p>
+  <a class="btn btn-primary" href="{{ url_for('student.student_home') }}">К урокам ▶️</a>
+</section>
+{% else %}
+<p class="subtitle">Учимся писать по-английски целыми предложениями. Фраз из пройденных уроков: {{ count }}.</p>
+<div class="game-grid">
+  {% for key, g in modes.items() %}
+  <a class="game-card" href="{{ url_for('writing.writing_play', mode=key) }}">
+    <span class="game-emoji">{{ g.emoji }}</span>
+    <span class="game-text"><b>{{ g.title }}</b><small>{{ g.desc }}</small></span>
+    <span class="game-best">{% if best.get(key) is not none %}{{ '⭐' * best[key] }}{{ '☆' * (3 - best[key]) }}{% else %}<small>новая!</small>{% endif %}</span>
+  </a>
+  {% endfor %}
+  <a class="game-card" href="{{ url_for('review.review_page', mode='hard') }}">
+    <span class="game-emoji">🎯</span>
+    <span class="game-text"><b>Работа над ошибками</b><small>Тренируем слова, в которых были ошибки.</small></span>
+    <span class="game-best"><small>открыть</small></span>
+  </a>
+</div>
+{% endif %}
+{% endblock %}
