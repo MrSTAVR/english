@@ -8,6 +8,7 @@
 <section class="card" id="students">
   <h2>👶 Аккаунты учеников ({{ students|length }})</h2>
   {% if student_cards %}
+  <div class="tbl-wrap">
   <table class="tbl">
     <thead>
       <tr><th>Ученик</th><th>Логин</th><th>Прогресс</th><th>Средний балл</th><th>Время занятий</th><th>Ачивок</th><th>🌳 Сад (серия / монеты)</th><th>Действия</th></tr>
@@ -39,18 +40,21 @@
               <button class="btn btn-small" type="submit">💾 Обновить сад</button>
             </form>
             {% if card.vacation %}
-            <form method="post" action="{{ url_for('parent.parent_vacation', sid=st.id) }}" class="inline-form">
+            <form method="post" action="{{ url_for('parent.parent_vacation', sid=st.id) }}" class="vac-form">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <span class="pill pill-soft">🏖 каникулы {{ card.vacation.start_day }} — {{ card.vacation.end_day }}</span>
               <button class="btn btn-small" type="submit" name="action" value="cancel">Отменить</button>
             </form>
             {% else %}
-            <form method="post" action="{{ url_for('parent.parent_vacation', sid=st.id) }}" class="inline-form">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <label>🏖 Каникулы с <input type="date" name="start_day" required></label>
-              <label>по <input type="date" name="end_day" required></label>
-              <button class="btn btn-small" type="submit" name="action" value="add" title="Серия дней в эти дни не сгорит">Назначить</button>
-            </form>
+            <details class="vac-box">
+              <summary>🏖 Назначить каникулы</summary>
+              <form method="post" action="{{ url_for('parent.parent_vacation', sid=st.id) }}" class="vac-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label>С <input type="date" name="start_day" required></label>
+                <label>по <input type="date" name="end_day" required></label>
+                <button class="btn btn-small" type="submit" name="action" value="add" title="Серия дней в эти дни не сгорит">Назначить</button>
+              </form>
+            </details>
             {% endif %}
           </td>
           <td class="actions-cell">
@@ -69,6 +73,7 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
   {% else %}
   <p class="hint">Аккаунтов пока нет — создайте первый ниже, и ребёнок сможет войти по логину и паролю. 😉</p>
   {% endif %}

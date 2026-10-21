@@ -17,7 +17,8 @@ def _game_stats(db, student_id):
     wk = db.execute(f"SELECT COUNT(*) FROM weekly_done {where}", args).fetchone()[0]
     bw = db.execute(f"SELECT COUNT(*) FROM boss_wins {where}", args).fetchone()[0]
     hw = db.execute(f"SELECT COUNT(*) FROM season_log {where}{' AND' if where else ' WHERE'} season='halloween' AND correct>=6", args).fetchone()[0]
-    return {"weeks_done": wk, "boss_wins": bw, "halloween_done": hw, "games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d, "wardrobe_bought": w,
+    hb = db.execute(f"SELECT COUNT(*) FROM house_items {where}", args).fetchone()[0]
+    return {"house_bought": hb, "weeks_done": wk, "boss_wins": bw, "halloween_done": hw, "games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d, "wardrobe_bought": w,
             "stories_done": st["a"], "stories_listened": st["b"],
             "writing_played": g["wp"], "writing_perfect": g["wperf"]}
 

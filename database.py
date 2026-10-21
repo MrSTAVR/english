@@ -113,6 +113,17 @@ CREATE TABLE IF NOT EXISTS garden (
     last_study_day TEXT,                       -- ISO-дата последнего занятия
     broken         INTEGER DEFAULT 0           -- 1 = серия прервана, сад «опустел»
 );
+CREATE TABLE IF NOT EXISTS house_items (
+    student_id INTEGER NOT NULL,
+    item_key   TEXT NOT NULL,
+    PRIMARY KEY (student_id, item_key)
+);
+CREATE TABLE IF NOT EXISTS house_place (
+    student_id INTEGER NOT NULL,
+    slot       TEXT NOT NULL,
+    item_key   TEXT NOT NULL,
+    PRIMARY KEY (student_id, slot)
+);
 CREATE TABLE IF NOT EXISTS activity (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL,
