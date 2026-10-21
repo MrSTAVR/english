@@ -16,14 +16,14 @@ def build_mascot_ctx():
     mascot = {"enabled": MASCOT_ENABLED, "name": MASCOT_NAME, "page": page}
     if page != "student":
         return mascot
-    if endpoint == "index":
+    if endpoint == "auth.index":
         mascot["page"] = "index"
-    elif endpoint == "student_home":
+    elif endpoint == "student.student_home":
         mascot["page"] = "home"
-    elif endpoint == "lesson_page":
+    elif endpoint == "student.lesson_page":
         mascot["page"] = "lesson"
-    elif endpoint == "submit_test":
+    elif endpoint == "student.submit_test":
         mascot["page"] = "result"
-    elif endpoint == "garden_page":
+    elif endpoint == "garden.garden_page":
         mascot["page"] = "garden"
     return mascot

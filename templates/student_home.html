@@ -37,7 +37,7 @@
 </section>
 
 <!-- Сад: короткий тизер -->
-<a class="garden-teaser glass" href="{{ url_for('garden_page') }}">
+<a class="garden-teaser glass" href="{{ url_for('garden.garden_page') }}">
   <span class="gt-tree">{{ tree_stage.glyph | tree_glyph }}</span>
   <span class="gt-text">
     <b>{{ tree_stage.name }}</b> · 🔥 серия {{ garden.streak_days }} дн. · <svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ garden.coins }} монеток · 🌳 {{ tree_count }} дер.
@@ -47,7 +47,7 @@
 
 <!-- 2. Кнопка «Следующий урок» -->
 {% if next_lesson %}
-  <a class="next-cta" href="{{ url_for('lesson_page', lesson_id=next_lesson.id) }}">
+  <a class="next-cta" href="{{ url_for('student.lesson_page', lesson_id=next_lesson.id) }}">
     <span class="next-cta-emoji">{{ next_lesson.emoji }}</span>
     <span class="next-cta-text">
       <span class="next-cta-kicker">Твой следующий урок</span>
@@ -94,9 +94,9 @@
         {% if info.locked %}
           <button class="btn btn-locked" disabled>🔒 Закрой предыдущий урок</button>
         {% elif info.done %}
-          <a class="btn btn-secondary" href="{{ url_for('lesson_page', lesson_id=l.id) }}">Повторить ещё раз 🔁</a>
+          <a class="btn btn-secondary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Повторить ещё раз 🔁</a>
         {% else %}
-          <a class="btn btn-primary" href="{{ url_for('lesson_page', lesson_id=l.id) }}">Начать урок ▶️</a>
+          <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Начать урок ▶️</a>
         {% endif %}
       </div>
     {% endfor %}
@@ -135,9 +135,9 @@
         </div>
         {% if info.done %}
           <div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '🌟' if info.best_score >= 90 }}</div>
-          <a class="btn btn-secondary" href="{{ url_for('lesson_page', lesson_id=l.id) }}">Повторить ещё раз 🔁</a>
+          <a class="btn btn-secondary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Повторить ещё раз 🔁</a>
         {% else %}
-          <a class="btn btn-primary" href="{{ url_for('lesson_page', lesson_id=l.id) }}">Начать урок ▶️</a>
+          <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Начать урок ▶️</a>
         {% endif %}
       </div>
     {% endfor %}

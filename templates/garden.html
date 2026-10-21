@@ -107,7 +107,7 @@
       <div class="mini-num">🌳 {{ tree_count }}</div>
       <div class="mini-label">деревьев в саду — каждое новое заметное событие!</div>
     </div>
-    <a class="btn btn-secondary" href="{{ url_for('student_home') }}">← К урокам</a>
+    <a class="btn btn-secondary" href="{{ url_for('student.student_home') }}">← К урокам</a>
   </aside>
 </div>
 
@@ -126,7 +126,7 @@
         <div class="shop-cat">{{ cat_names[d.category] }}</div>
         <div class="shop-price"><svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ d.cost }}</div>
         {% if garden.coins >= d.cost and not garden.broken and garden.streak_days > 0 and active|length < max_slots %}
-          <form method="post" action="{{ url_for('garden_buy') }}">
+          <form method="post" action="{{ url_for('garden.garden_buy') }}">
             <input type="hidden" name="deco_key" value="{{ d.key }}">
             <button class="btn btn-primary btn-small" type="submit">Купить 🎁</button>
           </form>
@@ -153,7 +153,7 @@
         <span class="worn-emoji">{{ d.emoji }}</span>
         <span class="worn-name">{{ d.name }}</span>
         <span class="worn-cat">{{ cat_names[d.category] }}</span>
-        <form method="post" action="{{ url_for('garden_remove', slot=slot) }}">
+        <form method="post" action="{{ url_for('garden.garden_remove', slot=slot) }}">
           <button class="btn btn-small btn-danger" type="submit">Снять (вернётся <svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ d.cost // 2 }})</button>
         </form>
       </div>

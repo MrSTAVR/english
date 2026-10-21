@@ -116,7 +116,7 @@
 <section class="card step hidden" id="step-test">
   <h2>Шаг 4 — Итоговый тест 📝</h2>
   <p>Ответь на {{ lesson.test|length }} вопросов. Чтобы урок считался пройденным, нужно набрать минимум 70%. Не торопись!</p>
-  <form method="post" action="{{ url_for('submit_test', lesson_id=lesson.id) }}" id="test-form">
+  <form method="post" action="{{ url_for('student.submit_test', lesson_id=lesson.id) }}" id="test-form">
     <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
     <input type="hidden" name="seconds" id="seconds-input" value="0">
 
@@ -194,7 +194,7 @@
   </form>
 </section>
 
-<a href="{{ url_for('student_home') }}" class="back-link">⬅️ Вернуться к урокам</a>
+<a href="{{ url_for('student.student_home') }}" class="back-link">⬅️ Вернуться к урокам</a>
 {% endblock %}
 
 {% block scripts %}

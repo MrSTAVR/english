@@ -2,18 +2,9 @@
 import re
 import sqlite3
 
-import app as appmod
-from app import match_columns
-
-
-def dbmod():
-    """Модуль, чей DB_PATH реально использует get_db(): database.py после шага 2,
-    app.py до него. Так тесты работают и до, и после разбиения."""
-    try:
-        import database
-        return database
-    except ImportError:
-        return appmod
+import database
+from curriculum import LESSONS_BY_ID
+from grading import match_columns
 
 
 def attempt_id_from(html):
@@ -68,7 +59,7 @@ def open_lesson(client, lesson_id):
 
 def submit_lesson(client, lesson_id, wrong=False, seconds=600):
     """Открывает урок, сдаёт тест, возвращает HTML страницы результата."""
-    lesson = appmod.LESSONS_BY_ID[lesson_id]
+    lesson = LESSONS_BY_ID[lesson_id]
     aid = open_lesson(client, lesson_id)
     r = client.post(f"/lesson/{lesson_id}/submit",
                     data=build_form(lesson, aid, seconds, wrong))
@@ -76,7 +67,7 @@ def submit_lesson(client, lesson_id, wrong=False, seconds=600):
 
 
 def db_all(sql, args=()):
-    conn = sqlite3.connect(dbmod().DB_PATH)
+    conn = sqlite3.connect(database.DB_PATH)
     try:
         return conn.execute(sql, args).fetchall()
     finally:

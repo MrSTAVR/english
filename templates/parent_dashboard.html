@@ -32,18 +32,18 @@
               🌳 <b>{{ card.tree_count }}</b> дер. · украшений {{ card.deco_count }}
               {% if card.garden.broken %}<span class="pill pill-warn">🍂 прервана</span>{% endif %}
             </div>
-            <form method="post" action="{{ url_for('parent_update_garden', sid=st.id) }}" class="inline-form garden-edit">
+            <form method="post" action="{{ url_for('parent.parent_update_garden', sid=st.id) }}" class="inline-form garden-edit">
               <input type="number" name="streak_days" min="0" max="999" placeholder="дней серии" title="Дней непрерывных занятий">
               <input type="number" name="coins" min="0" max="9999" placeholder="монеты" title="Количество монеток">
               <button class="btn btn-small" type="submit">💾 Обновить сад</button>
             </form>
           </td>
           <td class="actions-cell">
-            <form method="post" action="{{ url_for('reset_student_password', sid=st.id) }}" class="inline-form">
+            <form method="post" action="{{ url_for('parent.reset_student_password', sid=st.id) }}" class="inline-form">
               <input type="password" name="password" placeholder="новый пароль" minlength="4" required>
               <button class="btn btn-small" type="submit">🔑 Сбросить пароль</button>
             </form>
-            <form method="post" action="{{ url_for('delete_student', sid=st.id) }}" class="inline-form"
+            <form method="post" action="{{ url_for('parent.delete_student', sid=st.id) }}" class="inline-form"
                   onsubmit="return confirm('Удалить аккаунт {{ st.display_name }} и весь его прогресс?');">
               <button class="btn btn-danger" type="submit">🗑 Удалить</button>
             </form>
@@ -57,7 +57,7 @@
   {% endif %}
 
   <h3>➕ Новый ученик</h3>
-  <form method="post" action="{{ url_for('add_student') }}" class="student-form">
+  <form method="post" action="{{ url_for('parent.add_student') }}" class="student-form">
     <label>Имя (как увидит ребёнок):
       <input type="text" name="display_name" placeholder="Маша" maxlength="40" required></label>
     <label>Логин для входа:

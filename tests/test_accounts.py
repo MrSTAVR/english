@@ -4,7 +4,7 @@ import re
 
 import pytest
 
-from app import LESSONS_BY_ID, MAIN_COUNT
+from curriculum import LESSONS_BY_ID, MAIN_COUNT
 from tests.helpers import (build_form, db_all, db_scalar, open_lesson,
                            submit_lesson)
 

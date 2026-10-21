@@ -10,14 +10,15 @@ os.environ["ENGLISH_APP_DB"] = os.path.join(
 import pytest  # noqa: E402
 
 import app as appmod  # noqa: E402
-from tests.helpers import dbmod  # noqa: E402
+import config  # noqa: E402
+import database  # noqa: E402
 
 
 @pytest.fixture
 def flask_app(tmp_path, monkeypatch):
     """Приложение со свежей пустой БД на каждый тест."""
-    monkeypatch.setattr(dbmod(), "DB_PATH", str(tmp_path / "test.db"))
-    appmod.init_db()
+    monkeypatch.setattr(database, "DB_PATH", str(tmp_path / "test.db"))
+    database.init_db()
     appmod.app.config.update(TESTING=True)
     return appmod.app
 
@@ -30,7 +31,7 @@ def anon(flask_app):
 @pytest.fixture
 def parent(flask_app):
     c = flask_app.test_client()
-    r = c.post("/login/parent", data={"password": appmod.PARENT_PASSWORD},
+    r = c.post("/login/parent", data={"password": config.PARENT_PASSWORD},
                follow_redirects=True)
     assert "Кабинет родителя" in r.get_data(as_text=True)
     return c
