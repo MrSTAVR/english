@@ -36,7 +36,7 @@
 <section class="card step hidden" id="step-material">
   <h2>Шаг 2 — Изучи слова 🧠</h2>
   <p>Читай слово вслух (подсказка произношения в скобках). Нажимай на карточку, чтобы перевернуть её и увидеть перевод. Кнопка <b>🔊</b> рядом со словом — послушаешь правильное произношение!</p>
-  <div class="flashcards">
+  <div class="flashcards{% if lesson.material|selectattr('pic')|list %} has-pics{% endif %}">
     {% for w in lesson.material %}
       <div class="flashcard{% if w.pic %} has-pic{% endif %}" onclick="this.classList.toggle('flipped')">
         <div class="fc-front">

@@ -534,3 +534,14 @@ html[data-theme="dark"] .rv-opt.is-wrong, html[data-theme="dark"] .rv-fb.bad { b
 .lesson-dialogs .dlg { margin: 10px 0; }
 html[data-theme="dark"] .g-key.good { background: #12392a; color: #a8f0c8; }
 html[data-theme="dark"] .g-key.bad { background: #4a1a1c; color: #ffb4b6; }
+
+/* Карточки слов: одинаковая высота и аккуратная раскладка */
+.flashcards { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); align-items: stretch; grid-auto-rows: 150px; }
+.flashcards.has-pics { grid-auto-rows: 200px; }
+.flashcards .flashcard, .flashcards .flashcard.has-pic { height: 100%; }
+.flashcards .fc-front { padding: 8px 6px; gap: 2px; justify-content: center; }
+.flashcards .fc-en .tts-btn { margin-left: 0; }
+.flashcards .fc-en { flex-direction: column; gap: 4px; font-size: 1.2rem; line-height: 1.15; text-align: center; }
+.flashcards .fc-en .tts-btn { flex: none; }
+.flashcards .fc-hint { font-size: .8rem; text-align: center; line-height: 1.2; }
+.flashcards .fc-pic { font-size: 2.2rem; margin-bottom: 2px; }
