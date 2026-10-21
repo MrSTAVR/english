@@ -834,3 +834,9 @@ a, button, label, summary, input[type="submit"] { touch-action: manipulation; }
   .credit-quick input { width: 130px; }
   .garden-edit input[type="number"] { width: 100%; flex: none; }
 }
+
+/* подсказка про режим «Версия для ПК» (на таком экране всё уменьшено, поэтому шрифт огромный) */
+.desktop-warn { background: #fff3cd; color: #5c4400; border-bottom: 4px solid #ffc93c; padding: 24px 28px;
+  font-size: 34px; line-height: 1.4; }
+.desktop-warn button { display: block; margin-top: 16px; font: inherit; font-weight: 800; padding: 14px 32px;
+  border: 0; border-radius: 999px; background: #7c5cff; color: #fff; }
