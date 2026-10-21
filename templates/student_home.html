@@ -99,6 +99,13 @@
 </section>
 {% endif %}
 
+{% if rv_pool >= 4 %}
+<section class="rv-row">
+  <a class="rv-card" href="{{ url_for('games.games_hub') }}"><span class="rv-emoji">🎮</span><span class="rv-text"><b>Игры со словами</b><small>Пары, мемори, блиц, виселица</small></span><span class="rv-go">Играть ▶</span></a>
+  <a class="rv-card" href="{{ url_for('games.dialogs_page') }}"><span class="rv-emoji">💬</span><span class="rv-text"><b>Диалоги</b><small>Поговори с Томом и Анной</small></span><span class="rv-go">Открыть ▶</span></a>
+</section>
+{% endif %}
+
 <!-- 3. Мои уроки (компактный вид: последний пройденный, следующий и первый закрытый) -->
 <section>
   <div class="section-head">

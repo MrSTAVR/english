@@ -6,6 +6,13 @@ import json
 from curriculum import LESSONS_BY_ID
 
 
+def _game_stats(db, student_id):
+    where, args = ("WHERE student_id=?", (student_id,)) if student_id is not None else ("", ())
+    g = db.execute(f"SELECT COALESCE(SUM(plays),0) p, COALESCE(SUM(best>=3),0) s FROM game_scores {where}", args).fetchone()
+    d = db.execute(f"SELECT COUNT(*) FROM dialog_done {where}", args).fetchone()[0]
+    return {"games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d}
+
+
 def _goal_days(db, student_id):
     from goals import goal_days
     return goal_days(db, student_id)
@@ -155,6 +162,7 @@ def compute_stats(db, student_id=None):
         **speak,
         **_review_stats(db, student_id),
         "goal_days": _goal_days(db, student_id),
+        **_game_stats(db, student_id),
         "total_mistakes": total_mistakes,
         "comeback": comeback,
         "early_bird": early_bird,

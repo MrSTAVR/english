@@ -7,6 +7,7 @@ from achievements import (ACHIEVEMENTS, BY_KEY, CATEGORIES, public, tier_counts,
                           update_achievements, views as achievement_views)
 import config
 import goals
+from routes.games import dialogs_for
 from config import PASS_MARK
 from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID, pass_mark, unlocked_lesson_ids
 from data.extra_lessons import EXTRA_LESSONS
@@ -176,6 +177,7 @@ def lesson_page(lesson_id):
     mascot["lessonId"] = lesson_id
     mascot["lessonTitle"] = lesson["title"]
     return render_template("lesson.html", lesson=lesson, speaking=config.SPEAKING, need=pass_mark(lesson),
+                           lesson_dialogs=dialogs_for(db, student["id"], {lesson_id}),
                            attempt_id=cur.lastrowid,
                            started_ts=started.timestamp(),
                            mascot=mascot)

@@ -9,8 +9,9 @@ from routes.system import bp as system_bp
 from routes.pwa import bp as pwa_bp
 from routes.speak import bp as speak_bp
 from routes.review import bp as review_bp
+from routes.games import bp as games_bp
 
 
 def register_blueprints(app):
-    for bp in (auth_bp, student_bp, garden_bp, parent_bp, system_bp, pwa_bp, speak_bp, review_bp):
+    for bp in (auth_bp, student_bp, garden_bp, parent_bp, system_bp, pwa_bp, speak_bp, review_bp, games_bp):
         app.register_blueprint(bp)

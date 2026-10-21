@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Диалоги — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('games.games_hub', lesson=lesson.id if lesson else None) }}">⬅ Игры</a>
+  <h1>💬 Диалоги</h1>
+</div>
+{% if dialogs %}
+<p class="subtitle">Поговори по-английски: прочитай реплику и выбери правильный ответ. Всего диалогов в курсе: {{ total }}.</p>
+<div id="dialogs" data-dialogs='{{ dialogs | tojson }}'></div>
+{% else %}
+<section class="card hero">
+  <div class="big-emoji">🌱</div>
+  <h2>Диалоги откроются после уроков</h2>
+  <p>Диалог появляется, когда пройден урок с нужными словами. Начни с «Приветствий»!</p>
+  <a class="btn btn-primary" href="{{ url_for('student.student_home') }}">К урокам ▶️</a>
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}{% if dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=2"></script>{% endif %}{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Игры — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('student.lesson_page', lesson_id=lesson.id) if lesson else url_for('student.student_home') }}">⬅ {{ 'К уроку' if lesson else 'Мои уроки' }}</a>
+  <h1>🎮 Игры со словами</h1>
+</div>
+<p class="subtitle">{% if lesson %}Слова урока «{{ lesson.title }}» ({{ pool_size }}).{% else %}Слова из пройденных уроков: <b>{{ pool_size }}</b>.{% endif %} Играй — и слова запоминаются сами!</p>
+
+{% if not enough %}
+<section class="card hero">
+  <div class="big-emoji">🌱</div>
+  <h2>Пока мало слов</h2>
+  <p>Для игр нужно хотя бы 4 слова. Пройди урок — и игры откроются!</p>
+  <a class="btn btn-primary" href="{{ url_for('student.student_home') }}">К урокам ▶️</a>
+</section>
+{% else %}
+<div class="game-grid">
+  {% for key, g in games.items() %}
+  <a class="game-card" href="{{ url_for('games.game_play', game=key, lesson=lesson.id if lesson else None) }}">
+    <span class="game-emoji">{{ g.emoji }}</span>
+    <span class="game-text"><b>{{ g.title }}</b><small>{{ g.desc }}</small></span>
+    <span class="game-best">{% if best.get(key) %}{{ '⭐' * best[key].best }}{{ '☆' * (3 - best[key].best) }}<small>{{ best[key].plays }} игр</small>{% else %}<small>новая!</small>{% endif %}</span>
+  </a>
+  {% endfor %}
+  <a class="game-card game-dialog" href="{{ url_for('games.dialogs_page', lesson=lesson.id if lesson else None) }}">
+    <span class="game-emoji">💬</span>
+    <span class="game-text"><b>Диалоги</b><small>Поговори с Томом и Анной: выбирай правильные ответы.</small></span>
+    <span class="game-best"><small>открыть</small></span>
+  </a>
+</div>
+{% endif %}
+{% endblock %}

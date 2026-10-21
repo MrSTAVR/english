@@ -73,6 +73,19 @@ CREATE TABLE IF NOT EXISTS daily_goal (
     done         INTEGER DEFAULT 0,
     PRIMARY KEY (student_id, day)
 );
+CREATE TABLE IF NOT EXISTS game_scores (
+    student_id   INTEGER NOT NULL,
+    game         TEXT NOT NULL,
+    best         INTEGER DEFAULT 0,             -- лучшие звёзды 0..3
+    plays        INTEGER DEFAULT 0,
+    PRIMARY KEY (student_id, game)
+);
+CREATE TABLE IF NOT EXISTS dialog_done (
+    student_id   INTEGER NOT NULL,
+    key          TEXT NOT NULL,
+    done_at      TEXT NOT NULL,
+    PRIMARY KEY (student_id, key)
+);
 CREATE TABLE IF NOT EXISTS garden (
     student_id     INTEGER PRIMARY KEY,        -- сад принадлежит ученику
     coins          INTEGER DEFAULT 0,          -- монетки за уроки

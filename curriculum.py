@@ -3,6 +3,7 @@
 
 from data.extra_lessons import EXTRA_LESSONS
 from data.course import ORDER
+from data.dialogs import DIALOGS
 from data.emoji import emoji_for
 from data.lessons import LESSONS as _OLD_LESSONS
 from data.new_lessons import NEW_LESSONS
@@ -25,6 +26,8 @@ MAIN_COUNT = len(LESSONS)
 for _l in ALL_LESSONS:
     for _w in _l["material"]:
         _w.setdefault("pic", emoji_for(_w["en"]))     # картинка-эмодзи ("" — если нет)
+for _l in ALL_LESSONS:
+    _l["dialogs"] = [d for d in DIALOGS if d["lesson"] == _l["id"]]
 augment(ALL_LESSONS)
 add_review_questions(LESSONS)
 
@@ -91,6 +94,27 @@ def validate_lessons():
                 for b in th["blocks"]:
                     if not isinstance(b, dict) or not b.get("title") or not b.get("text"):
                         errors.append(f"урок {l['id']} — блок теории без title/text")
+    return errors
+
+
+def validate_dialogs():
+    errors, keys = [], set()
+    for d in DIALOGS:
+        if d["key"] in keys:
+            errors.append(f"диалог {d['key']} — повторяющийся ключ")
+        keys.add(d["key"])
+        if d["lesson"] not in LESSONS_BY_ID:
+            errors.append(f"диалог {d['key']} — нет урока {d['lesson']}")
+        if not any("options" in ln for ln in d["lines"]) or "options" in d["lines"][0]:
+            errors.append(f"диалог {d['key']} — должен начинаться с реплики партнёра и иметь ответы ученика")
+        for ln in d["lines"]:
+            if "options" in ln:
+                if not 2 <= len(ln["options"]) <= 4 or not 0 <= ln["answer"] < len(ln["options"]):
+                    errors.append(f"диалог {d['key']} — неверные варианты ответа")
+                if len(set(ln["options"])) != len(ln["options"]):
+                    errors.append(f"диалог {d['key']} — повторяющиеся варианты")
+            elif not ln.get("en") or not ln.get("ru"):
+                errors.append(f"диалог {d['key']} — реплика без en/ru")
     return errors
 
 

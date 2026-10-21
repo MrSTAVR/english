@@ -74,6 +74,10 @@
     reviewBad: ['Ничего, это слово вернётся — запомнишь! 🌱', 'Упс! Посмотри правильный ответ 👀', 'Не беда, повторение для этого и нужно 🤗'],
     reviewDone: ['Раунд пройден! 🏅 Память становится крепче с каждым разом.', 'Ура, повторили! 🎉'],
     goalDone: ['Цель дня выполнена! 🎯 Держи монетки для сада!', 'Ура, цель на сегодня достигнута! 🌟 Ты молодец!'],
+    gamesPage: ['Играем! 🎮 Выбирай игру — слова запоминаются сами.', 'Игры со словами — мои любимые! 🐣 С какой начнём?'],
+    dialogsPage: ['Давай поговорим по-английски! 💬 Выбирай правильные ответы.', 'Диалоги — это почти настоящий разговор! 🗣️'],
+    game3: ['Три звезды! Ты чемпион! 🏆', 'Отлично сыграно! ⭐⭐⭐'], game2: ['Хорошо! Попробуй ещё — на три звезды? 🏅'], game1: ['Неплохо! В следующий раз получится лучше 💪'], game0: ['Ничего, потренируйся — и всё получится! 🌱'],
+    dialogDone: ['Диалог пройден! 💬 Так и разговаривают англичане!', 'Ты отлично поговорила! 🗣️'],
     wordsEmpty: 'Здесь пока пусто — пройди первый урок, и слова появятся! 🌱',
     theoryPage: ['Тут вся теория, что мы прошли 📖 Если что-то забылось — заглядывай сюда!',
                  'Хочешь повторить правило? Открывай нужный урок и читай вслух 🗣️'],
@@ -863,6 +867,10 @@
     });
   } else if (S.page === 'words') {
     later(700, function () { say(S.empty ? T.wordsEmpty : fmt(pick(T.wordsPage)), { mood: S.empty ? 'think' : 'happy' }); });
+  } else if (S.page === 'games') {
+    later(700, function () { say(S.empty ? T.wordsEmpty : pick(T.gamesPage), { mood: 'happy' }); });
+  } else if (S.page === 'dialogs') {
+    later(700, function () { say(S.empty ? T.wordsEmpty : pick(T.dialogsPage), { mood: 'happy' }); });
   } else if (S.page === 'review') {
     later(700, function () { say(S.empty ? T.wordsEmpty : pick(T.reviewPage), { mood: 'happy' }); });
   } else if (S.page === 'speak') {
@@ -958,6 +966,16 @@
     rvStreak = ok ? rvStreak + 1 : 0;
     if (ok && rvStreak % 3 !== 0) return;             // хвалим не каждый ответ, а каждый третий
     say(pick(ok ? T.reviewOk : T.reviewBad), { mood: ok ? 'cheer' : 'think' });
+  });
+  document.addEventListener('game:end', function (e) {
+    var d = e.detail || {};
+    if (d.dialog) { say(pick(T.dialogDone), { mood: 'cheer' }); return; }
+    var st = d.stars | 0;
+    say(pick(st >= 3 ? T.game3 : st === 2 ? T.game2 : st === 1 ? T.game1 : T.game0), { mood: st >= 3 ? 'party' : st >= 1 ? 'cheer' : 'think' });
+  });
+  document.addEventListener('ach:new', function (e) {
+    var l = e.detail && e.detail.list;
+    if (l && l.length) celebrateAchievements(l);
   });
   document.addEventListener('review:goal', function (e) {
     say(pick(T.goalDone) + ' +' + ((e.detail && e.detail.coins) || 0) + ' 🪙', { persist: true, mood: 'party' });
