@@ -164,3 +164,25 @@ def test_season_setting_requires_parent(make_student):
     c = make_student()
     c.post("/parent/season", data={"season": "halloween", "mode": "off"})
     assert db_scalar("SELECT COUNT(*) FROM app_settings") == 0
+
+
+def test_parent_sets_custom_dates(parent, make_student, monkeypatch):
+    c = make_student()
+    monkeypatch.setattr(seasons, "today", lambda: date(2026, 12, 20))
+    assert c.get("/student/halloween").status_code == 302
+    parent.post("/parent/season", data={"season": "halloween", "mode": "auto",
+                                        "date_from": "2026-12-15", "date_to": "2026-12-25"})
+    assert db_scalar("SELECT value FROM app_settings WHERE key='season_halloween_from'") == "2026-12-15"
+    assert c.get("/student/halloween").status_code == 200
+    monkeypatch.setattr(seasons, "today", lambda: date(2026, 10, 25))   # стандартные даты больше не работают
+    assert c.get("/student/halloween").status_code == 302
+    assert "15.12.2026" in parent.get("/parent").get_data(as_text=True)
+    parent.post("/parent/season", data={"season": "halloween", "mode": "auto", "date_from": "", "date_to": ""})
+    assert db_scalar("SELECT COUNT(*) FROM app_settings WHERE key LIKE '%_from'") == 0 and c.get("/student/halloween").status_code == 200
+
+
+def test_custom_dates_validation(parent, make_student):
+    make_student()
+    for a, b in (("2026-12-25", "2026-12-15"), ("2026-12-15", ""), ("bad", "bad")):
+        parent.post("/parent/season", data={"season": "halloween", "mode": "auto", "date_from": a, "date_to": b})
+    assert db_scalar("SELECT COUNT(*) FROM app_settings WHERE key LIKE '%_from'") == 0

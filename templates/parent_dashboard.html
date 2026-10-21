@@ -104,9 +104,12 @@
   <form method="post" action="{{ url_for('parent.parent_season') }}" class="vac-form season-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="season" value="{{ s.key }}">
-    <b>{{ s.emoji }} {{ s.title }}</b> <span class="hint">({{ s.dates }}) — сейчас:
+    <b>{{ s.emoji }} {{ s.title }}</b> <span class="hint">({% if s.custom %}{{ s.custom[0].strftime('%d.%m.%Y') }} — {{ s.custom[1].strftime('%d.%m.%Y') }}, свои даты{% else %}{{ s.dates }}{% endif %}) — сейчас:
       {% if s.mode == 'on' %}включён вручную{% elif s.mode == 'off' %}выключен{% elif s.auto_now %}идёт по расписанию{% else %}не идёт (ждёт своих дат){% endif %}</span>
     <label><input type="radio" name="mode" value="auto" {{ 'checked' if s.mode == 'auto' }}> По датам</label>
+    <label>Свои даты: с <input type="date" name="date_from" value="{{ s.custom[0].isoformat() if s.custom }}"></label>
+    <label>по <input type="date" name="date_to" value="{{ s.custom[1].isoformat() if s.custom }}"></label>
+    <span class="hint">Пусто — стандартные даты ({{ s.dates }}). Даты действуют в режиме «По датам».</span>
     <label><input type="radio" name="mode" value="on" {{ 'checked' if s.mode == 'on' }}> Всегда включён</label>
     <label><input type="radio" name="mode" value="off" {{ 'checked' if s.mode == 'off' }}> Выключен</label>
     <button class="btn btn-small btn-primary" type="submit">Сохранить</button>

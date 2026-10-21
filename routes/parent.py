@@ -9,7 +9,7 @@ from datetime import datetime
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from garden import cap_streak, get_garden, tree_count_for, tree_stage
 from progress import credit_lessons, lesson_ids_upto, uncredit_lessons
-from seasons import SEASONS, auto_season, get_mode, set_mode
+from seasons import SEASONS, auto_season, get_dates, get_mode, set_dates, set_mode
 from security import hash_password
 from stats import compute_stats
 
@@ -226,7 +226,18 @@ def parent_season():
     if err:
         return err
     key = request.form.get("season", "")
-    if set_mode(get_db(), key, request.form.get("mode", "")):
+    db = get_db()
+    raw1, raw2 = request.form.get("date_from", "").strip(), request.form.get("date_to", "").strip()
+    d1 = d2 = None
+    if raw1 or raw2:
+        try:
+            d1, d2 = datetime.strptime(raw1, "%Y-%m-%d").date(), datetime.strptime(raw2, "%Y-%m-%d").date()
+        except ValueError:
+            d1 = None
+        if d1 is None or d2 < d1:
+            flash("Укажите обе даты праздника, конец — не раньше начала (или очистите обе, чтобы вернуть стандартные).", "error")
+            return redirect(url_for("parent.parent_dashboard") + "#seasons")
+    if set_mode(db, key, request.form.get("mode", "")) and set_dates(db, key, d1, d2):
         flash("Настройка праздника сохранена.", "ok")
     else:
         flash("Не удалось сохранить настройку.", "error")
@@ -311,7 +322,7 @@ def parent_dashboard():
                            credit_cards=credit_cards, main_count=len(LESSONS),
                            names_by_id=names_by_id, emojis_by_id=emojis_by_id,
                            student_emojis=STUDENT_EMOJIS,
-                           seasons=[{"key": k, **v, "mode": get_mode(k), "auto_now": auto_season() == k}
+                           seasons=[{"key": k, **v, "mode": get_mode(k), "custom": get_dates(k), "auto_now": auto_season() == k}
                                     for k, v in SEASONS.items()],
                            lesson_titles={l["id"]: (f'{l["num"]}. ' if l.get("num") else "") + l["title"] for l in ALL_LESSONS},
                            total_lessons=len(LESSONS))
