@@ -218,7 +218,7 @@
       if (busy) return; busy = true;
       if (anim) anim.pause();
       [].forEach.call(opts.children, function (x) { x.classList.add('lock'); });
-      if (ok) { flash('jump'); obs.classList.add('gone'); say(cur.en); } else { lives--; flash('oops'); obs.classList.add('hit'); }
+      if (ok) { flash('jump'); obs.classList.add('gone'); } else { lives--; flash('oops'); obs.classList.add('hit'); }
       head();
       setTimeout(function () { if (lives <= 0 || pos >= total) finish(); else next(); }, ok ? 800 : 1200);
     }
