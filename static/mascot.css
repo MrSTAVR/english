@@ -1,0 +1,193 @@
+/* ============================================================
+   🐣 Чик-чик 2.0 — помощник в стиле приложения
+   Цвета и скругления те же, что у карточек и иконки приложения.
+   ============================================================ */
+
+.mascot { position: fixed; z-index: 999; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+  right: max(14px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom));
+  pointer-events: none; }
+.mascot > * { pointer-events: auto; }
+.mascot-off { display: none; }
+
+/* ---------- облачко с репликой ---------- */
+.mascot-balloon { position: relative; max-width: min(330px, 74vw); box-sizing: border-box;
+  background: rgba(255, 255, 255, .96); color: var(--ink); border: 2px solid rgba(124, 92, 255, .22);
+  border-radius: 22px 22px 6px 22px; padding: 22px 38px 12px 16px;
+  box-shadow: 0 14px 34px rgba(90, 63, 214, .22); backdrop-filter: blur(8px);
+  font-weight: 700; line-height: 1.4; font-size: .98rem;
+  opacity: 0; transform: translateY(12px) scale(.86); transform-origin: 90% 100%;
+  transition: opacity .25s ease, transform .35s cubic-bezier(.2, .9, .3, 1.35); pointer-events: none; }
+.mascot-balloon.visible { opacity: 1; transform: none; pointer-events: auto; }
+.mascot-balloon.collapsed { opacity: 0; transform: translateY(8px) scale(.9); pointer-events: none; }
+.mascot-balloon .mb-name { position: absolute; top: -11px; left: 14px; font-size: .72rem; font-weight: 900;
+  letter-spacing: .03em; color: #fff; padding: 3px 11px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: 0 3px 8px rgba(124, 92, 255, .35); }
+.mascot-balloon .mb-text { white-space: pre-line; }
+.mascot-balloon .mb-text .caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -2px;
+  background: var(--primary); animation: mb-caret .6s steps(1) infinite; }
+@keyframes mb-caret { 50% { opacity: 0; } }
+.mascot-balloon .mb-close { position: absolute; top: 6px; right: 7px; width: 26px; height: 26px; border: 0; border-radius: 50%;
+  background: transparent; color: var(--muted); font-size: .95rem; line-height: 1; cursor: pointer; }
+.mascot-balloon .mb-close:hover { background: #f1ecff; color: var(--primary-dark); }
+.mascot-balloon::after { content: ""; position: absolute; right: 30px; bottom: -9px; width: 16px; height: 16px;
+  background: inherit; border-right: 2px solid rgba(124, 92, 255, .22); border-bottom: 2px solid rgba(124, 92, 255, .22);
+  transform: rotate(45deg); border-radius: 0 0 5px 0; }
+
+/* ---------- сам персонаж ---------- */
+.mascot-body { position: relative; width: 104px; height: 108px; padding: 0; border: 0; background: none; cursor: pointer;
+  transform-origin: 50% 96%; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  -webkit-user-select: none; user-select: none; filter: drop-shadow(0 8px 10px rgba(90, 63, 214, .18)); }
+.mascot-body:focus-visible { outline: 3px solid rgba(124, 92, 255, .5); outline-offset: 4px; border-radius: 24px; }
+.mascot-body.is-gone { visibility: hidden; }
+.m-puff { width: 100%; height: 100%; transform-origin: 50% 94%; transform: scale(var(--puff, 1));
+  transition: transform .25s cubic-bezier(.3, 1.6, .5, 1); }
+.m-puff svg { width: 100%; height: 100%; overflow: visible; display: block; }
+
+.chick .c-all { transform-origin: 60px 116px; animation: c-breathe 3.6s ease-in-out infinite; }
+@keyframes c-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(.992, 1.024); } }
+.chick .c-wing { transition: transform .3s ease; }
+.chick .c-wing-l { transform-origin: 26px 58px; }
+.chick .c-wing-r { transform-origin: 94px 58px; }
+.chick .c-look { transition: transform .35s ease; }
+.chick .c-crest { transform-origin: 60px 28px; animation: c-crest 5s ease-in-out infinite; }
+@keyframes c-crest { 0%, 88%, 100% { transform: rotate(0); } 92% { transform: rotate(7deg); } 96% { transform: rotate(-6deg); } }
+
+/* --- глаза: по умолчанию открытые --- */
+.chick .ec-l, .chick .ec-r, .chick .eh, .chick .ew, .chick .ed, .chick .brows { display: none; }
+.chick.s-happy .eo-l, .chick.s-happy .eo-r { display: none; }
+.chick.s-happy .eh { display: inline; }
+.chick.s-wide .eo-l, .chick.s-wide .eo-r { display: none; }
+.chick.s-wide .ew { display: inline; }
+.chick.s-dizzy .eo-l, .chick.s-dizzy .eo-r { display: none; }
+.chick.s-dizzy .ed { display: inline; }
+.chick.s-sad .brows { display: inline; }
+.chick.s-wink .eo-l { display: none; }
+.chick.s-wink .ec-l { display: inline; }
+.chick.s-blink .eo-l, .chick.s-blink .eo-r, .chick.s-sleep .eo-l, .chick.s-sleep .eo-r { display: none; }
+.chick.s-blink .ec-l, .chick.s-blink .ec-r, .chick.s-sleep .ec-l, .chick.s-sleep .ec-r { display: inline; }
+.chick.s-blink.s-happy .ec-l, .chick.s-blink.s-happy .ec-r { display: none; }
+.chick.s-blink.s-happy .eh { display: inline; }
+
+/* --- клюв «говорит» --- */
+.chick .c-beak-low { transform-origin: 60px 78px; transform: scaleY(.55); }
+.chick.is-talking .c-beak-low { animation: c-talk .2s ease-in-out infinite alternate; }
+@keyframes c-talk { from { transform: scaleY(.55); } to { transform: scaleY(1.45); } }
+.chick.s-happy .c-beak-low { transform: scaleY(1.2); }
+.chick.s-wide .c-beak-low { transform: scaleY(1.5); }
+
+/* --- эффекты вокруг головы --- */
+.chick .fx { opacity: 0; transform-box: fill-box; transform-origin: center; }
+.chick.fx-love .fx-heart { animation: fx-heart 1.6s ease-out infinite; }
+.chick.fx-love .fx-heart:nth-child(2) { animation-delay: .5s; }
+.chick.fx-love .fx-heart:nth-child(3) { animation-delay: 1s; }
+@keyframes fx-heart { 0% { opacity: 0; transform: translateY(8px) scale(.4); } 25% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-30px) scale(1.15); } }
+.chick.fx-stars .fx-orbit { opacity: 1; transform-origin: 60px 30px; animation: fx-orbit 1.1s linear infinite; }
+.chick.fx-stars .fx-orbit .fx { opacity: 1; }
+@keyframes fx-orbit { to { transform: rotate(360deg); } }
+.chick .fx-orbit { opacity: 0; }
+.chick.fx-sleep .fx-z { animation: fx-z 2.6s ease-in-out infinite; }
+.chick.fx-sleep .fx-z:nth-child(2) { animation-delay: .9s; }
+.chick.fx-sleep .fx-z:nth-child(3) { animation-delay: 1.8s; }
+@keyframes fx-z { 0% { opacity: 0; transform: translate(0, 6px) scale(.5); } 30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(10px, -26px) scale(1.2); } }
+.chick.fx-sweat .fx-sweat { animation: fx-sweat 1.4s ease-in infinite; }
+@keyframes fx-sweat { 0% { opacity: 0; transform: translateY(-6px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(14px); } }
+.chick.fx-spark .fx-spark { animation: fx-spark 1s ease-out infinite; }
+.chick.fx-spark .fx-spark:nth-child(2) { animation-delay: .25s; }
+.chick.fx-spark .fx-spark:nth-child(3) { animation-delay: .5s; }
+@keyframes fx-spark { 0% { opacity: 0; transform: scale(.2) rotate(0); } 40% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.3) rotate(90deg); } }
+
+/* --- позы тела (на кнопке) --- */
+.mascot-body.a-hop { animation: a-hop .6s cubic-bezier(.3, .7, .4, 1); }
+@keyframes a-hop { 0% { transform: scale(1.06, .92); } 35% { transform: translateY(-16px) scale(.96, 1.06); }
+  70% { transform: translateY(0) scale(1.06, .92); } 100% { transform: none; } }
+.mascot-body.a-jump { animation: a-jump .95s cubic-bezier(.3, .7, .4, 1); }
+@keyframes a-jump { 0% { transform: scale(1.12, .8); } 30% { transform: translateY(-44px) scale(.9, 1.14); }
+  55% { transform: translateY(-34px) scale(.95, 1.05); } 80% { transform: translateY(0) scale(1.14, .82); }
+  92% { transform: scale(.96, 1.04); } 100% { transform: none; } }
+.mascot-body.a-spin { animation: a-spin .95s cubic-bezier(.4, .1, .4, 1); }
+@keyframes a-spin { 0% { transform: scale(1.1, .85); } 25% { transform: translateY(-38px) rotate(0); }
+  70% { transform: translateY(-30px) rotate(360deg); } 90% { transform: translateY(0) rotate(360deg) scale(1.1, .88); }
+  100% { transform: none; } }
+.mascot-body.a-dance { animation: a-dance 1.4s ease-in-out; }
+@keyframes a-dance { 0%, 100% { transform: none; } 12% { transform: translateY(-10px) rotate(-9deg); }
+  25% { transform: rotate(0); } 37% { transform: translateY(-10px) rotate(9deg); } 50% { transform: rotate(0); }
+  62% { transform: translateY(-14px) rotate(-12deg) scale(1.04); } 75% { transform: rotate(0); }
+  87% { transform: translateY(-14px) rotate(12deg) scale(1.04); } }
+.mascot-body.a-shake { animation: a-shake .55s ease; }
+@keyframes a-shake { 0%, 100% { transform: none; } 15% { transform: translateX(-8px) rotate(-5deg); }
+  35% { transform: translateX(8px) rotate(5deg); } 55% { transform: translateX(-6px) rotate(-3deg); }
+  75% { transform: translateX(5px) rotate(2deg); } }
+.mascot-body.a-wobble { animation: a-wobble 1.6s ease-out; }
+@keyframes a-wobble { 0% { transform: rotate(0); } 12% { transform: rotate(-14deg); } 28% { transform: rotate(12deg); }
+  44% { transform: rotate(-9deg); } 60% { transform: rotate(6deg); } 78% { transform: rotate(-3deg); } 100% { transform: none; } }
+.mascot-body.a-peck { animation: a-peck 1.3s ease-in-out; }
+@keyframes a-peck { 0%, 100% { transform: none; } 15%, 45%, 75% { transform: translateY(5px) rotate(11deg) scale(1.04, .94); }
+  30%, 60%, 90% { transform: translateY(-1px) rotate(-2deg); } }
+.mascot-body.a-giggle { animation: a-giggle .7s ease; }
+@keyframes a-giggle { 0%, 100% { transform: none; } 10% { transform: translate(-3px, -4px) rotate(-3deg); }
+  25% { transform: translate(3px, 0) rotate(3deg); } 40% { transform: translate(-3px, -4px) rotate(-3deg); }
+  55% { transform: translate(3px, 0) rotate(3deg); } 70% { transform: translate(-2px, -3px) rotate(-2deg); } }
+.mascot-body.a-startle { animation: a-startle .5s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes a-startle { 0% { transform: none; } 30% { transform: translateY(-24px) scale(.88, 1.2); }
+  60% { transform: translateY(0) scale(1.12, .86); } 100% { transform: none; } }
+.mascot-body.a-popin { animation: a-popin .75s cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes a-popin { 0% { transform: scale(0) rotate(-40deg); } 55% { transform: scale(1.3) rotate(8deg); }
+  75% { transform: scale(.88) rotate(-3deg); } 100% { transform: none; } }
+.mascot-body.a-drop { animation: a-drop 1.25s cubic-bezier(.4, 0, .6, 1); }
+@keyframes a-drop { 0% { transform: translateY(-115vh) rotate(-20deg); } 55% { transform: translateY(0) rotate(0) scale(1.2, .72); }
+  68% { transform: translateY(-34px) scale(.92, 1.1); } 82% { transform: translateY(0) scale(1.1, .88); }
+  92% { transform: translateY(-8px); } 100% { transform: none; } }
+.mascot-body.a-tremble { animation: a-tremble .16s linear infinite; }
+@keyframes a-tremble { 0%, 100% { transform: translate(0, 0) rotate(0); } 25% { transform: translate(-2px, 1px) rotate(-2deg); }
+  50% { transform: translate(2px, -1px) rotate(2deg); } 75% { transform: translate(-1px, -1px) rotate(-1deg); } }
+.mascot-body.a-sleepy .c-all { animation-duration: 6s; }
+.mascot-body.a-sleepy { animation: a-sleepy 5s ease-in-out infinite; }
+@keyframes a-sleepy { 0%, 100% { transform: rotate(-1.5deg) translateY(2px); } 50% { transform: rotate(2.5deg) translateY(4px); } }
+
+/* --- крылья --- */
+.chick.w-flap .c-wing-l { animation: w-flap-l .22s ease-in-out 6 alternate; }
+.chick.w-flap .c-wing-r { animation: w-flap-r .22s ease-in-out 6 alternate; }
+@keyframes w-flap-l { to { transform: rotate(38deg); } }
+@keyframes w-flap-r { to { transform: rotate(-38deg); } }
+.chick.w-wave .c-wing-r { animation: w-wave 1.2s ease-in-out; }
+@keyframes w-wave { 0%, 100% { transform: rotate(0); } 20%, 60% { transform: rotate(-128deg); }
+  40%, 80% { transform: rotate(-104deg); } }
+.chick.w-up .c-wing-l { transform: rotate(125deg); }
+.chick.w-up .c-wing-r { transform: rotate(-125deg); }
+.chick.w-out .c-wing-l { transform: rotate(48deg); }
+.chick.w-out .c-wing-r { transform: rotate(-48deg); }
+.chick.w-stretch .c-wing-l, .chick.w-stretch .c-wing-r { animation-duration: .9s; animation-iteration-count: 1; animation-name: w-stretch-l; }
+.chick.w-stretch .c-wing-r { animation-name: w-stretch-r; }
+@keyframes w-stretch-l { 0%, 100% { transform: rotate(0); } 40%, 70% { transform: rotate(70deg); } }
+@keyframes w-stretch-r { 0%, 100% { transform: rotate(0); } 40%, 70% { transform: rotate(-70deg); } }
+
+/* ---------- перья, яйцо, скорлупа ---------- */
+.feather-layer { position: fixed; inset: 0; z-index: 1003; pointer-events: none; overflow: hidden; }
+.feather { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+.feather svg { display: block; width: 100%; height: 100%; }
+.egg { position: fixed; z-index: 1002; pointer-events: none; transform-origin: 50% 95%; }
+.egg svg { width: 100%; height: 100%; overflow: visible; display: block; }
+.egg .shell-top, .egg .shell-bot { transform-box: fill-box; }
+.egg.cracked .crack { opacity: 1; }
+.egg .crack { opacity: 0; transition: opacity .1s; }
+
+/* ---------- кнопка «вернуть помощника» ---------- */
+.mascot-reopen { position: fixed; z-index: 998; width: 52px; height: 52px; border-radius: 50%; padding: 0; cursor: pointer;
+  right: max(14px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom));
+  border: 3px solid #ffd54f; background: #fff; box-shadow: 0 6px 16px rgba(90, 63, 214, .25); }
+.mascot-reopen svg { width: 100%; height: 100%; display: block; }
+.mascot-reopen:hover { transform: scale(1.08); }
+
+@media (max-width: 640px) {
+  .mascot-body { width: 82px; height: 86px; }
+  .mascot-balloon { max-width: 70vw; font-size: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chick .c-all, .chick .c-crest { animation: none; }
+  .mascot-body[class*="a-"] { animation-duration: .01s !important; }
+  .mascot-balloon { transition: opacity .2s; }
+}

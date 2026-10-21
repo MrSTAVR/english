@@ -14,8 +14,11 @@ def build_mascot_ctx():
     page = "anon" if not role else ("parent" if role == "parent" else "student")
     endpoint = request.endpoint or ""
     mascot = {"enabled": MASCOT_ENABLED, "name": MASCOT_NAME, "page": page}
+    if page == "parent":
+        mascot["enabled"] = False      # в кабинете родителя помощник не нужен
     if page != "student":
         return mascot
+    mascot["student"] = session.get("student_name") or ""
     if endpoint == "auth.index":
         mascot["page"] = "index"
     elif endpoint == "student.student_home":
@@ -26,4 +29,8 @@ def build_mascot_ctx():
         mascot["page"] = "result"
     elif endpoint == "garden.garden_page":
         mascot["page"] = "garden"
+    elif endpoint == "student.words_page":
+        mascot["page"] = "words"
+    elif endpoint == "student.theory_page":
+        mascot["page"] = "theory"
     return mascot

@@ -33,7 +33,9 @@ def theory_page():
         return redirect(url_for("auth.index"))
     stats = compute_stats(db, student["id"])
     lessons = [l for l in ALL_LESSONS if l["id"] in stats["completed_ids"] and l.get("theory")]
-    return render_template("theory.html", mascot=build_mascot_ctx(), lessons=lessons)
+    mascot = build_mascot_ctx()
+    mascot["empty"] = not lessons
+    return render_template("theory.html", mascot=mascot, lessons=lessons)
 
 
 @bp.route("/student/words")
@@ -50,7 +52,9 @@ def words_page():
     stats = compute_stats(db, student["id"])
     groups = [{"lesson": l, "words": l["material"]}
               for l in ALL_LESSONS if l["id"] in stats["completed_ids"]]
-    return render_template("words.html", mascot=build_mascot_ctx(), groups=groups,
+    mascot = build_mascot_ctx()
+    mascot["empty"] = not groups
+    return render_template("words.html", mascot=mascot, groups=groups,
                            total_words=sum(len(g["words"]) for g in groups),
                            name=student["display_name"], emoji=student["emoji"])
 
