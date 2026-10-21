@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>{% block title %}Английский для дочки 🇬🇧{% endblock %}</title>
 <meta name="theme-color" content="#7c5cff">
+<script>(function(){try{var t=localStorage.getItem('theme');if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);if(t==='dark'){document.querySelector('meta[name=theme-color]').setAttribute('content','#14112a');}}catch(e){}})();</script>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/favicon-32.png') }}">
 <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
@@ -14,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="{{ url_for('static', filename='fonts.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=17">
-<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=2">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=1">
 </head>
 <body>
@@ -78,6 +79,8 @@
     <path d="M32 11l15 5.8V29c0 10-6.5 17.6-15 22.6C23.5 46.6 17 39 17 29V16.8z" fill="#b9a5ff"/>
     <path d="M24 31l6 6 11-12" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
   </symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="#8f73ff" stroke="#5a3fd6" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.6" fill="#ffd54f" stroke="#e5a600" stroke-width="1.6"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5.3 5.3L7 7M17 17l1.7 1.7M18.7 5.3L17 7M7 17l-1.7 1.7" stroke="#e5a600" stroke-width="2" stroke-linecap="round"/></symbol>
 </svg>
 <header class="topbar">
   <a href="/" class="logo"><svg class="logo-mark"><use href="#i-chick"/></svg><span>English Fun</span></a>
@@ -91,6 +94,9 @@
       <a href="{{ url_for('parent.parent_dashboard') }}" class="{{ 'on' if ep.startswith('parent.') }}"><svg class="icon"><use href="#i-shield"/></svg><span>Кабинет родителя</span></a>
       <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
     {% endif %}
+    <button type="button" class="theme-toggle" id="theme-toggle" title="Тёмная / светлая тема" aria-label="Переключить тёмную и светлую тему">
+      <svg class="icon ic-moon"><use href="#i-moon"/></svg><svg class="icon ic-sun"><use href="#i-sun"/></svg>
+    </button>
   </nav>
 </header>
 <div id="install-box" class="install-box" hidden>
@@ -114,6 +120,7 @@
 
 {# ---------- Анимированный помощник Чик-чик (правый нижний угол) ---------- #}
 <script>window.MASCOT_SETTINGS = {{ mascot|tojson }};</script>
+<script src="{{ url_for('static', filename='theme.js') }}?v=1"></script>
 <script src="{{ url_for('static', filename='mascot.js') }}?v=7"></script>
 <script src="{{ url_for('static', filename='tts.js') }}?v=2"></script>
 <script src="{{ url_for('static', filename='pwa.js') }}?v=1"></script>

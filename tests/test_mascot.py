@@ -47,3 +47,16 @@ def test_old_mascot_code_is_gone():
     js = (ROOT / "static" / "mascot.js").read_text(encoding="utf-8")
     assert "explode" in js and "feather" in js
     assert "dragstart" not in js
+
+
+def test_theme_toggle_and_assets(anon):
+    body = anon.get("/").get_data(as_text=True)
+    assert 'id="theme-toggle"' in body and "theme.js" in body
+    assert "localStorage.getItem('theme')" in body          # тема ставится до отрисовки
+    assert anon.get("/static/theme.js").status_code == 200
+
+
+def test_garden_ring_disappears_after_animation():
+    css = (ROOT / "static" / "style.css").read_text(encoding="utf-8")
+    line = next(l for l in css.splitlines() if l.startswith(".g-ring"))
+    assert "forwards" in line and "opacity: 0" in line
