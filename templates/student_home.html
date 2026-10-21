@@ -3,11 +3,10 @@
 {% block content %}
 
 {% if new_badge %}
-  {% for key in new_badge %}
-    {% for a in achievements if a.key == key %}
-    <div class="badge-popup">🎉 Новая ачивка: {{ a.emoji }} <b>{{ a.title }}</b>!</div>
-    {% endfor %}
-  {% endfor %}
+  <div class="new-medals card">
+    <b>🎉 Новые награды!</b>
+    {% for a in new_badge %}<a class="new-medal" href="{{ url_for('student.achievements_page') }}">{{ a|medal(44) }}<span>{{ a.title }}</span></a>{% endfor %}
+  </div>
 {% endif %}
 
 <div class="welcome-row">
@@ -22,7 +21,7 @@
 <section class="card tracker glass">
   <div class="section-head">
     <h2>📈 Мой трекер успеваемости</h2>
-    <span class="pill pill-soft">{{ earned_count }}/{{ achievements|length }} 🏅 наград</span>
+    <a class="pill pill-soft pill-link" href="{{ url_for('student.achievements_page') }}">{{ earned_count }}/{{ achievements|length }} 🏅 наград</a>
   </div>
   <div class="stats-grid">
     <a class="stat stat-c1 stat-link" href="{{ url_for('student.theory_page') }}" title="Открыть теорию"><span class="stat-icon"><svg class="icon"><use href="#i-book"/></svg></span><span class="stat-num">{{ stats.lessons_completed }}/{{ total_lessons }}</span><span class="stat-label">уроков пройдено</span><span class="stat-more">📖 Открыть теорию ›</span></a>
@@ -146,22 +145,37 @@
   </div>
 </section>
 
-<!-- 4. Ачивки (теперь внизу) -->
+<!-- 4. Награды: последние + ближайшие -->
 <section class="card glass ach-panel">
   <div class="section-head">
-    <h2>🏅 Мои достижения</h2>
-    <span class="pill pill-soft">{{ earned_count }} из {{ achievements|length }}</span>
+    <h2>🏅 Мои награды</h2>
+    <a class="pill pill-soft pill-link" href="{{ url_for('student.achievements_page') }}">{{ earned_count }} из {{ achievements|length }} · вся коллекция ›</a>
   </div>
-  <div class="ach-grid">
-    {% for a in achievements %}
-      <div class="ach {{ 'ach-earned' if a.earned else 'ach-locked' }}" title="{{ a.desc }}">
-        <div class="ach-emoji">{{ a.emoji if a.earned else '❔' }}</div>
-        <div class="ach-title">{{ a.title }}</div>
-        <div class="ach-desc">{{ a.desc }}</div>
-        {% if a.earned %}<div class="ach-date">🎁 {{ a.earned_at[:10] }}</div>{% endif %}
-      </div>
+  {% if ach_recent %}
+  <div class="medal-row">
+    {% for a in ach_recent %}
+      <a class="medal-tile" href="{{ url_for('student.achievements_page') }}" title="{{ a.title }} — {{ a.desc }}">{{ a|medal(72) }}<span>{{ a.title }}</span></a>
     {% endfor %}
   </div>
+  {% else %}
+    <p class="hint">Пока медалей нет — пройди первый урок, и Чик-чик вручит тебе подарок! 🎁</p>
+  {% endif %}
+  {% if ach_next %}
+  <h3 class="ach-next-title">Скоро получишь</h3>
+  <div class="ach-cards">
+    {% for a in ach_next %}
+      <article class="ach-card tier-{{ a.tier }} is-locked">
+        {{ a|medal(64) }}
+        <div class="ach-card-body">
+          <div class="ach-card-title">{{ a.title }}</div>
+          <div class="ach-card-desc">{{ a.desc }}</div>
+          <div class="ach-prog"><div class="ach-prog-fill" style="width: {{ a.progress[2] }}%"></div></div>
+          <div class="ach-card-date">{{ a.progress[0] }} из {{ a.progress[1] }}</div>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+  {% endif %}
 </section>
 {% endblock %}
 

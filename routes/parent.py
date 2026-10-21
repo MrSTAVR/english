@@ -242,7 +242,8 @@ def parent_dashboard():
             "SELECT a.student_id, a.key, a.earned_at, s.display_name, s.emoji "
             "FROM achievements a JOIN students s ON s.id = a.student_id").fetchall():
         earned[(r["student_id"], r["key"])] = r
-    achievements = [{**a, "earned": any(k[1] == a["key"] for k in earned),
+    achievements = [{**{k: v for k, v in a.items() if k != "check"},
+                     "earned": any(k[1] == a["key"] for k in earned),
                      "who": ", ".join(f"{v['emoji']} {v['display_name']}"
                                       for k, v in earned.items() if k[1] == a["key"]),
                      "earned_at": next((v["earned_at"] for k, v in earned.items()

@@ -17,6 +17,7 @@ from flask import Flask, g
 import config
 from database import init_db
 from hardening import init_hardening
+from badges import medal
 from mascot import build_mascot_ctx
 from routes import register_blueprints
 from security import load_secret_key
@@ -70,6 +71,8 @@ app.jinja_env.filters["mistakes_count"] = mistakes_count
 
 
 app.template_filter("tree_mini")(tree_mini)
+
+app.jinja_env.filters["medal"] = medal
 
 
 @app.context_processor

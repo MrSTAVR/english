@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Мои награды — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
+  <h1>🏅 Мои награды</h1>
+</div>
+
+<section class="card ach-hero">
+  <div class="ach-hero-main">
+    <div class="ach-hero-num"><b>{{ earned }}</b><span>из {{ total }}</span></div>
+    <div class="ach-hero-bar"><div class="ach-hero-fill" style="width: {{ (100 * earned / total)|round(0) }}%"></div></div>
+    <p class="subtitle">Собирай медали: за уроки, тесты, слова, время и дни подряд в саду.</p>
+  </div>
+  <div class="tier-row">
+    {% set names = {'bronze': 'Бронза', 'silver': 'Серебро', 'gold': 'Золото', 'legend': 'Легенды'} %}
+    {% for t in ['bronze', 'silver', 'gold', 'legend'] %}
+      <div class="tier-chip tier-{{ t }}"><i></i><b>{{ tiers[t][0] }}/{{ tiers[t][1] }}</b><span>{{ names[t] }}</span></div>
+    {% endfor %}
+  </div>
+</section>
+
+{% for g in groups %}
+<section class="ach-group">
+  <h2 class="ach-cat">{{ g.emoji }} {{ g.name }}
+    <span class="pill pill-soft">{{ g['items']|selectattr('earned')|list|length }}/{{ g['items']|length }}</span></h2>
+  <div class="ach-cards">
+    {% for a in g['items'] %}
+      <article class="ach-card tier-{{ a.tier }} {{ 'is-earned' if a.earned else 'is-locked' }}">
+        {{ a|medal(84) }}
+        <div class="ach-card-body">
+          <div class="ach-card-title">{{ a.title }}</div>
+          <div class="ach-card-desc">{{ a.desc }}</div>
+          {% if a.earned %}
+            <div class="ach-card-date">{{ a.tier_name }} · получено {{ a.earned_at[:10] }}</div>
+          {% elif a.progress %}
+            <div class="ach-prog"><div class="ach-prog-fill" style="width: {{ a.progress[2] }}%"></div></div>
+            <div class="ach-card-date">{{ a.progress[0] }} из {{ a.progress[1] }} · {{ a.tier_name }}</div>
+          {% else %}
+            <div class="ach-card-date">{{ a.tier_name }} награда</div>
+          {% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% endblock %}

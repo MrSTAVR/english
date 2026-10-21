@@ -189,14 +189,16 @@
 <!-- Достижения -->
 <section class="card">
   <h2>🏅 Достижения</h2>
-  <div class="ach-grid">
+  <div class="ach-cards">
     {% for a in achievements %}
-      <div class="ach {{ 'ach-earned' if a.earned else 'ach-locked' }}">
-        <div class="ach-emoji">{{ a.emoji }}</div>
-        <div class="ach-title">{{ a.title }}</div>
-        <div class="ach-desc">{{ a.desc }}</div>
-        {% if a.earned %}<div class="ach-date">🏅 у: {{ a.who }} · {{ a.earned_at[:10] }}</div>{% endif %}
-      </div>
+      <article class="ach-card tier-{{ a.tier }} {{ 'is-earned' if a.earned else 'is-locked' }}">
+        {{ a|medal(64) }}
+        <div class="ach-card-body">
+          <div class="ach-card-title">{{ a.title }}</div>
+          <div class="ach-card-desc">{{ a.desc }}</div>
+          {% if a.earned %}<div class="ach-card-date">{{ a.who }} · {{ a.earned_at[:10] }}</div>{% endif %}
+        </div>
+      </article>
     {% endfor %}
   </div>
 </section>

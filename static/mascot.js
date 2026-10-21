@@ -60,6 +60,9 @@
     wordsPage: ['Это твой словарь{who}! 📚 Нажимай 🔊 и повторяй за диктором.',
                 'Столько слов выучено! Попробуй «скрыть перевод» и вспомнить сама 🧠',
                 'Каждое слово тут — твоя победа 🏅'],
+    achPage: ['Вот твоя коллекция! 🏅 Собрано {n} из {total}. Нажми на «Скоро получишь» — и увидишь, сколько осталось!',
+              'Столько медалей! ✨ {n} из {total}. Золотые и легендарные — самые редкие 👑'],
+    achPageEmpty: 'Тут пока пусто, но это ненадолго: пройди урок — и получишь первую медаль! 🥉',
     wordsEmpty: 'Здесь пока пусто — пройди первый урок, и слова появятся! 🌱',
     theoryPage: ['Тут вся теория, что мы прошли 📖 Если что-то забылось — заглядывай сюда!',
                  'Хочешь повторить правило? Открывай нужный урок и читай вслух 🗣️'],
@@ -74,6 +77,12 @@
     achOpen: ['Ура!! Твоя награда: «{title}» {emoji} Ты её честно заслужила!',
               'Смотри, какой клад! «{title}» {emoji} — так и сияет! ✨',
               '«{title}» {emoji} — теперь в твоей коллекции! Я тобой горжусь 💛'],
+    achTier: {
+      bronze: ['Бронзовая награда «{title}» {emoji} — отличное начало! 🥉', 'Есть! «{title}» {emoji} — первая ступенька к серебру 🪜'],
+      silver: ['Серебро! «{title}» {emoji} — вот это класс! 🥈', '«{title}» {emoji} — серебряная награда, ты растёшь на глазах ✨'],
+      gold: ['ЗОЛОТО!!! «{title}» {emoji} Ты просто звезда! 🥇', 'Золотая награда «{title}» {emoji}! Я так тобой горжусь! 🌟'],
+      legend: ['ЛЕГЕНДАРНАЯ НАГРАДА!!! «{title}» {emoji} Такое получают единицы! 🎆👑', '«{title}» {emoji} — ЛЕГЕНДА! Я в полном восторге, чирик-чирик-чирик!!! 🎇']
+    },
     achAfter: ['Каждая ачивка — шажок к большому английскому 🇬🇧',
                'Откроешь все ачивки — устроим целый салют! 🎆',
                'Покажи маме с папой — они будут в восторге! 👨‍👩‍👧'],
@@ -643,16 +652,63 @@
   try { hiddenHere = !!sessionStorage.getItem('mascot_hidden_' + location.pathname); } catch (e) {}
   if (hiddenHere) { root.classList.add('mascot-off'); showReopen(); }
 
-  /* ---------- 🎁 вручение подарка за ачивки ---------- */
-  var giftEl = null;
+  /* ---------- 🎁 вручение наград: подарок → медали по одной ---------- */
+  var TIER_FX = { bronze: ['#f4a261', '#ffd7b0', '#fff'], silver: ['#e6ecf8', '#9aa8c7', '#7c5cff', '#fff'],
+                  gold: ['#ffd54f', '#ffb300', '#fff3c4', '#ff7ab6'], legend: ['#ff7ab6', '#ffd54f', '#6fe3b0', '#7c5cff', '#4fc3f7', '#fff'] };
+  var STAR = '<svg width="100%" height="100%" viewBox="-10 -10 20 20"><path d="M0 -9 L2.4 -2.4 L9 0 L2.4 2.4 L0 9 L-2.4 2.4 L-9 0 L-2.4 -2.4Z" fill="{c}"/></svg>';
+
+  function burstAt(x, y, colors, n, dist) {           // «салют»: разлетающиеся точки и звёздочки
+    if (RM) return;
+    for (var i = 0; i < n; i++) {
+      var el = document.createElement('div');
+      el.className = 'fx-dot';
+      var size = rnd(6, 13), c = colors[i % colors.length], star = i % 3 === 0;
+      el.style.width = el.style.height = size * (star ? 1.8 : 1) + 'px';
+      if (star) el.innerHTML = STAR.replace('{c}', c); else { el.style.background = c; el.style.borderRadius = '50%'; }
+      (giftEl || document.body).appendChild(el);
+      var ang = (i / n) * Math.PI * 2 + rnd(-.2, .2), d = rnd(.55, 1) * dist;
+      var dx = Math.cos(ang) * d, dy = Math.sin(ang) * d;
+      var anim = el.animate([
+        { transform: 'translate(' + x + 'px,' + y + 'px) scale(.2)', opacity: 1 },
+        { transform: 'translate(' + (x + dx) + 'px,' + (y + dy) + 'px) scale(1.1)', opacity: 1, offset: .55 },
+        { transform: 'translate(' + (x + dx * 1.05) + 'px,' + (y + dy * 1.05 + 70) + 'px) scale(.3)', opacity: 0 }
+      ], { duration: rnd(900, 1500), easing: 'cubic-bezier(.15,.7,.3,1)' });
+      anim.onfinish = (function (e) { return function () { e.remove(); }; })(el);
+    }
+  }
+  function fireworks(n, colors) {
+    for (var i = 0; i < n; i++) {
+      setTimeout(function () {
+        burstAt(rnd(.12, .88) * window.innerWidth, rnd(.12, .5) * window.innerHeight, colors, 26, rnd(110, 190));
+      }, i * 280);
+    }
+  }
+  function flashScreen() {
+    if (RM) return;
+    var f = document.createElement('div'); f.className = 'fx-flash';
+    document.body.appendChild(f); setTimeout(function () { f.remove(); }, 1000);
+  }
+  function tierEffects(tier) {
+    var cx = window.innerWidth / 2, cy = window.innerHeight * 0.36, cols = TIER_FX[tier] || TIER_FX.bronze;
+    if (tier === 'legend') { flashScreen(); confettiBurst(80); fireworks(6, cols); burstAt(cx, cy, cols, 40, 240); }
+    else if (tier === 'gold') { confettiBurst(54); fireworks(3, cols); burstAt(cx, cy, cols, 30, 200); }
+    else if (tier === 'silver') { confettiBurst(34); burstAt(cx, cy, cols, 24, 170); }
+    else { confettiBurst(20); burstAt(cx, cy, cols, 16, 140); }
+  }
+
+  var giftEl = null, giftIdx = 0, giftList = [];
   function celebrateAchievements(list) {
     if (giftEl || !list || !list.length) return;
+    giftList = list; giftIdx = 0;
+    document.body.classList.add('ceremony');
     say(pick(T.achIntro), { persist: true, mood: 'wow' });
 
     giftEl = document.createElement('div');
     giftEl.className = 'gift-stage';
+    giftEl.setAttribute('role', 'dialog');
+    giftEl.setAttribute('aria-label', 'Награда');
     giftEl.innerHTML =
-      '<div class="gift-hint">Нажми на коробку! 🐣 принёс тебе ' + (list.length > 1 ? list.length + ' подарка' : 'подарок') + '</div>' +
+      '<div class="gift-hint">Нажми на коробку! 🐣 принёс тебе ' + (list.length > 1 ? list.length + ' награды' : 'награду') + '</div>' +
       '<button type="button" class="gift-box" aria-label="Открыть подарок">' +
       '  <svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">' +
       '    <g class="gb-lid"><rect x="8" y="26" width="124" height="26" rx="7" fill="#FF5D8F"/>' +
@@ -664,47 +720,100 @@
       '    <rect x="16" y="52" width="108" height="10" fill="rgba(0,0,0,.08)"/>' +
       '  </svg></button>';
     document.body.appendChild(giftEl);
-    giftEl.querySelector('.gift-box').addEventListener('click', function () {
-      if (giftEl.classList.contains('gift-open')) return;
-      giftEl.classList.add('gift-open');
-      react('party');
-      setTimeout(function () { confettiBurst(); showGiftCard(list); }, 900);
+    var box = giftEl.querySelector('.gift-box');
+    box.addEventListener('click', function () {
+      if (giftEl.classList.contains('gift-open') || box.classList.contains('gift-shake')) return;
+      giftEl.querySelector('.gift-hint').textContent = 'Ого, что же там…?';
+      box.classList.add('gift-shake');                // коробка трясётся от нетерпения
+      react('wow');
+      setTimeout(function () {
+        box.classList.remove('gift-shake');
+        giftEl.classList.add('gift-open');
+        var r = box.getBoundingClientRect();
+        burstAt(r.left + r.width / 2, r.top + r.height * 0.3, TIER_FX.gold, 26, 170);
+        setTimeout(function () { showAch(0); }, RM ? 100 : 850);
+      }, RM ? 100 : 850);
     });
   }
-  function showGiftCard(list) {
+
+  function showAch(i) {
     if (!giftEl) return;
-    var items = list.map(function (a) {
-      return '<li class="gc-item"><span class="gc-emoji">' + a.emoji + '</span>' +
-             '<span class="gc-text"><b>' + esc(a.title) + '</b><small>' + esc(a.desc || '') + '</small></span></li>';
-    }).join('');
+    giftIdx = i;
+    var a = giftList[i], last = i === giftList.length - 1;
+    var dots = giftList.map(function (_, k) { return '<i class="' + (k < i ? 'done' : k === i ? 'on' : '') + '"></i>'; }).join('');
     giftEl.innerHTML =
-      '<div class="gift-card"><div class="gc-title">🎊 ' +
-        (list.length > 1 ? 'Тебе открыли целых ' + list.length + ' награды!' : 'Это твоя новая награда!') + '</div>' +
-        '<ul class="gc-list">' + items + '</ul>' +
-        '<button type="button" class="gc-close btn btn-primary">Забрать подарки! 🤩</button></div>';
-    giftEl.classList.remove('gift-open');
+      '<div class="ach-show tier-' + esc(a.tier) + '">' +
+        '<div class="ach-rays"></div>' +
+        '<div class="ach-tierlabel">' + esc(a.tierName) + ' награда</div>' +
+        '<button type="button" class="ach-medal-big" aria-label="Медаль: ' + esc(a.title) + '">' +
+          '<span class="medal tier-' + esc(a.tier) + '">' + a.svg + '</span></button>' +
+        '<div class="ach-title-big">' + esc(a.title) + '</div>' +
+        '<div class="ach-desc-big">' + esc(a.desc || '') + '</div>' +
+        (giftList.length > 1 ? '<div class="ach-dots">' + dots + '</div>' : '') +
+        '<div class="ach-actions"><button type="button" class="btn btn-secondary ach-next">' +
+          (last ? 'Забрать в коллекцию! 🎉' : 'Дальше ▶') + '</button>' +
+          (giftList.length > 1 && !last ? '<button type="button" class="ach-skip">Забрать все сразу</button>' : '') + '</div>' +
+      '</div>';
     giftEl.classList.add('gift-reveal');
-    var first = list[0];
-    say(fmt(pick(T.achOpen), { title: first.title, emoji: first.emoji }), { persist: true, mood: 'party' });
-    giftEl.querySelector('.gc-close').addEventListener('click', closeGift);
+    setTimeout(function () { tierEffects(a.tier); }, RM ? 0 : 450);
+    say(fmt(pick(T.achTier[a.tier] || T.achOpen), { title: a.title, emoji: a.emoji }),
+        { persist: true, mood: a.tier === 'legend' || a.tier === 'gold' ? 'party' : 'cheer' });
+
+    var medalBtn = giftEl.querySelector('.ach-medal-big');
+    medalBtn.addEventListener('click', function () {   // можно покрутить медаль
+      medalBtn.classList.remove('is-spin'); void medalBtn.offsetWidth; medalBtn.classList.add('is-spin');
+      var r = medalBtn.getBoundingClientRect();
+      burstAt(r.left + r.width / 2, r.top + r.height / 2, TIER_FX[a.tier] || TIER_FX.bronze, 14, 120);
+    });
+    giftEl.querySelector('.ach-next').addEventListener('click', function () { last ? finishGift() : nextAch(); });
+    var skip = giftEl.querySelector('.ach-skip');
+    if (skip) skip.addEventListener('click', finishGift);
+  }
+  function nextAch() {
+    var show = giftEl && giftEl.querySelector('.ach-show');
+    if (show && !RM) { show.classList.add('leaving'); setTimeout(function () { showAch(giftIdx + 1); }, 300); }
+    else showAch(giftIdx + 1);
+  }
+  function finishGift() {                              // медаль «улетает» к Чик-чику
+    if (!giftEl) return;
+    var medal = giftEl.querySelector('.ach-medal-big'), target = bodyEl.getBoundingClientRect();
+    var done = function () { closeGift(); };
+    if (medal && !RM) {
+      var r = medal.getBoundingClientRect();
+      var dx = target.left + target.width / 2 - (r.left + r.width / 2), dy = target.top + target.height / 2 - (r.top + r.height / 2);
+      giftEl.querySelector('.ach-show').classList.add('leaving');
+      medal.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + dx * 0.5 + 'px,' + (dy * 0.5 - 60) + 'px) scale(.6) rotate(200deg)', opacity: 1, offset: .55 },
+                     { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.12) rotate(420deg)', opacity: 0 }],
+                    { duration: 650, easing: 'cubic-bezier(.5,0,.7,.5)', fill: 'forwards' });
+      setTimeout(done, 620);
+    } else done();
   }
   function closeGift() {
     if (!giftEl) return;
     giftEl.remove(); giftEl = null;
-    setTimeout(function () { say(pick(T.achAfter), { mood: 'love' }); }, 1200);
+    document.body.classList.remove('ceremony');
+    pose('popin'); setFx('love', 2200); setFace('happy', 2400);
+    var n = giftList.length;
+    setTimeout(function () {
+      say(n > 1 ? 'Все ' + n + ' награды теперь в твоей коллекции! ' + pick(T.achAfter) : pick(T.achAfter), { mood: 'love' });
+    }, 500);
   }
-  function confettiBurst() {
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && giftEl) finishGift(); });
+
+  function confettiBurst(n) {
+    if (RM) return;
     var colors = ['#FF5D8F', '#FFD54F', '#4FC3F7', '#AED581', '#BA68C8', '#FB8C00'];
-    for (var i = 0; i < 34; i++) {
+    n = n || 34;
+    for (var i = 0; i < n; i++) {
       var c = document.createElement('i');
       c.className = 'confetti';
-      c.style.left = (10 + Math.random() * 80) + 'vw';
+      c.style.left = (4 + Math.random() * 92) + 'vw';
       c.style.background = colors[i % colors.length];
-      c.style.animationDuration = (1.4 + Math.random() * 1.6) + 's';
-      c.style.animationDelay = (Math.random() * 0.35) + 's';
+      c.style.animationDuration = (1.4 + Math.random() * 1.8) + 's';
+      c.style.animationDelay = (Math.random() * 0.5) + 's';
       c.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
-      document.body.appendChild(c);
-      (function (el) { setTimeout(function () { el.remove(); }, 3600); })(c);
+      (giftEl || document.body).appendChild(c);
+      (function (el) { setTimeout(function () { el.remove(); }, 4200); })(c);
     }
   }
 
@@ -743,6 +852,10 @@
     });
   } else if (S.page === 'words') {
     later(700, function () { say(S.empty ? T.wordsEmpty : fmt(pick(T.wordsPage)), { mood: S.empty ? 'think' : 'happy' }); });
+  } else if (S.page === 'achievements') {
+    later(700, function () {
+      say(S.earned ? fmt(pick(T.achPage), { n: S.earned, total: S.total }) : T.achPageEmpty, { mood: S.earned ? 'cheer' : 'think' });
+    });
   } else if (S.page === 'theory') {
     later(700, function () { say(S.empty ? T.theoryEmpty : pick(T.theoryPage), { mood: S.empty ? 'think' : 'happy' }); });
   } else if (S.page === 'result') {
@@ -752,8 +865,7 @@
       say(msg, { persist: true, mood: p === 100 ? 'party' : p >= 70 ? 'cheer' : p >= 50 ? 'think' : 'sad' });
       if (S.coinsEarned) say2(fmt(T.coinsEarned, { n: S.coinsEarned }), 3200, { mood: 'cool' });
       if (truthy(S.newAchievements)) {
-        var raw = Array.isArray(S.newAchievements) ? S.newAchievements : [];
-        var list = raw.map(function (a) { return typeof a === 'string' ? { key: a, emoji: '🏅', title: a, desc: '' } : a; });
+        var list = Array.isArray(S.newAchievements) ? S.newAchievements : [];
         setTimeout(function () { if (list.length) celebrateAchievements(list); }, 2000);
       }
     });
@@ -822,6 +934,7 @@
   /* для тестов и отладки */
   window.__mascot = {
     explode: explode,
+    celebrate: celebrateAchievements,
     say: say,
     state: function () { return { busy: busy, sleeping: sleeping, chain: chain, explosions: explosions }; }
   };

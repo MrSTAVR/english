@@ -1,0 +1,151 @@
+/* ============================================================
+   🏅 Награды: медали, коллекция, церемония вручения
+   ============================================================ */
+:root {
+  --t-bronze: #e08a4a; --t-silver: #9aa8c7; --t-gold: #f0b400; --t-legend: #b06cff;
+  --t-bronze-bg: #fff3e8; --t-silver-bg: #f3f6ff; --t-gold-bg: #fff8d9; --t-legend-bg: #f7efff;
+}
+
+/* ---------- медаль ---------- */
+.medal { --s: 88px; display: inline-block; width: var(--s); height: calc(var(--s) * 1.12); flex: none; position: relative; line-height: 0; }
+.medal-svg { width: 100%; height: 100%; overflow: visible; display: block; filter: drop-shadow(0 4px 4px rgba(90, 63, 214, .22)); }
+.medal .m-shine { animation: m-shine 5s ease-in-out infinite; }
+.tier-gold .medal .m-shine, .medal.tier-gold .m-shine { animation-duration: 3.6s; }
+.medal.tier-legend .m-shine { animation-duration: 2.8s; }
+@keyframes m-shine { 0%, 55% { translate: -10px 0; } 100% { translate: 150px 0; } }
+.medal.is-locked .medal-svg { filter: none; opacity: .8; }
+
+/* ---------- карточка награды ---------- */
+.ach-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; margin: 10px 0; }
+.ach-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 20px; background: #fff;
+  border: 2px solid var(--line); box-shadow: 0 3px 0 var(--line); transition: transform .15s, box-shadow .15s; }
+.ach-card.is-earned:hover { transform: translateY(-3px); }
+.ach-card.is-earned.tier-bronze { background: var(--t-bronze-bg); border-color: #f4c7a0; box-shadow: 0 3px 0 #f4c7a0; }
+.ach-card.is-earned.tier-silver { background: var(--t-silver-bg); border-color: #c9d3ea; box-shadow: 0 3px 0 #c9d3ea; }
+.ach-card.is-earned.tier-gold { background: var(--t-gold-bg); border-color: #ffd54f; box-shadow: 0 3px 0 #e5a600; }
+.ach-card.is-earned.tier-legend { background: linear-gradient(135deg, #fff0f8, #f3eaff 55%, #ecfff6); border-color: #d9b8ff;
+  box-shadow: 0 3px 0 #b894ff, 0 10px 24px rgba(176, 108, 255, .18); }
+.ach-card.is-locked { background: #f7f5fb; border-style: dashed; box-shadow: none; }
+.ach-card.is-locked .ach-card-title { color: var(--muted); }
+.ach-card-body { min-width: 0; flex: 1; }
+.ach-card-title { font-weight: 900; color: var(--ink); line-height: 1.2; }
+.ach-card-desc { font-size: .86rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.ach-card-date { font-size: .76rem; font-weight: 800; color: var(--muted); margin-top: 4px; letter-spacing: .02em; }
+.ach-card.is-earned .ach-card-date { color: #8a6d1c; }
+.ach-prog { height: 10px; border-radius: 999px; background: #ece7fa; margin-top: 6px; overflow: hidden; border: 1.5px solid var(--line); }
+.ach-prog-fill { height: 100%; border-radius: 999px; background: repeating-linear-gradient(-45deg, var(--primary) 0 8px, #8f73ff 8px 16px); min-width: 6px; }
+.tier-bronze .ach-prog-fill { background: var(--t-bronze); } .tier-silver .ach-prog-fill { background: var(--t-silver); }
+.tier-gold .ach-prog-fill { background: var(--t-gold); } .tier-legend .ach-prog-fill { background: linear-gradient(90deg, #ff7ab6, #ffd54f, #6fe3b0, #7c5cff); }
+
+/* ---------- страница коллекции ---------- */
+.ach-hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; align-items: center; }
+.ach-hero-num { display: flex; align-items: baseline; gap: 8px; }
+.ach-hero-num b { font-size: 2.6rem; font-weight: 900; color: var(--primary-dark); line-height: 1; }
+.ach-hero-num span { font-weight: 800; color: var(--muted); }
+.ach-hero-bar { height: 16px; border-radius: 999px; border: 2px solid var(--line-deep); background: #fff; padding: 2px; margin: 8px 0; }
+.ach-hero-fill { height: 100%; border-radius: 999px; background: repeating-linear-gradient(-45deg, #ffd54f 0 10px, #ffc107 10px 20px); min-width: 12px; }
+.tier-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.tier-chip { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border-radius: 16px; border: 2px solid; text-align: center; }
+.tier-chip i { width: 22px; height: 22px; border-radius: 50%; display: block; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .18); }
+.tier-chip b { font-weight: 900; font-size: 1.05rem; color: var(--ink); }
+.tier-chip span { font-size: .74rem; font-weight: 800; color: var(--muted); }
+.tier-chip.tier-bronze { background: var(--t-bronze-bg); border-color: #f4c7a0; } .tier-chip.tier-bronze i { background: var(--t-bronze); }
+.tier-chip.tier-silver { background: var(--t-silver-bg); border-color: #c9d3ea; } .tier-chip.tier-silver i { background: var(--t-silver); }
+.tier-chip.tier-gold { background: var(--t-gold-bg); border-color: #ffd54f; } .tier-chip.tier-gold i { background: var(--t-gold); }
+.tier-chip.tier-legend { background: var(--t-legend-bg); border-color: #d9b8ff; } .tier-chip.tier-legend i { background: linear-gradient(135deg, #ff7ab6, #7c5cff); }
+.ach-cat { display: flex; align-items: center; gap: 10px; margin: 22px 0 4px; }
+.pill-link { text-decoration: none; transition: transform .12s; } .pill-link:hover { transform: translateY(-1px); }
+@media (max-width: 760px) { .ach-hero { grid-template-columns: 1fr; } .ach-cards { grid-template-columns: 1fr; } }
+
+/* ---------- блоки на главной ---------- */
+.medal-row { display: flex; gap: 10px; overflow-x: auto; padding: 8px 2px 12px; scroll-snap-type: x proximity; }
+.medal-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 92px; flex: none; text-decoration: none;
+  color: var(--ink); font-size: .76rem; font-weight: 800; text-align: center; line-height: 1.15; scroll-snap-align: start; transition: transform .15s; }
+.medal-tile:hover { transform: translateY(-3px) rotate(-2deg); }
+.ach-next-title { margin: 6px 0 0; color: var(--muted); font-size: .95rem; text-transform: uppercase; letter-spacing: .06em; }
+.new-medals { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; background: linear-gradient(135deg, #fff8d9, #ffeefa); border-color: #ffd54f; }
+.new-medal { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; color: var(--ink); text-decoration: none; }
+
+/* ---------- 🎁 церемония вручения ---------- */
+.gift-stage { background: radial-gradient(circle at 50% 42%, rgba(70, 40, 140, .72), rgba(18, 12, 44, .9)); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); overflow: hidden; }
+body.ceremony .mascot { z-index: 1010; }
+.gift-hint { font-weight: 900; letter-spacing: .01em; text-align: center; padding: 0 16px; }
+.gift-box.gift-shake { animation: gift-shake .12s linear infinite; }
+@keyframes gift-shake { 0%, 100% { transform: translate(0, 0) rotate(0); } 25% { transform: translate(-6px, 2px) rotate(-4deg); } 75% { transform: translate(6px, -2px) rotate(4deg); } }
+.gift-box { transform-origin: 50% 90%; animation: boxWiggle 1.6s ease-in-out infinite, gift-drop .9s cubic-bezier(.3, 1.5, .5, 1) both; }
+@keyframes gift-drop { from { translate: 0 -110vh; } to { translate: 0 0; } }
+.gift-light { position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;
+  background: radial-gradient(circle, #fff, rgba(255, 224, 120, .9) 35%, transparent 70%); pointer-events: none; }
+
+.ach-show { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+  width: min(92vw, 460px); padding: 0 8px 150px; --ray: rgba(240, 180, 0, .5); }
+.ach-show.tier-bronze { --ray: rgba(244, 162, 97, .5); } .ach-show.tier-silver { --ray: rgba(210, 225, 255, .5); }
+.ach-show.tier-legend { --ray: rgba(255, 122, 182, .55); }
+.ach-rays { position: absolute; top: -90px; left: 50%; width: 560px; height: 560px; margin-left: -280px; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, var(--ray) 0 9deg, transparent 9deg 24deg);
+  -webkit-mask-image: radial-gradient(closest-side, #000 30%, transparent 100%); mask-image: radial-gradient(closest-side, #000 30%, transparent 100%);
+  animation: ray-spin 22s linear infinite, ray-in .8s ease-out both; }
+.ach-show.tier-legend .ach-rays { animation: ray-spin 14s linear infinite, ray-hue 4s linear infinite, ray-in .8s ease-out both; }
+@keyframes ray-spin { to { transform: rotate(360deg); } }
+@keyframes ray-hue { to { filter: hue-rotate(360deg); } }
+@keyframes ray-in { from { opacity: 0; scale: .3; } to { opacity: 1; scale: 1; } }
+.ach-tierlabel { position: relative; font-weight: 900; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; padding: 5px 16px; border-radius: 999px;
+  color: #3b2a00; background: #ffd54f; box-shadow: 0 3px 0 #b88a00; animation: ach-up .5s .25s cubic-bezier(.3, 1.5, .5, 1) both; }
+.tier-bronze .ach-tierlabel { background: #f4a261; color: #4a2300; box-shadow: 0 3px 0 #a8561d; }
+.tier-silver .ach-tierlabel { background: #e6ecf8; color: #2b3552; box-shadow: 0 3px 0 #8d9ab8; }
+.tier-legend .ach-tierlabel { background: linear-gradient(90deg, #ff7ab6, #ffd54f, #6fe3b0, #7c5cff); color: #2a1450; box-shadow: 0 3px 0 #5a3fd6; }
+.ach-medal-big { position: relative; border: 0; background: none; padding: 0; cursor: pointer; --s: 190px; margin: 6px 0 0;
+  animation: medal-in 1s cubic-bezier(.25, 1.3, .4, 1) both; -webkit-tap-highlight-color: transparent; }
+.ach-medal-big .medal { --s: 190px; }
+.ach-medal-big .medal-svg { filter: drop-shadow(0 12px 18px rgba(0, 0, 0, .45)); animation: medal-float 3.2s 1s ease-in-out infinite; }
+.ach-medal-big.is-spin .medal-svg { animation: medal-spin .9s cubic-bezier(.3, .8, .4, 1); }
+@keyframes medal-in { 0% { transform: scale(0) rotate(-300deg); opacity: 0; } 55% { transform: scale(1.22) rotate(14deg); opacity: 1; }
+  78% { transform: scale(.94) rotate(-4deg); } 100% { transform: none; opacity: 1; } }
+@keyframes medal-float { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-9px) rotate(2deg); } }
+@keyframes medal-spin { from { transform: rotateY(0); } to { transform: rotateY(720deg); } }
+.ach-title-big { position: relative; font-size: 1.65rem; font-weight: 900; color: #fff; line-height: 1.15; text-shadow: 0 3px 10px rgba(0, 0, 0, .5);
+  animation: ach-up .55s .55s cubic-bezier(.3, 1.4, .5, 1) both; }
+.ach-desc-big { position: relative; color: rgba(255, 255, 255, .92); font-weight: 700; font-size: 1.05rem; max-width: 340px;
+  animation: ach-up .55s .7s cubic-bezier(.3, 1.4, .5, 1) both; }
+.ach-dots { display: flex; gap: 8px; justify-content: center; margin-top: 4px; position: relative; animation: ach-up .5s .8s both; }
+.ach-dots i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, .3); }
+.ach-dots i.on { background: #ffd54f; box-shadow: 0 0 8px #ffd54f; transform: scale(1.25); }
+.ach-dots i.done { background: #6fe3b0; }
+.ach-actions { display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; margin-top: 6px; animation: ach-up .5s .95s both; }
+.ach-skip { border: 0; background: none; color: rgba(255, 255, 255, .7); font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; padding: 6px; }
+@keyframes ach-up { from { opacity: 0; transform: translateY(24px) scale(.9); } to { opacity: 1; transform: none; } }
+.ach-show.leaving .ach-title-big, .ach-show.leaving .ach-desc-big, .ach-show.leaving .ach-tierlabel, .ach-show.leaving .ach-actions,
+.ach-show.leaving .ach-dots, .ach-show.leaving .ach-rays { animation: ach-out .3s ease-in both; }
+@keyframes ach-out { to { opacity: 0; transform: scale(.9); } }
+.gift-stage .confetti, .gift-stage .fx-dot { z-index: 1; }
+.ach-show { z-index: 2; }
+.fx-dot { position: fixed; left: 0; top: 0; z-index: 1005; pointer-events: none; will-change: transform, opacity; }
+.fx-flash { position: fixed; inset: 0; z-index: 1004; background: #fff; pointer-events: none; animation: fx-flash .9s ease-out forwards; }
+@keyframes fx-flash { from { opacity: .95; } to { opacity: 0; } }
+
+@media (max-width: 640px) {
+  .ach-medal-big, .ach-medal-big .medal { --s: 150px; }
+  .ach-title-big { font-size: 1.35rem; }
+  .ach-show { padding-bottom: 170px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ach-rays, .ach-medal-big, .ach-medal-big .medal-svg, .gift-box, .medal .m-shine { animation: none !important; }
+  .ach-title-big, .ach-desc-big, .ach-tierlabel, .ach-actions, .ach-dots { animation: none; }
+}
+
+/* ---------- тёмная тема ---------- */
+html[data-theme="dark"] .ach-card { background: #1f1b3d; }
+html[data-theme="dark"] .ach-card.is-earned.tier-bronze { background: #3a2a1e; border-color: #8a5a34; box-shadow: 0 3px 0 #6b4326; }
+html[data-theme="dark"] .ach-card.is-earned.tier-silver { background: #28304a; border-color: #5d6a90; box-shadow: 0 3px 0 #444f73; }
+html[data-theme="dark"] .ach-card.is-earned.tier-gold { background: #3a3014; border-color: #b8921f; box-shadow: 0 3px 0 #8a6d1c; }
+html[data-theme="dark"] .ach-card.is-earned.tier-legend { background: linear-gradient(135deg, #3a1f46, #2a2455 55%, #17382f); border-color: #8f64c9; box-shadow: 0 3px 0 #6a47a0; }
+html[data-theme="dark"] .ach-card.is-locked { background: #19163a; }
+html[data-theme="dark"] .ach-card.is-earned .ach-card-date { color: #e5c15d; }
+html[data-theme="dark"] .ach-prog { background: #15122e; }
+html[data-theme="dark"] .ach-hero-bar { background: #15122e; }
+html[data-theme="dark"] .tier-chip.tier-bronze { background: #3a2a1e; border-color: #8a5a34; }
+html[data-theme="dark"] .tier-chip.tier-silver { background: #28304a; border-color: #5d6a90; }
+html[data-theme="dark"] .tier-chip.tier-gold { background: #3a3014; border-color: #b8921f; }
+html[data-theme="dark"] .tier-chip.tier-legend { background: #2e2250; border-color: #8f64c9; }
+html[data-theme="dark"] .new-medals { background: linear-gradient(135deg, #3a3214, #3a1f46); border-color: #b8921f; }
+html[data-theme="dark"] .medal.is-locked .medal-svg { opacity: .55; }

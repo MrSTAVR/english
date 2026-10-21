@@ -2,7 +2,9 @@
 """Режим ученика: список уроков, урок, сдача теста."""
 
 import json
-from achievements import ACHIEVEMENTS, update_achievements
+from badges import TIERS
+from achievements import (ACHIEVEMENTS, BY_KEY, CATEGORIES, public, tier_counts,
+                          update_achievements, views as achievement_views)
 from config import PASS_MARK
 from curriculum import ALL_LESSONS, LESSONS_BY_ID, unlocked_lesson_ids
 from data.extra_lessons import EXTRA_LESSONS
@@ -88,12 +90,13 @@ def student_home():
     lessons_info = [lesson_info(l) for l in LESSONS]
     extra_info = [lesson_info(l) for l in EXTRA_LESSONS]
     extras_done = sum(1 for i in extra_info if i["done"])
-    earned = {r["key"]: r["earned_at"] for r in db.execute(
-        "SELECT key, earned_at FROM achievements WHERE student_id=?",
-        (student["id"],)).fetchall()}
-    achievements = [{**a, "earned": a["key"] in earned,
-                     "earned_at": earned.get(a["key"])} for a in ACHIEVEMENTS]
-    new_badge = session.pop("new_achievements", None)
+    achievements = achievement_views(db, stats, student["id"])
+    new_keys = session.pop("new_achievements", None) or []
+    new_badge = [a for a in achievements if a["key"] in new_keys]
+    ach_recent = sorted((a for a in achievements if a["earned"]),
+                        key=lambda a: a["earned_at"] or "", reverse=True)[:8]
+    ach_next = sorted((a for a in achievements if not a["earned"] and a["progress"]),
+                      key=lambda a: -a["progress"][2])[:3]
     mascot = build_mascot_ctx()
     mascot["alreadyStarted"] = bool(stats["attempts"] or stats["completed_ids"])
     mascot["allDone"] = stats["lessons_completed"] >= len(LESSONS)
@@ -130,7 +133,7 @@ def student_home():
                            extras_done=extras_done,
                            total_extras=len(EXTRA_LESSONS),
                            stats=stats,
-                           achievements=achievements,
+                           achievements=achievements, ach_recent=ach_recent, ach_next=ach_next,
                            total_lessons=len(LESSONS),
                            new_badge=new_badge,
                            next_lesson=next_lesson,
@@ -240,9 +243,7 @@ def submit_test(lesson_id):
     mascot["percent"] = percent
     mascot["passed"] = passed
     mascot["coinsEarned"] = coins_earned
-    mascot["newAchievements"] = [
-        {"key": a["key"], "emoji": a["emoji"], "title": a["title"], "desc": a["desc"]}
-        for a in new_achievements]
+    mascot["newAchievements"] = [public(a) for a in new_achievements]
     return render_template("result.html", mascot=mascot,
                            lesson=lesson, percent=percent, passed=passed,
                            correct=correct, total=total,
@@ -250,5 +251,28 @@ def submit_test(lesson_id):
                            coins_earned=coins_earned,
                            coins_total=garden["coins"],
                            streak_days=garden["streak_days"],
+                           tier_names={k: v["name"] for k, v in TIERS.items()},
                            new_achievements=[a for a in ACHIEVEMENTS
                                              if a["key"] in [n["key"] for n in new_achievements]])
+
+
+@bp.route("/student/achievements")
+def achievements_page():
+    """Коллекция наград: медали по категориям, шкалы прогресса, счётчики по уровням."""
+    err = require_role("student")
+    if err:
+        return err
+    db = get_db()
+    student = get_student_or_none(db)
+    if not student:
+        session.clear()
+        return redirect(url_for("auth.index"))
+    items = achievement_views(db, compute_stats(db, student["id"]), student["id"])
+    groups = [{"key": k, "name": n, "emoji": e, "items": [i for i in items if i["cat"] == k]}
+              for k, n, e in CATEGORIES]
+    mascot = build_mascot_ctx()
+    mascot["earned"] = sum(1 for i in items if i["earned"])
+    mascot["total"] = len(items)
+    return render_template("achievements.html", mascot=mascot, groups=groups,
+                           earned=mascot["earned"], total=len(items),
+                           tiers=tier_counts(items))

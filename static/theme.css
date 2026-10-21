@@ -391,10 +391,6 @@ html[data-theme="dark"] .album-locked { background: #221e45; color: #7d78a3; }
 html[data-theme="dark"] .garden-stage { box-shadow: 0 6px 18px rgba(0, 0, 0, .4); }
 html[data-theme="dark"] .garden-svg { filter: brightness(.9) saturate(.95); }
 
-html[data-theme="dark"] .gift-card { background: #1f1b3d; }
-html[data-theme="dark"] .gc-title, html[data-theme="dark"] .gc-text b { color: #c9bbff; }
-html[data-theme="dark"] .gc-item { background: linear-gradient(90deg, #3a3214, #4a3d14); border-color: #b8921f; }
-html[data-theme="dark"] .gc-text small { color: #e5d28f; }
 
 html[data-theme="dark"] .mascot-balloon { background: rgba(31, 27, 61, .97); border-color: #4d4486; color: var(--ink); }
 html[data-theme="dark"] .mascot-balloon::after { border-right-color: #4d4486; border-bottom-color: #4d4486; }

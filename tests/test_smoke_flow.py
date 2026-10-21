@@ -58,7 +58,7 @@ def test_failed_then_perfect_attempt(make_student):
     assert '"page": "result"' in body and '"percent": 100' in body
 
     home = c.get("/student").get_data(as_text=True)
-    assert "Новая ачивка" in home                       # плашка показывается один раз
+    assert "Новые награды" in home                       # плашка показывается один раз
     assert "first_lesson" in earned_keys()
     assert f"1/{MAIN_COUNT}" in home
     assert "Начать урок" in home                         # урок 2 открыт

@@ -27,10 +27,17 @@
 
 {% if new_achievements %}
 <section class="card new-ach">
-  <h2>🏅 Новые достижения!</h2>
+  <h2>🏅 Новые награды!</h2>
+  <div class="ach-cards">
   {% for a in new_achievements %}
-    <div class="badge-popup">{{ a.emoji }} <b>{{ a.title }}</b> — {{ a.desc }}</div>
+    <article class="ach-card tier-{{ a.tier }} is-earned">
+      {{ a|medal(72) }}
+      <div class="ach-card-body"><div class="ach-card-title">{{ a.title }}</div>
+        <div class="ach-card-desc">{{ a.desc }}</div><div class="ach-card-date">{{ tier_names[a.tier] }} награда</div></div>
+    </article>
   {% endfor %}
+  </div>
+  <a class="btn btn-small" href="{{ url_for('student.achievements_page') }}">Вся коллекция ›</a>
 </section>
 {% endif %}
 

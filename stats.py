@@ -42,6 +42,8 @@ def compute_stats(db, student_id=None):
     total_seconds = 0
     total_mistakes = 0
     attempts_by_lesson = {}
+    failed_lessons = set()
+    comeback = early_bird = evening = False
 
     for r in rows:
         total_seconds += r["seconds_spent"] or 0
@@ -61,6 +63,19 @@ def compute_stats(db, student_id=None):
 
         lid = r["lesson_id"]
         attempts_by_lesson[lid] = attempts_by_lesson.get(lid, 0) + 1
+        hour = None
+        try:
+            hour = int((r["finished_at"] or "")[11:13])
+        except ValueError:
+            pass
+        if r["passed"]:
+            if lid in failed_lessons:
+                comeback = True
+            if hour is not None:
+                early_bird = early_bird or hour < 9
+                evening = evening or hour >= 20
+        else:
+            failed_lessons.add(lid)
         if r["passed"]:
             if lid not in best_by_lesson or r["score_percent"] > best_by_lesson[lid]["score_percent"]:
                 best_by_lesson[lid] = r
@@ -107,4 +122,7 @@ def compute_stats(db, student_id=None):
         "first_try_perfect": first_try_perfect,
         "words_learned": words_learned,
         "total_mistakes": total_mistakes,
+        "comeback": comeback,
+        "early_bird": early_bird,
+        "evening": evening,
     }
