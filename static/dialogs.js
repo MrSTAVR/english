@@ -19,7 +19,7 @@
     card.appendChild(el('h2', 'dlg-title', '<span class="dlg-ava big" style="background:' + d.who.bg + '">' + esc(d.who.pic) + '</span> ' + esc(d.title) + (d.done ? ' <span class="pill pill-soft">пройден ✅</span>' : '')));
     var chat = el('div', 'dlg-chat'), panel = el('div', 'dlg-panel');
     card.appendChild(chat); card.appendChild(panel);
-    var idx = 0, mistakes = 0, talking = false;
+    var idx = 0, mistakes = 0, touched = false;
 
     function bubble(who, en, ru, mine) {
       var b = el('div', 'dlg-row ' + (mine ? 'me' : 'them'));
@@ -38,7 +38,7 @@
       while (idx < d.lines.length && !d.lines[idx].options) {
         var ln = d.lines[idx++];
         bubble(d.partner, ln.en, ln.ru, false);
-        if (idx === 1) say(ln.en);
+        if (touched) say(ln.en);
       }
       if (idx >= d.lines.length) { finish(); return; }
       var turn = d.lines[idx];
@@ -51,7 +51,7 @@
         var b = el('button', 'rv-opt', esc(o)); b.type = 'button';
         b.onclick = function () {
           if (i !== turn.answer) { b.classList.add('is-wrong'); b.disabled = true; mistakes++; return; }
-          bubble(me.name, o, turn.ru, true);
+          touched = true; bubble(me.name, o, turn.ru, true);
           idx++;
           setTimeout(next, 450);
         };
@@ -63,7 +63,7 @@
     function finish() {
       panel.innerHTML = '<div class="rv-fb ok">🎉 Диалог пройден!' + (mistakes ? ' Ошибок: ' + mistakes + '.' : ' Без единой ошибки!') + '</div>';
       var again = el('button', 'btn btn-small', 'Пройти ещё раз 🔁'); again.type = 'button';
-      again.onclick = function () { chat.innerHTML = ''; idx = 0; mistakes = 0; next(); };
+      again.onclick = function () { chat.innerHTML = ''; idx = 0; mistakes = 0; touched = true; next(); };
       panel.appendChild(again);
       document.dispatchEvent(new CustomEvent('game:end', { detail: { stars: mistakes === 0 ? 3 : 2, dialog: true } }));
       save(d.key).then(function (j) {
