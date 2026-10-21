@@ -52,33 +52,42 @@
 {% endif %}
 
 <!-- Сегодня: цель, челлендж, слово дня -->
+{% macro trow(emoji, text, have, need) %}
+<div class="trow{{ ' ok' if have >= need }}">
+  <span class="trow-ico">{{ emoji }}</span>
+  <span class="trow-text">{{ text }}</span>
+  <span class="trow-num">{{ have }}/{{ need }}{% if have >= need %} ✅{% endif %}</span>
+  <span class="trow-bar"><i style="width: {{ [100 * have // need, 100]|min }}%"></i></span>
+</div>
+{% endmacro %}
 <section class="today-row">
   {% if goal %}
-  <div class="goal-card{{ ' goal-done' if goal.done }}">
-    <div class="goal-head"><b>🎯 Цель на сегодня</b>
-      <span class="goal-reward">{% if goal.done %}выполнена! +{{ goal.coins }} 🪙{% else %}награда: {{ goal.coins }} 🪙{% endif %}</span></div>
-    <div class="goal-items">
-      {% if goal.need_lessons %}<div class="goal-item{{ ' ok' if goal.lessons >= goal.need_lessons }}"><span>📚 Пройти урок</span><b>{{ goal.lessons }}/{{ goal.need_lessons }}</b></div>{% endif %}
-      {% if goal.need_words %}<div class="goal-item{{ ' ok' if goal.words >= goal.need_words }}"><span>🔁 Повторить слова</span><b>{{ goal.words }}/{{ goal.need_words }}</b>
-        <div class="goal-bar"><i style="width: {{ 100 * goal.words // goal.need_words }}%"></i></div></div>{% endif %}
-    </div>
+  <div class="tcard{{ ' tcard-done' if goal.done }}">
+    <div class="tcard-head"><span class="tcard-title">🎯 Цель на сегодня</span>
+      <span class="tcard-tag">{% if goal.done %}выполнена! +{{ goal.coins }} 🪙{% else %}награда {{ goal.coins }} 🪙{% endif %}</span></div>
+    {% if goal.need_lessons %}{{ trow('📚', 'Пройти урок', goal.lessons, goal.need_lessons) }}{% endif %}
+    {% if goal.need_words %}{{ trow('🔁', 'Повторить слова', goal.words, goal.need_words) }}{% endif %}
   </div>
   {% endif %}
   {% if weekly %}
-  <a class="goal-card week-card" href="{{ url_for('season.weekly_page') }}">
-    <div class="goal-head"><b>🗓️ Недельный челлендж</b>
-      <span class="goal-reward">{% if weekly.boss_won %}🏆 босс побеждён{% elif weekly.complete %}⚔️ босс ждёт!{% else %}ещё {{ weekly.days_left + 1 }} дн.{% endif %}</span></div>
-    <div class="goal-items">
-      {% for t in weekly.tasks %}<div class="goal-item{{ ' ok' if t.done }}"><span>{{ t.emoji }} {{ t.text }}</span><b>{{ t.have }}/{{ t.need }}</b></div>{% endfor %}
-    </div>
-    {% if weekly_got %}<div class="week-got">🎉 Челлендж выполнен: +{{ weekly_got }} монеток!</div>{% endif %}
+  <a class="tcard tcard-link{{ ' tcard-done' if weekly.complete }}" href="{{ url_for('season.weekly_page') }}">
+    <div class="tcard-head"><span class="tcard-title">🗓️ Недельный челлендж</span>
+      <span class="tcard-tag">{% if weekly.boss_won %}🏆 босс побеждён{% elif weekly.complete %}⚔️ босс ждёт!{% else %}ещё {{ weekly.days_left + 1 }} дн.{% endif %}</span></div>
+    {% for t in weekly.tasks %}{{ trow(t.emoji, t.text, t.have, t.need) }}{% endfor %}
+    {% if weekly_got %}<div class="week-got">🎉 Выполнено: +{{ weekly_got }} монеток!</div>{% endif %}
   </a>
   {% endif %}
   {% if rv_pool >= 4 and wod %}
-  <div class="rv-card rv-wod">
-    <span class="rv-kicker">🌟 Слово дня</span>
-    <span class="rv-word">{% if wod.pic %}<span class="rv-pic">{{ wod.pic }}</span> {% endif %}{{ wod.en }} <button type="button" class="btn btn-small say-btn" data-say="{{ wod.en }}" title="Послушать">🔊</button></span>
-    <span class="rv-tr">[{{ wod.hint }}] — {{ wod.ru }}</span>
+  <div class="tcard tcard-wod">
+    <div class="tcard-head"><span class="tcard-title">🌟 Слово дня</span></div>
+    <div class="wod-body">
+      {% if wod.pic %}<span class="wod-pic">{{ wod.pic }}</span>{% endif %}
+      <div class="wod-main">
+        <span class="wod-en">{{ wod.en }}</span>
+        <span class="wod-tr">[{{ wod.hint }}] — {{ wod.ru }}</span>
+      </div>
+      <button type="button" class="wod-say say-btn" data-say="{{ wod.en }}" title="Послушать" aria-label="Послушать">🔊</button>
+    </div>
   </div>
   {% endif %}
 </section>
