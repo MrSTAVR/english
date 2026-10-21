@@ -19,6 +19,14 @@ def build_mascot_ctx():
     if page != "student":
         return mascot
     mascot["student"] = session.get("student_name") or ""
+    sid = session.get("student_id")
+    if sid:
+        try:
+            from database import get_db
+            from wardrobe import outfit
+            mascot["outfit"] = outfit(get_db(), sid)
+        except Exception:        # наряд — украшение, страница не должна падать из-за него
+            mascot["outfit"] = {}
     if endpoint == "auth.index":
         mascot["page"] = "index"
     elif endpoint == "student.student_home":
@@ -27,6 +35,8 @@ def build_mascot_ctx():
         mascot["page"] = "lesson"
     elif endpoint == "student.submit_test":
         mascot["page"] = "result"
+    elif endpoint == "wardrobe.wardrobe_page":
+        mascot["page"] = "wardrobe"
     elif endpoint == "garden.garden_page":
         mascot["page"] = "garden"
     elif endpoint == "student.words_page":

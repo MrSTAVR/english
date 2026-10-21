@@ -74,6 +74,7 @@
     reviewBad: ['Ничего, это слово вернётся — запомнишь! 🌱', 'Упс! Посмотри правильный ответ 👀', 'Не беда, повторение для этого и нужно 🤗'],
     reviewDone: ['Раунд пройден! 🏅 Память становится крепче с каждым разом.', 'Ура, повторили! 🎉'],
     goalDone: ['Цель дня выполнена! 🎯 Держи монетки для сада!', 'Ура, цель на сегодня достигнута! 🌟 Ты молодец!'],
+    wardrobePage: ['Ооо, гардероб! 🎩 Давай выберем мне наряд!', 'Хочу шляпу! Или очки! Или всё сразу? 😎', 'Как я тебе в этом? Красавчик, правда? 🐥'],
     gamesPage: ['Играем! 🎮 Выбирай игру — слова запоминаются сами.', 'Игры со словами — мои любимые! 🐣 С какой начнём?'],
     dialogsPage: ['Давай поговорим по-английски! 💬 Выбирай правильные ответы.', 'Диалоги — это почти настоящий разговор! 🗣️'],
     game3: ['Три звезды! Ты чемпион! 🏆', 'Отлично сыграно! ⭐⭐⭐'], game2: ['Хорошо! Попробуй ещё — на три звезды? 🏅'], game1: ['Неплохо! В следующий раз получится лучше 💪'], game0: ['Ничего, потренируйся — и всё получится! 🌱'],
@@ -171,56 +172,7 @@
   }
 
   /* ---------- SVG-персонаж (цвета иконки приложения) ---------- */
-  function chickSVG() {
-    return '<svg class="chick" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-      '<ellipse cx="60" cy="113" rx="30" ry="5" fill="rgba(90,63,214,.16)"/>' +
-      '<g class="c-all">' +
-        '<path d="M44 104 L40 114 M44 104 L46 115 M44 104 L52 114" stroke="#FB8C00" stroke-width="4" stroke-linecap="round" fill="none"/>' +
-        '<path d="M76 104 L72 114 M76 104 L74 115 M76 104 L82 114" stroke="#FB8C00" stroke-width="4" stroke-linecap="round" fill="none"/>' +
-        '<g class="c-wing c-wing-l"><path d="M30 60 Q8 62 10 84 Q24 92 36 80 Z" fill="#FFC947" stroke="#E8A317" stroke-width="2" stroke-linejoin="round"/></g>' +
-        '<g class="c-wing c-wing-r"><path d="M90 60 Q112 62 110 84 Q96 92 84 80 Z" fill="#FFC947" stroke="#E8A317" stroke-width="2" stroke-linejoin="round"/></g>' +
-        '<ellipse cx="60" cy="72" rx="36" ry="36" fill="#FFD54F" stroke="#F2B21B" stroke-width="2.5"/>' +
-        '<ellipse cx="60" cy="86" rx="23" ry="19" fill="#FFF3C4"/>' +
-        '<g class="c-crest"><path d="M52 40 Q46 24 56 22 Q58 30 58 38 Z" fill="#FFC947"/>' +
-          '<path d="M60 38 Q58 18 66 16 Q68 26 66 38 Z" fill="#FFB300"/>' +
-          '<path d="M68 40 Q76 28 82 34 Q76 38 72 42 Z" fill="#FFC947"/></g>' +
-        '<ellipse cx="34" cy="70" rx="6" ry="4.2" fill="#FF8FB8" opacity=".6"/>' +
-        '<ellipse cx="86" cy="70" rx="6" ry="4.2" fill="#FF8FB8" opacity=".6"/>' +
-        '<g class="c-look">' +
-          '<g class="eo-l"><circle cx="46" cy="58" r="5.6" fill="#3b2a6b"/><circle cx="48" cy="56" r="1.9" fill="#fff"/></g>' +
-          '<g class="eo-r"><circle cx="74" cy="58" r="5.6" fill="#3b2a6b"/><circle cx="76" cy="56" r="1.9" fill="#fff"/></g>' +
-          '<path class="ec-l" d="M40 58 Q46 63 52 58" stroke="#3b2a6b" stroke-width="3" fill="none" stroke-linecap="round"/>' +
-          '<path class="ec-r" d="M68 58 Q74 63 80 58" stroke="#3b2a6b" stroke-width="3" fill="none" stroke-linecap="round"/>' +
-          '<g class="eh"><path d="M40 61 Q46 52 52 61" stroke="#3b2a6b" stroke-width="3.2" fill="none" stroke-linecap="round"/>' +
-            '<path d="M68 61 Q74 52 80 61" stroke="#3b2a6b" stroke-width="3.2" fill="none" stroke-linecap="round"/></g>' +
-          '<g class="ew"><circle cx="46" cy="58" r="8" fill="#fff" stroke="#3b2a6b" stroke-width="2"/><circle cx="46" cy="58" r="3.6" fill="#3b2a6b"/>' +
-            '<circle cx="74" cy="58" r="8" fill="#fff" stroke="#3b2a6b" stroke-width="2"/><circle cx="74" cy="58" r="3.6" fill="#3b2a6b"/></g>' +
-          '<g class="ed"><path d="M40 52 L52 64 M52 52 L40 64 M68 52 L80 64 M80 52 L68 64" stroke="#3b2a6b" stroke-width="3" stroke-linecap="round"/></g>' +
-          '<g class="brows"><path d="M39 50 L52 46" stroke="#3b2a6b" stroke-width="2.6" stroke-linecap="round"/>' +
-            '<path d="M81 50 L68 46" stroke="#3b2a6b" stroke-width="2.6" stroke-linecap="round"/></g>' +
-        '</g>' +
-        '<path d="M51 66 Q60 62 69 66 L60 77 Z" fill="#FB8C00"/>' +
-        '<g class="c-beak-low"><path d="M53 75 Q60 85 67 75 Z" fill="#F57C00"/></g>' +
-      '</g>' +
-      '<g class="fxs">' +
-        '<g transform="translate(94 30)"><path class="fx fx-heart" d="M0 -3 C-6 -9 -12 -1 0 7 C12 -1 6 -9 0 -3Z" fill="#FF5D8F"/></g>' +
-        '<g transform="translate(24 24)"><path class="fx fx-heart" d="M0 -3 C-6 -9 -12 -1 0 7 C12 -1 6 -9 0 -3Z" fill="#FF8FB8"/></g>' +
-        '<g transform="translate(104 52)"><path class="fx fx-heart" d="M0 -3 C-6 -9 -12 -1 0 7 C12 -1 6 -9 0 -3Z" fill="#FF5D8F"/></g>' +
-        '<g class="fx-orbit">' +
-          '<path class="fx" d="M60 -2 l2.6 5.6 6 .8 -4.4 4.2 1.1 6 -5.3 -2.9 -5.3 2.9 1.1 -6 -4.4 -4.2 6 -.8Z" fill="#7C5CFF"/>' +
-          '<path class="fx" d="M92 36 l2.6 5.6 6 .8 -4.4 4.2 1.1 6 -5.3 -2.9 -5.3 2.9 1.1 -6 -4.4 -4.2 6 -.8Z" fill="#FFD54F"/>' +
-          '<path class="fx" d="M26 36 l2.6 5.6 6 .8 -4.4 4.2 1.1 6 -5.3 -2.9 -5.3 2.9 1.1 -6 -4.4 -4.2 6 -.8Z" fill="#FF5D8F"/>' +
-        '</g>' +
-        '<text class="fx fx-z" x="88" y="40" font-size="15" font-weight="900" fill="#7C5CFF" font-family="Nunito,sans-serif">z</text>' +
-        '<text class="fx fx-z" x="96" y="30" font-size="12" font-weight="900" fill="#A58BFF" font-family="Nunito,sans-serif">z</text>' +
-        '<text class="fx fx-z" x="102" y="20" font-size="9" font-weight="900" fill="#C9B8FF" font-family="Nunito,sans-serif">z</text>' +
-        '<path class="fx fx-sweat" d="M90 40 Q95 48 90 52 Q85 48 90 40Z" fill="#6EC6FF"/>' +
-        '<g transform="translate(20 50)"><path class="fx fx-spark" d="M0 -8 L2 -2 L8 0 L2 2 L0 8 L-2 2 L-8 0 L-2 -2Z" fill="#FFD54F"/></g>' +
-        '<g transform="translate(100 18)"><path class="fx fx-spark" d="M0 -8 L2 -2 L8 0 L2 2 L0 8 L-2 2 L-8 0 L-2 -2Z" fill="#FF5D8F"/></g>' +
-        '<g transform="translate(60 4)"><path class="fx fx-spark" d="M0 -8 L2 -2 L8 0 L2 2 L0 8 L-2 2 L-8 0 L-2 -2Z" fill="#7C5CFF"/></g>' +
-      '</g>' +
-    '</svg>';
-  }
+  function chickSVG() { return window.Chick.svg(S.outfit || {}); }
 
   /* ---------- DOM ---------- */
   var root = document.createElement('div');
@@ -867,6 +819,8 @@
     });
   } else if (S.page === 'words') {
     later(700, function () { say(S.empty ? T.wordsEmpty : fmt(pick(T.wordsPage)), { mood: S.empty ? 'think' : 'happy' }); });
+  } else if (S.page === 'wardrobe') {
+    later(700, function () { say(pick(T.wardrobePage), { mood: 'happy' }); });
   } else if (S.page === 'games') {
     later(700, function () { say(S.empty ? T.wordsEmpty : pick(T.gamesPage), { mood: 'happy' }); });
   } else if (S.page === 'dialogs') {

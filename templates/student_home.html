@@ -101,8 +101,11 @@
 
 {% if rv_pool >= 4 %}
 <section class="rv-row">
-  <a class="rv-card" href="{{ url_for('games.games_hub') }}"><span class="rv-emoji">🎮</span><span class="rv-text"><b>Игры со словами</b><small>Пары, мемори, блиц, виселица</small></span><span class="rv-go">Играть ▶</span></a>
+  <a class="rv-card" href="{{ url_for('games.games_hub') }}"><span class="rv-emoji">🎮</span><span class="rv-text"><b>Игры со словами</b><small>Пары, мемори, блиц, слушаем, бег</small></span><span class="rv-go">Играть ▶</span></a>
   <a class="rv-card" href="{{ url_for('games.dialogs_page') }}"><span class="rv-emoji">💬</span><span class="rv-text"><b>Диалоги</b><small>Поговори с Томом и Анной</small></span><span class="rv-go">Открыть ▶</span></a>
+</section>
+<section class="rv-row">
+  <a class="rv-card rv-main" href="{{ url_for('wardrobe.wardrobe_page') }}"><span class="rv-emoji">🎩</span><span class="rv-text"><b>Гардероб Чик-чика</b><small>Шапки, очки, шарфы и цвет перьев — за монетки</small></span><span class="rv-go">Наряжать ▶</span></a>
 </section>
 {% endif %}
 

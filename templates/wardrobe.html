@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Гардероб — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
+  <h1>🎩 Гардероб Чик-чика</h1>
+</div>
+<p class="subtitle">Наряжай помощника за монетки! Купленное остаётся навсегда — можно надевать и снимать сколько хочешь.</p>
+{% if flash_msg %}<div class="flash flash-success garden-flash">{{ flash_msg }}</div>{% endif %}
+
+<section class="card wd-top">
+  <div class="wd-preview" id="wd-preview" aria-label="Чик-чик в твоём наряде"></div>
+  <div class="wd-side">
+    <div class="wd-coins"><svg class="icon icon-coin"><use href="#i-coin"/></svg> <b>{{ coins }}</b> монеток</div>
+    <p class="wd-note">Монетки дают за тесты (5 за сданный, +5 за идеальный) и за дневную цель.</p>
+  </div>
+</section>
+
+<div id="wardrobe" data-items='{{ items | tojson }}' data-owned='{{ owned | tojson }}' data-worn='{{ worn | tojson }}' data-coins="{{ coins }}">
+{% for slot in slots %}
+  <section class="wd-section">
+    <h2>{{ slot.emoji }} {{ slot.title }}</h2>
+    <div class="wd-grid">
+    {% for it in items if it.slot == slot.key %}
+      {% set have = it.key in owned %}
+      {% set on = worn.get(slot.key) == it.key or (slot.key == 'color' and not worn.get('color') and it.key == 'color-yellow') %}
+      <div class="wd-item card{{ ' is-on' if on }}">
+        <div class="wd-thumb" data-key="{{ it.key }}" data-slot="{{ slot.key }}"></div>
+        <div class="wd-name">{{ it.name }}</div>
+        {% if on %}
+          <div class="wd-state">✔ Надето</div>
+          {% if slot.key != 'color' %}
+          <form method="post" action="{{ url_for('wardrobe.wardrobe_wear') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="key" value="{{ it.key }}"><button class="btn btn-small" type="submit">Снять</button></form>
+          {% endif %}
+        {% elif have %}
+          <form method="post" action="{{ url_for('wardrobe.wardrobe_wear') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="key" value="{{ it.key }}"><button class="btn btn-secondary btn-small" type="submit">Надеть</button></form>
+        {% elif coins >= it.cost %}
+          <div class="shop-price"><svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ it.cost }}</div>
+          <form method="post" action="{{ url_for('wardrobe.wardrobe_buy') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="key" value="{{ it.key }}"><button class="btn btn-primary btn-small" type="submit">Купить 🎁</button></form>
+        {% else %}
+          <div class="shop-price"><svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ it.cost }}</div>
+          <button class="btn btn-locked btn-small" disabled>Не хватает монеток</button>
+        {% endif %}
+      </div>
+    {% endfor %}
+    </div>
+  </section>
+{% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='wardrobe.js') }}?v=1"></script>{% endblock %}

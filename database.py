@@ -86,6 +86,17 @@ CREATE TABLE IF NOT EXISTS dialog_done (
     done_at      TEXT NOT NULL,
     PRIMARY KEY (student_id, key)
 );
+CREATE TABLE IF NOT EXISTS wardrobe_items (
+    student_id   INTEGER NOT NULL,
+    item_key     TEXT NOT NULL,
+    PRIMARY KEY (student_id, item_key)
+);
+CREATE TABLE IF NOT EXISTS wardrobe_wear (
+    student_id   INTEGER NOT NULL,
+    slot         TEXT NOT NULL,
+    item_key     TEXT NOT NULL,
+    PRIMARY KEY (student_id, slot)
+);
 CREATE TABLE IF NOT EXISTS garden (
     student_id     INTEGER PRIMARY KEY,        -- сад принадлежит ученику
     coins          INTEGER DEFAULT 0,          -- монетки за уроки

@@ -10,7 +10,8 @@ def _game_stats(db, student_id):
     where, args = ("WHERE student_id=?", (student_id,)) if student_id is not None else ("", ())
     g = db.execute(f"SELECT COALESCE(SUM(plays),0) p, COALESCE(SUM(best>=3),0) s FROM game_scores {where}", args).fetchone()
     d = db.execute(f"SELECT COUNT(*) FROM dialog_done {where}", args).fetchone()[0]
-    return {"games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d}
+    w = db.execute(f"SELECT COUNT(*) FROM wardrobe_items {where}", args).fetchone()[0]
+    return {"games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d, "wardrobe_bought": w}
 
 
 def _goal_days(db, student_id):

@@ -69,6 +69,8 @@ def delete_student(sid):
     db.execute("DELETE FROM achievements WHERE student_id=?", (sid,))
     db.execute("DELETE FROM decorations WHERE student_id=?", (sid,))
     db.execute("DELETE FROM garden WHERE student_id=?", (sid,))
+    for table in ("wardrobe_items", "wardrobe_wear", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal"):
+        db.execute(f"DELETE FROM {table} WHERE student_id=?", (sid,))
     db.execute("DELETE FROM students WHERE id=?", (sid,))
     db.commit()
     flash(f"Аккаунт {student['display_name']} удалён вместе с его прогрессом.", "success")

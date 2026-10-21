@@ -72,6 +72,8 @@ ACHIEVEMENTS = [
     _m("game_10", "🕹️", "Игроман", "Десять сыгранных игр.", "silver", "games", "games_played", 10),
     _m("game_50", "🎲", "Король игр", "Пятьдесят сыгранных игр!", "gold", "games", "games_played", 50),
     _m("game_p4", "🏆", "Чемпион игр", "Три звезды во всех пяти играх.", "legend", "games", "games_perfect", 5),
+    _m("wardrobe_1", "🎩", "Модник", "Куплен первый наряд для Чик-чика.", "bronze", "games", "wardrobe_bought", 1),
+    _m("wardrobe_6", "👑", "Стилист", "Куплено 6 нарядов для Чик-чика.", "silver", "games", "wardrobe_bought", 6),
     _m("dialog_1", "💬", "Первый разговор", "Пройден первый диалог.", "bronze", "games", "dialogs_done", 1),
     _m("dialog_8", "🗨️", "Собеседница", "Пройдено 8 диалогов.", "silver", "games", "dialogs_done", 8),
     _m("dialog_15", "🎤", "Мастер общения", "Пройдены все диалоги!", "gold", "games", "dialogs_done", len(DIALOGS)),
