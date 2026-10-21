@@ -4,6 +4,7 @@
 import random
 from datetime import datetime
 
+import activity
 from achievements import public, update_achievements
 from curriculum import ALL_LESSONS, LESSONS_BY_ID, unlocked_lesson_ids
 from data.dialogs import DIALOGS, DIALOGS_BY_KEY, character
@@ -114,6 +115,7 @@ def api_game():
                "ON CONFLICT(student_id, game) DO UPDATE SET plays=plays+1, best=MAX(best, excluded.best)",
                (student["id"], game, stars))
     db.commit()
+    activity.log(db, student["id"], "game")
     stats = compute_stats(db, student["id"])
     new = update_achievements(db, stats, student["id"])
     if new:
@@ -168,6 +170,7 @@ def api_dialog():
     db.execute("INSERT OR IGNORE INTO dialog_done (student_id, key, done_at) VALUES (?, ?, ?)",
                (student["id"], key, datetime.now().isoformat(timespec="seconds")))
     db.commit()
+    activity.log(db, student["id"], "dialog")
     stats = compute_stats(db, student["id"])
     new = update_achievements(db, stats, student["id"])
     if new:

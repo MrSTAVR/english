@@ -113,6 +113,31 @@ CREATE TABLE IF NOT EXISTS garden (
     last_study_day TEXT,                       -- ISO-дата последнего занятия
     broken         INTEGER DEFAULT 0           -- 1 = серия прервана, сад «опустел»
 );
+CREATE TABLE IF NOT EXISTS activity (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    day        TEXT NOT NULL,                  -- ISO-дата
+    kind       TEXT NOT NULL                   -- lesson / game / story / write / dialog
+);
+CREATE INDEX IF NOT EXISTS idx_activity_student_day ON activity (student_id, day);
+CREATE TABLE IF NOT EXISTS weekly_done (
+    student_id INTEGER NOT NULL,
+    week       TEXT NOT NULL,                  -- ISO-дата понедельника
+    boss_won   INTEGER DEFAULT 0,
+    PRIMARY KEY (student_id, week)
+);
+CREATE TABLE IF NOT EXISTS boss_wins (
+    student_id INTEGER NOT NULL,
+    week       TEXT NOT NULL,
+    PRIMARY KEY (student_id, week)
+);
+CREATE TABLE IF NOT EXISTS season_log (
+    student_id INTEGER NOT NULL,
+    season     TEXT NOT NULL,
+    day        TEXT NOT NULL,
+    correct    INTEGER DEFAULT 0,
+    PRIMARY KEY (student_id, season, day)
+);
 CREATE TABLE IF NOT EXISTS vacations (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL,

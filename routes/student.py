@@ -14,6 +14,9 @@ from data.extra_lessons import EXTRA_LESSONS
 from database import get_db
 from datetime import datetime
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
+import activity
+import weekly
+from seasons import active_season
 from garden import award_coins, get_garden, on_vacation, refresh_garden, touch_streak, tree_count_for, tree_stage
 from grading import grade_question
 from mascot import build_mascot_ctx
@@ -77,6 +80,11 @@ def student_home():
         return redirect(url_for("auth.index"))
     stats = compute_stats(db, student["id"])
     garden = refresh_garden(db, student["id"])
+    weekly_got = weekly.claim(db, student["id"])
+    if weekly_got:
+        _new = update_achievements(db, compute_stats(db, student["id"]), student["id"])
+        if _new:
+            session["new_achievements"] = (session.get("new_achievements") or []) + [a["key"] for a in _new]
     unlocked = unlocked_lesson_ids(stats)
 
     def lesson_info(l):
@@ -148,6 +156,8 @@ def student_home():
                            earned_count=earned_count,
                            garden=garden,
                            on_vacation=on_vacation(db, student["id"]),
+                           season=active_season(), weekly=weekly.status(db, student["id"]),
+                           weekly_got=weekly_got,
                            tree_stage=tree_stage(garden["streak_days"]),
                            tree_count=tree_count_for(garden["streak_days"]))
 
@@ -251,6 +261,8 @@ def submit_test(lesson_id):
     if new_achievements:
         session["new_achievements"] = [a["key"] for a in new_achievements]
 
+    if passed:
+        activity.log(db, student["id"], "lesson")
     coins_earned = award_coins(db, student["id"], percent, passed)
     garden = get_garden(db, student["id"])
 

@@ -3,6 +3,7 @@
 
 import random
 
+import activity
 from achievements import public, update_achievements
 from database import get_db
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
@@ -92,6 +93,7 @@ def api_writing():
     db.execute("INSERT INTO game_scores (student_id, game, best, plays) VALUES (?, ?, ?, 1) "
                "ON CONFLICT(student_id, game) DO UPDATE SET plays=plays+1, best=MAX(best, excluded.best)", (sid, mode, stars))
     db.commit()
+    activity.log(db, sid, "write")
     stats = compute_stats(db, sid)
     # слова, в которых ошиблись, попадают в «работу над ошибками» (только уже изученные слова)
     known = {w["key"] for w in learned_pool(stats)}

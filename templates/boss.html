@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Босс недели — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('season.weekly_page') }}">⬅ Челлендж</a>
+  <h1>{{ st.boss_emoji }} {{ st.boss_name }}</h1>
+</div>
+<section class="card">
+  <div id="boss" data-words='{{ words | tojson }}' data-distract='{{ distract | tojson }}'
+       data-lives="{{ lives }}" data-emoji="{{ st.boss_emoji }}" data-name="{{ st.boss_name }}"></div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='boss.js') }}?v=1"></script>{% endblock %}

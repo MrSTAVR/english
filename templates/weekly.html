@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Недельный челлендж — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
+  <h1>🗓️ Недельный челлендж</h1>
+</div>
+<p class="subtitle">Выполни три задания до воскресенья — получишь {{ coins }} монеток и право сразиться с боссом недели! Осталось дней: {{ st.days_left + 1 }}.</p>
+{% if got %}<div class="flash flash-success garden-flash">🎉 Челлендж выполнен! +{{ got }} монеток</div>{% endif %}
+
+<section class="card wk-tasks">
+  {% for t in st.tasks %}
+  <div class="wk-task{{ ' ok' if t.done }}">
+    <span class="wk-emoji">{{ t.emoji }}</span>
+    <span class="wk-text">{{ t.text }}</span>
+    <b>{{ t.have }}/{{ t.need }}</b>
+    <div class="goal-bar"><i style="width: {{ 100 * t.have // t.need }}%"></i></div>
+    {% if t.done %}<span class="wk-check">✅</span>{% endif %}
+  </div>
+  {% endfor %}
+  <p class="hint">Недель выполнено: {{ weeks }}</p>
+</section>
+
+<section class="card boss-card{{ ' boss-locked' if not st.complete }}">
+  <div class="boss-emoji">{{ st.boss_emoji }}</div>
+  <h2>Босс недели: {{ st.boss_name }}</h2>
+  {% if not st.complete %}
+    <p>Босс прячется. Выполни все задания челленджа, и он выйдет на бой!</p>
+  {% elif not enough %}
+    <p>Чтобы сразиться с боссом, нужно знать хотя бы {{ min_words }} слов — пройди ещё урок. 🌱</p>
+  {% elif st.boss_won %}
+    <p>🏆 Босс побеждён на этой неделе! Новый появится в понедельник. Победы: {{ wins }}.</p>
+    <a class="btn btn-secondary" href="{{ url_for('season.boss_page') }}">Потренироваться ещё</a>
+  {% else %}
+    <p>Отвечай на вопросы — каждый верный ответ бьёт босса. Три жизни! Победа: +{{ boss_coins }} монеток и шанс на особый наряд.</p>
+    <a class="btn btn-primary" href="{{ url_for('season.boss_page') }}">⚔️ Сразиться!</a>
+  {% endif %}
+  <div class="boss-rewards">
+    <b>Награды за победы (в магазине их нет):</b>
+    {% for need, key in rewards %}<span class="pill{{ ' pill-soft' if wins < need }}">{{ 'Победы' if need > 1 else 'Победа' }} {{ need }}: {{ items[key].name }}{% if wins >= need %} ✅{% endif %}</span>{% endfor %}
+  </div>
+</section>
+{% endblock %}

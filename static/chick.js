@@ -96,7 +96,14 @@
     'neck-medal': '<path d="M50 92 L60 106 L70 92" stroke="#E8454B" stroke-width="5" fill="none" stroke-linejoin="round"/><circle cx="60" cy="108" r="8" fill="#FFD54F" stroke="#E8A317" stroke-width="2.4"/>' + starAt(60, 108, 5, '#E8A317'),
     'neck-lei': '<g>' + [[38, 92], [44, 98], [51, 102], [60, 104], [69, 102], [76, 98], [82, 92]].map(function (p, i) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="4.6" fill="' + ['#FF8FB8', '#FFD54F', '#fff', '#FF5D8F', '#fff', '#FFD54F', '#FF8FB8'][i] + '" stroke="#e6a" stroke-opacity=".3"/>'; }).join('') + '</g>',
     'neck-bandana': '<path d="M34 92 Q60 102 86 92 L60 116 Z" fill="#E8454B" stroke="#C0282F" stroke-width="2" stroke-linejoin="round"/><circle cx="52" cy="98" r="1.7" fill="#fff"/><circle cx="68" cy="98" r="1.7" fill="#fff"/><circle cx="60" cy="106" r="1.7" fill="#fff"/><circle cx="60" cy="98" r="1.7" fill="#fff"/>',
-    'neck-tie': '<path d="M60 94 L54 99 L60 118 L66 99 Z" fill="#3D7BFF" stroke="#2A5DD0" stroke-width="1.8" stroke-linejoin="round"/><path d="M54 94 L66 94 L60 99 Z" fill="#2A5DD0"/>'
+    'neck-tie': '<path d="M60 94 L54 99 L60 118 L66 99 Z" fill="#3D7BFF" stroke="#2A5DD0" stroke-width="1.8" stroke-linejoin="round"/><path d="M54 94 L66 94 L60 99 Z" fill="#2A5DD0"/>',
+    /* --- награды босса и сезон Хэллоуина --- */
+    'hat-knight': '<path d="M41 44 Q41 20 60 20 Q79 20 79 44 Z" fill="#B8C0D6" stroke="#7B849E" stroke-width="2"/><rect x="40" y="38" width="40" height="6" rx="2" fill="#98A1BB" stroke="#7B849E" stroke-width="1.5"/><path d="M60 20 Q64 6 76 10 Q70 12 68 22Z" fill="#E8454B" stroke="#C0282F" stroke-width="1.5"/><path d="M50 30 H70" stroke="#5E667F" stroke-width="3" stroke-linecap="round"/>',
+    'neck-cape': '<path d="M32 92 Q60 104 88 92 L96 116 Q60 108 24 116 Z" fill="#7C5CFF" stroke="#5A3FD6" stroke-width="2" stroke-linejoin="round"/><circle cx="60" cy="100" r="4" fill="#FFD54F" stroke="#E8A317" stroke-width="1.5"/>',
+    'hat-witch': '<ellipse cx="60" cy="42" rx="30" ry="6" fill="#2B1B47" stroke="#160C2B" stroke-width="2"/><path d="M46 42 L58 8 Q61 2 66 8 L74 42 Z" fill="#3A2563" stroke="#241540" stroke-width="2" stroke-linejoin="round"/><path d="M48 35 L72 35" stroke="#FF8A1F" stroke-width="5"/><rect x="56" y="31" width="8" height="8" rx="1.5" fill="none" stroke="#FFD54F" stroke-width="2"/>',
+    'hat-pumpkin': '<ellipse cx="60" cy="30" rx="22" ry="15" fill="#FF8A1F" stroke="#D96A00" stroke-width="2"/><path d="M50 18 Q46 30 50 43 M60 15 Q57 30 60 45 M70 18 Q74 30 70 43" stroke="#D96A00" stroke-width="1.8" fill="none"/><path d="M58 15 Q57 8 62 6 Q64 10 62 15Z" fill="#4FBF6B" stroke="#2F9A4B" stroke-width="1.5"/>',
+    'face-vampire': '<path d="M53 75 L56 84 L59 75Z M61 75 L64 84 L67 75Z" fill="#fff" stroke="#C9C2E6" stroke-width="1"/>',
+    'neck-batbow': '<path d="M60 98 L48 90 Q44 96 40 92 Q42 102 50 102 Q56 104 60 100 Q64 104 70 102 Q78 102 80 92 Q76 96 72 90 Z" fill="#2B1B47" stroke="#160C2B" stroke-width="1.5" stroke-linejoin="round"/><circle cx="60" cy="98" r="3" fill="#FF8A1F"/>'
   };
   var ORDER = ['hat', 'face', 'neck'];
 

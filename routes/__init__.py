@@ -13,8 +13,9 @@ from routes.games import bp as games_bp
 from routes.wardrobe import bp as wardrobe_bp
 from routes.stories import bp as stories_bp
 from routes.writing import bp as writing_bp
+from routes.season import bp as season_bp
 
 
 def register_blueprints(app):
-    for bp in (auth_bp, student_bp, garden_bp, parent_bp, system_bp, pwa_bp, speak_bp, review_bp, games_bp, wardrobe_bp, stories_bp, writing_bp):
+    for bp in (auth_bp, student_bp, garden_bp, parent_bp, system_bp, pwa_bp, speak_bp, review_bp, games_bp, wardrobe_bp, stories_bp, writing_bp, season_bp):
         app.register_blueprint(bp)

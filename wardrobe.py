@@ -45,8 +45,20 @@ ITEMS = [
     {"key": "color-purple", "slot": "color", "name": "Фиолетовый", "cost": 20},
     {"key": "color-white", "slot": "color", "name": "Снежный белый", "cost": 28},
 ]
+# Награды босса (в магазине не продаются)
+ITEMS += [
+    {"key": "hat-knight", "slot": "hat", "name": "Шлем рыцаря", "cost": 0, "source": "boss", "note": "Победи босса недели"},
+    {"key": "neck-cape", "slot": "neck", "name": "Плащ героя", "cost": 0, "source": "boss", "note": "Победи босса 3 раза"},
+    # сезон Хэллоуин: покупаются только во время сезона, купленное остаётся навсегда
+    {"key": "hat-witch", "slot": "hat", "name": "Шляпа ведьмы", "cost": 22, "source": "halloween"},
+    {"key": "hat-pumpkin", "slot": "hat", "name": "Тыква на голове", "cost": 26, "source": "halloween"},
+    {"key": "face-vampire", "slot": "face", "name": "Клыки вампира", "cost": 16, "source": "halloween"},
+    {"key": "neck-batbow", "slot": "neck", "name": "Бабочка-летучая мышь", "cost": 14, "source": "halloween"},
+]
+for _i in ITEMS:
+    _i.setdefault("source", "shop")
 ITEMS_BY_KEY = {i["key"]: i for i in ITEMS}
-FREE_KEYS = {i["key"] for i in ITEMS if i["cost"] == 0}
+FREE_KEYS = {i["key"] for i in ITEMS if i["cost"] == 0 and i["source"] == "shop"}
 
 
 def owned_keys(db, student_id):
@@ -73,6 +85,12 @@ def buy(db, student_id, key):
         return False, "Такого наряда нет."
     if key in owned_keys(db, student_id):
         return False, "Он уже у тебя!"
+    if item["source"] == "boss":
+        return False, "Этот наряд — награда за победу над боссом!"
+    if item["source"] != "shop":
+        from seasons import active_season
+        if active_season() != item["source"]:
+            return False, "Этот сезонный наряд сейчас не продаётся — вернётся в следующем году."
     g = get_garden(db, student_id)
     if g["coins"] < item["cost"]:
         return False, f"Не хватает монеток: нужно {item['cost']}, а у тебя {g['coins']}."
@@ -99,3 +117,27 @@ def wear(db, student_id, key):
         msg = f"«{item['name']}» надето! ✨"
     db.commit()
     return True, msg
+
+
+def grant(db, student_id, key):
+    """Выдаёт наряд бесплатно (награда). -> True, если он был новым."""
+    if key not in ITEMS_BY_KEY or key in owned_keys(db, student_id):
+        return False
+    db.execute("INSERT OR IGNORE INTO wardrobe_items (student_id, item_key) VALUES (?, ?)", (student_id, key))
+    db.commit()
+    return True
+
+
+def visible_items(db, student_id):
+    """Что показывать в гардеробе: магазин, свои награды, сезонное — только в сезон или если куплено."""
+    from seasons import active_season
+    own, season = owned_keys(db, student_id), active_season()
+    out = []
+    for i in ITEMS:
+        if i["source"] == "shop" or i["key"] in own:
+            out.append(i)
+        elif i["source"] == "boss":
+            out.append(i)
+        elif i["source"] == season:
+            out.append(i)
+    return out

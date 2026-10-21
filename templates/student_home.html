@@ -36,6 +36,8 @@
   </div>
 </section>
 
+{% if season == 'halloween' %}<a class="season-banner" href="{{ url_for('season.halloween_page') }}">🎃 Хэллоуин! Новые слова, викторина и наряды — только пока идёт праздник →</a>{% endif %}
+{% if weekly %}<a class="weekly-teaser glass" href="{{ url_for('season.weekly_page') }}">🗓️ Недельный челлендж: <b>{{ weekly.tasks|selectattr('done')|list|length }}/{{ weekly.tasks|length }}</b>{% if weekly_got %} · 🎉 +{{ weekly_got }} монеток!{% elif weekly.boss_won %} · 🏆 босс побеждён{% elif weekly.complete %} · ⚔️ босс ждёт!{% endif %} →</a>{% endif %}
 {% if on_vacation %}<p class="hint vacation-note">🏖 У тебя каникулы — серия дней не сгорит. Можно отдыхать или заниматься, как хочется!</p>{% endif %}
 <!-- Сад: короткий тизер -->
 <a class="garden-teaser glass" href="{{ url_for('garden.garden_page') }}">

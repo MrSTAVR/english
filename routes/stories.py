@@ -3,6 +3,7 @@
 
 from datetime import datetime
 
+import activity
 from achievements import public, update_achievements
 from curriculum import LESSONS_BY_ID
 from data.stories import COMMON, STORIES, STORIES_BY_KEY, story_words
@@ -123,6 +124,7 @@ def api_story():
         db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?", (STORY_COINS, sid))
         coins = STORY_COINS
     db.commit()
+    activity.log(db, sid, "story")
     new = update_achievements(db, compute_stats(db, sid), sid)
     if new:
         session["new_achievements"] = (session.get("new_achievements") or []) + [a["key"] for a in new]

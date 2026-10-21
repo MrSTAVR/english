@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Хэллоуин — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
+  <h1>🎃 Хэллоуин</h1>
+</div>
+<p class="subtitle">Страшно-весёлые слова! Нажми на карточку — услышишь слово. Потом пройди викторину: {{ pass_mark }} из {{ quiz_len }} — и {{ coins }} монетки (раз в день). В гардеробе появились хэллоуинские наряды — но только пока идёт праздник! 🧙‍♀️</p>
+<section class="card hw-phrase"><b>{{ phrase.en }}</b> — {{ phrase.ru }} <button class="btn btn-small hw-say" type="button" data-say="{{ phrase.en }}">🔊</button></section>
+<div class="hw-grid">
+{% for w in words %}
+  <button type="button" class="card hw-card" data-say="{{ w.en }}"><span class="hw-pic">{{ w.pic }}</span><b>{{ w.en }}</b><small>{{ w.ru }}</small></button>
+{% endfor %}
+</div>
+<section class="card" id="halloween" data-words='{{ words | tojson }}' data-len="{{ quiz_len }}" data-pass="{{ pass_mark }}">
+  <h2>🎃 Викторина{% if done_today %} ✅ (сегодня уже пройдена){% endif %}</h2>
+  <div id="hw-quiz"></div>
+</section>
+<p><a class="btn btn-secondary" href="{{ url_for('wardrobe.wardrobe_page') }}">🎩 В гардероб</a></p>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='halloween.js') }}?v=1"></script>{% endblock %}

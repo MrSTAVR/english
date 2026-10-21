@@ -7,7 +7,7 @@ from flask import Blueprint, redirect, render_template, request, session, url_fo
 from garden import get_garden
 from mascot import build_mascot_ctx
 from stats import compute_stats
-from wardrobe import ITEMS, SLOTS, buy, outfit, owned_keys, wear
+from wardrobe import SLOTS, buy, outfit, owned_keys, visible_items, wear
 
 from routes.common import get_student_or_none, require_role
 
@@ -33,7 +33,7 @@ def wardrobe_page():
         return err
     mascot = build_mascot_ctx()
     mascot["page"] = "wardrobe"
-    return render_template("wardrobe.html", mascot=mascot, slots=SLOTS, items=ITEMS,
+    return render_template("wardrobe.html", mascot=mascot, slots=SLOTS, items=visible_items(db, student["id"]),
                            coins=get_garden(db, student["id"])["coins"],
                            owned=sorted(owned_keys(db, student["id"])), worn=outfit(db, student["id"]),
                            flash_msg=session.pop("wardrobe_flash", None))

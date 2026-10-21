@@ -797,3 +797,18 @@ button, input, select, textarea { font-family: inherit; }
 
 .offline-bar{position:fixed;left:0;right:0;bottom:0;z-index:9999;padding:10px 16px;text-align:center;background:#fff3cd;color:#664d03;font-weight:700;box-shadow:0 -2px 8px rgba(0,0,0,.15)}
 .vacation-note{background:#e8f6ff;border-radius:12px;padding:8px 12px}
+.wk-task{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;padding:10px 0;border-bottom:1px dashed rgba(124,92,255,.2)}
+.wk-task .goal-bar{grid-column:1/-1}.wk-task.ok .wk-text{text-decoration:line-through;opacity:.7}.wk-emoji{font-size:1.6rem}
+.boss-card{text-align:center}.boss-emoji,.boss-big{font-size:4rem;line-height:1}.boss-locked{opacity:.7;filter:grayscale(.6)}
+.boss-rewards{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center}
+.boss-head{text-align:center}.boss-fighter{transition:transform .2s}.boss-fighter.hit{transform:scale(.8) rotate(-12deg)}.boss-fighter.laugh{transform:scale(1.15)}
+.boss-hp{margin:8px auto;max-width:360px;height:14px}.boss-hp i{background:#e8454b}.boss-lives{font-size:1.4rem;margin-bottom:8px}
+.boss-q{font-size:1.4rem;text-align:center;margin:12px 0}.boss-pic{font-size:2rem}
+.boss-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.boss-opt.ok{background:#4fbf6b!important;color:#fff!important}.boss-opt.bad{background:#e8454b!important;color:#fff!important}
+.boss-end{text-align:center}
+.hw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin:12px 0}
+.hw-card{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px;cursor:pointer;border:0;text-align:center}.hw-pic{font-size:2.4rem}
+.hw-phrase{text-align:center;font-size:1.2rem}
+.season-banner{display:block;background:linear-gradient(90deg,#ff8a1f,#6c4bdb);color:#fff;border-radius:16px;padding:10px 14px;margin:10px 0;font-weight:800;text-decoration:none;text-align:center}
+.weekly-teaser{display:block;border-radius:16px;padding:10px 14px;margin:10px 0;text-decoration:none;font-weight:700}

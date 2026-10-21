@@ -26,7 +26,7 @@
       {% set on = worn.get(slot.key) == it.key or (slot.key == 'color' and not worn.get('color') and it.key == 'color-yellow') %}
       <div class="wd-item card{{ ' is-on' if on }}">
         <div class="wd-thumb" data-key="{{ it.key }}" data-slot="{{ slot.key }}"></div>
-        <div class="wd-name">{{ it.name }}</div>
+        <div class="wd-name">{{ it.name }}{% if it.source == 'halloween' %} 🎃{% elif it.source == 'boss' %} 🏆{% endif %}</div>
         {% if on %}
           <div class="wd-state">✔ Надето</div>
           {% if slot.key != 'color' %}
@@ -34,6 +34,8 @@
           {% endif %}
         {% elif have %}
           <form method="post" action="{{ url_for('wardrobe.wardrobe_wear') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="key" value="{{ it.key }}"><button class="btn btn-secondary btn-small" type="submit">Надеть</button></form>
+        {% elif it.source == 'boss' %}
+          <div class="wd-state">🔒 {{ it.note }}</div>
         {% elif coins >= it.cost %}
           <div class="shop-price"><svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ it.cost }}</div>
           <form method="post" action="{{ url_for('wardrobe.wardrobe_buy') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="key" value="{{ it.key }}"><button class="btn btn-primary btn-small" type="submit">Купить 🎁</button></form>
@@ -48,4 +50,4 @@
 {% endfor %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='wardrobe.js') }}?v=1"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='wardrobe.js') }}?v=2"></script>{% endblock %}
