@@ -1,0 +1,240 @@
+# -*- coding: utf-8 -*-
+"""Кабинет родителя: аккаунты учеников, статистика, API ошибок."""
+
+import json
+from achievements import ACHIEVEMENTS
+from curriculum import ALL_LESSONS, LESSONS_BY_ID
+from data.lessons import LESSONS
+from database import get_db
+from datetime import datetime
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
+from garden import cap_streak, get_garden, tree_count_for, tree_stage
+from security import hash_password
+from stats import compute_stats
+
+from routes.common import require_role
+
+bp = Blueprint("parent", __name__)
+
+
+STUDENT_EMOJIS = ["🦄", "🐱", "🐰", "🦊", "🐼", "🐥", "🦋", "🌈", "🚀", "🎀", "🐢", "🦁"]
+
+
+def valid_username(name):
+    import re
+    return bool(re.fullmatch(r"[a-zA-Z0-9_.\-]{2,20}", name or ""))
+
+
+@bp.route("/parent/students/add", methods=["POST"])
+def add_student():
+    err = require_role("parent")
+    if err:
+        return err
+    username = (request.form.get("username") or "").strip().lower()
+    display_name = (request.form.get("display_name") or "").strip()[:40]
+    password = request.form.get("password") or ""
+    emoji = request.form.get("emoji") or "🎒"
+    if emoji not in STUDENT_EMOJIS:
+        emoji = "🎒"
+    db = get_db()
+    if not valid_username(username):
+        flash("Логин: только английские буквы, цифры, точка/дефис/подчёркивание, 2–20 символов.", "error")
+    elif not display_name:
+        flash("Нужно указать имя ученика.", "error")
+    elif len(password) < 4:
+        flash("Пароль должен быть не короче 4 символов.", "error")
+    elif db.execute("SELECT id FROM students WHERE username=?", (username,)).fetchone():
+        flash(f"Логин «{username}» уже занят.", "error")
+    else:
+        db.execute(
+            "INSERT INTO students (username, display_name, password_hash, emoji, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (username, display_name, hash_password(password), emoji,
+             datetime.now().isoformat(timespec="seconds")))
+        db.commit()
+        flash(f"Аккаунт для {display_name} создан! 🎉", "success")
+    return redirect(url_for("parent.parent_dashboard") + "#students")
+
+
+@bp.route("/parent/students/<int:sid>/delete", methods=["POST"])
+def delete_student(sid):
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    student = db.execute("SELECT * FROM students WHERE id=?", (sid,)).fetchone()
+    if not student:
+        abort(404)
+    db.execute("DELETE FROM attempts WHERE student_id=?", (sid,))
+    db.execute("DELETE FROM achievements WHERE student_id=?", (sid,))
+    db.execute("DELETE FROM students WHERE id=?", (sid,))
+    db.commit()
+    flash(f"Аккаунт {student['display_name']} удалён вместе с его прогрессом.", "success")
+    return redirect(url_for("parent.parent_dashboard") + "#students")
+
+
+@bp.route("/parent/students/<int:sid>/reset_password", methods=["POST"])
+def reset_student_password(sid):
+    err = require_role("parent")
+    if err:
+        return err
+    password = request.form.get("password") or ""
+    if len(password) < 4:
+        flash("Новый пароль должен быть не короче 4 символов.", "error")
+        return redirect(url_for("parent.parent_dashboard") + "#students")
+    db = get_db()
+    student = db.execute("SELECT * FROM students WHERE id=?", (sid,)).fetchone()
+    if not student:
+        abort(404)
+    db.execute("UPDATE students SET password_hash=? WHERE id=?",
+               (hash_password(password), sid))
+    db.commit()
+    flash(f"Пароль для {student['display_name']} обновлён 🔑", "success")
+    return redirect(url_for("parent.parent_dashboard") + "#students")
+
+
+@bp.route("/parent/students/<int:sid>/garden", methods=["POST"])
+def parent_update_garden(sid):
+    """Тестовая настройка сада ребёнка: серия дней и монетки."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    student = db.execute("SELECT * FROM students WHERE id=?", (sid,)).fetchone()
+    if not student:
+        abort(404)
+    g = get_garden(db, sid)
+
+    def _num(name, default=None):
+        raw = request.form.get(name)
+        if raw is None or raw.strip() == "":
+            return default
+        try:
+            return max(0, min(9999, int(raw)))
+        except ValueError:
+            return default
+
+    streak = _num("streak_days")
+    coins = _num("coins")
+    if streak is None and coins is None:
+        flash("Ничего не изменено — заполни хотя бы одно поле.", "error")
+        return redirect(url_for("parent.parent_dashboard") + "#students")
+    if streak is not None:
+        streak = cap_streak(streak)  # серия ограничена STREAK_CAP днями
+        # синхронизируем last_study_day с реальностью, чтобы refresh не сбросил серию
+        if streak > 0:
+            db.execute("UPDATE garden SET streak_days=?, broken=0, manual=1 WHERE student_id=?",
+                       (streak, sid))
+        else:
+            # «прерываем» серию — как будто пропущен день: дерево возвращается
+            # к начальному размеру, украшения снимаются (монетки остаются)
+            db.execute("UPDATE garden SET streak_days=0, broken=1, manual=1 WHERE student_id=?",
+                       (sid,))
+            db.execute("DELETE FROM decorations WHERE student_id=?", (sid,))
+        best = cap_streak(max(int(g["best_streak"]), streak or 0))
+        db.execute("UPDATE garden SET best_streak=? WHERE student_id=?", (best, sid))
+    if coins is not None:
+        db.execute("UPDATE garden SET coins=? WHERE student_id=?", (coins, sid))
+    db.commit()
+    flash(f"Сад для {student['display_name']} обновлён: серия {streak if streak is not None else g['streak_days']} дн., "
+          f"монет {coins if coins is not None else g['coins']} 🌳", "success")
+    return redirect(url_for("parent.parent_dashboard") + "#students")
+
+
+@bp.route("/parent")
+def parent_dashboard():
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+
+    # Аккаунты учеников + их персональная статистика
+    students = db.execute(
+        "SELECT * FROM students ORDER BY created_at ASC").fetchall()
+    student_cards = []
+    for st in students:
+        sstats = compute_stats(db, st["id"])
+        earned = {r["key"] for r in db.execute(
+            "SELECT key FROM achievements WHERE student_id=?", (st["id"],)).fetchall()}
+        sgarden = get_garden(db, st["id"])
+        student_cards.append({"student": st, "stats": sstats,
+                              "earned_count": len(earned),
+                              "garden": sgarden,
+                              "tree_stage": tree_stage(sgarden["streak_days"]),
+                              "tree_count": tree_count_for(sgarden["streak_days"]),
+                              "deco_count": db.execute(
+                                  "SELECT COUNT(*) c FROM decorations WHERE student_id=?",
+                                  (st["id"],)).fetchone()["c"]})
+
+    stats = compute_stats(db)  # общая сводка по всем детям
+    attempts = list(reversed(stats["attempts"]))  # свежие сверху
+
+    # Сводка по урокам (основные + дополнительные)
+    lesson_rows = []
+    for l in ALL_LESSONS:
+        la = [a for a in stats["attempts"] if a["lesson_id"] == l["id"]]
+        best = max(la, key=lambda a: a["score_percent"], default=None)
+        time_spent = sum(a["seconds_spent"] or 0 for a in la)
+        lesson_rows.append({
+            "lesson": l,
+            "tries": len(la),
+            "passed": l["id"] in stats["completed_ids"],
+            "best_score": best["score_percent"] if best else None,
+            "time_spent": time_spent,
+        })
+
+    earned = {}
+    for r in db.execute(
+            "SELECT a.student_id, a.key, a.earned_at, s.display_name, s.emoji "
+            "FROM achievements a JOIN students s ON s.id = a.student_id").fetchall():
+        earned[(r["student_id"], r["key"])] = r
+    achievements = [{**a, "earned": any(k[1] == a["key"] for k in earned),
+                     "who": ", ".join(f"{v['emoji']} {v['display_name']}"
+                                      for k, v in earned.items() if k[1] == a["key"]),
+                     "earned_at": next((v["earned_at"] for k, v in earned.items()
+                                        if k[1] == a["key"]), None)}
+                    for a in ACHIEVEMENTS]
+
+    names_by_id = {st["id"]: st["display_name"] for st in students}
+    emojis_by_id = {st["id"]: st["emoji"] for st in students}
+
+    return render_template("parent_dashboard.html",
+                           stats=stats, lessons=lesson_rows,
+                           attempts=attempts, achievements=achievements,
+                           students=students, student_cards=student_cards,
+                           names_by_id=names_by_id, emojis_by_id=emojis_by_id,
+                           student_emojis=STUDENT_EMOJIS,
+                           lesson_titles={l["id"]: l["title"] for l in ALL_LESSONS},
+                           total_lessons=len(LESSONS))
+
+
+@bp.route("/api/mistakes")
+def api_mistakes():
+    """Все ошибки по всем попыткам — для таблицы в кабинете родителя."""
+    err = require_role("parent")
+    if err:
+        return jsonify([])
+    db = get_db()
+    names = {r["id"]: r["display_name"] for r in
+             db.execute("SELECT id, display_name FROM students").fetchall()}
+    rows = db.execute(
+        "SELECT * FROM attempts WHERE finished_at IS NOT NULL ORDER BY finished_at DESC").fetchall()
+    out = []
+    for r in rows:
+        lesson = LESSONS_BY_ID.get(r["lesson_id"], {})
+        try:
+            details = json.loads(r["details_json"] or "{}")
+        except Exception:
+            details = {}
+        for res in details.get("results", []):
+            if not res["correct"]:
+                out.append({
+                    "date": (r["finished_at"] or "")[:16].replace("T", " "),
+                    "student": names.get(r["student_id"], "—"),
+                    "lesson_title": lesson.get("title", f"Урок {r['lesson_id']}"),
+                    "question": res["q"],
+                    "given": res["given"] or "(пусто)",
+                    "correct": res["correct_answer"],
+                    "explain": res.get("explain", ""),
+                })
+    return jsonify(out)
