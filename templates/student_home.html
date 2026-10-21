@@ -45,6 +45,19 @@
   <span class="gt-btn">Открыть сад →</span>
 </a>
 
+<!-- 1б. Цель дня -->
+{% if goal %}
+<section class="goal-card{{ ' goal-done' if goal.done }}">
+  <div class="goal-head"><b>🎯 Цель на сегодня</b>
+    <span class="goal-reward">{% if goal.done %}выполнена! +{{ goal.coins }} 🪙{% else %}награда: {{ goal.coins }} 🪙{% endif %}</span></div>
+  <div class="goal-items">
+    {% if goal.need_lessons %}<div class="goal-item{{ ' ok' if goal.lessons >= goal.need_lessons }}"><span>📚 Пройти урок</span><b>{{ goal.lessons }}/{{ goal.need_lessons }}</b></div>{% endif %}
+    {% if goal.need_words %}<div class="goal-item{{ ' ok' if goal.words >= goal.need_words }}"><span>🔁 Повторить слова</span><b>{{ goal.words }}/{{ goal.need_words }}</b>
+      <div class="goal-bar"><i style="width: {{ 100 * goal.words // goal.need_words }}%"></i></div></div>{% endif %}
+  </div>
+</section>
+{% endif %}
+
 <!-- 2. Кнопка «Следующий урок» -->
 {% if next_lesson %}
   <a class="next-cta" href="{{ url_for('student.lesson_page', lesson_id=next_lesson.id) }}">
@@ -79,7 +92,7 @@
   {% if wod %}
   <div class="rv-card rv-wod">
     <span class="rv-kicker">🌟 Слово дня</span>
-    <span class="rv-word">{{ wod.en }} <button type="button" class="btn btn-small say-btn" data-say="{{ wod.en }}" title="Послушать">🔊</button></span>
+    <span class="rv-word">{% if wod.pic %}<span class="rv-pic">{{ wod.pic }}</span> {% endif %}{{ wod.en }} <button type="button" class="btn btn-small say-btn" data-say="{{ wod.en }}" title="Послушать">🔊</button></span>
     <span class="rv-tr">[{{ wod.hint }}] — {{ wod.ru }}</span>
   </div>
   {% endif %}

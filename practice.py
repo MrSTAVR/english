@@ -207,7 +207,7 @@ def pool_from(lessons):
                 continue
             seen.add(key)
             ru = re.sub(r"\s*\(.*?\)", "", w["ru"]).strip() or w["ru"]    # без пояснений в скобках
-            out.append({"key": key, "en": v[0], "accept": v, "ru": ru, "hint": w.get("hint", ""),
+            out.append({"key": key, "en": v[0], "accept": v, "ru": ru, "hint": w.get("hint", ""), "pic": w.get("pic", ""),
                         "lesson": l["id"]})
     return out
 

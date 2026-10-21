@@ -38,8 +38,9 @@
   <p>Читай слово вслух (подсказка произношения в скобках). Нажимай на карточку, чтобы перевернуть её и увидеть перевод. Кнопка <b>🔊</b> рядом со словом — послушаешь правильное произношение!</p>
   <div class="flashcards">
     {% for w in lesson.material %}
-      <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="flashcard{% if w.pic %} has-pic{% endif %}" onclick="this.classList.toggle('flipped')">
         <div class="fc-front">
+          {% if w.pic %}<div class="fc-pic" aria-hidden="true">{{ w.pic }}</div>{% endif %}
           <div class="fc-en">{{ w.en }}</div>
           <div class="fc-hint">[{{ w.hint }}]</div>
           <div class="fc-tap">нажми 👆</div>

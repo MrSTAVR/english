@@ -73,6 +73,7 @@
     reviewOk: ['Верно! ✅', 'Молодец! 🌟', 'Так держать! 💪', 'Отлично, ты помнишь! 🧠'],
     reviewBad: ['Ничего, это слово вернётся — запомнишь! 🌱', 'Упс! Посмотри правильный ответ 👀', 'Не беда, повторение для этого и нужно 🤗'],
     reviewDone: ['Раунд пройден! 🏅 Память становится крепче с каждым разом.', 'Ура, повторили! 🎉'],
+    goalDone: ['Цель дня выполнена! 🎯 Держи монетки для сада!', 'Ура, цель на сегодня достигнута! 🌟 Ты молодец!'],
     wordsEmpty: 'Здесь пока пусто — пройди первый урок, и слова появятся! 🌱',
     theoryPage: ['Тут вся теория, что мы прошли 📖 Если что-то забылось — заглядывай сюда!',
                  'Хочешь повторить правило? Открывай нужный урок и читай вслух 🗣️'],
@@ -875,9 +876,10 @@
   } else if (S.page === 'result') {
     later(700, function () {
       var p = S.percent || 0;
-      var msg = p === 100 ? pick(T.resultPass100) : p >= 70 ? pick(T.resultPass) : p >= 50 ? T.resultNear : T.resultLow;
-      say(msg, { persist: true, mood: p === 100 ? 'party' : p >= 70 ? 'cheer' : p >= 50 ? 'think' : 'sad' });
+      var msg = p === 100 ? pick(T.resultPass100) : (p >= 70 || S.passed) ? pick(T.resultPass) : p >= 50 ? T.resultNear : T.resultLow;
+      say(msg, { persist: true, mood: p === 100 ? 'party' : (p >= 70 || S.passed) ? 'cheer' : p >= 50 ? 'think' : 'sad' });
       if (S.coinsEarned) say2(fmt(T.coinsEarned, { n: S.coinsEarned }), 3200, { mood: 'cool' });
+      if (S.goalDone) setTimeout(function () { say(pick(T.goalDone) + ' +' + S.goalCoins + ' 🪙', { persist: true, mood: 'party' }); explode && explode(); }, 6500);
       if (truthy(S.newAchievements)) {
         var list = Array.isArray(S.newAchievements) ? S.newAchievements : [];
         setTimeout(function () { if (list.length) celebrateAchievements(list); }, 2000);
@@ -956,6 +958,9 @@
     rvStreak = ok ? rvStreak + 1 : 0;
     if (ok && rvStreak % 3 !== 0) return;             // хвалим не каждый ответ, а каждый третий
     say(pick(ok ? T.reviewOk : T.reviewBad), { mood: ok ? 'cheer' : 'think' });
+  });
+  document.addEventListener('review:goal', function (e) {
+    say(pick(T.goalDone) + ' +' + ((e.detail && e.detail.coins) || 0) + ' 🪙', { persist: true, mood: 'party' });
   });
   document.addEventListener('review:done', function () { say(pick(T.reviewDone), { mood: 'party' }); });
   document.addEventListener('review:achievements', function (e) {

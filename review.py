@@ -162,6 +162,7 @@ def make_question(word, pool, box, rng):
     q["en"] = word["en"]
     q["ru"] = word["ru"]
     q["hint"] = word["hint"]
+    q["pic"] = word.get("pic", "")
     q["box"] = box
     return q
 

@@ -6,6 +6,11 @@ import json
 from curriculum import LESSONS_BY_ID
 
 
+def _goal_days(db, student_id):
+    from goals import goal_days
+    return goal_days(db, student_id)
+
+
 def _review_stats(db, student_id):
     from review import review_stats
     return review_stats(db, student_id)
@@ -149,6 +154,7 @@ def compute_stats(db, student_id=None):
         "words_learned": words_learned,
         **speak,
         **_review_stats(db, student_id),
+        "goal_days": _goal_days(db, student_id),
         "total_mistakes": total_mistakes,
         "comeback": comeback,
         "early_bird": early_bird,

@@ -3,6 +3,7 @@
 
 from data.extra_lessons import EXTRA_LESSONS
 from data.course import ORDER
+from data.emoji import emoji_for
 from data.lessons import LESSONS as _OLD_LESSONS
 from data.new_lessons import NEW_LESSONS
 
@@ -21,6 +22,9 @@ ALL_LESSONS = LESSONS + EXTRA_LESSONS
 MAIN_COUNT = len(LESSONS)
 
 
+for _l in ALL_LESSONS:
+    for _w in _l["material"]:
+        _w.setdefault("pic", emoji_for(_w["en"]))     # картинка-эмодзи ("" — если нет)
 augment(ALL_LESSONS)
 add_review_questions(LESSONS)
 

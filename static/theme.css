@@ -462,3 +462,24 @@ html[data-theme="dark"] .rv-go { color: #b9a8ff; }
 html[data-theme="dark"] .rv-wod { background: linear-gradient(135deg, #4a3d12, #5b4a12); color: #ffeaa0; border-color: #8a6d12; }
 html[data-theme="dark"] .rv-opt.is-right, html[data-theme="dark"] .rv-fb.ok { background: #12392a; color: #a8f0c8; }
 html[data-theme="dark"] .rv-opt.is-wrong, html[data-theme="dark"] .rv-fb.bad { background: #4a1a1c; color: #ffb4b6; }
+
+/* ---------- Картинки-эмодзи к словам ---------- */
+.flashcard.has-pic { height: 198px; }
+.fc-pic { font-size: 2.3rem; line-height: 1; margin-bottom: 4px; filter: drop-shadow(0 3px 0 rgba(90, 63, 214, .15)); }
+.dict-pic { display: inline-block; width: 1.6em; text-align: center; margin-right: 4px; font-size: 1.25rem; }
+.rv-pic { font-size: 1.5rem; }
+.rv-pic-big { font-size: 3.4rem; text-align: center; margin: 6px 0; }
+.rv-sayline .rv-pic { margin-right: 2px; }
+
+/* ---------- Цель дня ---------- */
+.goal-card { margin: 14px 0; padding: 14px 16px; border-radius: 20px; background: var(--surface, #fff);
+  border: 2px solid var(--line); box-shadow: var(--shadow); }
+.goal-card.goal-done { border-color: #2fd08c; background: linear-gradient(135deg, rgba(47, 208, 140, .14), transparent); }
+.goal-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 8px; color: var(--ink); }
+.goal-reward { font-size: .85rem; color: var(--muted); }
+.goal-items { display: grid; gap: 8px; }
+@media (min-width: 640px) { .goal-items { grid-template-columns: 1fr 1fr; } }
+.goal-item { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; align-items: center; color: var(--ink); }
+.goal-item.ok b::after { content: " ✅"; }
+.goal-bar { grid-column: 1 / -1; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.goal-bar i { display: block; height: 100%; background: linear-gradient(90deg, #7c5cff, #ff7ab6); transition: width .3s; }

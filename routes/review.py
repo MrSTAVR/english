@@ -5,6 +5,7 @@ from achievements import public, update_achievements
 from database import get_db
 from flask import Blueprint, abort, jsonify, redirect, render_template, request, session, url_for
 from mascot import build_mascot_ctx
+import goals
 from review import MASTERED_BOX, build_round, counts, learned_pool, record, state
 from stats import compute_stats
 
@@ -53,8 +54,11 @@ def api_review():
         abort(400)                       # слово ещё не изучено — не записываем
     box = record(db, student["id"], key, ok)
     stats = compute_stats(db, student["id"])
+    _row, goal_coins, goal_done = goals.add(db, student["id"], stats, len(learned_pool(stats)), words=1)
+    stats = compute_stats(db, student["id"])             # цель дня могла дать ачивку
     new = update_achievements(db, stats, student["id"])
     if new:
         session["new_achievements"] = (session.get("new_achievements") or []) + [a["key"] for a in new]
     return jsonify(ok=True, box=box, mastered=stats["review_mastered"], correct=stats["review_correct"],
-                   learned=box >= MASTERED_BOX, newAchievements=[public(a) for a in new])
+                   learned=box >= MASTERED_BOX, goalDone=goal_done, goalCoins=goal_coins,
+                   newAchievements=[public(a) for a in new])

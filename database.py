@@ -65,6 +65,14 @@ CREATE TABLE IF NOT EXISTS word_review (
     last_at      TEXT,
     PRIMARY KEY (student_id, key)
 );
+CREATE TABLE IF NOT EXISTS daily_goal (
+    student_id   INTEGER NOT NULL,
+    day          TEXT NOT NULL,
+    lessons      INTEGER DEFAULT 0,
+    words        INTEGER DEFAULT 0,
+    done         INTEGER DEFAULT 0,
+    PRIMARY KEY (student_id, day)
+);
 CREATE TABLE IF NOT EXISTS garden (
     student_id     INTEGER PRIMARY KEY,        -- сад принадлежит ученику
     coins          INTEGER DEFAULT 0,          -- монетки за уроки

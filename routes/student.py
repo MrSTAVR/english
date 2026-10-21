@@ -6,6 +6,7 @@ from badges import TIERS
 from achievements import (ACHIEVEMENTS, BY_KEY, CATEGORIES, public, tier_counts,
                           update_achievements, views as achievement_views)
 import config
+import goals
 from config import PASS_MARK
 from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID, pass_mark, unlocked_lesson_ids
 from data.extra_lessons import EXTRA_LESSONS
@@ -128,7 +129,8 @@ def student_home():
     rv_pool = learned_pool(stats)
     rv_state = review_state(db, student["id"])
     rv_due, rv_new, rv_mastered = review_counts(rv_pool, rv_state)
-    return render_template("student_home.html", rv_pool=len(rv_pool), rv_ready=rv_due + min(rv_new, 10),
+    goal = goals.view(db, student["id"], stats, len(rv_pool))
+    return render_template("student_home.html", goal=goal, rv_pool=len(rv_pool), rv_ready=rv_due + min(rv_new, 10),
                            rv_mastered=rv_mastered, wod=word_of_day(rv_pool, rv_state, student["id"]), mascot=mascot, speaking=config.SPEAKING,
                            name=student["display_name"],
                            emoji=student["emoji"],
@@ -238,6 +240,9 @@ def submit_test(lesson_id):
     db.commit()
 
     stats = compute_stats(db, student["id"])
+    _row, goal_coins, goal_done = goals.add(db, student["id"], stats, len(learned_pool(stats)),
+                                            lessons=1 if passed else 0)
+    stats = compute_stats(db, student["id"])             # цель дня могла дать ачивку
     new_achievements = update_achievements(db, stats, student["id"])
     if new_achievements:
         session["new_achievements"] = [a["key"] for a in new_achievements]
@@ -249,6 +254,8 @@ def submit_test(lesson_id):
     mascot["percent"] = percent
     mascot["passed"] = passed
     mascot["coinsEarned"] = coins_earned
+    mascot["goalDone"] = goal_done
+    mascot["goalCoins"] = goal_coins
     mascot["newAchievements"] = [public(a) for a in new_achievements]
     return render_template("result.html", mascot=mascot,
                            lesson=lesson, percent=percent, passed=passed, need=need,
