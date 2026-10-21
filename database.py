@@ -9,7 +9,8 @@ from config import DB_PATH
 
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(DB_PATH)
+        # timeout: при нескольких процессах сервера ждём освобождения базы, а не падаем
+        g.db = sqlite3.connect(DB_PATH, timeout=15)
         g.db.row_factory = sqlite3.Row
         g.db.execute("PRAGMA foreign_keys = ON")
     return g.db
@@ -58,6 +59,13 @@ CREATE TABLE IF NOT EXISTS decorations (
     deco_key   TEXT NOT NULL,                  -- ключ из DECORATIONS
     slot       INTEGER NOT NULL                 -- слот на дереве (0..MAX_SLOTS-1)
 );
+CREATE TABLE IF NOT EXISTS login_failures (
+    id    INTEGER PRIMARY KEY AUTOINCREMENT,
+    scope TEXT NOT NULL,                       -- ip / student / parent
+    ident TEXT NOT NULL,                       -- адрес или логин
+    ts    REAL NOT NULL                        -- unix-время неудачной попытки
+);
+CREATE INDEX IF NOT EXISTS idx_login_failures ON login_failures (scope, ident, ts);
 """
 
 
@@ -66,7 +74,8 @@ RETIRED_DECORATIONS = {"rainbow": 30}   # ключ -> цена: выведены
 
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=15)
+    conn.execute("PRAGMA journal_mode=WAL")   # читатели не мешают писателям; остаётся в файле базы
     conn.executescript(SCHEMA)
     # Миграция старых баз: добавляем недостающие колонки/таблицы
     cols = {r[1] for r in conn.execute("PRAGMA table_info(attempts)")}

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Хеширование и проверка паролей (PBKDF2)."""
 
-from config import PARENT_PASSWORD
+from config import BASE_DIR, PARENT_PASSWORD
 import hashlib
 import hmac
 import os
@@ -33,3 +33,24 @@ def check_parent_password(password):
     """Сравнение пароля родителя за постоянное время."""
     return hmac.compare_digest(str(password).encode("utf-8"),
                                PARENT_PASSWORD.encode("utf-8"))
+
+
+def load_secret_key(path=None):
+    """Ключ подписи сессий: из ENGLISH_SECRET_KEY или из файла .secret_key.
+
+    Файл создаётся при первом запуске с доступом только для владельца (0600).
+    Один и тот же ключ нужен всем процессам сервера и сохраняет вход после перезапуска.
+    """
+    env_key = os.environ.get("ENGLISH_SECRET_KEY")
+    if env_key:
+        return env_key
+    path = path or os.path.join(BASE_DIR, ".secret_key")
+    try:
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError:
+        pass
+    else:
+        with os.fdopen(fd, "w") as f:
+            f.write(os.urandom(24).hex())
+    with open(path) as f:
+        return f.read().strip()

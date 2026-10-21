@@ -14,25 +14,28 @@ import sys
 
 from flask import Flask, g
 
-from config import BASE_DIR
+import config
 from database import init_db
+from hardening import init_hardening
 from mascot import build_mascot_ctx
 from routes import register_blueprints
+from security import load_secret_key
 from template_filters import human_time, match_answer_json, match_cols, match_expected_json, mistakes_count, \
     shuffle_match, shuffle_sort, shuffle_words, tree_mini
 
 app = Flask(__name__)
 
 
+# В боевом режиме отказываемся стартовать с небезопасными настройками
+if config.IS_PRODUCTION:
+    _problems = config.production_problems()
+    if _problems:
+        raise RuntimeError("Небезопасная настройка для боевого режима:\n  - " + "\n  - ".join(_problems)
+                           + "\nСм. .env.example")
+
 # Постоянный секретный ключ, чтобы сессии не сбрасывались после перезапуска
-SECRET_FILE = os.path.join(BASE_DIR, ".secret_key")
-
-if not os.path.exists(SECRET_FILE):
-    with open(SECRET_FILE, "w") as f:
-        f.write(os.urandom(24).hex())
-
-with open(SECRET_FILE) as f:
-    app.secret_key = f.read().strip()
+app.secret_key = load_secret_key()
+init_hardening(app)
 
 
 @app.teardown_appcontext

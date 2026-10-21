@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """Общие помощники для маршрутов: проверка роли и текущий ученик."""
 
-from flask import redirect, session, url_for
+import time
+
+from flask import flash, redirect, session, url_for
 
 
 def get_student_or_none(db):
@@ -13,6 +15,15 @@ def get_student_or_none(db):
 
 
 def require_role(role):
+    """None, если роль подходит; иначе редирект на главную.
+
+    Вход родителя действует ограниченное время (config.PARENT_SESSION_HOURS):
+    ребёнок не должен получать кабинет родителя на «забытом» телефоне.
+    """
     if session.get("role") != role:
+        return redirect(url_for("auth.index"))
+    if role == "parent" and time.time() > session.get("parent_until", 0):
+        session.clear()
+        flash("Вход родителя закончился. Войди снова 🔐", "error")
         return redirect(url_for("auth.index"))
     return None

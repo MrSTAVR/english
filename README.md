@@ -41,9 +41,19 @@ python app.py            # Windows: run.bat, Linux/macOS: ./run.sh
 
 | Переменная | Назначение | По умолчанию |
 |---|---|---|
-| `ENGLISH_PARENT_PASSWORD` | пароль кабинета родителя | `1234` — **смените!** |
+| `ENGLISH_ENV` | `production` включает строгие проверки для сервера | разработка |
+| `ENGLISH_PARENT_PASSWORD` | пароль кабинета родителя (в production: от 8 символов, не `1234`) | `1234` — **смените!** |
+| `ENGLISH_SECRET_KEY` | ключ подписи сессий (иначе файл `.secret_key`) | создаётся сам |
 | `ENGLISH_APP_DB` | путь к файлу базы данных | `english_app.db` рядом с `app.py` |
-| `PORT` | порт сервера | `5000` |
+| `ENGLISH_COOKIE_SECURE` | cookie только по HTTPS | включено в production |
+| `ENGLISH_BEHIND_PROXY` | `1` — доверять заголовкам Caddy/nginx (реальный IP, https) | выключено |
+| `ENGLISH_SESSION_DAYS` | сколько дней ребёнок остаётся «залогинен» | `30` |
+| `ENGLISH_PARENT_SESSION_HOURS` | срок входа родителя | `12` |
+| `ENGLISH_HOST` / `PORT` | адрес и порт `serve.py` | `127.0.0.1` / `8000` |
+| `ENGLISH_BIND` | адрес gunicorn | `127.0.0.1:8000` |
+| `ENGLISH_BACKUP_DIR` / `ENGLISH_BACKUP_KEEP` | папка и число копий для `backup_db.py` | `backups` / `14` |
+
+Все переменные собраны в `.env.example`.
 
 PowerShell: `$env:ENGLISH_PARENT_PASSWORD = "мой-пароль"; python app.py`
 Linux/macOS: `ENGLISH_PARENT_PASSWORD=мой-пароль python3 app.py`
@@ -52,7 +62,11 @@ Linux/macOS: `ENGLISH_PARENT_PASSWORD=мой-пароль python3 app.py`
 
 ```
 app.py              создание приложения, подключение модулей и blueprint-ов
-config.py           пути и константы (PASS_MARK, пароль родителя)
+config.py           настройки из окружения, проверки боевого режима
+ratelimit.py        защита входа от подбора пароля
+hardening.py        заголовки безопасности, cookie, работа за прокси
+backup_db.py        резервная копия базы (gzip, хранит последние N)
+wsgi.py, serve.py, gunicorn.conf.py   запуск на сервере
 database.py         схема SQLite, подключение, миграции
 security.py         хеши паролей (PBKDF2), проверка пароля родителя
 csrf.py             CSRF-защита POST-форм
@@ -64,7 +78,7 @@ garden.py           сад: серия, монеты, магазин, данны
 garden_scene.py     SVG-сцена сада: дерево, 30 находок, украшения
 template_filters.py фильтры Jinja и перемешивание заданий
 mascot.py           контекст для помощника Чик-чик
-routes/             маршруты: auth, student, garden, parent (+ common)
+routes/             маршруты: auth, student, garden, parent, system (+ common)
 data/               lessons.py (основной курс), extra_lessons.py (дополнительные)
 templates/, static/ HTML, CSS, JS (mascot.js, tts.js)
 tests/              pytest-тесты
@@ -87,14 +101,26 @@ pytest
 Тесты работают на временной базе данных и не трогают `english_app.db`.
 Они проходят весь путь: вход → уроки → тесты → ачивки → кабинет родителя → CSRF.
 
+## Запуск на сервере
+
+```bash
+export ENGLISH_ENV=production ENGLISH_BEHIND_PROXY=1
+export ENGLISH_PARENT_PASSWORD='длинный-пароль'
+gunicorn -c gunicorn.conf.py wsgi:app      # Linux; на Windows: python serve.py
+```
+
+В режиме `production` приложение **не запустится**, если пароль родителя простой или не задан.
+Перед ним ставится прокси с HTTPS (Caddy/nginx). Проверка работоспособности: `/healthz`.
+Резервная копия: `python backup_db.py` (безопасна при работающем приложении).
+
 ## Безопасность
 
-Приложение рассчитано на домашнюю сеть, а не на публикацию в интернете.
-- Смените пароль родителя через `ENGLISH_PARENT_PASSWORD`.
-- Пароли учеников хранятся только в виде хеша PBKDF2; POST-формы защищены CSRF-токеном.
-- Сервер слушает все сетевые интерфейсы (`0.0.0.0`): он доступен с других устройств вашей Wi-Fi-сети (с телефона ребёнка).
-- Файл `.secret_key` подписывает сессии — не публикуйте его (он в `.gitignore`).
-- Для публикации в интернете нужен настоящий WSGI-сервер (gunicorn/waitress), HTTPS и пароль родителя посильнее общего.
+- Пароли учеников хранятся как хеш PBKDF2; POST-формы защищены CSRF-токеном.
+- Вход ограничен: после серии неудач аккаунт, кабинет родителя и IP блокируются на 10 минут.
+- Cookie: HttpOnly, SameSite=Lax, Secure в production; вход родителя истекает через 12 часов.
+- Заголовки безопасности, `noindex`, лимит размера запроса, HSTS по HTTPS.
+- Файл `.secret_key`, `.env` и `backups/` не публикуйте (они в `.gitignore`).
+- Без `ENGLISH_ENV=production` сервер слушает все интерфейсы (`python app.py`) — это режим домашней сети.
 
 ## Git-воркфлоу
 

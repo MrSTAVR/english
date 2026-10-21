@@ -1,12 +1,20 @@
 # -*- coding: utf-8 -*-
 """Вход, выход и главная страница."""
 
-from security import check_parent_password
+import time
+
+import config
+import ratelimit
 from database import get_db
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
-from security import verify_password
+from security import check_parent_password, verify_password
 
 bp = Blueprint("auth", __name__)
+
+
+def _too_many(seconds):
+    flash(f"Слишком много неудачных попыток. Подожди {ratelimit.wait_text(seconds)} и попробуй снова 🕐", "error")
+    return redirect(url_for("auth.index"))
 
 
 @bp.route("/")
@@ -22,11 +30,19 @@ def login_student():
     username = (request.form.get("username") or "").strip()
     password = request.form.get("password") or ""
     db = get_db()
+    keys = [("ip", request.remote_addr), ("student", username.lower())]
+    wait = ratelimit.blocked_for(db, keys)
+    if wait:
+        return _too_many(wait)
     student = db.execute("SELECT * FROM students WHERE username=?",
                          (username,)).fetchone()
     if not student or not verify_password(student["password_hash"], password):
+        ratelimit.record_failure(db, keys)
         flash("Такого аккаунта нет или пароль неверный. Попроси родителей проверить в кабинете 👀", "error")
         return redirect(url_for("auth.index"))
+    ratelimit.clear(db, [("student", username.lower())])
+    session.clear()                      # новая сессия при входе
+    session.permanent = True             # ребёнок не вводит пароль при каждом запуске
     session["role"] = "student"
     session["student_id"] = student["id"]
     session["student_name"] = student["display_name"]
@@ -36,10 +52,20 @@ def login_student():
 @bp.route("/login/parent", methods=["POST"])
 def login_parent():
     pwd = request.form.get("password") or ""
+    db = get_db()
+    keys = [("ip", request.remote_addr), ("parent", "*")]
+    wait = ratelimit.blocked_for(db, keys)
+    if wait:
+        return _too_many(wait)
     if not check_parent_password(pwd):
+        ratelimit.record_failure(db, keys)
         flash("Неверный пароль. Подсказка: спроси у родителей 😉", "error")
         return redirect(url_for("auth.index"))
+    ratelimit.clear(db, [("parent", "*")])
+    session.clear()
+    session.permanent = True
     session["role"] = "parent"
+    session["parent_until"] = time.time() + config.PARENT_SESSION_HOURS * 3600
     return redirect(url_for("parent.parent_dashboard"))
 
 
