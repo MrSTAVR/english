@@ -1,4 +1,4 @@
-/* Игры со словами: пары на время, мемори, блиц, виселица. Слова приходят с сервера. */
+/* Игры со словами: пары на время, мемори, блиц, «услышь и выбери», бег с препятствиями. Слова приходят с сервера. */
 (function () {
   'use strict';
   var root = document.getElementById('game');
@@ -156,5 +156,96 @@
     ask();
   }
 
-  ({ pairs: pairs, memory: memory, blitz: blitz }[game] || function () {})();
+  /* ---------- 👂 Услышь и выбери ---------- */
+  function listen() {
+    var rounds = shuffle(words).slice(0, 8), pos = 0, score = 0, cur = null;
+    var pics = words.concat(distract).filter(function (w) { return w.pic; });
+    var bar = el('div', 'g-bar'), box = el('div', 'ls-box'), opts = el('div', 'ls-opts');
+    var play = el('button', 'ls-play', '🔊'); play.type = 'button'; play.title = 'Послушать ещё раз';
+    play.onclick = function () { if (cur) say(cur.en); };
+    box.appendChild(play); box.appendChild(el('p', 'ls-hint', 'Что ты услышал?'));
+    root.appendChild(bar); root.appendChild(box); root.appendChild(opts);
+
+    function ask() {
+      if (pos >= rounds.length) {
+        var st = score >= rounds.length - 1 ? 3 : score >= Math.ceil(rounds.length * 0.6) ? 2 : score >= 1 ? 1 : 0;
+        end(st, 'Угадано: ' + score + ' из ' + rounds.length + '.'); return;
+      }
+      cur = rounds[pos++];
+      bar.innerHTML = '<span>Слово ' + pos + ' из ' + rounds.length + '</span><span>Верно: ' + score + '</span>';
+      var picMode = !!cur.pic && pics.filter(function (w) { return w.pic !== cur.pic && w.key !== cur.key; }).length >= 3;
+      var field = picMode ? 'pic' : 'ru', seen = {}, wrong = [];
+      seen[cur[field]] = 1;
+      shuffle(picMode ? pics : words.concat(distract)).forEach(function (w) {
+        if (wrong.length < 3 && w.key !== cur.key && !seen[w[field]] && (picMode || w.ru.length > 3)) { seen[w[field]] = 1; wrong.push(w); }
+      });
+      opts.innerHTML = ''; opts.className = 'ls-opts' + (picMode ? ' pics' : '');
+      shuffle(wrong.concat([cur])).forEach(function (o) {
+        var b = el('button', picMode ? 'ls-opt pic' : 'rv-opt', esc(o[field])); b.type = 'button';
+        b.onclick = function () {
+          if (b.classList.contains('lock')) return;
+          var ok = o.key === cur.key;
+          [].forEach.call(opts.children, function (x) { x.classList.add('lock'); });
+          b.classList.add(ok ? 'is-right' : 'is-wrong');
+          if (ok) score++;
+          box.querySelector('.ls-hint').innerHTML = (ok ? '✅ ' : '❌ ') + '<b>' + esc(cur.en) + '</b> — ' + esc(cur.ru);
+          if (!ok) { var right = [].filter.call(opts.children, function (x) { return x.textContent === cur[field]; })[0]; if (right) right.classList.add('is-right'); }
+          setTimeout(function () { box.querySelector('.ls-hint').textContent = 'Что ты услышал?'; ask(); }, ok ? 900 : 1600);
+        };
+        opts.appendChild(b);
+      });
+      setTimeout(function () { say(cur.en); }, 250);
+    }
+    ask();
+  }
+
+  /* ---------- 🏃 Бег с препятствиями ---------- */
+  function runner() {
+    var total = Math.min(10, words.length), seq = shuffle(words).slice(0, total), pos = 0, lives = 3, busy = false, anim = null, cur = null;
+    var OBJ = ['🪨', '🌵', '🚧', '🌳', '🪵', '🧱'];
+    var bar = el('div', 'g-bar'), stage = el('div', 'rn-stage'), opts = el('div', 'rv-opts');
+    var hero = el('div', 'rn-hero', '🐥'), obs = el('div', 'rn-obs'), ground = el('div', 'rn-ground');
+    stage.appendChild(el('div', 'rn-cloud', '☁️')); stage.appendChild(hero); stage.appendChild(obs); stage.appendChild(ground);
+    root.appendChild(bar); root.appendChild(stage); root.appendChild(opts);
+
+    function head() { bar.innerHTML = '<span>Препятствие ' + Math.min(pos, total) + ' из ' + total + '</span><span>' + '❤️'.repeat(lives) + '🖤'.repeat(3 - lives) + '</span>'; }
+    function finish() {
+      if (lives <= 0) { end(0, 'Цыплёнок споткнулся. Пройдено препятствий: ' + Math.max(pos - 1, 0) + ' из ' + total + '.'); return; }
+      end(lives, 'Дистанция пройдена! Осталось жизней: ' + lives + '.');
+    }
+    function flash(cls) { hero.classList.remove('jump', 'oops'); void hero.offsetWidth; hero.classList.add(cls); }
+    function resolve(ok) {
+      if (busy) return; busy = true;
+      if (anim) anim.pause();
+      [].forEach.call(opts.children, function (x) { x.classList.add('lock'); });
+      if (ok) { flash('jump'); obs.classList.add('gone'); say(cur.en); } else { lives--; flash('oops'); obs.classList.add('hit'); }
+      head();
+      setTimeout(function () { if (lives <= 0 || pos >= total) finish(); else next(); }, ok ? 800 : 1200);
+    }
+    function next() {
+      busy = false; cur = seq[pos++]; head();
+      var wrong = shuffle(words.concat(distract).filter(function (w) { return w.key !== cur.key && w.ru !== cur.ru; })).slice(0, 2);
+      obs.className = 'rn-obs';
+      obs.innerHTML = '<div class="rn-sign">' + (cur.pic ? esc(cur.pic) + ' ' : '') + esc(cur.en) + '</div><div class="rn-obj">' + OBJ[Math.floor(Math.random() * OBJ.length)] + '</div>';
+      opts.innerHTML = '';
+      shuffle(wrong.concat([cur])).forEach(function (o) {
+        var b = el('button', 'rv-opt', esc(o.ru)); b.type = 'button';
+        b.onclick = function () {
+          if (busy) return;
+          var ok = o.key === cur.key;
+          b.classList.add(ok ? 'is-right' : 'is-wrong');
+          if (!ok) { var r = [].filter.call(opts.children, function (x) { return x.textContent === cur.ru; })[0]; if (r) r.classList.add('is-right'); }
+          resolve(ok);
+        };
+        opts.appendChild(b);
+      });
+      say(cur.en);
+      var W = stage.clientWidth, hx = hero.offsetLeft + hero.offsetWidth - 6, dur = Math.max(4500, 8500 - pos * 400);
+      anim = obs.animate([{ transform: 'translateX(' + W + 'px)' }, { transform: 'translateX(' + hx + 'px)' }], { duration: dur, easing: 'linear', fill: 'forwards' });
+      anim.onfinish = function () { if (!busy) resolve(false); };
+    }
+    next();
+  }
+
+  ({ pairs: pairs, memory: memory, blitz: blitz, listen: listen, runner: runner }[game] || function () {})();
 })();

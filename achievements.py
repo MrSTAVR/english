@@ -71,7 +71,7 @@ ACHIEVEMENTS = [
     _m("game_1", "🎮", "Первая игра", "Сыграна первая игра со словами.", "bronze", "games", "games_played", 1),
     _m("game_10", "🕹️", "Игроман", "Десять сыгранных игр.", "silver", "games", "games_played", 10),
     _m("game_50", "🎲", "Король игр", "Пятьдесят сыгранных игр!", "gold", "games", "games_played", 50),
-    _m("game_p4", "🏆", "Чемпион игр", "Три звезды во всех трёх играх.", "legend", "games", "games_perfect", 3),
+    _m("game_p4", "🏆", "Чемпион игр", "Три звезды во всех пяти играх.", "legend", "games", "games_perfect", 5),
     _m("dialog_1", "💬", "Первый разговор", "Пройден первый диалог.", "bronze", "games", "dialogs_done", 1),
     _m("dialog_8", "🗨️", "Собеседница", "Пройдено 8 диалогов.", "silver", "games", "dialogs_done", 8),
     _m("dialog_15", "🎤", "Мастер общения", "Пройдены все диалоги!", "gold", "games", "dialogs_done", len(DIALOGS)),

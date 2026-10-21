@@ -28,9 +28,9 @@ def test_game_pages_open_after_lessons(parent, make_student):
     c = make_student()
     _credit(parent)
     hub = c.get("/student/games").get_data(as_text=True)
-    for title in ("Найди пару", "Мемори", "Блиц", "Диалоги"):
+    for title in ("Найди пару", "Мемори", "Блиц", "Услышь", "Бег", "Диалоги"):
         assert title in hub
-    for g in ("pairs", "memory", "blitz"):
+    for g in ("pairs", "memory", "blitz", "listen", "runner"):
         html = c.get(f"/student/games/play/{g}").get_data(as_text=True)
         assert 'id="game"' in html and "games.js" in html and "data-words" in html
     assert c.get("/student/games/play/nope").status_code == 404
@@ -57,7 +57,7 @@ def test_game_api_and_achievements(make_student):
 def test_four_perfect_games_give_champion(make_student):
     c = make_student()
     last = None
-    for g in ("pairs", "memory", "blitz"):
+    for g in ("pairs", "memory", "blitz", "listen", "runner"):
         last = c.post("/api/game", json={"game": g, "stars": 3}).get_json()
     assert any(a["key"] == "game_p4" for a in last["newAchievements"])
 
