@@ -20,6 +20,22 @@ from routes.common import get_student_or_none, require_role
 bp = Blueprint("student", __name__)
 
 
+@bp.route("/student/theory")
+def theory_page():
+    """Теория из всех пройденных (и зачтённых) уроков."""
+    err = require_role("student")
+    if err:
+        return err
+    db = get_db()
+    student = get_student_or_none(db)
+    if not student:
+        session.clear()
+        return redirect(url_for("auth.index"))
+    stats = compute_stats(db, student["id"])
+    lessons = [l for l in ALL_LESSONS if l["id"] in stats["completed_ids"] and l.get("theory")]
+    return render_template("theory.html", mascot=build_mascot_ctx(), lessons=lessons)
+
+
 @bp.route("/student/words")
 def words_page():
     """Словарь ученика: все слова из пройденных (и зачтённых) уроков."""

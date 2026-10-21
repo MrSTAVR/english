@@ -25,7 +25,7 @@
     <span class="pill pill-soft">{{ earned_count }}/{{ achievements|length }} 🏅 наград</span>
   </div>
   <div class="stats-grid">
-    <div class="stat stat-c1"><span class="stat-icon">📚</span><span class="stat-num">{{ stats.lessons_completed }}/{{ total_lessons }}</span><span class="stat-label">уроков пройдено</span></div>
+    <a class="stat stat-c1 stat-link" href="{{ url_for('student.theory_page') }}" title="Открыть теорию"><span class="stat-icon">📚</span><span class="stat-num">{{ stats.lessons_completed }}/{{ total_lessons }}</span><span class="stat-label">уроков пройдено</span><span class="stat-more">📖 Открыть теорию ›</span></a>
     <div class="stat stat-c2"><span class="stat-icon">⭐</span><span class="stat-num">{% if stats.avg_score %}{{ "%.0f"|format(stats.avg_score) }}%{% else %}—{% endif %}</span><span class="stat-label">средний балл тестов</span></div>
     <a class="stat stat-c3 stat-link" href="{{ url_for('student.words_page') }}" title="Открыть словарь"><span class="stat-icon">🧠</span><span class="stat-num">{{ stats.words_learned }}</span><span class="stat-label">слов выучено</span><span class="stat-more">📖 Открыть словарь ›</span></a>
     <div class="stat stat-c4"><span class="stat-icon">⏰</span><span class="stat-num">{{ stats.total_seconds|human_time }}</span><span class="stat-label">время занятий</span></div>
