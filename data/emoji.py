@@ -22,7 +22,7 @@ wake up ⏰|brush my teeth 🦷|have breakfast 🥣|go to school 🏫|have lunch
 book 📕|notebook 📓|pencil ✏️|ruler 📏|rubber 🧽|teacher 👩‍🏫|classroom 🏫|maths 🧮|english 🇬🇧|art 🎨|music 🎵|pe 🏃
 doctor 👩‍⚕️|cook 👨‍🍳|driver 🚌|farmer 🧑‍🌾|pilot 👨‍✈️|singer 🎤|policeman 👮|artist 🧑‍🎨
 clock 🕐|time ⏰|morning 🌅|afternoon ☀️|evening 🌆
-pound 💷|dollar 💵|shop 🛍️|money 💰|expensive 💎|cheap 🏷️|buy 🛒
+ruble 🪙|rubles 🪙|price 🏷️|shop 🛍️|money 💰|expensive 💎|cheap 🏷️|buy 🛒
 bus 🚌|train 🚆|plane ✈️|boat ⛵|taxi 🚕|map 🗺️|street 🛣️
 menu 📋|waiter 🧑‍🍳|table 🪑|bill 🧾|pizza 🍕|soup 🍲|salad 🥗|burger 🍔|delicious 😋
 please 🙏|thank you 🙏|thanks 🙏|sorry 🙇|good morning 🌅|good night 🌙

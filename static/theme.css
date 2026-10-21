@@ -645,3 +645,9 @@ html[data-theme="dark"] .rn-stage { background: linear-gradient(#27306b 0 62%, #
 .st-quiz { margin-top: 12px; }
 .st-q { margin: 6px 0 10px; font-size: 1.05rem; }
 .st-coins { font-weight: 900; color: #b8860b; margin: 8px 0; }
+
+.theory-tip { margin: 14px 0 18px; }
+
+/* Теория: отступ между советом и кнопкой, чтобы не слипались */
+.step .theory-tip { margin: 14px 0 18px; }
+.step .theory-tip + .btn, .step .theory-block + .btn { margin-top: 14px; }

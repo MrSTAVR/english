@@ -16,7 +16,7 @@
 <section class="card step" id="step-theory">
   <h2>Шаг 1 — Теория 📖</h2>
   {% if lesson.theory %}
-    <p class="theory-intro">{{ lesson.theory.intro }}</p>
+    <p class="theory-intro">{{ lesson.theory.intro | safe }}</p>
     {% for b in lesson.theory.blocks %}
       <div class="theory-block card-inner">
         <h3>{{ b.title }}</h3>
