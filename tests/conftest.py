@@ -19,7 +19,7 @@ def flask_app(tmp_path, monkeypatch):
     """Приложение со свежей пустой БД на каждый тест."""
     monkeypatch.setattr(database, "DB_PATH", str(tmp_path / "test.db"))
     database.init_db()
-    appmod.app.config.update(TESTING=True)
+    appmod.app.config.update(TESTING=True, CSRF_ENABLED=False)
     return appmod.app
 
 

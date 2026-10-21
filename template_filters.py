@@ -23,7 +23,7 @@ def human_time(seconds):
 def shuffle_words(words):
     """Перемешиваем слова в задании 'собери предложение' (стабильно для одной страницы)."""
     w = list(words)
-    rng = random.Random(hash(tuple(w)))  # одно и то же перемешивание при повторном рендере
+    rng = random.Random("|".join(w))  # одно и то же перемешивание при повторном рендере
     rng.shuffle(w)
     if w == list(words):                # чтобы не было соблазна читать по порядку
         w.reverse()

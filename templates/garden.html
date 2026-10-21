@@ -127,6 +127,7 @@
         <div class="shop-price"><svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ d.cost }}</div>
         {% if garden.coins >= d.cost and not garden.broken and garden.streak_days > 0 and active|length < max_slots %}
           <form method="post" action="{{ url_for('garden.garden_buy') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="deco_key" value="{{ d.key }}">
             <button class="btn btn-primary btn-small" type="submit">Купить 🎁</button>
           </form>
@@ -154,6 +155,7 @@
         <span class="worn-name">{{ d.name }}</span>
         <span class="worn-cat">{{ cat_names[d.category] }}</span>
         <form method="post" action="{{ url_for('garden.garden_remove', slot=slot) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-small btn-danger" type="submit">Снять (вернётся <svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ d.cost // 2 }})</button>
         </form>
       </div>

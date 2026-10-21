@@ -8,6 +8,7 @@
     с правильными ответами, прогресс и достижения.
 """
 
+from csrf import init_csrf
 import os
 import sys
 
@@ -75,6 +76,7 @@ def inject_mascot():
     return {"mascot": build_mascot_ctx()}
 
 
+init_csrf(app)
 register_blueprints(app)
 
 

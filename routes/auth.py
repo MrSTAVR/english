@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Вход, выход и главная страница."""
 
-from config import PARENT_PASSWORD
+from security import check_parent_password
 from database import get_db
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from security import verify_password
@@ -36,7 +36,7 @@ def login_student():
 @bp.route("/login/parent", methods=["POST"])
 def login_parent():
     pwd = request.form.get("password") or ""
-    if pwd != PARENT_PASSWORD:
+    if not check_parent_password(pwd):
         flash("Неверный пароль. Подсказка: спроси у родителей 😉", "error")
         return redirect(url_for("auth.index"))
     session["role"] = "parent"

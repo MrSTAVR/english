@@ -55,7 +55,7 @@ def student_home():
     new_badge = session.pop("new_achievements", None)
     mascot = build_mascot_ctx()
     mascot["alreadyStarted"] = bool(stats["attempts"])
-    mascot["allDone"] = len(stats["completed_ids"]) == len(LESSONS)
+    mascot["allDone"] = stats["lessons_completed"] >= len(LESSONS)
     # Следующий непройденный доступный урок (для крупной кнопки «Продолжить»)
     next_lesson = None
     for l in LESSONS:

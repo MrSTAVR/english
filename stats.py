@@ -23,8 +23,8 @@ def compute_stats(db, student_id=None):
 
     best_by_lesson = {}   # лучший результат по каждому уроку
     max_streak = 0
-    best_clean_run = 0
-    current_clean_run = 0
+    clean_run = 0        # текущая серия идеальных тестов подряд
+    best_clean_run = 0   # лучшая серия
     has_perfect = False
     perfect_count = 0
     first_try_perfect = False
@@ -58,12 +58,12 @@ def compute_stats(db, student_id=None):
                 perfect_count += 1
                 if attempts_by_lesson[lid] == 1:
                     first_try_perfect = True
-                best_clean_run += 1
-                current_clean_run = max(current_clean_run, best_clean_run)
+                clean_run += 1
+                best_clean_run = max(best_clean_run, clean_run)
             else:
-                best_clean_run = 0
+                clean_run = 0
         else:
-            best_clean_run = 0
+            clean_run = 0
 
         try:
             total_mistakes += len(json.loads(r["mistakes_json"] or "[]"))
@@ -71,19 +71,21 @@ def compute_stats(db, student_id=None):
             pass
 
     completed_ids = sorted(best_by_lesson.keys())
+    main_ids = [i for i in completed_ids if not LESSONS_BY_ID[i].get("is_extra")]
     words_learned = sum(len(LESSONS_BY_ID[i]["material"]) for i in completed_ids)
 
     return {
         "attempts": rows,
         "best_by_lesson": best_by_lesson,
-        "lessons_completed": len(completed_ids),
+        "lessons_completed": len(main_ids),          # только основной курс
+        "extras_completed": len(completed_ids) - len(main_ids),
         "completed_ids": set(completed_ids),
         "avg_score": (sum(r["score_percent"] for r in best_by_lesson.values()) / len(best_by_lesson))
                      if best_by_lesson else 0.0,
         "total_seconds": total_seconds,
         "total_minutes": round(total_seconds / 60),
         "max_streak": max_streak,
-        "best_clean_run": current_clean_run,
+        "best_clean_run": best_clean_run,
         "has_perfect": has_perfect,
         "perfect_count": perfect_count,
         "first_try_perfect": first_try_perfect,
