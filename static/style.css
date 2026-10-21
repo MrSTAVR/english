@@ -794,3 +794,6 @@ button, input, select, textarea { font-family: inherit; }
 .th-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 .th-lesson > summary { cursor: pointer; font-size: 1.15rem; font-weight: 800; color: var(--primary-dark); padding: 4px 0; }
 .th-lesson[open] > summary { margin-bottom: 10px; }
+
+.offline-bar{position:fixed;left:0;right:0;bottom:0;z-index:9999;padding:10px 16px;text-align:center;background:#fff3cd;color:#664d03;font-weight:700;box-shadow:0 -2px 8px rgba(0,0,0,.15)}
+.vacation-note{background:#e8f6ff;border-radius:12px;padding:8px 12px}

@@ -7,6 +7,31 @@
     });
   }
 
+  // Выход из аккаунта: забываем сохранённые страницы
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest('a[href="/logout"]');
+    if (a && navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: "clear-pages" });
+    }
+  });
+
+  // Плашка «нет сети»: играть можно, но результаты не сохранятся
+  var bar = null;
+  function netState() {
+    if (!navigator.onLine) {
+      if (!bar) {
+        bar = document.createElement("div");
+        bar.className = "offline-bar";
+        bar.setAttribute("role", "status");
+        bar.textContent = "📴 Нет интернета — можно заниматься, но результаты и монетки не сохранятся.";
+        document.body.appendChild(bar);
+      }
+    } else if (bar) { bar.remove(); bar = null; }
+  }
+  window.addEventListener("online", netState);
+  window.addEventListener("offline", netState);
+  document.addEventListener("DOMContentLoaded", netState);
+
   var box = document.getElementById("install-box");
   if (!box) return;
   var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;

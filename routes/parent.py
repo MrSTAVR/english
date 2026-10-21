@@ -69,7 +69,7 @@ def delete_student(sid):
     db.execute("DELETE FROM achievements WHERE student_id=?", (sid,))
     db.execute("DELETE FROM decorations WHERE student_id=?", (sid,))
     db.execute("DELETE FROM garden WHERE student_id=?", (sid,))
-    for table in ("wardrobe_items", "wardrobe_wear", "story_done", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal"):
+    for table in ("wardrobe_items", "wardrobe_wear", "story_done", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal", "vacations"):
         db.execute(f"DELETE FROM {table} WHERE student_id=?", (sid,))
     db.execute("DELETE FROM students WHERE id=?", (sid,))
     db.commit()
@@ -186,6 +186,38 @@ def credit_student_lessons(sid):
     return back
 
 
+@bp.route("/parent/students/<int:sid>/vacation", methods=["POST"])
+def parent_vacation(sid):
+    """Каникулы: в эти дни серия не сгорает. action=add (с датами) или cancel."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    if not db.execute("SELECT 1 FROM students WHERE id=?", (sid,)).fetchone():
+        abort(404)
+    today = datetime.now().date()
+    if request.form.get("action") == "cancel":
+        db.execute("DELETE FROM vacations WHERE student_id=? AND end_day>=?",
+                   (sid, today.isoformat()))
+        db.commit()
+        flash("Каникулы отменены.", "ok")
+        return redirect(url_for("parent.parent_dashboard") + "#students")
+    try:
+        d1 = datetime.strptime(request.form.get("start_day", ""), "%Y-%m-%d").date()
+        d2 = datetime.strptime(request.form.get("end_day", ""), "%Y-%m-%d").date()
+    except ValueError:
+        flash("Укажите даты начала и конца каникул.", "error")
+        return redirect(url_for("parent.parent_dashboard") + "#students")
+    if d2 < d1 or (d2 - d1).days > 60 or d2 < today:
+        flash("Даты некорректны: конец не раньше начала, не дольше 60 дней, не в прошлом.", "error")
+        return redirect(url_for("parent.parent_dashboard") + "#students")
+    db.execute("INSERT INTO vacations (student_id, start_day, end_day) VALUES (?,?,?)",
+               (sid, d1.isoformat(), d2.isoformat()))
+    db.commit()
+    flash("Каникулы сохранены: серия в эти дни не сгорит. 🏖", "ok")
+    return redirect(url_for("parent.parent_dashboard") + "#students")
+
+
 @bp.route("/parent")
 def parent_dashboard():
     err = require_role("parent")
@@ -202,7 +234,10 @@ def parent_dashboard():
         earned = {r["key"] for r in db.execute(
             "SELECT key FROM achievements WHERE student_id=?", (st["id"],)).fetchall()}
         sgarden = get_garden(db, st["id"])
-        student_cards.append({"student": st, "stats": sstats,
+        vac = db.execute("SELECT * FROM vacations WHERE student_id=? AND end_day>=? "
+                         "ORDER BY start_day LIMIT 1",
+                         (st["id"], datetime.now().date().isoformat())).fetchone()
+        student_cards.append({"student": st, "stats": sstats, "vacation": vac,
                               "earned_count": len(earned),
                               "garden": sgarden,
                               "tree_stage": tree_stage(sgarden["streak_days"]),

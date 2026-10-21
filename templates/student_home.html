@@ -36,6 +36,7 @@
   </div>
 </section>
 
+{% if on_vacation %}<p class="hint vacation-note">🏖 У тебя каникулы — серия дней не сгорит. Можно отдыхать или заниматься, как хочется!</p>{% endif %}
 <!-- Сад: короткий тизер -->
 <a class="garden-teaser glass" href="{{ url_for('garden.garden_page') }}">
   <span class="gt-tree">{{ garden.streak_days | tree_mini }}</span>

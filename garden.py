@@ -111,8 +111,44 @@ def cap_streak(days):
     return max(0, min(int(days), STREAK_CAP))
 
 
+def vacation_days(db, student_id):
+    """Множество дат (date) каникул ученика: эти дни не считаются пропуском."""
+    from datetime import timedelta
+    out = set()
+    for r in db.execute("SELECT start_day, end_day FROM vacations WHERE student_id=?",
+                        (student_id,)).fetchall():
+        try:
+            d = datetime.strptime(r["start_day"], "%Y-%m-%d").date()
+            e = datetime.strptime(r["end_day"], "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            continue
+        n = 0
+        while d <= e and n < 400:
+            out.add(d)
+            d += timedelta(days=1)
+            n += 1
+    return out
+
+
+def on_vacation(db, student_id, day=None):
+    """Сегодня (или указанный день) у ученика каникулы?"""
+    return (day or datetime.now().date()) in vacation_days(db, student_id)
+
+
+def missed_days(last, today, vac):
+    """Сколько дней между last и today (не включая) пропущено — каникулы не в счёт."""
+    from datetime import timedelta
+    n, d = 0, last + timedelta(days=1)
+    while d < today:
+        if d not in vac:
+            n += 1
+        d += timedelta(days=1)
+    return n
+
+
 def compute_streak_from_history(db, student_id):
-    """Реальная серия дней по датам попыток (для синхронизации после ручных правок)."""
+    """Реальная серия дней по датам попыток (для синхронизации после ручных правок).
+    Дни каникул серию не прерывают и в неё не засчитываются."""
     from datetime import timedelta
     rows = db.execute(
         "SELECT DISTINCT substr(started_at, 1, 10) AS d FROM attempts "
@@ -120,12 +156,16 @@ def compute_streak_from_history(db, student_id):
     days = sorted({r["d"] for r in rows if r["d"]}, reverse=True)
     if not days:
         return 0, None
+    vac = vacation_days(db, student_id)
     today = datetime.now().date()
     last = datetime.strptime(days[0], "%Y-%m-%d").date()
-    if (today - last).days > 1:      # последний заход был позавчера или раньше
+    if missed_days(last, today, vac) > 0:   # был пропущен хотя бы один обычный день
         return 0, days[0]
+    studied = {datetime.strptime(d, "%Y-%m-%d").date() for d in days}
     streak, expected = 1, last - timedelta(days=1)
     for d in days[1:]:
+        while expected in vac and expected not in studied:
+            expected -= timedelta(days=1)
         if datetime.strptime(d, "%Y-%m-%d").date() == expected:
             streak += 1
             expected -= timedelta(days=1)
@@ -194,9 +234,9 @@ def touch_streak(db, student_id):
         return g
     from datetime import timedelta
     if last:
-        delta = (datetime.now().date() -
-                 datetime.strptime(last, "%Y-%m-%d").date()).days
-        streak = g["streak_days"] + 1 if delta == 1 else 1
+        missed = missed_days(datetime.strptime(last, "%Y-%m-%d").date(),
+                             datetime.now().date(), vacation_days(db, student_id))
+        streak = g["streak_days"] + 1 if missed == 0 else 1
     else:
         # истории занятий ещё нет (или сад правили вручную) — просто фиксируем день
         streak = max(int(g["streak_days"]), 1)

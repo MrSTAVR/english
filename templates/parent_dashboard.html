@@ -38,6 +38,20 @@
               <input type="number" name="coins" min="0" max="9999" placeholder="монеты" title="Количество монеток">
               <button class="btn btn-small" type="submit">💾 Обновить сад</button>
             </form>
+            {% if card.vacation %}
+            <form method="post" action="{{ url_for('parent.parent_vacation', sid=st.id) }}" class="inline-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <span class="pill pill-soft">🏖 каникулы {{ card.vacation.start_day }} — {{ card.vacation.end_day }}</span>
+              <button class="btn btn-small" type="submit" name="action" value="cancel">Отменить</button>
+            </form>
+            {% else %}
+            <form method="post" action="{{ url_for('parent.parent_vacation', sid=st.id) }}" class="inline-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label>🏖 Каникулы с <input type="date" name="start_day" required></label>
+              <label>по <input type="date" name="end_day" required></label>
+              <button class="btn btn-small" type="submit" name="action" value="add" title="Серия дней в эти дни не сгорит">Назначить</button>
+            </form>
+            {% endif %}
           </td>
           <td class="actions-cell">
             <form method="post" action="{{ url_for('parent.reset_student_password', sid=st.id) }}" class="inline-form">

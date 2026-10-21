@@ -14,7 +14,7 @@ from data.extra_lessons import EXTRA_LESSONS
 from database import get_db
 from datetime import datetime
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
-from garden import award_coins, get_garden, refresh_garden, touch_streak, tree_count_for, tree_stage
+from garden import award_coins, get_garden, on_vacation, refresh_garden, touch_streak, tree_count_for, tree_stage
 from grading import grade_question
 from mascot import build_mascot_ctx
 from review import counts as review_counts, learned_pool, state as review_state, word_of_day
@@ -147,6 +147,7 @@ def student_home():
                            next_lesson=next_lesson,
                            earned_count=earned_count,
                            garden=garden,
+                           on_vacation=on_vacation(db, student["id"]),
                            tree_stage=tree_stage(garden["streak_days"]),
                            tree_count=tree_count_for(garden["streak_days"]))
 
