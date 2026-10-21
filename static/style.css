@@ -712,3 +712,42 @@ h2 { color: var(--primary-dark); font-weight: 800; }
 .shop-thumb { border-radius: 12px; overflow: hidden; line-height: 0; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, .12); }
 .gt-tree { width: 46px; height: 46px; flex: none; }
 .gt-svg { width: 100%; height: 100%; display: block; }
+
+
+/* ============================================================
+   📱 Мобильное приложение (PWA): безопасные зоны, касания, баннер установки
+   ============================================================ */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+a, button, label, summary, input[type="submit"] { touch-action: manipulation; }
+
+/* вырезы экрана (iPhone) и жестовая полоса: отступы только там, где они есть */
+.topbar { padding-top: calc(12px + env(safe-area-inset-top));
+          padding-left: max(24px, env(safe-area-inset-left));
+          padding-right: max(24px, env(safe-area-inset-right)); }
+.footer { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+.mascot, .mascot-reopen { right: max(18px, env(safe-area-inset-right));
+                          bottom: calc(14px + env(safe-area-inset-bottom)); }
+
+.install-box { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin: 10px 16px 0; padding: 10px 14px; border-radius: 16px;
+  background: #fff8dc; border: 2px solid #ffd54f; font-weight: 700; color: var(--ink); }
+.install-box[hidden], .install-btn[hidden] { display: none; }
+.install-text { flex: 1 1 200px; }
+.install-btn { border: 0; border-radius: 12px; padding: 10px 16px; font: inherit; font-weight: 800;
+  color: #fff; background: var(--primary); cursor: pointer; }
+.install-close { border: 0; background: none; font-size: 1.1rem; color: var(--muted); cursor: pointer;
+  padding: 6px 8px; }
+
+@media (max-width: 520px) {
+  .topbar { flex-wrap: wrap; gap: 6px 0; padding-left: max(14px, env(safe-area-inset-left));
+            padding-right: max(14px, env(safe-area-inset-right)); }
+  .logo { font-size: 1.2rem; }
+  .topbar nav { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .topbar nav a { margin-left: 0; }
+}
+
+/* когда запущено как установленное приложение */
+@media (display-mode: standalone) {
+  .install-box { display: none; }
+}

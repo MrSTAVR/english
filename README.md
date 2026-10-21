@@ -78,7 +78,8 @@ garden.py           сад: серия, монеты, магазин, данны
 garden_scene.py     SVG-сцена сада: дерево, 30 находок, украшения
 template_filters.py фильтры Jinja и перемешивание заданий
 mascot.py           контекст для помощника Чик-чик
-routes/             маршруты: auth, student, garden, parent, system (+ common)
+routes/             маршруты: auth, student, garden, parent, system, pwa (+ common)
+tools/              разовые скрипты: иконки и шрифты для PWA
 data/               lessons.py (основной курс), extra_lessons.py (дополнительные)
 templates/, static/ HTML, CSS, JS (mascot.js, tts.js)
 tests/              pytest-тесты
@@ -112,6 +113,17 @@ gunicorn -c gunicorn.conf.py wsgi:app      # Linux; на Windows: python serve.p
 В режиме `production` приложение **не запустится**, если пароль родителя простой или не задан.
 Перед ним ставится прокси с HTTPS (Caddy/nginx). Проверка работоспособности: `/healthz`.
 Резервная копия: `python backup_db.py` (безопасна при работающем приложении).
+
+## Мобильное приложение (PWA)
+
+Сайт устанавливается на телефон как приложение: своя иконка, запуск без адресной строки, офлайн-страница при обрыве сети.
+Нужен HTTPS (на сервере он есть).
+- **Android (Chrome):** на сайте появится кнопка «📲 Установить» (или меню ⋮ → «Установить приложение»).
+- **iPhone (Safari):** «Поделиться» ⬆️ → «На экран Домой».
+
+Шрифт Nunito хранится в проекте: один раз выполните `python tools/fetch_fonts.py`.
+Иконки рисует `python tools/make_icons.py` (нужен `pip install pillow`).
+Service worker (`/sw.js`) кэширует только статику; страницы и формы всегда идут через сервер.
 
 ## Безопасность
 

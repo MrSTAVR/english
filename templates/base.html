@@ -2,12 +2,18 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>{% block title %}Английский для дочки 🇬🇧{% endblock %}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=10">
+<meta name="theme-color" content="#7c5cff">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/favicon-32.png') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="English Fun">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="stylesheet" href="{{ url_for('static', filename='fonts.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=11">
 </head>
 <body>
 {# SVG-спрайт: надёжные иконки (emoji 🪙 на Windows не отображается) #}
@@ -35,6 +41,11 @@
     {% endif %}
   </nav>
 </header>
+<div id="install-box" class="install-box" hidden>
+  <span class="install-text"></span>
+  <button type="button" class="install-btn" hidden>📲 Установить</button>
+  <button type="button" class="install-close" aria-label="Скрыть">✕</button>
+</div>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% for cat, msg in messages %}
@@ -48,10 +59,12 @@
 
 <footer class="footer">Сделано с ❤️ для изучения английского</footer>
 
+
 {# ---------- Анимированный помощник Чик-чик (правый нижний угол) ---------- #}
 <script>window.MASCOT_SETTINGS = {{ mascot|tojson }};</script>
 <script src="{{ url_for('static', filename='mascot.js') }}?v=6"></script>
 <script src="{{ url_for('static', filename='tts.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='pwa.js') }}?v=1"></script>
 
 {% block scripts %}{% endblock %}
 </body>
