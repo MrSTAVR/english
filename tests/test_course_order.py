@@ -124,3 +124,35 @@ def test_score_between_60_and_70_passes_only_on_soft_lessons(make_student):
     n2 = len(LESSONS_BY_ID[9]["test"])
     html = _partial(c, 9, -(-n2 * 62 // 100))                     # обычный урок: 62% — мало
     assert "Нужно минимум 70%" in html
+
+
+def test_new_topic_lessons_are_placed_sensibly():
+    from data.course import ORDER
+    pos = {lid: i for i, lid in enumerate(ORDER)}
+    assert all(i in pos for i in range(45, 52))
+    assert ORDER[-1] == 32                                  # финал остаётся последним
+    assert pos[16] < pos[45]                                # вежливость — после простых команд
+    assert pos[19] < pos[51] and pos[45] < pos[51]          # кафе — после еды и вежливых слов
+    assert pos[24] < pos[48]                                # время — после «Моего дня»
+    assert pos[26] < pos[49] and pos[38] < pos[49]          # покупки — после одежды и чисел до 100
+    assert pos[28] < pos[50]                                # город — после дома
+
+
+def test_new_topic_lessons_have_dialogs():
+    from curriculum import LESSONS_BY_ID
+    for lid in range(45, 52):
+        assert LESSONS_BY_ID[lid]["dialogs"], lid
+
+
+def test_new_topic_lessons_can_be_passed(parent, make_student):
+    import re
+    from tests.helpers import db_scalar, submit_lesson
+    c = make_student()
+    sid = db_scalar("SELECT id FROM students WHERE username='masha'")
+    parent.post(f"/parent/students/{sid}/credit", data={"upto": "10", "action": "add"})
+    from curriculum import LESSONS_BY_ID
+    for lid in range(45, 52):
+        num = LESSONS_BY_ID[lid]["num"]
+        parent.post(f"/parent/students/{sid}/credit", data={"upto": str(num - 1), "action": "add"})
+        html = submit_lesson(c, lid)
+        assert db_scalar("SELECT passed FROM attempts WHERE lesson_id=? AND manual=0", (lid,)) == 1, (lid, re.sub("<[^>]+>", " ", html)[:300])

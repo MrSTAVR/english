@@ -19,6 +19,13 @@ station 🚉|garage 🛠️|café ☕|theatre 🎭|baker's 🥖|hospital 🏥|gr
 big 🐘|small 🐜|long 📏|short 🤏|hot 🔥|cold 🥶|fast 🐆|slow 🐢|happy 😊|sad 😢|new ✨
 hello 👋|hi 👋|goodbye 👋|bye 👋|weekend 🎉|jump 🦘|listen 👂|look 👀|read 📖|stand up 🧍|sit down 🪑
 wake up ⏰|brush my teeth 🦷|have breakfast 🥣|go to school 🏫|have lunch 🥪|play with friends 🧑‍🤝‍🧑|do homework ✏️|have dinner 🍽️|read a book 📖|go to bed 😴
+book 📕|notebook 📓|pencil ✏️|ruler 📏|rubber 🧽|teacher 👩‍🏫|classroom 🏫|maths 🧮|english 🇬🇧|art 🎨|music 🎵|pe 🏃
+doctor 👩‍⚕️|cook 👨‍🍳|driver 🚌|farmer 🧑‍🌾|pilot 👨‍✈️|singer 🎤|policeman 👮|artist 🧑‍🎨
+clock 🕐|time ⏰|morning 🌅|afternoon ☀️|evening 🌆
+pound 💷|dollar 💵|shop 🛍️|money 💰|expensive 💎|cheap 🏷️|buy 🛒
+bus 🚌|train 🚆|plane ✈️|boat ⛵|taxi 🚕|map 🗺️|street 🛣️
+menu 📋|waiter 🧑‍🍳|table 🪑|bill 🧾|pizza 🍕|soup 🍲|salad 🥗|burger 🍔|delicious 😋
+please 🙏|thank you 🙏|thanks 🙏|sorry 🙇|good morning 🌅|good night 🌙
 """
 
 EMOJI = {}
