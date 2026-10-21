@@ -27,6 +27,15 @@ add_review_questions(LESSONS)
 LESSONS_BY_ID = {l["id"]: l for l in ALL_LESSONS}
 
 
+SOFT_PASS_IDS = set(range(1, 9)) | {33, 34, 35}     # фонетика и алфавит — самые сухие уроки
+
+
+def pass_mark(lesson):
+    """Проходной балл: на «сухих» первых темах мягче (60%), дальше — стандартные 70%."""
+    from config import PASS_MARK, PASS_MARK_SOFT
+    return PASS_MARK_SOFT if lesson["id"] in SOFT_PASS_IDS else PASS_MARK
+
+
 def validate_lessons():
     """Проверка целостности банка уроков: индексы ответов, полнота слов для 'order'."""
     errors = []

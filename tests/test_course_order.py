@@ -45,7 +45,7 @@ def test_progress_is_not_lost_when_new_lessons_are_inserted():
 
 def test_credit_upto_uses_course_order():
     assert lesson_ids_upto(3) == {l["id"] for l in LESSONS[:3]}
-    assert 33 in lesson_ids_upto(2)
+    assert 33 in lesson_ids_upto(3) and 33 not in lesson_ids_upto(2)
 
 
 def test_all_new_lesson_pages_render_and_pass(parent, make_student):
@@ -66,3 +66,56 @@ def test_letters_lessons_use_letter_listening():
         for q in listen:
             if q["type"] == "choice":
                 assert q["options"][q["answer"]] == q["audio"]
+
+
+def test_no_long_runs_of_same_kind():
+    phonetics = {1, 2, 3, 4, 5, 6, 7, 8, 33, 34, 35}
+    numbers = {10, 11, 38}
+    for group in (phonetics, numbers):
+        run = 0
+        for l in LESSONS:
+            run = run + 1 if l["id"] in group else 0
+            assert run <= 1 if group is numbers else run <= 2, (l["num"], l["title"])
+
+
+def test_grammar_comes_after_its_vocabulary():
+    pos = {l["id"]: l["num"] for l in LESSONS}
+    assert pos[14] < pos[15] < pos[39]          # to be → вопросы
+    assert pos[17] < pos[18]                    # животные → can
+    assert pos[19] < pos[20]                    # еда → I like
+    assert pos[22] < pos[23] < pos[24]          # Present Simple
+    assert pos[25] < pos[31]                    # Present Continuous
+    assert pos[27] < pos[28]                    # предлоги → дом
+    assert pos[10] < pos[11] and pos[17] < pos[5]   # числа 1–10 → 11–20; животные → окончание -s
+    assert LESSONS[-1]["id"] == 32               # финал — последний
+
+
+def test_soft_pass_mark_for_dry_lessons(make_student):
+    from curriculum import pass_mark
+    assert pass_mark(LESSONS_BY_ID[1]) == 60 and pass_mark(LESSONS_BY_ID[33]) == 60
+    assert pass_mark(LESSONS_BY_ID[14]) == 70 and pass_mark(LESSONS_BY_ID[10001]) == 70
+    c = make_student()
+    html = c.get("/lesson/1").get_data(as_text=True)
+    assert "минимум 60%" in html
+
+
+def _partial(client, lid, n_right):
+    """Сдаёт тест, где верны только первые n_right ответов; возвращает html результата."""
+    from tests.helpers import attempt_id_from, correct_fields, wrong_fields
+    html = client.get(f"/lesson/{lid}").get_data(as_text=True)
+    form = {"attempt_id": attempt_id_from(html), "seconds": 600}
+    for i, q in enumerate(LESSONS_BY_ID[lid]["test"]):
+        form.update((correct_fields if i < n_right else wrong_fields)(q, i))
+    return client.post(f"/lesson/{lid}/submit", data=form).get_data(as_text=True)
+
+
+def test_score_between_60_and_70_passes_only_on_soft_lessons(make_student):
+    c = make_student()
+    n = len(LESSONS_BY_ID[1]["test"])
+    right = -(-n * 62 // 100)                      # ≈62%
+    assert 60 <= 100 * right / n < 70
+    assert "Нужно минимум" not in _partial(c, 1, right)          # урок 1: порог 60% — сдан
+    assert db_scalar("SELECT passed FROM attempts ORDER BY id DESC LIMIT 1") == 1
+    n2 = len(LESSONS_BY_ID[9]["test"])
+    html = _partial(c, 9, -(-n2 * 62 // 100))                     # обычный урок: 62% — мало
+    assert "Нужно минимум 70%" in html

@@ -7,7 +7,7 @@ from achievements import (ACHIEVEMENTS, BY_KEY, CATEGORIES, public, tier_counts,
                           update_achievements, views as achievement_views)
 import config
 from config import PASS_MARK
-from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID, unlocked_lesson_ids
+from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID, pass_mark, unlocked_lesson_ids
 from data.extra_lessons import EXTRA_LESSONS
 from database import get_db
 from datetime import datetime
@@ -173,7 +173,7 @@ def lesson_page(lesson_id):
     mascot = build_mascot_ctx()
     mascot["lessonId"] = lesson_id
     mascot["lessonTitle"] = lesson["title"]
-    return render_template("lesson.html", lesson=lesson, speaking=config.SPEAKING,
+    return render_template("lesson.html", lesson=lesson, speaking=config.SPEAKING, need=pass_mark(lesson),
                            attempt_id=cur.lastrowid,
                            started_ts=started.timestamp(),
                            mascot=mascot)
@@ -226,7 +226,8 @@ def submit_test(lesson_id):
 
     total = len(test)
     percent = round(100 * correct / total) if total else 0
-    passed = percent >= PASS_MARK
+    need = pass_mark(lesson)
+    passed = percent >= need
     finished = datetime.now()
     db.execute(
         """UPDATE attempts SET finished_at=?, seconds_spent=?, score_percent=?,
@@ -250,7 +251,7 @@ def submit_test(lesson_id):
     mascot["coinsEarned"] = coins_earned
     mascot["newAchievements"] = [public(a) for a in new_achievements]
     return render_template("result.html", mascot=mascot,
-                           lesson=lesson, percent=percent, passed=passed,
+                           lesson=lesson, percent=percent, passed=passed, need=need,
                            correct=correct, total=total,
                            seconds=seconds, results=results,
                            coins_earned=coins_earned,

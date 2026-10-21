@@ -22,6 +22,7 @@ DB_PATH = os.environ.get("ENGLISH_APP_DB") or os.path.join(BASE_DIR, "english_ap
 
 
 SPEAKING = _env_flag("ENGLISH_SPEAKING", True)   # тренировка произношения с микрофоном
+PASS_MARK_SOFT = 60     # для фонетики и алфавита (самые сухие уроки)
 PASS_MARK = 70          # минимальный процент, чтобы тест считаться сданным
 
 # --- Режим работы ----------------------------------------------------------

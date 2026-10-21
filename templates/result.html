@@ -13,7 +13,7 @@
   <div class="score-ring">{{ percent }}%</div>
   <p>Правильных ответов: <b>{{ correct }}</b> из <b>{{ total }}</b> · Время: <b>{{ seconds|human_time }}</b></p>
   {% if not passed %}
-    <p class="hint-text">Нужно минимум 70%, чтобы урок считался пройденным. Попробуй ещё разок — у тебя получится! 💖</p>
+    <p class="hint-text">Нужно минимум {{ need }}%, чтобы урок считался пройденным. Попробуй ещё разок — у тебя получится! 💖</p>
   {% endif %}
 </section>
 
