@@ -853,3 +853,36 @@ button, input, select, textarea { font-family: inherit; }
   .pair-chip { font-size: 1rem; padding: 6px 12px; }
   .exercise .btn, .exercise button.btn-small { margin: 4px 8px 4px 0; }
 }
+
+/* ---------- 📖 Словарь ученика ---------- */
+.stat-link { text-decoration: none; color: inherit; display: block; cursor: pointer; transition: transform .12s, box-shadow .12s; }
+.stat-link:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(90, 63, 214, .2); }
+.stat-more { display: block; margin-top: 4px; font-size: .78rem; font-weight: 800; color: var(--primary-dark); }
+.dict-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.dict-head h1 { margin: 6px 0; }
+.dict-tools { display: flex; flex-direction: column; gap: 10px; }
+.dict-tools input[type="search"] { width: 100%; box-sizing: border-box; padding: 12px 16px; border-radius: 14px;
+  border: 2px solid #d9c8f5; font-size: 1rem; background: #fff; }
+.dict-tools input[type="search"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(124, 92, 255, .18); }
+.dict-check { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-weight: 700; color: var(--muted); }
+.dict-check input { width: 22px; height: 22px; flex: none; accent-color: var(--primary); }
+.dict-group-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 12px; }
+.dict-group-head h2 { margin: 0; font-size: 1.2rem; }
+.dict-list { list-style: none; margin: 10px 0 0; padding: 0; }
+.dict-row { display: grid; grid-template-columns: minmax(120px, 1fr) auto minmax(120px, 1.4fr); gap: 6px 14px; align-items: center;
+  padding: 10px 6px; border-bottom: 1px dashed #e4dcf7; cursor: pointer; }
+.dict-row:last-child { border-bottom: 0; }
+.dict-row:hover { background: #f7f3ff; border-radius: 10px; }
+.dict-en { font-size: 1.2rem; font-weight: 900; color: var(--primary-dark); }
+.dict-hint { color: var(--muted); font-weight: 700; }
+.dict-ru { color: var(--ink); transition: filter .2s; }
+.dict-hide-ru .dict-row:not(.revealed) .dict-ru { filter: blur(7px); user-select: none; }
+.dict-play.playing { background: #ffe3c2; color: #9a5b00; }
+@media (max-width: 640px) {
+  .dict-row { grid-template-columns: 1fr auto; padding: 14px 6px; }
+  .dict-ru { grid-column: 1 / -1; }
+  .dict-en { font-size: 1.3rem; }
+  .tts-btn { width: 40px; height: 40px; }
+  .tts-btn .icon { width: 22px; height: 22px; }
+  .stat-more { font-size: .85rem; }
+}

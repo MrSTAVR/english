@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Мой словарь — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
+  <h1>📖 Мой словарь</h1>
+</div>
+
+{% if groups %}
+<p class="subtitle">Все слова из пройденных уроков: <b>{{ total_words }}</b>. Нажимай 🔊, чтобы послушать, как они звучат.</p>
+
+<div class="dict-tools card">
+  <input type="search" id="dict-search" placeholder="🔎 Найти слово или перевод…" autocomplete="off">
+  <label class="dict-check"><input type="checkbox" id="dict-hide"> 🙈 Скрыть перевод (проверь себя — нажми на слово, чтобы подсмотреть)</label>
+</div>
+<p id="dict-empty" class="hint hidden">Ничего не нашлось 🙈</p>
+
+{% for g in groups %}
+<section class="card dict-group" data-group>
+  <div class="dict-group-head">
+    <h2>{{ g.lesson.emoji }} {{ g.lesson.title }}{% if g.lesson.is_extra %} <span class="pill pill-soft">доп.</span>{% endif %}</h2>
+    <button type="button" class="btn btn-small dict-play" data-play>▶ Прослушать все</button>
+  </div>
+  <ul class="dict-list">
+    {% for w in g.words %}
+    <li class="dict-row" data-en="{{ w.en|lower }}" data-ru="{{ w.ru|lower }}">
+      <span class="dict-en" data-tts="{{ w.en }}">{{ w.en }}</span>
+      <span class="dict-hint">[{{ w.hint }}]</span>
+      <span class="dict-ru">{{ w.ru }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+{% else %}
+<section class="card hero">
+  <div class="big-emoji">🌱</div>
+  <h2>Словарь пока пуст</h2>
+  <p>Пройди первый урок — и все его слова появятся здесь.</p>
+  <a class="btn btn-primary" href="{{ url_for('student.student_home') }}">К урокам ▶️</a>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var search = document.getElementById('dict-search');
+  var hide = document.getElementById('dict-hide');
+  if (!search) return;
+  var groups = [].slice.call(document.querySelectorAll('[data-group]'));
+
+  function applyFilter() {
+    var q = search.value.trim().toLowerCase(), any = false;
+    groups.forEach(function (g) {
+      var shown = 0;
+      g.querySelectorAll('.dict-row').forEach(function (r) {
+        var ok = !q || r.dataset.en.indexOf(q) !== -1 || r.dataset.ru.indexOf(q) !== -1;
+        r.classList.toggle('hidden', !ok);
+        if (ok) shown++;
+      });
+      g.classList.toggle('hidden', shown === 0);
+      if (shown) any = true;
+    });
+    document.getElementById('dict-empty').classList.toggle('hidden', any);
+  }
+  search.addEventListener('input', applyFilter);
+
+  hide.addEventListener('change', function () {
+    document.body.classList.toggle('dict-hide-ru', hide.checked);
+    document.querySelectorAll('.dict-row.revealed').forEach(function (r) { r.classList.remove('revealed'); });
+  });
+  document.querySelectorAll('.dict-row').forEach(function (r) {
+    r.addEventListener('click', function (e) {
+      if (e.target.closest('.tts-btn')) return;
+      r.classList.toggle('revealed');
+    });
+  });
+
+  // «Прослушать все»: слова урока по очереди
+  var synth = window.speechSynthesis, token = 0;
+  function stopAll() { token++; try { synth && synth.cancel(); } catch (e) {} 
+    document.querySelectorAll('[data-play].playing').forEach(function (b) { b.classList.remove('playing'); b.textContent = '▶ Прослушать все'; }); }
+  document.querySelectorAll('[data-play]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.classList.contains('playing')) { stopAll(); return; }
+      stopAll();
+      if (!synth || !window.ttsSpeak) { alert('На этом устройстве нет голоса для озвучки 😕'); return; }
+      var my = ++token;
+      var words = [].slice.call(btn.closest('[data-group]').querySelectorAll('.dict-row:not(.hidden) .dict-en'))
+                    .map(function (el) { return el.getAttribute('data-tts'); });
+      btn.classList.add('playing'); btn.textContent = '⏹ Стоп';
+      var i = 0;
+      (function next() {
+        if (my !== token) return;
+        if (i >= words.length) { stopAll(); return; }
+        window.ttsSpeak(words[i++], 0.8);
+        var wait = setInterval(function () {            // ждём конца слова + короткая пауза
+          if (my !== token) { clearInterval(wait); return; }
+          if (!synth.speaking) { clearInterval(wait); setTimeout(next, 450); }
+        }, 150);
+      })();
+    });
+  });
+  window.addEventListener('pagehide', stopAll);
+})();
+</script>
+{% endblock %}

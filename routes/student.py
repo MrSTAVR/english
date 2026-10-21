@@ -4,7 +4,7 @@
 import json
 from achievements import ACHIEVEMENTS, update_achievements
 from config import PASS_MARK
-from curriculum import LESSONS_BY_ID, unlocked_lesson_ids
+from curriculum import ALL_LESSONS, LESSONS_BY_ID, unlocked_lesson_ids
 from data.extra_lessons import EXTRA_LESSONS
 from data.lessons import LESSONS
 from database import get_db
@@ -18,6 +18,25 @@ from stats import compute_stats
 from routes.common import get_student_or_none, require_role
 
 bp = Blueprint("student", __name__)
+
+
+@bp.route("/student/words")
+def words_page():
+    """Словарь ученика: все слова из пройденных (и зачтённых) уроков."""
+    err = require_role("student")
+    if err:
+        return err
+    db = get_db()
+    student = get_student_or_none(db)
+    if not student:
+        session.clear()
+        return redirect(url_for("auth.index"))
+    stats = compute_stats(db, student["id"])
+    groups = [{"lesson": l, "words": l["material"]}
+              for l in ALL_LESSONS if l["id"] in stats["completed_ids"]]
+    return render_template("words.html", mascot=build_mascot_ctx(), groups=groups,
+                           total_words=sum(len(g["words"]) for g in groups),
+                           name=student["display_name"], emoji=student["emoji"])
 
 
 @bp.route("/student")
