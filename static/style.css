@@ -236,10 +236,10 @@ h2 { color: var(--primary-dark); font-weight: 800; }
 }
 .match-tile:hover { transform: translateY(-1px); }
 .match-tile.dragging { opacity: .45; cursor: grabbing; }
-.match-tile.placed { opacity: .35; }
+.match-tile.placed { display: none; }          /* уже стоит в паре; нажми на пару, чтобы вернуть */
 .match-slot {
   position: relative; background: #fff; border: 2px dashed #c9b3ef; border-radius: 12px;
-  padding: 10px 14px; min-height: 44px; display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; min-height: 44px; display: flex; align-items: center; gap: 8px; justify-content: space-between;
   cursor: pointer; transition: border-color .15s, background .15s;
 }
 .match-slot .slot-hint { color: #b3a1d9; font-size: .8rem; }
@@ -840,3 +840,16 @@ a, button, label, summary, input[type="submit"] { touch-action: manipulation; }
   font-size: 34px; line-height: 1.4; }
 .desktop-warn button { display: block; margin-top: 16px; font: inherit; font-weight: 800; padding: 14px 32px;
   border: 0; border-radius: 999px; background: #7c5cff; color: #fff; }
+
+/* ---------- правки по скриншотам с телефона ---------- */
+button, input, select, textarea { font-family: inherit; }
+.match-slot[data-filled-left] .slot-hint { display: none; }
+.pair-chip { cursor: pointer; }
+@media (max-width: 640px) {
+  .topbar { position: static; }                       /* липкая шапка съедала пятую часть экрана */
+  .topbar nav a { font-size: .95rem; }
+  .match-slot .slot-hint { display: none; }
+  .match-slot .slot-text { font-size: 1.15rem; }
+  .pair-chip { font-size: 1rem; padding: 6px 12px; }
+  .exercise .btn, .exercise button.btn-small { margin: 4px 8px 4px 0; }
+}

@@ -479,9 +479,25 @@ function placePair(root, slot, tile) {
   chip.textContent = tile.textContent;
   const oldChip = slot.querySelector('.pair-chip');
   if (oldChip) oldChip.remove();
+  chip.title = 'Нажми, чтобы убрать';
+  chip.addEventListener('click', e => { e.stopPropagation(); unplacePair(root, slot); });
   slot.prepend(chip);
   tile.classList.add('placed');
   dndState(root)[tile.dataset.left] = Number(slot.dataset.right);
+  fillHidden(root);
+  refreshMatchFeedback(root);
+}
+
+function unplacePair(root, slot) {
+  // вернуть карточку из слота обратно в левый столбик
+  const left = slot.dataset.filledLeft;
+  if (left === undefined) return;
+  delete slot.dataset.filledLeft;
+  slot.classList.remove('slot-ok', 'slot-bad');
+  const chip = slot.querySelector('.pair-chip'); if (chip) chip.remove();
+  const tile = root.querySelector(`.match-tile[data-left="${left}"]`);
+  if (tile) tile.classList.remove('placed');
+  delete dndState(root)[left];
   fillHidden(root);
   refreshMatchFeedback(root);
 }
