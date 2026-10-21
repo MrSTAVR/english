@@ -70,12 +70,13 @@ def test_letters_lessons_use_letter_listening():
 
 def test_no_long_runs_of_same_kind():
     phonetics = {1, 2, 3, 4, 5, 6, 7, 8, 33, 34, 35}
+    grammar = {14, 15, 22, 23, 25, 31, 40, 41, 42, 43}
     numbers = {10, 11, 38}
-    for group in (phonetics, numbers):
+    for group in (phonetics, numbers, grammar):
         run = 0
         for l in LESSONS:
             run = run + 1 if l["id"] in group else 0
-            assert run <= 1 if group is numbers else run <= 2, (l["num"], l["title"])
+            assert run <= (1 if group is numbers else 2), (l["num"], l["title"])
 
 
 def test_grammar_comes_after_its_vocabulary():
@@ -87,6 +88,10 @@ def test_grammar_comes_after_its_vocabulary():
     assert pos[25] < pos[31]                    # Present Continuous
     assert pos[27] < pos[28]                    # предлоги → дом
     assert pos[10] < pos[11] and pos[17] < pos[5]   # числа 1–10 → 11–20; животные → окончание -s
+    assert pos[13] < pos[41] and pos[14] < pos[41]   # притяжательные — после семьи и to be
+    assert pos[19] < pos[42]                    # this/that с apple, egg — после еды
+    assert pos[17] < pos[44]                    # прилагательные описывают уже знакомых животных
+    assert pos[21] < pos[40] and pos[5] < pos[43]   # have got — после частей тела; исключения — после правила -s
     assert LESSONS[-1]["id"] == 32               # финал — последний
 
 

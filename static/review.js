@@ -28,6 +28,11 @@
       (ok ? '✅ Верно!' : '❌ Правильно: <b>' + esc(correctText) + '</b>') +
       '<div class="rv-explain">💡 ' + esc(item.explain || '') + '</div>');
     box.appendChild(fb);
+    // после ответа всегда можно услышать английское слово (и оно озвучивается само)
+    var hearEn = el('div', 'rv-sayline', '<button type="button" class="btn btn-small">🔊 ' + esc(item.en) + '</button><span class="rv-hint">[' + esc(item.hint || '') + ']</span>');
+    hearEn.querySelector('button').onclick = function () { say(item.en); };
+    box.appendChild(hearEn);
+    setTimeout(function () { say(item.en); }, 350);
     document.dispatchEvent(new CustomEvent('review:answer', { detail: { ok: ok } }));
     send(item, ok).then(function (j) {
       if (!j) return;
@@ -53,6 +58,11 @@
     var it = items[idx];
     var box = el('div', 'rv-q');
     box.appendChild(el('p', 'q', '<b>' + esc(it.q) + '</b>'));
+    if (!it.audio && it.type === 'choice' && it.q.indexOf('Что значит') === 0) {   // английское слово в вопросе — можно послушать
+      var hear = el('p', null, '<button type="button" class="btn btn-small say-btn">🔊 Послушать слово</button>');
+      hear.querySelector('button').onclick = function () { say(it.en); };
+      box.appendChild(hear);
+    }
     if (it.audio) {
       var play = el('p', null, '<button type="button" class="btn btn-small say-btn">🔊 Слушать</button> <button type="button" class="btn btn-small say-btn slow">🐢 Медленно</button>');
       play.querySelector('.say-btn').onclick = function () { say(it.audio); };
