@@ -126,6 +126,8 @@ gunicorn -c gunicorn.conf.py wsgi:app      # Linux; на Windows: python serve.p
 Иконки рисует `python tools/make_icons.py` (нужен `pip install pillow`).
 Service worker (`/sw.js`) кэширует только статику; страницы и формы всегда идут через сервер.
 
+Установка, обновление, копии и восстановление на VPS: папка `deploy/` и `deploy/OPERATIONS.md`.
+
 ## Безопасность
 
 - Пароли учеников хранятся как хеш PBKDF2; POST-формы защищены CSRF-токеном.
