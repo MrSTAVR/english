@@ -106,8 +106,12 @@
           <span class="ex-result"></span>
         </div>
       {% else %}
-        <input type="text" class="typein" placeholder="Напиши ответ по-английски">
+        {% if ex is russian_answer %}
+        <input type="text" class="typein" placeholder="Напиши перевод по-русски" lang="ru">
+        {% else %}
+        <input type="text" class="typein" placeholder="Напиши ответ по-английски" lang="en">
         <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ">🔊 Послушать</button>
+        {% endif %}
       {% endif %}
       {% if ex.type not in ('match', 'sort') %}
         <button class="btn btn-small" onclick="checkExercise(this)">Проверить ✔️</button>
@@ -201,8 +205,12 @@
             <input type="hidden" name="q{{ outer_loop.index0 }}_sort" id="sort-{{ outer_loop.index0 }}">
           </div>
         {% else %}
-          <input type="text" class="typein" name="q{{ outer_loop.index0 }}" placeholder="Напиши ответ по-английски" autocomplete="off">
+          {% if q is russian_answer %}
+          <input type="text" class="typein" name="q{{ outer_loop.index0 }}" placeholder="Напиши перевод по-русски" autocomplete="off" lang="ru">
+          {% else %}
+          <input type="text" class="typein" name="q{{ outer_loop.index0 }}" placeholder="{{ 'Напиши то, что услышал(а), по-английски' if q.audio else 'Напиши ответ по-английски' }}" autocomplete="off" lang="en">
           <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ">🔊 Послушать</button>
+          {% endif %}
         {% endif %}
       </div>
     {% endfor %}
@@ -216,7 +224,7 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='practice.js') }}?v=1"></script>
-{% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=1"></script>{% endif %}
+{% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=2"></script>{% endif %}
 <script>
 const START_TS = {{ started_ts }};
 

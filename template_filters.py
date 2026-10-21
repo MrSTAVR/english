@@ -9,6 +9,12 @@ from markupsafe import Markup
 from grading import match_columns
 
 
+def is_russian_answer(q):
+    """True, если ответ на type_in-вопрос нужно написать по-русски (перевод)."""
+    import re
+    return bool(re.search("[а-яёА-ЯЁ]", str(q.get("answer", ""))))
+
+
 def human_time(seconds):
     seconds = int(seconds or 0)
     if seconds < 60:

@@ -21,7 +21,7 @@ from badges import medal
 from mascot import build_mascot_ctx
 from routes import register_blueprints
 from security import load_secret_key
-from template_filters import human_time, match_answer_json, match_cols, match_expected_json, mistakes_count, \
+from template_filters import human_time, is_russian_answer, match_answer_json, match_cols, match_expected_json, mistakes_count, \
     shuffle_match, shuffle_sort, shuffle_words, tree_mini
 
 app = Flask(__name__)
@@ -50,6 +50,7 @@ init_db()
 
 
 app.jinja_env.filters["human_time"] = human_time
+app.jinja_env.tests["russian_answer"] = is_russian_answer
 
 
 app.jinja_env.filters["shuffle_words"] = shuffle_words

@@ -22,6 +22,18 @@
     "can't": 'can not', 'cannot': 'can not', "won't": 'will not', "wasn't": 'was not'
   };
 
+  /* слова, которые звучат одинаково: распознаватель выбирает любое из них */
+  var HOMO = {};
+  [['to', 'too', 'two'], ['no', 'know'], ['write', 'right'], ['see', 'sea'], ['hi', 'high'],
+   ['i', 'eye', 'aye'], ['by', 'buy', 'bye'], ['one', 'won'], ['for', 'four', 'fore'], ['eight', 'ate'],
+   ['son', 'sun'], ['be', 'bee'], ['you', 'u', 'ewe'], ['are', 'r'], ['why', 'y'], ['hear', 'here'],
+   ['there', 'their', "they're"], ['wear', 'where'], ['hole', 'whole'], ['blue', 'blew'], ['red', 'read'],
+   ['dear', 'deer'], ['pair', 'pear', 'pare'], ['tail', 'tale'], ['meet', 'meat'], ['bear', 'bare'],
+   ['sail', 'sale'], ['plain', 'plane'], ['wait', 'weight'], ['week', 'weak'], ['flower', 'flour'],
+   ['night', 'knight'], ['new', 'knew'], ['nose', 'knows'], ['knee', 'nee'], ['wood', 'would'],
+   ['its', "it's"], ['our', 'hour'], ['ok', 'okay'], ['mom', 'mum'], ['color', 'colour']
+  ].forEach(function (g) { g.forEach(function (w) { HOMO[w] = g[0]; }); });
+
   function norm(s) {
     s = String(s || '').toLowerCase().replace(/[’`]/g, "'");
     var words = s.replace(/-/g, ' ').split(/[^a-z0-9']+/).filter(Boolean);
@@ -35,6 +47,7 @@
       }
       out.push(CONTR[w] || w);
     });
+    out = out.join(' ').split(' ').map(function (w) { return HOMO[w] || w; });
     return out.join(' ');
   }
 
@@ -56,6 +69,15 @@
     if (!a || !b) return 0;
     if (a === b) return 1;
     var best = 1 - lev(a, b) / Math.max(a.length, b.length);
+    var aw = a.split(' '), bw = b.split(' ');
+    // целевое слово есть среди сказанных («the cat» → cat): почти хорошо
+    if (bw.length === 1 && aw.indexOf(b) !== -1) best = Math.max(best, 0.9);
+    // фраза: доля совпавших слов
+    if (bw.length > 1) {
+      var left = aw.slice(), hit = 0;
+      bw.forEach(function (w) { var i = left.indexOf(w); if (i !== -1) { hit++; left.splice(i, 1); } });
+      best = Math.max(best, hit / Math.max(aw.length, bw.length) * (hit === bw.length && aw.length === bw.length ? 1 : 0.95));
+    }
     var a2 = a.replace(/ /g, ''), b2 = b.replace(/ /g, '');
     if (a2 === b2) return 1;
     return Math.max(best, 1 - lev(a2, b2) / Math.max(a2.length, b2.length));
@@ -98,7 +120,7 @@
     var rec = new SR(), done = false, got = null, timer;
     current = rec;
     rec.lang = 'en-US';
-    rec.interimResults = false;
+    rec.interimResults = true;      // ловим и промежуточный результат — короткие слова иногда не доходят до «финала»
     rec.continuous = false;
     rec.maxAlternatives = 5;
     function finish(err, res) {
@@ -112,6 +134,7 @@
       var r = e.results[e.results.length - 1], list = [];
       for (var i = 0; i < r.length; i++) list.push({ text: r[i].transcript, confidence: r[i].confidence });
       got = list;
+      if (r.isFinal) { try { rec.stop(); } catch (x) { /* noop */ } }
     };
     rec.onerror = function (e) { finish(e.error || 'error'); };
     rec.onend = function () { finish(got ? null : 'no-speech', got); };
@@ -150,7 +173,7 @@
     var results = {}, total = items.length;
     block.innerHTML = '';
     if (!SR) block.appendChild(el('p', 'sp-note', ERRORS.unsupported + ' Слова можно послушать кнопкой 🔊.'));
-    else block.appendChild(el('p', 'sp-note', 'Нажми 🔊 — послушай, потом 🎤 и скажи слово вслух. Браузер попросит доступ к микрофону.'));
+    else block.appendChild(el('p', 'sp-note', 'Нажми 🔊 — послушай, потом 🎤 и скажи слово вслух. Говори сразу, когда кнопка стала красной ⏺, — чётко и не слишком тихо.'));
 
     items.forEach(function (it, idx) {
       var row = el('div', 'sp-row');
@@ -179,7 +202,7 @@
           var sim = similarity(heard, it.accept || [it.en]), st = stars(sim);
           res.className = 'sp-res st' + st;
           res.innerHTML = '<span class="sp-stars">' + starsHtml(st) + '</span> <span class="sp-heard">я услышал: «' +
-            esc(heard[0].text) + '»</span>';
+            esc(heard[0].text) + '»' + (st < 3 && heard.length > 1 ? ' (ещё: ' + esc(heard.slice(1, 4).map(function (h) { return h.text; }).join(', ')) + ')' : '') + '</span>';
           var prev = results[idx];
           results[idx] = Math.max(prev == null ? -1 : prev, st);
           document.dispatchEvent(new CustomEvent('speak:result', { detail: { stars: st, target: it.en } }));

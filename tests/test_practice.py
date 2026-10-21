@@ -108,3 +108,12 @@ def test_speaking_can_be_disabled(make_student, monkeypatch):
     assert c.get("/student/speak").status_code == 404
     assert c.post("/api/speak", json={"target": "cat", "score": 3}).status_code == 404
     assert "speak.js" not in c.get("/lesson/1").get_data(as_text=True)
+
+
+def test_russian_answer_placeholder(make_student):
+    c = make_student()
+    html = c.get("/lesson/1").get_data(as_text=True)
+    assert "Напиши перевод по-русски" in html
+    # у русскоязычных вопросов нет кнопки «Послушать» для вписанного ответа
+    from template_filters import is_russian_answer
+    assert is_russian_answer({"answer": "кот"}) and not is_russian_answer({"answer": "cat"})
