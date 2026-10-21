@@ -23,7 +23,7 @@
       <p>Аккаунты детей, прогресс, время и все ошибки.</p>
       <form method="post" action="{{ url_for('auth.login_parent') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="password" name="password" placeholder="Пароль (по умолчанию 1234)" required>
+        <input type="password" name="password" placeholder="Пароль родителя" required>
         <button type="submit" class="btn btn-secondary">Войти в кабинет 📊</button>
       </form>
     </div>

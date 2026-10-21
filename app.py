@@ -84,5 +84,5 @@ if __name__ == "__main__":
     # Порт можно менять: python3 app.py 8080  (или PORT=8080 python3 app.py)
     port = int(sys.argv[1]) if len(sys.argv) > 1 else int(os.environ.get("PORT", 5000))
     print(f"==> Приложение запущено: http://localhost:{port}")
-    print("    Режим ученика: вход по имени. Кабинет родителя: пароль 1234")
+    print("    Ученики входят по логину и паролю (аккаунты создаёт родитель в кабинете).")
     app.run(host="0.0.0.0", port=port, debug=False)
