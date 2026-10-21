@@ -26,12 +26,12 @@
   <a href="/" class="logo">🐣 English Fun</a>
   <nav>
     {% if session.get('role') == 'student' %}
-      <a href="{{ url_for('student_home') }}">🎓 Мои уроки</a>
-      <a href="{{ url_for('garden_page') }}">🌳 Моё дерево</a>
-      <a href="{{ url_for('logout') }}">Выйти</a>
+      <a href="{{ url_for('student.student_home') }}">🎓 Мои уроки</a>
+      <a href="{{ url_for('garden.garden_page') }}">🌳 Моё дерево</a>
+      <a href="{{ url_for('auth.logout') }}">Выйти</a>
     {% elif session.get('role') == 'parent' %}
-      <a href="{{ url_for('parent_dashboard') }}">📊 Кабинет родителя</a>
-      <a href="{{ url_for('logout') }}">Выйти</a>
+      <a href="{{ url_for('parent.parent_dashboard') }}">📊 Кабинет родителя</a>
+      <a href="{{ url_for('auth.logout') }}">Выйти</a>
     {% endif %}
   </nav>
 </header>

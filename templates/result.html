@@ -21,7 +21,7 @@
 <section class="card coins-card">
   <h2><svg class="icon icon-coin"><use href="#i-coin"/></svg> Монетки!</h2>
   <p>Получено <b>+{{ coins_earned }}</b> монеток · теперь у тебя <b>{{ coins_total }}</b> <svg class="icon icon-coin"><use href="#i-coin"/></svg><br>
-     Загляни в <a href="{{ url_for('garden_page') }}">🌳 свой сад</a> — серия уже {{ streak_days }} дн.!</p>
+     Загляни в <a href="{{ url_for('garden.garden_page') }}">🌳 свой сад</a> — серия уже {{ streak_days }} дн.!</p>
 </section>
 {% endif %}
 
@@ -49,8 +49,8 @@
 
 <div class="result-actions">
   {% if not passed %}
-    <a class="btn btn-primary" href="{{ url_for('lesson_page', lesson_id=lesson.id) }}">Попробовать ещё раз 🔁</a>
+    <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id) }}">Попробовать ещё раз 🔁</a>
   {% endif %}
-  <a class="btn btn-secondary" href="{{ url_for('student_home') }}">К списку уроков 🏠</a>
+  <a class="btn btn-secondary" href="{{ url_for('student.student_home') }}">К списку уроков 🏠</a>
 </div>
 {% endblock %}

@@ -1,6 +1,17 @@
-*.log
-server.log
-*.db
+# окружение и IDE
+.venv/
+.idea/
+.pytest_cache/
+
+# Python
 __pycache__/
 *.pyc
+
+# данные и секреты
+*.db
 .secret_key
+
+# логи и временные файлы
+*.log
+server.log
+*.bak

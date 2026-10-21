@@ -2,9 +2,7 @@
 """Бывший smoke_test_v2.py: аккаунты учеников и изоляция прогресса."""
 import re
 
-import pytest
-
-from app import LESSONS_BY_ID, MAIN_COUNT
+from curriculum import LESSONS_BY_ID, MAIN_COUNT
 from tests.helpers import (build_form, db_all, db_scalar, open_lesson,
                            submit_lesson)
 
@@ -111,7 +109,6 @@ def test_delete_removes_account_and_progress(parent, make_student, anon):
     assert "Такого аккаунта нет" in r.get_data(as_text=True)
 
 
-@pytest.mark.xfail(strict=True, reason="BUG #2: при удалении ученика остаются garden/decorations")
 def test_delete_removes_garden(parent, make_student):
     masha = make_student()
     masha.get("/student")                       # создаёт строку сада

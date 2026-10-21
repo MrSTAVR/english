@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Хеширование и проверка паролей (PBKDF2)."""
 
+from config import PARENT_PASSWORD
 import hashlib
 import hmac
 import os
@@ -26,3 +27,9 @@ def verify_password(stored, password):
         return hmac.compare_digest(digest.hex(), digest_hex)
     except Exception:
         return False
+
+
+def check_parent_password(password):
+    """Сравнение пароля родителя за постоянное время."""
+    return hmac.compare_digest(str(password).encode("utf-8"),
+                               PARENT_PASSWORD.encode("utf-8"))

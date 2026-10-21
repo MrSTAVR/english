@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Юнит-тесты оценивания — страховка перед выносом в grading.py."""
-from app import grade_question, norm_answer
+from grading import grade_question, norm_answer
 
 
 def test_norm_answer():

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from app import ALL_LESSONS, LESSONS_BY_ID, validate_lessons
+from curriculum import ALL_LESSONS, LESSONS_BY_ID, validate_lessons
 from data.extra_lessons import EXTRA_LESSONS
 from data.lessons import LESSONS
 

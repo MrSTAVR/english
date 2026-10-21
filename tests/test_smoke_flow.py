@@ -5,8 +5,8 @@ import re
 
 import pytest
 
-import app as appmod
-from app import ACHIEVEMENTS, LESSONS_BY_ID, MAIN_COUNT
+from achievements import ACHIEVEMENTS
+from curriculum import LESSONS_BY_ID, MAIN_COUNT
 from data.extra_lessons import EXTRA_LESSONS
 from data.lessons import LESSONS
 from tests.helpers import (build_form, db_all, db_scalar, open_lesson,
@@ -121,10 +121,6 @@ def test_garden_page_opens(make_student):
     assert "OperationalError" not in body and "garden-scene" in body
 
 
-# ---- Известные баги: тесты помечены xfail(strict). Когда баг исправят,
-# ---- тест «неожиданно пройдёт» и упадёт — тогда снимите отметку xfail.
-
-@pytest.mark.xfail(strict=True, reason="BUG #1: доп. уроки учитываются в прогрессе основного курса")
 def test_extra_lessons_do_not_count_as_main_progress(make_student):
     c = make_student()
     submit_lesson(c, EXTRA_LESSONS[0]["id"])

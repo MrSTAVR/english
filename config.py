@@ -10,4 +10,4 @@ DB_PATH = os.environ.get("ENGLISH_APP_DB") or os.path.join(BASE_DIR, "english_ap
 
 
 PASS_MARK = 70          # минимальный процент, чтобы тест считаться сданным
-PARENT_PASSWORD = "1234"  # пароль для входа в режим родителя (можно поменять)
+PARENT_PASSWORD = os.environ.get("ENGLISH_PARENT_PASSWORD", "1234")  # пароль родителя; смените через переменную окружения
