@@ -402,3 +402,27 @@ html[data-theme="dark"] .mascot-reopen { background: #1f1b3d; }
   html[data-theme="dark"] .tbl tbody tr:hover { background: #1f1b3d; }
   html[data-theme="dark"] .tbl td { border-bottom-color: #3a3367; }
 }
+
+/* ---------- Тренировка произношения и доп. задания ---------- */
+.pr-title { margin: 18px 0 8px; }
+.pr-item.done { border-color: #5ac98a; }
+.pr-bank, .pr-line { display: flex; flex-wrap: wrap; gap: 6px; min-height: 44px; margin: 6px 0; }
+.pr-line { border: 2px dashed var(--line, #cfc6f5); border-radius: 12px; padding: 6px; }
+.speak-block .sp-note { margin: 0 0 10px; opacity: .85; }
+.sp-row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--line, #eee9ff); }
+.sp-row:last-child { border-bottom: 0; }
+.sp-word b { font-size: 1.15rem; display: block; }
+.sp-word span { opacity: .7; font-size: .9rem; }
+.sp-btns { display: flex; gap: 6px; }
+.sp-res { grid-column: 1 / -1; min-height: 0; font-size: .95rem; }
+.sp-res.sp-err { color: #b3261e; }
+.sp-stars { font-size: 1.25rem; letter-spacing: 2px; }
+.sp-off { opacity: .35; }
+.sp-heard { opacity: .75; }
+.sp-mic.listening { animation: sp-pulse 1s ease-in-out infinite; background: #e5484d; }
+@keyframes sp-pulse { 50% { transform: scale(1.12); box-shadow: 0 0 0 8px rgba(229,72,77,.25); } }
+.sp-privacy { font-size: .85rem; opacity: .75; }
+@media (prefers-reduced-motion: reduce) { .sp-mic.listening { animation: none; } }
+html[data-theme="dark"] .sp-res.sp-err { color: #ff8a8f; }
+html[data-theme="dark"] .pr-line { border-color: #4a4378; }

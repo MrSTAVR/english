@@ -7,8 +7,9 @@ from routes.garden import bp as garden_bp
 from routes.parent import bp as parent_bp
 from routes.system import bp as system_bp
 from routes.pwa import bp as pwa_bp
+from routes.speak import bp as speak_bp
 
 
 def register_blueprints(app):
-    for bp in (auth_bp, student_bp, garden_bp, parent_bp, system_bp, pwa_bp):
+    for bp in (auth_bp, student_bp, garden_bp, parent_bp, system_bp, pwa_bp, speak_bp):
         app.register_blueprint(bp)

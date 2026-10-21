@@ -5,6 +5,7 @@ import json
 from badges import TIERS
 from achievements import (ACHIEVEMENTS, BY_KEY, CATEGORIES, public, tier_counts,
                           update_achievements, views as achievement_views)
+import config
 from config import PASS_MARK
 from curriculum import ALL_LESSONS, LESSONS_BY_ID, unlocked_lesson_ids
 from data.extra_lessons import EXTRA_LESSONS
@@ -124,7 +125,7 @@ def student_home():
         info["highlight"] = info["lesson"]["id"] in highlight_ids
     hidden_count = sum(1 for info in lessons_info if not info["highlight"])
     earned_count = sum(1 for a in achievements if a["earned"])
-    return render_template("student_home.html", mascot=mascot,
+    return render_template("student_home.html", mascot=mascot, speaking=config.SPEAKING,
                            name=student["display_name"],
                            emoji=student["emoji"],
                            lessons=lessons_info,
@@ -168,7 +169,7 @@ def lesson_page(lesson_id):
     mascot = build_mascot_ctx()
     mascot["lessonId"] = lesson_id
     mascot["lessonTitle"] = lesson["title"]
-    return render_template("lesson.html", lesson=lesson,
+    return render_template("lesson.html", lesson=lesson, speaking=config.SPEAKING,
                            attempt_id=cur.lastrowid,
                            started_ts=started.timestamp(),
                            mascot=mascot)

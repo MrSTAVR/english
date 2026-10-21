@@ -21,6 +21,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get("ENGLISH_APP_DB") or os.path.join(BASE_DIR, "english_app.db")
 
 
+SPEAKING = _env_flag("ENGLISH_SPEAKING", True)   # тренировка произношения с микрофоном
 PASS_MARK = 70          # минимальный процент, чтобы тест считаться сданным
 
 # --- Режим работы ----------------------------------------------------------

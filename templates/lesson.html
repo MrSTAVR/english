@@ -116,6 +116,14 @@
       <div class="explain hidden">💡 {{ ex.explain }}</div>
     </div>
   {% endfor %}
+  {% if lesson.practice %}
+  <h3 class="pr-title">🎯 Ещё потренируемся</h3>
+  <div id="practice" data-items='{{ lesson.practice | tojson }}'></div>
+  {% endif %}
+  {% if speaking and lesson.speak %}
+  <h3 class="pr-title">🎤 Скажи вслух</h3>
+  <div id="speak-block" class="speak-block" data-items='{{ lesson.speak | tojson }}' data-lesson="{{ lesson.id }}"></div>
+  {% endif %}
   <button class="btn btn-primary" onclick="goStep('step-test')">Всё понятно! Открываю тест 📝</button>
 </section>
 
@@ -132,6 +140,7 @@
       {% set outer_loop = loop %}
       <div class="question card-inner" data-qindex="{{ loop.index0 }}">
         <p class="q"><b>Вопрос {{ loop.index }}.</b> {{ q.q }}</p>
+        {% if q.audio %}<p><button type="button" class="btn btn-small say-btn" data-say="{{ q.audio }}">🔊 Слушать</button> <button type="button" class="btn btn-small say-btn" data-say="{{ q.audio }}" data-slow="1">🐢 Медленно</button></p>{% endif %}
         {% if q.type == 'choice' %}
           <div class="options">
             {% for opt in q.options %}
@@ -206,6 +215,8 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='practice.js') }}?v=1"></script>
+{% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=1"></script>{% endif %}
 <script>
 const START_TS = {{ started_ts }};
 

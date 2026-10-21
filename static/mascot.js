@@ -63,6 +63,12 @@
     achPage: ['Вот твоя коллекция! 🏅 Собрано {n} из {total}. Нажми на «Скоро получишь» — и увидишь, сколько осталось!',
               'Столько медалей! ✨ {n} из {total}. Золотые и легендарные — самые редкие 👑'],
     achPageEmpty: 'Тут пока пусто, но это ненадолго: пройди урок — и получишь первую медаль! 🥉',
+    speakPage: ['Сейчас потренируем произношение! 🎤 Нажми на микрофон и скажи слово вслух.',
+                'Говорим по-английски! 🗣️ Сначала послушай 🔊, потом повтори.'],
+    speakStars3: ['Отлично! Как настоящая англичанка! 🌟', 'Три звезды! Произношение — супер ✨', 'Чистый звук! 🔔 Так держать!'],
+    speakStars2: ['Хорошо! Почти идеально 👍 Попробуй ещё разок — на три звезды?', 'Неплохо! Ещё чуть-чуть чётче 🎯'],
+    speakStars1: ['Я почти понял(а) 🤔 Послушай 🐢 медленно и повтори.', 'Близко! Скажи погромче и отчётливее 🎤'],
+    speakStars0: ['Не расслышал(а) 🙈 Попробуй ещё раз — я верю в тебя!', 'Ничего страшного! Послушай ещё раз 🔊 и повтори.'],
     wordsEmpty: 'Здесь пока пусто — пройди первый урок, и слова появятся! 🌱',
     theoryPage: ['Тут вся теория, что мы прошли 📖 Если что-то забылось — заглядывай сюда!',
                  'Хочешь повторить правило? Открывай нужный урок и читай вслух 🗣️'],
@@ -852,6 +858,8 @@
     });
   } else if (S.page === 'words') {
     later(700, function () { say(S.empty ? T.wordsEmpty : fmt(pick(T.wordsPage)), { mood: S.empty ? 'think' : 'happy' }); });
+  } else if (S.page === 'speak') {
+    later(700, function () { say(pick(T.speakPage), { mood: 'happy' }); });
   } else if (S.page === 'achievements') {
     later(700, function () {
       say(S.earned ? fmt(pick(T.achPage), { n: S.earned, total: S.total }) : T.achPageEmpty, { mood: S.earned ? 'cheer' : 'think' });
@@ -930,6 +938,16 @@
       if (total.length && ok.length === total.length) { cheered = true; say(T.allExercises, { mood: 'party' }); }
     }, 1200);
   }
+
+  document.addEventListener('speak:result', function (e) {
+    var d = e.detail || {}, st = d.stars | 0;
+    var list = st >= 3 ? T.speakStars3 : st === 2 ? T.speakStars2 : st === 1 ? T.speakStars1 : T.speakStars0;
+    say(pick(list), { mood: st >= 3 ? 'cheer' : st === 2 ? 'happy' : 'think' });
+  });
+  document.addEventListener('speak:achievements', function (e) {
+    var l = e.detail && e.detail.list;
+    if (l && l.length) celebrateAchievements(l);
+  });
 
   /* для тестов и отладки */
   window.__mascot = {

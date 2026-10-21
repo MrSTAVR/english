@@ -46,6 +46,15 @@ CREATE TABLE IF NOT EXISTS achievements (
     earned_at    TEXT NOT NULL,
     PRIMARY KEY (student_id, key)
 );
+CREATE TABLE IF NOT EXISTS speaking (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id   INTEGER NOT NULL,
+    lesson_id    INTEGER DEFAULT 0,
+    target       TEXT NOT NULL,                 -- что просили сказать
+    score        INTEGER NOT NULL,              -- 0..3 звезды
+    created_at   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_speaking_student ON speaking (student_id);
 CREATE TABLE IF NOT EXISTS garden (
     student_id     INTEGER PRIMARY KEY,        -- сад принадлежит ученику
     coins          INTEGER DEFAULT 0,          -- монетки за уроки

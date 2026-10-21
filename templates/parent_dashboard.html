@@ -128,6 +128,7 @@
     <div class="stat"><span class="stat-num">{{ stats.attempts|length }}</span><span class="stat-label">тестов сдано всего</span></div>
     <div class="stat"><span class="stat-num">{{ stats.total_mistakes }}</span><span class="stat-label">ошибок за всё время</span></div>
     <div class="stat"><span class="stat-num">{{ stats.words_learned }}</span><span class="stat-label">слов пройдено</span></div>
+    {% if stats.speak_tries %}<div class="stat"><span class="stat-num">🎤 {{ stats.speak_words }}</span><span class="stat-label">слов произнесено вслух (средняя оценка {{ stats.speak_avg }} из 3⭐)</span></div>{% endif %}
   </div>
   <div class="progress-bar"><div class="progress-fill" style="width: {{ 100 * stats.lessons_completed / total_lessons }}%"></div></div>
 </section>

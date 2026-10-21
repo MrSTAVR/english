@@ -5,6 +5,7 @@ from data.extra_lessons import EXTRA_LESSONS
 from data.lessons import LESSONS
 
 from grading import match_columns
+from practice import augment
 
 
 # Все уроки: основные (с последовательной разблокировкой) + дополнительные
@@ -12,6 +13,8 @@ from grading import match_columns
 ALL_LESSONS = LESSONS + EXTRA_LESSONS
 MAIN_COUNT = len(LESSONS)
 
+
+augment(ALL_LESSONS)
 
 LESSONS_BY_ID = {l["id"]: l for l in ALL_LESSONS}
 

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Говорим — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
+  <h1>🎤 Говорим по-английски</h1>
+</div>
+<p class="subtitle">Скажи слова вслух — я послушаю и поставлю звёзды. Сегодня слов: <b>{{ items|length }}</b>.</p>
+
+{% if fallback %}
+<p class="hint">Ты ещё не прошёл(а) ни одного урока, поэтому слова пока из самого первого. После уроков здесь появятся твои слова!</p>
+{% endif %}
+
+<section class="card speak-card">
+  <div id="speak-page" class="speak-block" data-items='{{ items | tojson }}'></div>
+</section>
+
+<section class="card hero hidden" id="sp-summary">
+  <div class="big-emoji">🏅</div>
+  <h2>Раунд пройден!</h2>
+  <p>Твои звёзды: <b class="sp-sum-num"></b></p>
+  <a class="btn btn-primary" href="{{ url_for('speak.speak_page') }}">Ещё раунд 🔁</a>
+</section>
+
+<p class="hint sp-privacy">🔒 Звук на наш сайт не отправляется — сохраняется только оценка. Браузер Chrome/Edge сам передаёт запись в своё облако для распознавания. Работает в Chrome, Edge и Safari; в Firefox микрофонных заданий нет.</p>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='speak.js') }}?v=1"></script>
+{% endblock %}

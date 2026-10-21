@@ -6,6 +6,24 @@ import json
 from curriculum import LESSONS_BY_ID
 
 
+def speaking_stats(db, student_id=None):
+    """Итоги тренировки произношения: слов (≥2⭐), идеальных (3⭐), средняя оценка."""
+    if student_id is None:
+        rows = db.execute("SELECT student_id, target, MAX(score) AS best, COUNT(*) AS n, "
+                          "SUM(score) AS total FROM speaking GROUP BY student_id, target").fetchall()
+    else:
+        rows = db.execute("SELECT student_id, target, MAX(score) AS best, COUNT(*) AS n, "
+                          "SUM(score) AS total FROM speaking WHERE student_id=? GROUP BY target",
+                          (student_id,)).fetchall()
+    tries = sum(r["n"] for r in rows)
+    return {
+        "speak_words": sum(1 for r in rows if r["best"] >= 2),
+        "speak_perfect": sum(1 for r in rows if r["best"] >= 3),
+        "speak_tries": tries,
+        "speak_avg": round(sum(r["total"] for r in rows) / tries, 1) if tries else 0,
+    }
+
+
 def compute_stats(db, student_id=None):
     """Статистика по попыткам — используется для ачивок и трекера.
 
@@ -102,7 +120,10 @@ def compute_stats(db, student_id=None):
     completed_ids = sorted(best_by_lesson.keys())
     real_best = [r for r in best_by_lesson.values() if not r["manual"]]
     main_ids = [i for i in completed_ids if not LESSONS_BY_ID[i].get("is_extra")]
-    words_learned = sum(len(LESSONS_BY_ID[i]["material"]) for i in completed_ids)
+    # уникальные слова: «Orange» в уроках про цвета и про фрукты — одно слово
+    words_learned = len({w["en"].strip().lower()
+                         for i in completed_ids for w in LESSONS_BY_ID[i]["material"]})
+    speak = speaking_stats(db, student_id)
 
     return {
         "attempts": rows,
@@ -121,6 +142,7 @@ def compute_stats(db, student_id=None):
         "perfect_count": perfect_count,
         "first_try_perfect": first_try_perfect,
         "words_learned": words_learned,
+        **speak,
         "total_mistakes": total_mistakes,
         "comeback": comeback,
         "early_bird": early_bird,

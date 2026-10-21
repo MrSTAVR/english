@@ -33,6 +33,8 @@ def build_mascot_ctx():
         mascot["page"] = "words"
     elif endpoint == "student.achievements_page":
         mascot["page"] = "achievements"
+    elif endpoint == "speak.speak_page":
+        mascot["page"] = "speak"
     elif endpoint == "student.theory_page":
         mascot["page"] = "theory"
     return mascot
