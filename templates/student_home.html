@@ -9,57 +9,25 @@
   </div>
 {% endif %}
 
+{% macro tile(href, emoji, title, sub, locked=false, badge='') %}
+{% if locked %}<div class="tile tile-locked" title="Откроется после первых уроков"><span class="tile-emoji">{{ emoji }}</span><b>{{ title }}</b><small>🔒 после первых уроков</small></div>
+{% else %}<a class="tile" href="{{ href }}"><span class="tile-emoji">{{ emoji }}</span><b>{{ title }}</b><small>{{ sub }}</small>{% if badge %}<span class="tile-badge">{{ badge }}</span>{% endif %}</a>{% endif %}
+{% endmacro %}
 <div class="welcome-row">
   <div class="welcome-avatar">{{ emoji or '🎒' }}</div>
-  <div>
+  <div class="welcome-main">
     <h1>Привет, {{ name }}! 👋</h1>
     <p class="welcome-sub">Учим английский весело — шаг за шагом 🐣</p>
   </div>
+  <div class="status-chips">
+    <a class="chip" href="{{ url_for('garden.garden_page') }}" title="Серия дней подряд"><svg class="icon"><use href="#i-flame"/></svg> {{ garden.streak_days }} дн.</a>
+    <a class="chip" href="{{ url_for('garden.garden_page') }}" title="Монетки"><svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ garden.coins }}</a>
+    <a class="chip" href="{{ url_for('student.achievements_page') }}" title="Награды">🏅 {{ earned_count }}</a>
+  </div>
 </div>
 
-<!-- 1. Трекер успеваемости -->
-<section class="card tracker glass">
-  <div class="section-head">
-    <h2>📈 Мой трекер успеваемости</h2>
-    <a class="pill pill-soft pill-link" href="{{ url_for('student.achievements_page') }}">{{ earned_count }}/{{ achievements|length }} 🏅 наград</a>
-  </div>
-  <div class="stats-grid">
-    <a class="stat stat-c1 stat-link" href="{{ url_for('student.theory_page') }}" title="Открыть теорию"><span class="stat-icon"><svg class="icon"><use href="#i-book"/></svg></span><span class="stat-num">{{ stats.lessons_completed }}/{{ total_lessons }}</span><span class="stat-label">уроков пройдено</span><span class="stat-more">📖 Открыть теорию ›</span></a>
-    <div class="stat stat-c2"><span class="stat-icon"><svg class="icon"><use href="#i-star"/></svg></span><span class="stat-num">{% if stats.avg_score %}{{ "%.0f"|format(stats.avg_score) }}%{% else %}—{% endif %}</span><span class="stat-label">средний балл тестов</span></div>
-    <a class="stat stat-c3 stat-link" href="{{ url_for('student.words_page') }}" title="Открыть словарь"><span class="stat-icon"><svg class="icon"><use href="#i-words"/></svg></span><span class="stat-num">{{ stats.words_learned }}</span><span class="stat-label">слов выучено</span><span class="stat-more">📖 Открыть словарь ›</span></a>
-    {% if speaking %}<a class="stat stat-c2 stat-link" href="{{ url_for('speak.speak_page') }}" title="Тренировка произношения"><span class="stat-icon"><svg class="icon"><use href="#i-sound"/></svg></span><span class="stat-num">{{ stats.speak_words }}</span><span class="stat-label">слов произнесено</span><span class="stat-more">🎤 Говорим ›</span></a>{% endif %}
-    <div class="stat stat-c4"><span class="stat-icon"><svg class="icon"><use href="#i-clock"/></svg></span><span class="stat-num">{{ stats.total_seconds|human_time }}</span><span class="stat-label">время занятий</span></div>
-  </div>
-  <div class="progress-wrap">
-    <div class="progress-bar"><div class="progress-fill" style="width: {{ 100 * stats.lessons_completed / total_lessons }}%"><span class="progress-knob"><svg class="icon"><use href="#i-chick"/></svg></span></div></div>
-    <span class="progress-pct">{{ "%.0f"|format(100 * stats.lessons_completed / total_lessons) }}%</span>
-  </div>
-</section>
-
-{% if season == 'halloween' %}<a class="season-banner" href="{{ url_for('season.halloween_page') }}">🎃 Хэллоуин! Новые слова, викторина и наряды — только пока идёт праздник →</a>{% endif %}
-{% if weekly %}<a class="weekly-teaser glass" href="{{ url_for('season.weekly_page') }}">🗓️ Недельный челлендж: <b>{{ weekly.tasks|selectattr('done')|list|length }}/{{ weekly.tasks|length }}</b>{% if weekly_got %} · 🎉 +{{ weekly_got }} монеток!{% elif weekly.boss_won %} · 🏆 босс побеждён{% elif weekly.complete %} · ⚔️ босс ждёт!{% endif %} →</a>{% endif %}
 {% if on_vacation %}<p class="hint vacation-note">🏖 У тебя каникулы — серия дней не сгорит. Можно отдыхать или заниматься, как хочется!</p>{% endif %}
-<!-- Сад: короткий тизер -->
-<a class="garden-teaser glass" href="{{ url_for('garden.garden_page') }}">
-  <span class="gt-tree">{{ garden.streak_days | tree_mini }}</span>
-  <span class="gt-text">
-    <b>{{ tree_stage.name }}</b> · <svg class="icon"><use href="#i-flame"/></svg> серия {{ garden.streak_days }} дн. · <svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ garden.coins }} монеток · 🌳 {{ tree_count }} дер.
-  </span>
-  <span class="gt-btn">Открыть сад →</span>
-</a>
-
-<!-- 1б. Цель дня -->
-{% if goal %}
-<section class="goal-card{{ ' goal-done' if goal.done }}">
-  <div class="goal-head"><b>🎯 Цель на сегодня</b>
-    <span class="goal-reward">{% if goal.done %}выполнена! +{{ goal.coins }} 🪙{% else %}награда: {{ goal.coins }} 🪙{% endif %}</span></div>
-  <div class="goal-items">
-    {% if goal.need_lessons %}<div class="goal-item{{ ' ok' if goal.lessons >= goal.need_lessons }}"><span>📚 Пройти урок</span><b>{{ goal.lessons }}/{{ goal.need_lessons }}</b></div>{% endif %}
-    {% if goal.need_words %}<div class="goal-item{{ ' ok' if goal.words >= goal.need_words }}"><span>🔁 Повторить слова</span><b>{{ goal.words }}/{{ goal.need_words }}</b>
-      <div class="goal-bar"><i style="width: {{ 100 * goal.words // goal.need_words }}%"></i></div></div>{% endif %}
-  </div>
-</section>
-{% endif %}
+{% if season == 'halloween' %}<a class="season-banner" href="{{ url_for('season.halloween_page') }}">🎃 Хэллоуин! Новые слова, викторина и наряды — только пока идёт праздник →</a>{% endif %}
 
 <!-- 2. Кнопка «Следующий урок» -->
 {% if next_lesson %}
@@ -83,16 +51,30 @@
   </div>
 {% endif %}
 
-<!-- 2б. Повторение и слово дня -->
-{% if rv_pool >= 4 %}
-<section class="rv-row">
-  <a class="rv-card rv-main" href="{{ url_for('review.review_page') }}">
-    <span class="rv-emoji">🔁</span>
-    <span class="rv-text"><b>Повторение слов</b>
-      <small>{% if rv_ready %}Готово к повторению: {{ rv_ready if rv_ready < 10 else '10+' }}{% else %}На сегодня всё повторено 🎉{% endif %} · выучено надолго: {{ rv_mastered }}</small></span>
-    <span class="rv-go">{{ 'Начать ▶' if rv_ready else 'Ещё раз ▶' }}</span>
+<!-- Сегодня: цель, челлендж, слово дня -->
+<section class="today-row">
+  {% if goal %}
+  <div class="goal-card{{ ' goal-done' if goal.done }}">
+    <div class="goal-head"><b>🎯 Цель на сегодня</b>
+      <span class="goal-reward">{% if goal.done %}выполнена! +{{ goal.coins }} 🪙{% else %}награда: {{ goal.coins }} 🪙{% endif %}</span></div>
+    <div class="goal-items">
+      {% if goal.need_lessons %}<div class="goal-item{{ ' ok' if goal.lessons >= goal.need_lessons }}"><span>📚 Пройти урок</span><b>{{ goal.lessons }}/{{ goal.need_lessons }}</b></div>{% endif %}
+      {% if goal.need_words %}<div class="goal-item{{ ' ok' if goal.words >= goal.need_words }}"><span>🔁 Повторить слова</span><b>{{ goal.words }}/{{ goal.need_words }}</b>
+        <div class="goal-bar"><i style="width: {{ 100 * goal.words // goal.need_words }}%"></i></div></div>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% if weekly %}
+  <a class="goal-card week-card" href="{{ url_for('season.weekly_page') }}">
+    <div class="goal-head"><b>🗓️ Недельный челлендж</b>
+      <span class="goal-reward">{% if weekly.boss_won %}🏆 босс побеждён{% elif weekly.complete %}⚔️ босс ждёт!{% else %}ещё {{ weekly.days_left + 1 }} дн.{% endif %}</span></div>
+    <div class="goal-items">
+      {% for t in weekly.tasks %}<div class="goal-item{{ ' ok' if t.done }}"><span>{{ t.emoji }} {{ t.text }}</span><b>{{ t.have }}/{{ t.need }}</b></div>{% endfor %}
+    </div>
+    {% if weekly_got %}<div class="week-got">🎉 Челлендж выполнен: +{{ weekly_got }} монеток!</div>{% endif %}
   </a>
-  {% if wod %}
+  {% endif %}
+  {% if rv_pool >= 4 and wod %}
   <div class="rv-card rv-wod">
     <span class="rv-kicker">🌟 Слово дня</span>
     <span class="rv-word">{% if wod.pic %}<span class="rv-pic">{{ wod.pic }}</span> {% endif %}{{ wod.en }} <button type="button" class="btn btn-small say-btn" data-say="{{ wod.en }}" title="Послушать">🔊</button></span>
@@ -100,25 +82,34 @@
   </div>
   {% endif %}
 </section>
-{% endif %}
 
-{% if rv_pool >= 4 %}
-<section class="rv-row">
-  <a class="rv-card" href="{{ url_for('games.games_hub') }}"><span class="rv-emoji">🎮</span><span class="rv-text"><b>Игры со словами</b><small>Пары, мемори, блиц, слушаем, бег</small></span><span class="rv-go">Играть ▶</span></a>
-  <a class="rv-card" href="{{ url_for('games.dialogs_page') }}"><span class="rv-emoji">💬</span><span class="rv-text"><b>Диалоги</b><small>Поговори с Томом и Анной</small></span><span class="rv-go">Открыть ▶</span></a>
+{% set locked = rv_pool < 4 %}
+<!-- Занимайся и играй -->
+<section>
+  <div class="section-head"><h2 class="section-title">🎯 Занимайся и играй</h2></div>
+  <div class="tile-grid tile-grid-4">
+    {{ tile(url_for('review.review_page'), '🔁', 'Повторение', ('ждут: ' ~ (rv_ready if rv_ready < 10 else '10+')) if rv_ready else 'всё повторено 🎉', locked, (rv_ready if rv_ready < 10 else '10+') if rv_ready else '') }}
+    {{ tile(url_for('games.games_hub'), '🎮', 'Игры', 'пары, мемори, блиц', locked) }}
+    {{ tile(url_for('games.dialogs_page'), '💬', 'Диалоги', 'Том и Анна', locked) }}
+    {{ tile(url_for('writing.writing_hub'), '✍️', 'Письмо', 'предложения и диктант', locked) }}
+    {{ tile(url_for('stories.stories_page'), '📖', 'Истории', 'читай и слушай', locked) }}
+    {% if speaking %}{{ tile(url_for('speak.speak_page'), '🎤', 'Говорим', 'скажи слово вслух') }}{% endif %}
+    {{ tile(url_for('student.theory_page'), '📘', 'Теория', 'правила и подсказки') }}
+    {{ tile(url_for('student.words_page'), '🔤', 'Словарь', 'все мои слова') }}
+  </div>
 </section>
-<section class="rv-row">
-  <a class="rv-card" href="{{ url_for('writing.writing_hub') }}"><span class="rv-emoji">✍️</span><span class="rv-text"><b>Письмо</b><small>Собери предложение, диктант, работа над ошибками</small></span><span class="rv-go">Писать ▶</span></a>
-  <a class="rv-card" href="{{ url_for('stories.stories_page') }}"><span class="rv-emoji">📖</span><span class="rv-text"><b>Истории</b><small>Читай и слушай короткие рассказы</small></span><span class="rv-go">Открыть ▶</span></a>
+
+<!-- Мой мир -->
+<section>
+  <div class="section-head"><h2 class="section-title">🌈 Мой мир</h2></div>
+  <div class="tile-grid">
+    {{ tile(url_for('garden.garden_page'), garden.streak_days | tree_mini, 'Мой сад', tree_stage.name ~ ' · ' ~ tree_count ~ ' дер.') }}
+    {{ tile(url_for('wardrobe.wardrobe_page'), '🎩', 'Гардероб', 'наряды для Чик-чика') }}
+    {{ tile(url_for('house.house_page'), '🏠', 'Домик', 'мебель и декор') }}
+    {{ tile(url_for('house.stickers_page'), '🏷️', 'Наклейки', 'за каждую тему') }}
+    {{ tile(url_for('student.achievements_page'), '🏅', 'Награды', earned_count ~ ' из ' ~ achievements|length) }}
+  </div>
 </section>
-<section class="rv-row">
-  <a class="rv-card" href="{{ url_for('wardrobe.wardrobe_page') }}"><span class="rv-emoji">🎩</span><span class="rv-text"><b>Гардероб Чик-чика</b><small>Шапки, очки, шарфы и цвет перьев — за монетки</small></span><span class="rv-go">Наряжать ▶</span></a>
-  <a class="rv-card" href="{{ url_for('house.house_page') }}"><span class="rv-emoji">🏠</span><span class="rv-text"><b>Домик Чик-чика</b><small>Мебель и декор — за монетки</small></span><span class="rv-go">Обустроить ▶</span></a>
-</section>
-<section class="rv-row">
-  <a class="rv-card" href="{{ url_for('house.stickers_page') }}"><span class="rv-emoji">🏷️</span><span class="rv-text"><b>Мои наклейки</b><small>Наклейка за каждую пройденную тему</small></span><span class="rv-go">Смотреть ▶</span></a>
-</section>
-{% endif %}
 
 <!-- 3. Мои уроки (компактный вид: последний пройденный, следующий и первый закрытый) -->
 <section>
@@ -167,11 +158,9 @@
 </section>
 
 <!-- 3б. Дополнительные уроки — всегда открыты -->
-<section>
-  <div class="section-head">
-    <h2 class="section-title">🎁 Дополнительные уроки</h2>
-    <span class="pill pill-soft">{{ extras_done }} из {{ total_extras }} пройдено · открыты всегда 🔓</span>
-  </div>
+<details class="extras-box">
+  <summary class="section-head"><h2 class="section-title">🎁 Дополнительные уроки</h2>
+    <span class="pill pill-soft">{{ extras_done }} из {{ total_extras }} пройдено · открыты всегда 🔓</span></summary>
   <p class="section-sub">Иди в любом порядке и в любое время — они не блокируются основным курсом и помогают учить полезные слова.</p>
   <div class="lesson-grid">
     {% for info in extra_lessons %}
@@ -196,6 +185,25 @@
         {% endif %}
       </div>
     {% endfor %}
+  </div>
+</details>
+
+<!-- 1. Трекер успеваемости -->
+<section class="card tracker glass" id="tracker">
+  <div class="section-head">
+    <h2>📈 Мой трекер успеваемости</h2>
+    <a class="pill pill-soft pill-link" href="{{ url_for('student.achievements_page') }}">{{ earned_count }}/{{ achievements|length }} 🏅 наград</a>
+  </div>
+  <div class="stats-grid">
+    <a class="stat stat-c1 stat-link" href="{{ url_for('student.theory_page') }}" title="Открыть теорию"><span class="stat-icon"><svg class="icon"><use href="#i-book"/></svg></span><span class="stat-num">{{ stats.lessons_completed }}/{{ total_lessons }}</span><span class="stat-label">уроков пройдено</span><span class="stat-more">📖 Открыть теорию ›</span></a>
+    <div class="stat stat-c2"><span class="stat-icon"><svg class="icon"><use href="#i-star"/></svg></span><span class="stat-num">{% if stats.avg_score %}{{ "%.0f"|format(stats.avg_score) }}%{% else %}—{% endif %}</span><span class="stat-label">средний балл тестов</span></div>
+    <a class="stat stat-c3 stat-link" href="{{ url_for('student.words_page') }}" title="Открыть словарь"><span class="stat-icon"><svg class="icon"><use href="#i-words"/></svg></span><span class="stat-num">{{ stats.words_learned }}</span><span class="stat-label">слов выучено</span><span class="stat-more">📖 Открыть словарь ›</span></a>
+    {% if speaking %}<a class="stat stat-c2 stat-link" href="{{ url_for('speak.speak_page') }}" title="Тренировка произношения"><span class="stat-icon"><svg class="icon"><use href="#i-sound"/></svg></span><span class="stat-num">{{ stats.speak_words }}</span><span class="stat-label">слов произнесено</span><span class="stat-more">🎤 Говорим ›</span></a>{% endif %}
+    <div class="stat stat-c4"><span class="stat-icon"><svg class="icon"><use href="#i-clock"/></svg></span><span class="stat-num">{{ stats.total_seconds|human_time }}</span><span class="stat-label">время занятий</span></div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" style="width: {{ 100 * stats.lessons_completed / total_lessons }}%"><span class="progress-knob"><svg class="icon"><use href="#i-chick"/></svg></span></div></div>
+    <span class="progress-pct">{{ "%.0f"|format(100 * stats.lessons_completed / total_lessons) }}%</span>
   </div>
 </section>
 

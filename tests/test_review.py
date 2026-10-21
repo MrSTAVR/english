@@ -83,7 +83,7 @@ def test_review_page_empty_then_filled(parent, make_student):
     html = student.get("/student/review").get_data(as_text=True)
     assert 'id="rv-stage"' in html and "review.js" in html
     home = student.get("/student").get_data(as_text=True)
-    assert "Повторение слов" in home and "Слово дня" in home
+    assert "review" in home and "Повторение" in home and "Слово дня" in home
 
 
 def test_review_api_validates_and_records(parent, make_student):
