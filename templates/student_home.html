@@ -89,7 +89,8 @@
           <span>⏱️ ~15 мин</span><span>🧠 {{ l.material|length }} слов</span><span>✅ тест {{ l.test|length }}</span>
         </div>
         {% if info.done %}
-          <div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '🌟' if info.best_score >= 90 }}</div>
+          {% if info.credited %}<div class="done-score">Зачтено родителем 👨‍👩‍👧</div>
+          {% else %}<div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '🌟' if info.best_score >= 90 }}</div>{% endif %}
         {% endif %}
         {% if info.locked %}
           <button class="btn btn-locked" disabled>🔒 Закрой предыдущий урок</button>
@@ -134,7 +135,8 @@
           <span>⏱️ ~10 мин</span><span>🧠 {{ l.material|length }} слов</span><span>✅ тест {{ l.test|length }}</span>
         </div>
         {% if info.done %}
-          <div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '🌟' if info.best_score >= 90 }}</div>
+          {% if info.credited %}<div class="done-score">Зачтено родителем 👨‍👩‍👧</div>
+          {% else %}<div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '🌟' if info.best_score >= 90 }}</div>{% endif %}
           <a class="btn btn-secondary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Повторить ещё раз 🔁</a>
         {% else %}
           <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Начать урок ▶️</a>

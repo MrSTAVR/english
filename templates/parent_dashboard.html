@@ -77,6 +77,47 @@
   </form>
 </section>
 
+<!-- Зачёт пройденных уроков -->
+<section class="card" id="credit">
+  <h2>✅ Зачесть пройденные уроки</h2>
+  <p class="hint">Если ребёнок уже прошёл уроки в другой версии (например, на домашнем компьютере), отметьте их здесь —
+    проходить заново не придётся, следующие уроки откроются. Монетки и серия дней при этом не меняются.</p>
+  {% if credit_cards %}
+  {% for cc in credit_cards %}
+  <details class="credit-box" {% if credit_cards|length == 1 %}open{% endif %}>
+    <summary>{{ cc.student.emoji }} <b>{{ cc.student.display_name }}</b></summary>
+    <form method="post" action="{{ url_for('parent.credit_student_lessons', sid=cc.student.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="credit-quick">
+        <label>Все основные уроки с 1-го по №
+          <input type="number" name="upto" min="1" max="{{ main_count }}" inputmode="numeric" placeholder="12"></label>
+        <span class="hint">(всего в курсе {{ main_count }})</span>
+      </div>
+      <p class="hint">…или отметьте нужные уроки:</p>
+      <div class="credit-grid">
+        {% for row in cc.rows %}
+          <label class="credit-item credit-{{ row.state }}">
+            <input type="checkbox" name="lessons" value="{{ row.lesson.id }}" {% if row.state == 'done' %}disabled checked{% endif %}>
+            <span>{{ row.lesson.emoji }} {{ row.lesson.title }}
+              {% if row.lesson.is_extra %}<span class="pill pill-soft">доп.</span>{% endif %}
+              {% if row.state == 'credited' %}<small>зачтён родителем</small>{% elif row.state == 'done' %}<small>пройден</small>{% endif %}
+            </span>
+          </label>
+        {% endfor %}
+      </div>
+      <div class="credit-actions">
+        <button class="btn btn-primary" type="submit" name="action" value="add">✅ Зачесть выбранные</button>
+        <button class="btn btn-small" type="submit" name="action" value="remove"
+                onclick="return confirm('Снять зачёт с выбранных уроков? Настоящие пройденные тесты останутся.');">↩️ Снять зачёт</button>
+      </div>
+    </form>
+  </details>
+  {% endfor %}
+  {% else %}
+  <p class="hint">Сначала создайте аккаунт ученика.</p>
+  {% endif %}
+</section>
+
 <!-- Общая сводка -->
 <section class="card tracker">
   <h2>📊 Общая статистика (все ученики)</h2>

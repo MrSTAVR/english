@@ -751,3 +751,86 @@ a, button, label, summary, input[type="submit"] { touch-action: manipulation; }
 @media (display-mode: standalone) {
   .install-box { display: none; }
 }
+
+/* ---------- ✅ Зачёт пройденных уроков (кабинет родителя) ---------- */
+.credit-box { border: 2px solid var(--border); border-radius: 16px; padding: 10px 14px; margin: 10px 0; background: var(--surface); }
+.credit-box > summary { cursor: pointer; font-size: 1.1rem; padding: 6px 0; }
+.credit-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 8px 0; }
+.credit-quick input { width: 110px; padding: 10px; border-radius: 12px; border: 2px solid var(--border); font: inherit; }
+.credit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 14px; }
+.credit-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; }
+.credit-item:hover { background: #f3efff; }
+.credit-item input { width: 22px; height: 22px; margin-top: 2px; flex: none; }
+.credit-item small { display: block; color: var(--muted); font-weight: 700; }
+.credit-done { opacity: .7; cursor: default; }
+.credit-credited span { color: var(--primary-dark); }
+.credit-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+/* ---------- Перетаскивание пальцем (Pointer Events) ---------- */
+.match-tile, .sort-word { touch-action: none; -webkit-user-select: none; user-select: none;
+                          -webkit-touch-callout: none; }
+.dnd-ghost { position: fixed !important; left: 0; top: 0; z-index: 10000; margin: 0 !important;
+             pointer-events: none; opacity: .95; box-sizing: border-box;
+             box-shadow: 0 14px 30px rgba(36, 29, 71, .35); transition: none !important; }
+.sort-tray, .bin-body, .match-slot { -webkit-user-select: none; user-select: none; }
+
+/* ============================================================
+   📱 Телефон: крупнее текст и кнопки, таблицы карточками
+   ============================================================ */
+@media (max-width: 640px) {
+  html { font-size: 118.75%; }                      /* 19px вместо 16px: всё на rem растёт вместе */
+  body { line-height: 1.5; }
+  h1 { font-size: 1.7rem; line-height: 1.2; }
+  h2 { font-size: 1.35rem; }
+  .container { margin: 14px auto; padding: 0 12px; }
+  .card { padding-left: 16px; padding-right: 16px; }
+
+  /* крупные цели для пальца (не меньше 48px) и поля без «зума» iOS */
+  .btn, .btn-small, .btn-danger { min-height: 48px; padding: 12px 20px; font-size: 1rem;
+                                  display: inline-flex; align-items: center; justify-content: center; }
+  input[type="text"], input[type="password"], input[type="number"], select, textarea, .typein,
+  .login-card input, .student-form input, .student-form select, .inline-form input {
+    min-height: 48px; font-size: 1rem; padding: 10px 14px; box-sizing: border-box; }
+  .typein { max-width: none; }
+  .inline-form { flex-wrap: wrap; width: 100%; margin-right: 0; }
+  .inline-form input { flex: 1 1 140px; width: auto; }
+  .student-form label, .student-form input, .student-form select { width: 100%; }
+  .student-form label { font-size: .95rem; }
+
+  /* ответы и слова */
+  .opt { padding: 14px 16px; font-size: 1.05rem; }
+  .opt input { width: 22px; height: 22px; vertical-align: middle; margin-right: 12px; }
+  .word-chip { padding: 10px 16px; min-height: 46px; font-size: 1.1rem; }
+  .match-tile { padding: 14px 16px; font-size: 1.1rem; min-height: 52px; box-sizing: border-box; }
+  .match-slot { min-height: 60px; font-size: 1.05rem; }
+  .match-col { min-width: 140px; }
+  .sort-tray { gap: 10px; padding: 12px; min-height: 64px; }
+  .bin { min-width: 0; flex: 1 1 100%; }
+  .bin-body { min-height: 56px; gap: 10px; }
+
+  /* мелкие подписи */
+  .lesson-meta { font-size: .9rem; }
+  .lesson-meta span, .pill { padding: 5px 12px; font-size: .9rem; }
+  .stat-label, .mini-label { font-size: .95rem; }
+  .hint { font-size: .95rem; }
+  .footer { font-size: .95rem; }
+  .flash { font-size: 1.05rem; }
+
+  /* таблицы кабинета родителя: строка = карточка */
+  .tbl { display: block; font-size: 1rem; }
+  .tbl thead { display: none; }
+  .tbl tbody, .tbl tr, .tbl td { display: block; width: auto; }
+  .tbl tr { border: 1.5px solid #e8defc; border-radius: 14px; margin: 0 0 12px; padding: 6px 12px; background: #fff; }
+  .tbl td { border-bottom: 1px dashed #eee9fa; padding: 8px 0; }
+  .tbl td:last-child { border-bottom: 0; }
+  .tbl td[data-label]::before { content: attr(data-label); display: block; font-size: .8rem; font-weight: 800;
+                                color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  .tbl tbody tr:hover { background: #fff; }
+  .actions-cell { min-width: 0; }
+  .mini-progress { width: 100%; }
+  .credit-grid { grid-template-columns: 1fr; }
+  .credit-item { padding: 12px 10px; }
+  .credit-item input { width: 26px; height: 26px; }
+  .credit-quick input { width: 130px; }
+  .garden-edit input[type="number"] { width: 100%; flex: none; }
+}

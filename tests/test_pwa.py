@@ -115,3 +115,18 @@ def test_fetch_fonts_keeps_only_cyrillic_and_latin():
     assert "googleapis" not in css and "gstatic" not in css
     assert css.count("@font-face") == 2 and "url(fonts/nunito-cyrillic-200-1000.woff2)" in css
     assert "unicode-range: U+0301" in css
+
+
+def test_mobile_assets_wired(anon):
+    body = anon.get("/").get_data(as_text=True)
+    assert "mobile.js" in body and (STATIC / "mobile.js").is_file()
+    css = (STATIC / "style.css").read_text(encoding="utf-8")
+    assert "touch-action: none" in css and "@media (max-width: 640px)" in css
+
+
+def test_lesson_uses_pointer_events_not_html5_drag(parent, make_student):
+    student = make_student()
+    parent.post("/parent/students/1/credit", data={"upto": "2", "action": "add"})
+    html = student.get("/lesson/3").get_data(as_text=True)
+    assert "pointerdown" in html and "setPointerCapture" in html
+    assert "addEventListener('dragstart', e => {\n      dragged" not in html

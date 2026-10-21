@@ -270,8 +270,6 @@ function updateOrder(qi) {
 }
 
 // --- drag & drop: match (пары) и sort (категории) ---
-let dragged = null;
-
 function dndState(root) { return root._pairs || (root._pairs = {}); }
 
 function fillHidden(root) {
@@ -303,38 +301,139 @@ function refreshMatchFeedback(root) {
   });
 }
 
+// Перетаскивание на Pointer Events: одинаково работает мышью, пальцем и пером.
+// (HTML5-drag на телефонах срабатывает «через раз», поэтому он не используется.)
+let dndSuppressUntil = 0;            // сразу после перетаскивания гасим «хвостовой» click
+
+function dndTargetAt(root, x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  if (root.classList.contains('dnd-match')) {
+    const slot = el.closest('.match-slot');
+    return slot && root.contains(slot) ? slot : null;
+  }
+  const tray = el.closest('.sort-tray');
+  if (tray && root.contains(tray)) return tray;
+  const bin = el.closest('.bin');
+  return bin && root.contains(bin) ? bin : null;
+}
+
+function dndDrop(root, el, target) {
+  if (root.classList.contains('dnd-match')) {
+    if (el.classList.contains('match-tile')) placePair(root, target, el);
+    return;
+  }
+  const body = target.classList.contains('sort-tray') ? target : target.querySelector('.bin-body');
+  el.classList.remove('tap-selected');
+  body.appendChild(el);
+  fillHidden(root);
+}
+
+function makeDraggable(root, el) {
+  el.draggable = false;
+  el.removeAttribute('draggable');
+  el.addEventListener('dragstart', e => e.preventDefault());
+  el.addEventListener('contextmenu', e => e.preventDefault());   // долгое нажатие на телефоне
+  let st = null;
+
+  function setHover(target) {
+    if (st.target === target) return;
+    if (st.target) st.target.classList.remove('hover');
+    st.target = target;
+    if (target) target.classList.add('hover');
+  }
+  function updateTarget() { setHover(dndTargetAt(root, st.last.x, st.last.y)); }
+  function moveGhost() {
+    st.ghost.style.transform = `translate(${st.last.x - st.dx}px, ${st.last.y - st.dy}px)`;
+  }
+  function startDrag() {
+    const r = el.getBoundingClientRect();
+    st.dx = st.x - r.left; st.dy = st.y - r.top;
+    const g = el.cloneNode(true);
+    g.className = el.className + ' dnd-ghost';
+    g.classList.remove('tap-selected', 'placed', 'dragging');
+    g.style.width = r.width + 'px';
+    g.removeAttribute('id');
+    document.body.appendChild(g);
+    st.ghost = g;
+    st.dragging = true;
+    el.classList.add('dragging');
+    el.classList.remove('tap-selected');
+    st.raf = requestAnimationFrame(tick);
+  }
+  function tick() {                    // прокрутка страницы, пока палец у края экрана
+    if (!st || !st.dragging) return;
+    const y = st.last.y, edge = 90;
+    let d = 0;
+    if (y < edge) d = -Math.ceil((edge - y) / 5);
+    else if (y > window.innerHeight - edge) d = Math.ceil((y - (window.innerHeight - edge)) / 5);
+    if (d) { window.scrollBy(0, d); updateTarget(); }
+    st.raf = requestAnimationFrame(tick);
+  }
+  function cleanup() {
+    if (!st) return;
+    if (st.raf) cancelAnimationFrame(st.raf);
+    if (st.ghost) st.ghost.remove();
+    if (st.target) st.target.classList.remove('hover');
+    el.classList.remove('dragging');
+    try { el.releasePointerCapture(st.id); } catch (err) {}
+    st = null;
+  }
+
+  el.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (st) cleanup();
+    st = {id: e.pointerId, x: e.clientX, y: e.clientY, last: {x: e.clientX, y: e.clientY},
+          dragging: false, ghost: null, target: null, dx: 0, dy: 0, raf: 0};
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  el.addEventListener('pointermove', e => {
+    if (!st || e.pointerId !== st.id) return;
+    st.last = {x: e.clientX, y: e.clientY};
+    if (!st.dragging) {
+      if (Math.hypot(e.clientX - st.x, e.clientY - st.y) < 8) return;   // это ещё просто касание
+      startDrag();
+    }
+    moveGhost();
+    updateTarget();
+    e.preventDefault();
+  });
+  el.addEventListener('pointerup', e => {
+    if (!st || e.pointerId !== st.id) return;
+    const wasDragging = st.dragging;
+    if (wasDragging) {
+      st.last = {x: e.clientX, y: e.clientY};
+      const target = dndTargetAt(root, e.clientX, e.clientY);
+      dndSuppressUntil = Date.now() + 400;
+      cleanup();
+      if (target) dndDrop(root, el, target);
+    } else {
+      cleanup();                       // короткое касание: сработает обычный click (выбор «тапом»)
+    }
+  });
+  el.addEventListener('pointercancel', () => { if (st) cleanup(); });
+  el.addEventListener('lostpointercapture', () => { if (st && !st.dragging) cleanup(); });
+}
+
 function wireDnd(root) {
-  // перетаскиваемые элементы
+  // после перетаскивания браузер шлёт click — он не должен выбрать/вернуть слово
+  root.addEventListener('click', e => {
+    if (Date.now() < dndSuppressUntil) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
   root.querySelectorAll('.match-tile, .sort-word').forEach(el => {
-    el.addEventListener('dragstart', e => {
-      dragged = el;
-      el.classList.add('dragging');
-      try { e.dataTransfer.setData('text/plain', ''); } catch (err) {}
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    el.addEventListener('dragend', () => { el.classList.remove('dragging'); dragged = null; });
-    // клик как резервный способ для тач-устройств: выбрать, затем коснуться цели
+    makeDraggable(root, el);
+    // запасной способ без перетаскивания: коснуться слова, затем коснуться цели
     el.addEventListener('click', () => {
-      if (root.classList.contains('dnd-sort') && el.parentElement.classList.contains('sort-tray')) {
-        const sel = root.querySelector('.tap-selected');
-        if (sel) sel.classList.remove('tap-selected');
-        el.classList.add('tap-selected');
-      } else if (el.classList.contains('match-tile')) {
-        const sel = root.querySelector('.tap-selected');
-        if (sel) sel.classList.remove('tap-selected');
-        el.classList.add('tap-selected');
-      }
+      if (root.classList.contains('dnd-sort') && !el.parentElement.classList.contains('sort-tray')) return;
+      const sel = root.querySelector('.tap-selected');
+      if (sel) sel.classList.remove('tap-selected');
+      if (sel !== el) el.classList.add('tap-selected');
     });
   });
 
   if (root.classList.contains('dnd-match')) {
     root.querySelectorAll('.match-slot').forEach(slot => {
-      slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('hover'); });
-      slot.addEventListener('dragleave', () => slot.classList.remove('hover'));
-      slot.addEventListener('drop', e => {
-        e.preventDefault(); slot.classList.remove('hover');
-        if (dragged && dragged.classList.contains('match-tile')) placePair(root, slot, dragged);
-      });
       slot.addEventListener('click', () => {
         const sel = root.querySelector('.match-tile.tap-selected');
         if (sel) { placePair(root, slot, sel); sel.classList.remove('tap-selected'); }
@@ -343,23 +442,12 @@ function wireDnd(root) {
   } else {
     root.querySelectorAll('.bin').forEach(bin => {
       const body = bin.querySelector('.bin-body');
-      const target = bin;
-      target.addEventListener('dragover', e => { e.preventDefault(); bin.classList.add('hover'); });
-      target.addEventListener('dragleave', () => bin.classList.remove('hover'));
-      target.addEventListener('drop', e => {
-        e.preventDefault(); bin.classList.remove('hover');
-        if (dragged && dragged.classList.contains('sort-word')) {
-          dragged.classList.remove('tap-selected');
-          body.appendChild(dragged);
-          fillHidden(root);
-        }
-      });
-      target.addEventListener('click', () => {
+      bin.addEventListener('click', () => {
         const sel = root.querySelector('.sort-word.tap-selected');
         if (sel) { sel.classList.remove('tap-selected'); body.appendChild(sel); fillHidden(root); }
       });
     });
-    // клик по слову внутри корзины возвращает его в лоток
+    // касание слова внутри корзины возвращает его в лоток
     root.querySelectorAll('.bin-body').forEach(body => {
       body.addEventListener('click', e => {
         if (e.target.classList.contains('sort-word')) {
@@ -372,6 +460,14 @@ function wireDnd(root) {
 }
 
 function placePair(root, slot, tile) {
+  // плитку переносят из другого слота — освобождаем прежний
+  root.querySelectorAll('.match-slot').forEach(s2 => {
+    if (s2 !== slot && s2.dataset.filledLeft === tile.dataset.left) {
+      delete s2.dataset.filledLeft;
+      s2.classList.remove('slot-ok', 'slot-bad');
+      const c = s2.querySelector('.pair-chip'); if (c) c.remove();
+    }
+  });
   // если в слоте уже была пара — вернуть её карточку в левый столбик
   if (slot.dataset.filledLeft !== undefined) {
     const old = root.querySelector(`.match-tile[data-left="${slot.dataset.filledLeft}"]`);

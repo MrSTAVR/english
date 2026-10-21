@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS attempts (
     total_q       INTEGER DEFAULT 0,
     correct_q     INTEGER DEFAULT 0,
     mistakes_json TEXT DEFAULT '[]',         -- [{question, given, correct}]
+    manual        INTEGER DEFAULT 0,         -- 1 = урок зачтён родителем (не настоящая попытка)
     details_json  TEXT DEFAULT '{}'          -- полные результаты по каждому вопросу
 );
 CREATE TABLE IF NOT EXISTS achievements (
@@ -81,6 +82,8 @@ def init_db():
     cols = {r[1] for r in conn.execute("PRAGMA table_info(attempts)")}
     if "student_id" not in cols:
         conn.execute("ALTER TABLE attempts ADD COLUMN student_id INTEGER")
+    if "manual" not in cols:
+        conn.execute("ALTER TABLE attempts ADD COLUMN manual INTEGER DEFAULT 0")
     g_cols = {r[1] for r in conn.execute("PRAGMA table_info(garden)")}
     if g_cols and "manual" not in g_cols:
         conn.execute("ALTER TABLE garden ADD COLUMN manual INTEGER DEFAULT 0")

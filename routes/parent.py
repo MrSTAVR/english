@@ -2,13 +2,14 @@
 """Кабинет родителя: аккаунты учеников, статистика, API ошибок."""
 
 import json
-from achievements import ACHIEVEMENTS
+from achievements import ACHIEVEMENTS, update_achievements
 from curriculum import ALL_LESSONS, LESSONS_BY_ID
 from data.lessons import LESSONS
 from database import get_db
 from datetime import datetime
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from garden import cap_streak, get_garden, tree_count_for, tree_stage
+from progress import credit_lessons, lesson_ids_upto, uncredit_lessons
 from security import hash_password
 from stats import compute_stats
 
@@ -143,6 +144,47 @@ def parent_update_garden(sid):
     return redirect(url_for("parent.parent_dashboard") + "#students")
 
 
+@bp.route("/parent/students/<int:sid>/credit", methods=["POST"])
+def credit_student_lessons(sid):
+    """Зачесть (или снять зачёт с) уроков: перенос прогресса без повторного прохождения."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    student = db.execute("SELECT * FROM students WHERE id=?", (sid,)).fetchone()
+    if not student:
+        abort(404)
+    back = redirect(url_for("parent.parent_dashboard") + "#credit")
+    ids = set()
+    for raw in request.form.getlist("lessons"):
+        if raw.isdigit():
+            ids.add(int(raw))
+    upto = request.form.get("upto", "").strip()
+    if upto.isdigit():
+        ids |= lesson_ids_upto(int(upto))
+    ids &= set(LESSONS_BY_ID)
+    if not ids:
+        flash("Выбери уроки или укажи номер, до которого всё пройдено.", "error")
+        return back
+
+    if request.form.get("action") == "remove":
+        removed = uncredit_lessons(db, sid, ids)
+        flash(f"Зачёт снят с уроков: {len(removed)}." if removed else
+              "Снимать нечего: у выбранных уроков нет зачёта родителя.", "success" if removed else "error")
+        return back
+
+    added = credit_lessons(db, sid, ids)
+    if not added:
+        flash("Все выбранные уроки уже пройдены.", "error")
+        return back
+    new = update_achievements(db, compute_stats(db, sid), sid)
+    msg = f"{student['display_name']}: зачтено уроков — {len(added)} ✅ Следующие уроки открыты."
+    if new:
+        msg += " Ачивки: " + ", ".join(f"{a['emoji']} {a['title']}" for a in new)
+    flash(msg, "success")
+    return back
+
+
 @bp.route("/parent")
 def parent_dashboard():
     err = require_role("parent")
@@ -167,6 +209,16 @@ def parent_dashboard():
                               "deco_count": db.execute(
                                   "SELECT COUNT(*) c FROM decorations WHERE student_id=?",
                                   (st["id"],)).fetchone()["c"]})
+
+    # Зачёт уроков: состояние каждого урока для каждого ученика
+    credit_cards = []
+    for card in student_cards:
+        sst = card["stats"]
+        rows = [{"lesson": l,
+                 "state": ("credited" if l["id"] in sst["credited_ids"] else
+                           "done" if l["id"] in sst["completed_ids"] else "none")}
+                for l in ALL_LESSONS]
+        credit_cards.append({"student": card["student"], "rows": rows})
 
     stats = compute_stats(db)  # общая сводка по всем детям
     attempts = list(reversed(stats["attempts"]))  # свежие сверху
@@ -204,6 +256,7 @@ def parent_dashboard():
                            stats=stats, lessons=lesson_rows,
                            attempts=attempts, achievements=achievements,
                            students=students, student_cards=student_cards,
+                           credit_cards=credit_cards, main_count=len(LESSONS),
                            names_by_id=names_by_id, emojis_by_id=emojis_by_id,
                            student_emojis=STUDENT_EMOJIS,
                            lesson_titles={l["id"]: l["title"] for l in ALL_LESSONS},

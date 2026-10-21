@@ -37,11 +37,13 @@ def student_home():
 
     def lesson_info(l):
         best = stats["best_by_lesson"].get(l["id"])
+        credited = l["id"] in stats["credited_ids"]
         return {
             "lesson": l,
             "locked": l["id"] not in unlocked,
             "done": l["id"] in stats["completed_ids"],
-            "best_score": best["score_percent"] if best else None,
+            "credited": credited,
+            "best_score": best["score_percent"] if best and not credited else None,
         }
 
     lessons_info = [lesson_info(l) for l in LESSONS]
@@ -54,7 +56,7 @@ def student_home():
                      "earned_at": earned.get(a["key"])} for a in ACHIEVEMENTS]
     new_badge = session.pop("new_achievements", None)
     mascot = build_mascot_ctx()
-    mascot["alreadyStarted"] = bool(stats["attempts"])
+    mascot["alreadyStarted"] = bool(stats["attempts"] or stats["completed_ids"])
     mascot["allDone"] = stats["lessons_completed"] >= len(LESSONS)
     # Следующий непройденный доступный урок (для крупной кнопки «Продолжить»)
     next_lesson = None

@@ -21,6 +21,17 @@ def compute_stats(db, student_id=None):
             "SELECT * FROM attempts WHERE finished_at IS NOT NULL AND student_id=? "
             "ORDER BY finished_at ASC, id ASC", (student_id,)).fetchall()
 
+    # Уроки, зачтённые родителем, — не настоящие попытки: они открывают следующие уроки
+    # и считаются пройденными, но не влияют на «идеальные тесты», время и средний балл.
+    credited = {}
+    real_rows = []
+    for r in rows:
+        if r["manual"]:
+            credited.setdefault(r["lesson_id"], r)
+        else:
+            real_rows.append(r)
+    rows = real_rows
+
     best_by_lesson = {}   # лучший результат по каждому уроку
     max_streak = 0
     clean_run = 0        # текущая серия идеальных тестов подряд
@@ -70,7 +81,11 @@ def compute_stats(db, student_id=None):
         except Exception:
             pass
 
+    for lid, r in credited.items():
+        best_by_lesson.setdefault(lid, r)           # настоящая попытка важнее зачёта
+
     completed_ids = sorted(best_by_lesson.keys())
+    real_best = [r for r in best_by_lesson.values() if not r["manual"]]
     main_ids = [i for i in completed_ids if not LESSONS_BY_ID[i].get("is_extra")]
     words_learned = sum(len(LESSONS_BY_ID[i]["material"]) for i in completed_ids)
 
@@ -80,8 +95,9 @@ def compute_stats(db, student_id=None):
         "lessons_completed": len(main_ids),          # только основной курс
         "extras_completed": len(completed_ids) - len(main_ids),
         "completed_ids": set(completed_ids),
-        "avg_score": (sum(r["score_percent"] for r in best_by_lesson.values()) / len(best_by_lesson))
-                     if best_by_lesson else 0.0,
+        "credited_ids": {lid for lid, r in best_by_lesson.items() if r["manual"]},
+        "avg_score": (sum(r["score_percent"] for r in real_best) / len(real_best))
+                     if real_best else 0.0,
         "total_seconds": total_seconds,
         "total_minutes": round(total_seconds / 60),
         "max_streak": max_streak,
