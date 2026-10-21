@@ -5,6 +5,13 @@
 <h1>{{ lesson.emoji }} Урок {{ lesson.id }}: {{ lesson.title }}</h1>
 <p class="subtitle">{{ lesson.description }}</p>
 
+<ol class="stepper" id="stepper" aria-label="Шаги урока">
+  <li data-s="step-theory" class="active"><i>1</i><span>Теория</span></li>
+  <li data-s="step-material"><i>2</i><span>Слова</span></li>
+  <li data-s="step-exercises"><i>3</i><span>Тренировка</span></li>
+  <li data-s="step-test"><i>4</i><span>Тест</span></li>
+</ol>
+
 <!-- Шаг 1: теория -->
 <section class="card step" id="step-theory">
   <h2>Шаг 1 — Теория 📖</h2>
@@ -205,6 +212,12 @@ const START_TS = {{ started_ts }};
 function goStep(id) {
   document.querySelectorAll('.step').forEach(s => s.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
+  var seen = true;
+  document.querySelectorAll('#stepper li').forEach(function (li) {
+    li.classList.remove('active', 'done');
+    if (li.dataset.s === id) { li.classList.add('active'); seen = false; }
+    else if (seen) li.classList.add('done');
+  });
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 

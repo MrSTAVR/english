@@ -25,13 +25,13 @@
     <span class="pill pill-soft">{{ earned_count }}/{{ achievements|length }} 🏅 наград</span>
   </div>
   <div class="stats-grid">
-    <a class="stat stat-c1 stat-link" href="{{ url_for('student.theory_page') }}" title="Открыть теорию"><span class="stat-icon">📚</span><span class="stat-num">{{ stats.lessons_completed }}/{{ total_lessons }}</span><span class="stat-label">уроков пройдено</span><span class="stat-more">📖 Открыть теорию ›</span></a>
-    <div class="stat stat-c2"><span class="stat-icon">⭐</span><span class="stat-num">{% if stats.avg_score %}{{ "%.0f"|format(stats.avg_score) }}%{% else %}—{% endif %}</span><span class="stat-label">средний балл тестов</span></div>
-    <a class="stat stat-c3 stat-link" href="{{ url_for('student.words_page') }}" title="Открыть словарь"><span class="stat-icon">🧠</span><span class="stat-num">{{ stats.words_learned }}</span><span class="stat-label">слов выучено</span><span class="stat-more">📖 Открыть словарь ›</span></a>
-    <div class="stat stat-c4"><span class="stat-icon">⏰</span><span class="stat-num">{{ stats.total_seconds|human_time }}</span><span class="stat-label">время занятий</span></div>
+    <a class="stat stat-c1 stat-link" href="{{ url_for('student.theory_page') }}" title="Открыть теорию"><span class="stat-icon"><svg class="icon"><use href="#i-book"/></svg></span><span class="stat-num">{{ stats.lessons_completed }}/{{ total_lessons }}</span><span class="stat-label">уроков пройдено</span><span class="stat-more">📖 Открыть теорию ›</span></a>
+    <div class="stat stat-c2"><span class="stat-icon"><svg class="icon"><use href="#i-star"/></svg></span><span class="stat-num">{% if stats.avg_score %}{{ "%.0f"|format(stats.avg_score) }}%{% else %}—{% endif %}</span><span class="stat-label">средний балл тестов</span></div>
+    <a class="stat stat-c3 stat-link" href="{{ url_for('student.words_page') }}" title="Открыть словарь"><span class="stat-icon"><svg class="icon"><use href="#i-words"/></svg></span><span class="stat-num">{{ stats.words_learned }}</span><span class="stat-label">слов выучено</span><span class="stat-more">📖 Открыть словарь ›</span></a>
+    <div class="stat stat-c4"><span class="stat-icon"><svg class="icon"><use href="#i-clock"/></svg></span><span class="stat-num">{{ stats.total_seconds|human_time }}</span><span class="stat-label">время занятий</span></div>
   </div>
   <div class="progress-wrap">
-    <div class="progress-bar"><div class="progress-fill" style="width: {{ 100 * stats.lessons_completed / total_lessons }}%"><span class="progress-knob">🐣</span></div></div>
+    <div class="progress-bar"><div class="progress-fill" style="width: {{ 100 * stats.lessons_completed / total_lessons }}%"><span class="progress-knob"><svg class="icon"><use href="#i-chick"/></svg></span></div></div>
     <span class="progress-pct">{{ "%.0f"|format(100 * stats.lessons_completed / total_lessons) }}%</span>
   </div>
 </section>
@@ -40,7 +40,7 @@
 <a class="garden-teaser glass" href="{{ url_for('garden.garden_page') }}">
   <span class="gt-tree">{{ garden.streak_days | tree_mini }}</span>
   <span class="gt-text">
-    <b>{{ tree_stage.name }}</b> · 🔥 серия {{ garden.streak_days }} дн. · <svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ garden.coins }} монеток · 🌳 {{ tree_count }} дер.
+    <b>{{ tree_stage.name }}</b> · <svg class="icon"><use href="#i-flame"/></svg> серия {{ garden.streak_days }} дн. · <svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ garden.coins }} монеток · 🌳 {{ tree_count }} дер.
   </span>
   <span class="gt-btn">Открыть сад →</span>
 </a>

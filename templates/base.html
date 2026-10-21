@@ -14,6 +14,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="{{ url_for('static', filename='fonts.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=17">
+<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=1">
 </head>
 <body>
@@ -28,17 +29,67 @@
     <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/>
     <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
   </symbol>
+  <symbol id="i-chick" viewBox="0 0 32 32">
+    <path d="M12 8 Q10 3 13 2.5 Q14 5 14 7zM17 7.5Q16 1.5 19 1.5Q20 5 19 8z" fill="#ffb300"/>
+    <path d="M6 18 Q1 18 2.5 24 Q6 26 8.5 22z M26 18 Q31 18 29.5 24 Q26 26 23.5 22z" fill="#ffc947" stroke="#e8a317" stroke-width=".8"/>
+    <circle cx="16" cy="18" r="11.5" fill="#ffd54f" stroke="#f2b21b" stroke-width="1.2"/>
+    <ellipse cx="16" cy="23" rx="7" ry="5.5" fill="#fff3c4"/>
+    <circle cx="12" cy="16" r="1.8" fill="#3b2a6b"/><circle cx="20" cy="16" r="1.8" fill="#3b2a6b"/>
+    <circle cx="12.6" cy="15.3" r=".6" fill="#fff"/><circle cx="20.6" cy="15.3" r=".6" fill="#fff"/>
+    <ellipse cx="8.5" cy="19.5" rx="2" ry="1.3" fill="#ff8fb8" opacity=".6"/><ellipse cx="23.5" cy="19.5" rx="2" ry="1.3" fill="#ff8fb8" opacity=".6"/>
+    <path d="M13.5 19 Q16 17.8 18.5 19 L16 22.2z" fill="#fb8c00"/>
+  </symbol>
+  <symbol id="i-book" viewBox="0 0 24 24">
+    <path d="M3 5.5c3-1.8 6-1.8 9 0v14.5c-3-1.8-6-1.8-9 0z" fill="#8f73ff"/>
+    <path d="M21 5.5c-3-1.8-6-1.8-9 0v14.5c3-1.8 6-1.8 9 0z" fill="#b9a5ff"/>
+    <path d="M6 9.5c1.5-.5 3-.5 4 0M6 12.5c1.5-.5 3-.5 4 0M14 9.5c1-.5 2.5-.5 4 0M14 12.5c1-.5 2.5-.5 4 0" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity=".8"/>
+  </symbol>
+  <symbol id="i-star" viewBox="0 0 24 24">
+    <path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z" fill="#ffc93c" stroke="#e0a100" stroke-width="1.4" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="i-words" viewBox="0 0 24 24">
+    <path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="#4fc3f7"/>
+    <text x="12" y="14" text-anchor="middle" font-size="8.5" font-weight="900" fill="#fff" font-family="Nunito,Arial,sans-serif">Aa</text>
+  </symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24">
+    <circle cx="12" cy="12.5" r="9" fill="#6fe3b0" stroke="#2fd08c" stroke-width="2"/>
+    <path d="M12 7.5v5.3l3.4 2" fill="none" stroke="#146c4a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M4 4.5l3-2M20 4.5l-3-2" stroke="#2fd08c" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24">
+    <path d="M12 2c.8 4 6 6 6 12a6 6 0 0 1-12 0c0-3 1.5-4.5 3-7 1 .8 2 2 2 3.2C11.6 8 12 5 12 2z" fill="#ff8a3c"/>
+    <path d="M12 22a3.6 3.6 0 0 1-3.6-3.6c0-2 2-3 3.6-5 1.6 2 3.6 3 3.6 5A3.6 3.6 0 0 1 12 22z" fill="#ffd54f"/>
+  </symbol>
+  <symbol id="i-sprout" viewBox="0 0 24 24">
+    <path d="M12 21v-9" stroke="#2f9e5f" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M12 13C12 8 8 5.5 3.5 6c0 4.5 3 7.5 8.5 7z" fill="#5fd38d"/>
+    <path d="M12 11c0-4 3-6.5 8.5-6.5C20.5 9 17 12 12 11z" fill="#2fd08c"/>
+  </symbol>
+  <symbol id="i-backpack" viewBox="0 0 64 64">
+    <path d="M22 14c0-6 4-9 10-9s10 3 10 9" fill="none" stroke="#c2410c" stroke-width="4" stroke-linecap="round"/>
+    <rect x="12" y="13" width="40" height="44" rx="14" fill="#ff6b6b" stroke="#d64545" stroke-width="2.5"/>
+    <rect x="19" y="33" width="26" height="17" rx="7" fill="#ffd54f" stroke="#e0a800" stroke-width="2.2"/>
+    <path d="M26 41h12" stroke="#e0a800" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M12 38c-4 0-5 3-5 6s1 6 5 6M52 38c4 0 5 3 5 6s-1 6-5 6" fill="none" stroke="#d64545" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="32" cy="22" r="3.4" fill="#fff" opacity=".85"/>
+  </symbol>
+  <symbol id="i-shield" viewBox="0 0 64 64">
+    <path d="M32 5l21 8v16c0 14-9 24-21 30C20 53 11 43 11 29V13z" fill="#8f73ff" stroke="#5a3fd6" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M32 11l15 5.8V29c0 10-6.5 17.6-15 22.6C23.5 46.6 17 39 17 29V16.8z" fill="#b9a5ff"/>
+    <path d="M24 31l6 6 11-12" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
 </svg>
 <header class="topbar">
-  <a href="/" class="logo">🐣 English Fun</a>
+  <a href="/" class="logo"><svg class="logo-mark"><use href="#i-chick"/></svg><span>English Fun</span></a>
+  {% set ep = request.endpoint or '' %}
   <nav>
     {% if session.get('role') == 'student' %}
-      <a href="{{ url_for('student.student_home') }}">🎓 Мои уроки</a>
-      <a href="{{ url_for('garden.garden_page') }}">🌳 Моё дерево</a>
-      <a href="{{ url_for('auth.logout') }}">Выйти</a>
+      <a href="{{ url_for('student.student_home') }}" class="{{ 'on' if ep in ('student.student_home', 'student.lesson_page', 'student.submit_test') }}"><svg class="icon"><use href="#i-book"/></svg><span>Мои уроки</span></a>
+      <a href="{{ url_for('garden.garden_page') }}" class="{{ 'on' if ep.startswith('garden.') }}"><svg class="icon"><use href="#i-sprout"/></svg><span>Мой сад</span></a>
+      <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
     {% elif session.get('role') == 'parent' %}
-      <a href="{{ url_for('parent.parent_dashboard') }}">📊 Кабинет родителя</a>
-      <a href="{{ url_for('auth.logout') }}">Выйти</a>
+      <a href="{{ url_for('parent.parent_dashboard') }}" class="{{ 'on' if ep.startswith('parent.') }}"><svg class="icon"><use href="#i-shield"/></svg><span>Кабинет родителя</span></a>
+      <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
     {% endif %}
   </nav>
 </header>
@@ -58,7 +109,7 @@
 {% block content %}{% endblock %}
 </main>
 
-<footer class="footer">Сделано с ❤️ для изучения английского</footer>
+<footer class="footer"><svg class="icon"><use href="#i-chick"/></svg> Сделано с любовью для изучения английского</footer>
 
 
 {# ---------- Анимированный помощник Чик-чик (правый нижний угол) ---------- #}

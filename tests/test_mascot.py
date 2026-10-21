@@ -17,8 +17,8 @@ def settings(html):
 
 def test_assets_linked_and_served(anon):
     body = anon.get("/").get_data(as_text=True)
-    assert "mascot.css" in body and "mascot.js" in body
-    for name in ("mascot.css", "mascot.js"):
+    assert "mascot.css" in body and "mascot.js" in body and "theme.css" in body
+    for name in ("mascot.css", "mascot.js", "theme.css"):
         assert anon.get("/static/" + name).status_code == 200
 
 

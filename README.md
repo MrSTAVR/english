@@ -85,7 +85,7 @@ mascot.py           контекст для помощника Чик-чик
 routes/             маршруты: auth, student, garden, parent, system, pwa (+ common)
 tools/              разовые скрипты: иконки и шрифты для PWA
 data/               lessons.py (основной курс), extra_lessons.py (дополнительные)
-templates/, static/ HTML, CSS, JS (mascot.js + mascot.css, tts.js)
+templates/, static/ HTML, CSS (style.css — база, theme.css — дизайн 2.0, mascot.css), JS (mascot.js, tts.js)
 tests/              pytest-тесты
 ```
 
