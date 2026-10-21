@@ -1,0 +1,10 @@
+{
+	# порт 443 занят Xray (VPN), поэтому HTTPS-порт приложения другой.
+	# Сертификат Let's Encrypt Caddy получает и продлевает сам через порт 80.
+	https_port __HTTPS_PORT__
+}
+
+__DOMAIN__ {
+	encode gzip
+	reverse_proxy 127.0.0.1:8000
+}

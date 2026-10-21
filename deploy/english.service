@@ -1,0 +1,23 @@
+[Unit]
+Description=English Fun (Flask + gunicorn)
+After=network.target
+
+[Service]
+User=english
+Group=english
+WorkingDirectory=/opt/english/app
+EnvironmentFile=/etc/english.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/english/venv/bin/gunicorn -c gunicorn.conf.py wsgi:app
+Restart=on-failure
+RestartSec=3
+
+# изоляция: сервис видит систему только для чтения и пишет лишь в папку с базой
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/english/data
+
+[Install]
+WantedBy=multi-user.target
