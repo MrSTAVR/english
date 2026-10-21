@@ -69,6 +69,10 @@
     speakStars2: ['Хорошо! Почти идеально 👍 Попробуй ещё разок — на три звезды?', 'Неплохо! Ещё чуть-чуть чётче 🎯'],
     speakStars1: ['Я почти понял(а) 🤔 Послушай 🐢 медленно и повтори.', 'Близко! Скажи погромче и отчётливее 🎤'],
     speakStars0: ['Не расслышал(а) 🙈 Попробуй ещё раз — я верю в тебя!', 'Ничего страшного! Послушай ещё раз 🔊 и повтори.'],
+    reviewPage: ['Время повторить слова! 🔁 Чем чаще повторяешь, тем крепче память.', 'Повторение — мать учения 🧠 Поехали!'],
+    reviewOk: ['Верно! ✅', 'Молодец! 🌟', 'Так держать! 💪', 'Отлично, ты помнишь! 🧠'],
+    reviewBad: ['Ничего, это слово вернётся — запомнишь! 🌱', 'Упс! Посмотри правильный ответ 👀', 'Не беда, повторение для этого и нужно 🤗'],
+    reviewDone: ['Раунд пройден! 🏅 Память становится крепче с каждым разом.', 'Ура, повторили! 🎉'],
     wordsEmpty: 'Здесь пока пусто — пройди первый урок, и слова появятся! 🌱',
     theoryPage: ['Тут вся теория, что мы прошли 📖 Если что-то забылось — заглядывай сюда!',
                  'Хочешь повторить правило? Открывай нужный урок и читай вслух 🗣️'],
@@ -858,6 +862,8 @@
     });
   } else if (S.page === 'words') {
     later(700, function () { say(S.empty ? T.wordsEmpty : fmt(pick(T.wordsPage)), { mood: S.empty ? 'think' : 'happy' }); });
+  } else if (S.page === 'review') {
+    later(700, function () { say(S.empty ? T.wordsEmpty : pick(T.reviewPage), { mood: 'happy' }); });
   } else if (S.page === 'speak') {
     later(700, function () { say(pick(T.speakPage), { mood: 'happy' }); });
   } else if (S.page === 'achievements') {
@@ -943,6 +949,18 @@
     var d = e.detail || {}, st = d.stars | 0;
     var list = st >= 3 ? T.speakStars3 : st === 2 ? T.speakStars2 : st === 1 ? T.speakStars1 : T.speakStars0;
     say(pick(list), { mood: st >= 3 ? 'cheer' : st === 2 ? 'happy' : 'think' });
+  });
+  var rvStreak = 0;
+  document.addEventListener('review:answer', function (e) {
+    var ok = e.detail && e.detail.ok;
+    rvStreak = ok ? rvStreak + 1 : 0;
+    if (ok && rvStreak % 3 !== 0) return;             // хвалим не каждый ответ, а каждый третий
+    say(pick(ok ? T.reviewOk : T.reviewBad), { mood: ok ? 'cheer' : 'think' });
+  });
+  document.addEventListener('review:done', function () { say(pick(T.reviewDone), { mood: 'party' }); });
+  document.addEventListener('review:achievements', function (e) {
+    var l = e.detail && e.detail.list;
+    if (l && l.length) celebrateAchievements(l);
   });
   document.addEventListener('speak:achievements', function (e) {
     var l = e.detail && e.detail.list;

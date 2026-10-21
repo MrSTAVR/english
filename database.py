@@ -55,6 +55,16 @@ CREATE TABLE IF NOT EXISTS speaking (
     created_at   TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_speaking_student ON speaking (student_id);
+CREATE TABLE IF NOT EXISTS word_review (
+    student_id   INTEGER NOT NULL,
+    key          TEXT NOT NULL,                 -- слово (нижний регистр)
+    box          INTEGER DEFAULT 0,             -- коробка Лейтнера 0..5
+    due          TEXT NOT NULL,                 -- дата следующего повторения
+    n_ok         INTEGER DEFAULT 0,
+    n_bad        INTEGER DEFAULT 0,
+    last_at      TEXT,
+    PRIMARY KEY (student_id, key)
+);
 CREATE TABLE IF NOT EXISTS garden (
     student_id     INTEGER PRIMARY KEY,        -- сад принадлежит ученику
     coins          INTEGER DEFAULT 0,          -- монетки за уроки

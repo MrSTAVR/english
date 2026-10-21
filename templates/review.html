@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Повторение слов — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
+  <h1>🔁 Повторение слов</h1>
+</div>
+
+{% if pool_size < 4 %}
+<section class="card hero">
+  <div class="big-emoji">🌱</div>
+  <h2>Пока нечего повторять</h2>
+  <p>Пройди первые уроки — и здесь появятся слова для повторения.</p>
+  <a class="btn btn-primary" href="{{ url_for('student.student_home') }}">К урокам ▶️</a>
+</section>
+{% elif all_done %}
+<section class="card hero">
+  <div class="big-emoji">🎉</div>
+  <h2>На сегодня всё повторено!</h2>
+  <p>Выучено надолго: <b>{{ mastered }}</b> из {{ pool_size }} слов. Завтра слова вернутся — так память работает лучше всего.</p>
+  <a class="btn btn-primary" href="{{ url_for('review.review_page', extra=1) }}">Всё равно потренироваться 💪</a>
+</section>
+{% else %}
+<p class="subtitle">{{ questions|length }} заданий. Слова, которые ты знаешь хорошо, возвращаются реже, а трудные — чаще.</p>
+<section class="card" id="rv-card">
+  <div class="rv-progress"><div class="rv-bar"><div class="rv-fill" id="rv-fill"></div></div><span id="rv-count"></span></div>
+  <div id="rv-stage" data-items='{{ questions | tojson }}'></div>
+</section>
+<section class="card hero hidden" id="rv-summary">
+  <div class="big-emoji" id="rv-emoji">🏅</div>
+  <h2>Раунд пройден!</h2>
+  <p>Верно: <b id="rv-ok"></b> из <b id="rv-total"></b>. <span id="rv-learned"></span></p>
+  <a class="btn btn-primary" href="{{ url_for('review.review_page', extra=1) }}">Ещё раунд 🔁</a>
+  <a class="btn btn-secondary" href="{{ url_for('student.student_home') }}">На главную</a>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if questions %}<script src="{{ url_for('static', filename='review.js') }}?v=1"></script>{% endif %}
+{% endblock %}

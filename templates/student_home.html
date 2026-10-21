@@ -67,6 +67,25 @@
   </div>
 {% endif %}
 
+<!-- 2б. Повторение и слово дня -->
+{% if rv_pool >= 4 %}
+<section class="rv-row">
+  <a class="rv-card rv-main" href="{{ url_for('review.review_page') }}">
+    <span class="rv-emoji">🔁</span>
+    <span class="rv-text"><b>Повторение слов</b>
+      <small>{% if rv_ready %}Готово к повторению: {{ rv_ready if rv_ready < 10 else '10+' }}{% else %}На сегодня всё повторено 🎉{% endif %} · выучено надолго: {{ rv_mastered }}</small></span>
+    <span class="rv-go">{{ 'Начать ▶' if rv_ready else 'Ещё раз ▶' }}</span>
+  </a>
+  {% if wod %}
+  <div class="rv-card rv-wod">
+    <span class="rv-kicker">🌟 Слово дня</span>
+    <span class="rv-word">{{ wod.en }} <button type="button" class="btn btn-small say-btn" data-say="{{ wod.en }}" title="Послушать">🔊</button></span>
+    <span class="rv-tr">[{{ wod.hint }}] — {{ wod.ru }}</span>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
 <!-- 3. Мои уроки (компактный вид: последний пройденный, следующий и первый закрытый) -->
 <section>
   <div class="section-head">
@@ -181,6 +200,10 @@
 {% endblock %}
 
 {% block scripts %}
+<script>document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('.say-btn');
+  if (b && window.ttsSpeak) window.ttsSpeak(b.dataset.say);
+});</script>
 <script>
 (function () {
   var btn = document.getElementById('showAllLessonsBtn');

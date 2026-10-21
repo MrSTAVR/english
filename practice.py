@@ -192,6 +192,50 @@ def practice_extras(lesson):
     return out
 
 
+def pool_from(lessons):
+    """Уникальные слова уроков (для повторения): key, en, accept, ru (без скобок), hint, lesson."""
+    seen, out = set(), []
+    for l in lessons:
+        for w in l.get("material", []):
+            if w.get("letter") or "[" in w["ru"]:
+                continue
+            v = _variants(w["en"])
+            if not v:
+                continue
+            key = v[0].lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            ru = re.sub(r"\s*\(.*?\)", "", w["ru"]).strip() or w["ru"]    # без пояснений в скобках
+            out.append({"key": key, "en": v[0], "accept": v, "ru": ru, "hint": w.get("hint", ""),
+                        "lesson": l["id"]})
+    return out
+
+
+def review_extras(lesson, earlier_lessons, n=2):
+    """Вопросы «🔁 Повторение» из прошлых уроков для итогового теста (детерминированно)."""
+    pool = pool_from(earlier_lessons)
+    if len(pool) < 6:
+        return []
+    rng = random.Random(lesson["id"] * 101 + 7)
+    out = []
+    for i, w in enumerate(rng.sample(pool, n)):
+        field_q, field_a = ("ru", "en") if i % 2 == 0 else ("en", "ru")
+        size = len(w[field_a].split())
+        cand = [x[field_a] for x in pool if x["key"] != w["key"] and x[field_a] != w[field_a]
+                and abs(len(x[field_a].split()) - size) <= 1]
+        cand = list(dict.fromkeys(cand))
+        if len(cand) < 3:
+            continue
+        opts = rng.sample(cand, 3) + [w[field_a]]
+        rng.shuffle(opts)
+        q = (f"🔁 Повторение. Как по-английски: «{w['ru']}»?" if field_a == "en"
+             else f"🔁 Повторение. Что значит «{w['en']}»?")
+        out.append({"type": "choice", "q": q, "options": opts, "answer": opts.index(w[field_a]),
+                    "explain": f"{w['en']} — {w['ru']}"})
+    return out
+
+
 def augment(lessons):
     """Один раз дополняет уроки: +2 вопроса в тест, +задания тренировки."""
     for l in lessons:
@@ -201,3 +245,11 @@ def augment(lessons):
         l["practice"] = practice_extras(l)
         l["speak"] = speak_items(l)
         l["_augmented"] = True
+
+
+def add_review_questions(course):
+    """В тест каждого урока — по 2 вопроса из ранее пройденных (по порядку курса)."""
+    for i, l in enumerate(course):
+        if i and not l.get("_review_added"):
+            l["test"] = list(l["test"]) + review_extras(l, course[:i])
+            l["_review_added"] = True

@@ -6,6 +6,11 @@ import json
 from curriculum import LESSONS_BY_ID
 
 
+def _review_stats(db, student_id):
+    from review import review_stats
+    return review_stats(db, student_id)
+
+
 def speaking_stats(db, student_id=None):
     """Итоги тренировки произношения: слов (≥2⭐), идеальных (3⭐), средняя оценка."""
     if student_id is None:
@@ -143,6 +148,7 @@ def compute_stats(db, student_id=None):
         "first_try_perfect": first_try_perfect,
         "words_learned": words_learned,
         **speak,
+        **_review_stats(db, student_id),
         "total_mistakes": total_mistakes,
         "comeback": comeback,
         "early_bird": early_bird,

@@ -15,6 +15,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, s
 from garden import award_coins, get_garden, refresh_garden, touch_streak, tree_count_for, tree_stage
 from grading import grade_question
 from mascot import build_mascot_ctx
+from review import counts as review_counts, learned_pool, state as review_state, word_of_day
 from stats import compute_stats
 
 from routes.common import get_student_or_none, require_role
@@ -124,7 +125,11 @@ def student_home():
         info["highlight"] = info["lesson"]["id"] in highlight_ids
     hidden_count = sum(1 for info in lessons_info if not info["highlight"])
     earned_count = sum(1 for a in achievements if a["earned"])
-    return render_template("student_home.html", mascot=mascot, speaking=config.SPEAKING,
+    rv_pool = learned_pool(stats)
+    rv_state = review_state(db, student["id"])
+    rv_due, rv_new, rv_mastered = review_counts(rv_pool, rv_state)
+    return render_template("student_home.html", rv_pool=len(rv_pool), rv_ready=rv_due + min(rv_new, 10),
+                           rv_mastered=rv_mastered, wod=word_of_day(rv_pool, rv_state, student["id"]), mascot=mascot, speaking=config.SPEAKING,
                            name=student["display_name"],
                            emoji=student["emoji"],
                            lessons=lessons_info,
