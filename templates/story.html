@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ story.title }} — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('stories.stories_page') }}">⬅ Истории</a>
+  <h1>{{ story.emoji }} {{ story.title }}</h1>
+</div>
+<div class="st-tabs">
+  <a class="btn btn-small {{ 'btn-primary' if story.mode == 'read' else 'btn-secondary' }}" href="{{ url_for('stories.story_page', key=story.key, mode='read') }}">📖 Читать</a>
+  <a class="btn btn-small {{ 'btn-primary' if story.mode == 'listen' else 'btn-secondary' }}" href="{{ url_for('stories.story_page', key=story.key, mode='listen') }}">🎧 Слушать</a>
+</div>
+<div id="story" data-story='{{ story | tojson }}'></div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='stories.js') }}?v=1"></script>{% endblock %}

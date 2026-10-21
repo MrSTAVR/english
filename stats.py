@@ -11,7 +11,9 @@ def _game_stats(db, student_id):
     g = db.execute(f"SELECT COALESCE(SUM(plays),0) p, COALESCE(SUM(best>=3),0) s FROM game_scores {where}", args).fetchone()
     d = db.execute(f"SELECT COUNT(*) FROM dialog_done {where}", args).fetchone()[0]
     w = db.execute(f"SELECT COUNT(*) FROM wardrobe_items {where}", args).fetchone()[0]
-    return {"games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d, "wardrobe_bought": w}
+    st = db.execute(f"SELECT COUNT(DISTINCT key) a, COALESCE(SUM(mode='listen'),0) b FROM story_done {where}", args).fetchone()
+    return {"games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d, "wardrobe_bought": w,
+            "stories_done": st["a"], "stories_listened": st["b"]}
 
 
 def _goal_days(db, student_id):

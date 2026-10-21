@@ -86,6 +86,14 @@ CREATE TABLE IF NOT EXISTS dialog_done (
     done_at      TEXT NOT NULL,
     PRIMARY KEY (student_id, key)
 );
+CREATE TABLE IF NOT EXISTS story_done (
+    student_id   INTEGER NOT NULL,
+    key          TEXT NOT NULL,
+    mode         TEXT NOT NULL,                -- read / listen
+    best         INTEGER DEFAULT 0,            -- лучший результат: верных ответов из 3
+    done_at      TEXT NOT NULL,
+    PRIMARY KEY (student_id, key, mode)
+);
 CREATE TABLE IF NOT EXISTS wardrobe_items (
     student_id   INTEGER NOT NULL,
     item_key     TEXT NOT NULL,

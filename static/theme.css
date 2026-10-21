@@ -617,3 +617,31 @@ html[data-theme="dark"] .rn-stage { background: linear-gradient(#27306b 0 62%, #
 .wd-name { font-weight: 800; font-size: .95rem; }
 .wd-state { color: #1f9d6a; font-weight: 800; font-size: .9rem; }
 .wd-thumb .chick .c-all, .wd-preview .chick .c-all { animation: none; }
+
+/* Истории */
+.st-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 10px; }
+.st-card { text-align: center; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.st-emoji { font-size: 2.4rem; line-height: 1; }
+.st-title { font-weight: 900; }
+.st-modes { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.st-locked { opacity: .65; }
+.st-note { color: var(--muted); font-size: .85rem; }
+.st-tabs { display: flex; gap: 8px; margin: 6px 0 12px; }
+.st-player { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.st-slow { font-weight: 700; cursor: pointer; }
+.st-hint { flex-basis: 100%; margin: 0; color: var(--muted); }
+.st-text { margin-top: 12px; position: relative; font-size: 1.15rem; line-height: 2; }
+.st-text.masked .st-sen { filter: blur(9px); user-select: none; pointer-events: none; }
+.st-sen { margin: 0 0 6px; padding: 2px 6px; border-radius: 10px; }
+.st-sen.now { background: rgba(255, 213, 79, .35); }
+.st-w { cursor: pointer; border-radius: 6px; padding: 0 1px; }
+.st-w:hover, .st-w.on { background: rgba(124, 92, 255, .22); }
+.st-tr, .st-sp { border: 0; background: transparent; cursor: pointer; font-size: .95rem; margin-left: 4px; padding: 0 2px; }
+.st-ru { display: block; font-size: .95rem; color: var(--muted); line-height: 1.4; }
+.st-ru.hidden { display: none; }
+.st-pop { position: sticky; bottom: 8px; margin-top: 8px; padding: 10px 14px; border-radius: 14px; background: var(--primary); color: #fff; font-weight: 800; font-size: 1.05rem; line-height: 1.4; box-shadow: 0 6px 18px rgba(90, 63, 214, .35); }
+.st-pop.hidden { display: none; }
+.st-pop .st-sp { color: #fff; }
+.st-quiz { margin-top: 12px; }
+.st-q { margin: 6px 0 10px; font-size: 1.05rem; }
+.st-coins { font-weight: 900; color: #b8860b; margin: 8px 0; }

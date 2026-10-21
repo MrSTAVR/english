@@ -6,6 +6,7 @@ from datetime import datetime
 from badges import TIERS, TIER_ORDER, badge_svg
 from curriculum import MAIN_COUNT
 from data.dialogs import DIALOGS
+from data.stories import STORIES
 
 CATEGORIES = [
     ("lessons", "Уроки", "📚"),
@@ -72,6 +73,10 @@ ACHIEVEMENTS = [
     _m("game_10", "🕹️", "Игроман", "Десять сыгранных игр.", "silver", "games", "games_played", 10),
     _m("game_50", "🎲", "Король игр", "Пятьдесят сыгранных игр!", "gold", "games", "games_played", 50),
     _m("game_p4", "🏆", "Чемпион игр", "Три звезды во всех пяти играх.", "legend", "games", "games_perfect", 5),
+    _m("story_1", "📖", "Первая история", "Прочитана первая история.", "bronze", "games", "stories_done", 1),
+    _m("story_8", "📚", "Книжный червячок", "Прочитано 8 историй.", "silver", "games", "stories_done", 8),
+    _m("story_all", "🏛️", "Библиотекарь", "Прочитаны все истории!", "gold", "games", "stories_done", len(STORIES)),
+    _m("listen_5", "🎧", "Хороший слушатель", "Пять историй прослушано на слух.", "silver", "games", "stories_listened", 5),
     _m("wardrobe_1", "🎩", "Модник", "Куплен первый наряд для Чик-чика.", "bronze", "games", "wardrobe_bought", 1),
     _m("wardrobe_6", "👑", "Стилист", "Куплено 6 нарядов для Чик-чика.", "silver", "games", "wardrobe_bought", 6),
     _m("dialog_1", "💬", "Первый разговор", "Пройден первый диалог.", "bronze", "games", "dialogs_done", 1),

@@ -1,0 +1,148 @@
+# -*- coding: utf-8 -*-
+"""Короткие истории для чтения и аудирования.
+
+Каждая история открывается после урока "lesson". Любое слово в тексте можно нажать — покажется перевод:
+он берётся из словаря слов курса, из COMMON (служебные слова) и из "gloss" самой истории.
+Тест tests/test_stories.py проверяет, что перевод есть для КАЖДОГО слова."""
+
+
+def _s(en, ru):
+    return {"en": en, "ru": ru}
+
+
+def _q(q, options, answer, ru=None):
+    return {"q": q, "options": options, "answer": answer}
+
+
+# Служебные и частые слова, которых нет в списках слов уроков
+COMMON = {
+    "a": "какой-то, один", "an": "какой-то, один", "the": "(артикль)", "i": "я", "my": "мой, моя", "we": "мы", "he": "он", "she": "она",
+    "it": "это, оно", "is": "есть, является", "am": "есть (я)", "are": "есть (мы, они, ты)", "and": "и", "in": "в", "on": "на", "at": "в, на",
+    "to": "к, в", "of": "из", "this": "это", "that": "тот", "his": "его", "her": "её, ей", "its": "его, её (о животном)", "our": "наш",
+    "not": "не", "no": "нет", "yes": "да", "can": "могу, умеет", "do": "делать", "does": "делает", "say": "говорить", "says": "говорит",
+    "with": "с", "for": "для", "has": "имеет", "have": "иметь, есть у меня", "go": "идти, ехать", "goes": "идёт, едет", "see": "видеть",
+    "sees": "видит", "like": "любить, нравиться", "likes": "любит", "love": "любить", "play": "играть", "plays": "играет", "now": "сейчас",
+    "today": "сегодня", "then": "потом", "too": "тоже", "very": "очень", "so": "так", "but": "но", "or": "или", "what": "что", "where": "где",
+    "who": "кто", "how": "как", "name": "имя", "name's": "имя", "friend": "друг, подруга", "friends": "друзья", "year": "год", "years": "годы, лет",
+    "old": "старый", "home": "дом", "school": "школа", "there": "там", "here": "здесь", "up": "вверх", "out": "наружу", "down": "вниз",
+    "good": "хороший", "great": "здорово", "all": "все", "every": "каждый", "day": "день", "week": "неделя", "me": "мне, меня", "you": "ты, вы",
+    "your": "твой", "they": "они", "them": "их", "are": "есть (мы, они, ты)", "some": "немного", "much": "много", "one": "один", "two": "два",
+    "three": "три", "ten": "десять", "tom": "Том", "anna": "Анна", "jump": "прыгать", "bag": "сумка", "by": "на (о транспорте), возле", "dad": "папа", "mum": "мама", "be": "быть", "thank": "спасибо", "tea": "чай", "snow": "снег", "sun": "солнце", "teeth": "зубы", "lunch": "обед", "breakfast": "завтрак",
+}
+
+STORIES = [
+    {"key": "meet-tom", "lesson": 9, "title": "Знакомься: Том", "emoji": "👦",
+     "sentences": [_s("Hello! My name is Tom.", "Привет! Меня зовут Том."), _s("I am ten.", "Мне десять."),
+                   _s("This is my friend Anna.", "Это моя подруга Анна."), _s("Anna is nine.", "Анне девять."),
+                   _s("We are friends.", "Мы друзья."), _s("Goodbye!", "До свидания!")],
+     "gloss": {"nine": "девять"},
+     "questions": [_q("What is the boy's name?", ["Tom", "Anna", "Sam"], 0), _q("How old is Tom?", ["Nine", "Ten", "Eleven"], 1),
+                   _q("Who is Anna?", ["Tom's friend", "Tom's sister", "Tom's teacher"], 0)]},
+    {"key": "my-family", "lesson": 13, "title": "Моя семья", "emoji": "👨‍👩‍👧",
+     "sentences": [_s("This is my family.", "Это моя семья."), _s("My mother is Kate.", "Мою маму зовут Кейт."),
+                   _s("My father is Mark.", "Моего папу зовут Марк."), _s("I have a sister and a brother.", "У меня есть сестра и брат."),
+                   _s("My sister is Lily.", "Мою сестру зовут Лили."), _s("My brother is Max.", "Моего брата зовут Макс."),
+                   _s("I love my family!", "Я люблю свою семью!")],
+     "gloss": {"kate": "Кейт", "mark": "Марк", "lily": "Лили", "max": "Макс"},
+     "questions": [_q("Who is Kate?", ["The mother", "The sister", "The grandmother"], 0), _q("What is the sister's name?", ["Max", "Lily", "Kate"], 1),
+                   _q("Who is Max?", ["The brother", "The father", "The friend"], 0)]},
+    {"key": "colors-day", "lesson": 12, "title": "День цветов", "emoji": "🌈",
+     "sentences": [_s("I have a red hat.", "У меня красная шляпа."), _s("I have a blue bag.", "У меня синяя сумка."),
+                   _s("My cat is black and white.", "Мой кот чёрно-белый."), _s("My dog is brown.", "Моя собака коричневая."),
+                   _s("The sun is yellow.", "Солнце жёлтое."), _s("The tree is green.", "Дерево зелёное."), _s("I like colors!", "Я люблю цвета!")],
+     "gloss": {"colors": "цвета", "tree": "дерево", "hat": "шляпа", "bag": "сумка"},
+     "questions": [_q("What color is the hat?", ["Red", "Blue", "Green"], 0), _q("What color is the dog?", ["Black", "Brown", "Yellow"], 1),
+                   _q("What color is the tree?", ["Green", "Red", "White"], 0)]},
+    {"key": "at-the-zoo", "lesson": 18, "title": "В зоопарке", "emoji": "🦁",
+     "sentences": [_s("We are at the zoo.", "Мы в зоопарке."), _s("I see a big lion.", "Я вижу большого льва."),
+                   _s("I see a small monkey.", "Я вижу маленькую обезьянку."), _s("The monkey can jump.", "Обезьянка умеет прыгать."),
+                   _s("The elephant is very big.", "Слон очень большой."), _s("The duck can swim.", "Утка умеет плавать."), _s("I love the zoo!", "Я люблю зоопарк!")],
+     "gloss": {"zoo": "зоопарк"},
+     "questions": [_q("Where are they?", ["At the zoo", "At school", "At home"], 0), _q("What can the monkey do?", ["Swim", "Jump", "Fly"], 1),
+                   _q("Who can swim?", ["The duck", "The lion", "The elephant"], 0)]},
+    {"key": "my-pet", "lesson": 40, "title": "Мой питомец", "emoji": "🐶",
+     "sentences": [_s("I have got a dog.", "У меня есть собака."), _s("His name is Rex.", "Его зовут Рекс."), _s("Rex is big and brown.", "Рекс большой и коричневый."),
+                   _s("Rex likes bread.", "Рекс любит хлеб."), _s("Rex can run fast.", "Рекс умеет быстро бегать."), _s("I love Rex!", "Я люблю Рекса!")],
+     "gloss": {"rex": "Рекс", "got": "(have got — есть)", "bread": "хлеб", "run": "бегать", "fast": "быстро"},
+     "questions": [_q("What is the dog's name?", ["Rex", "Max", "Tom"], 0), _q("What color is Rex?", ["Black", "White", "Brown"], 2),
+                   _q("What does Rex like?", ["Bread", "Milk", "Cake"], 0)]},
+    {"key": "my-day", "lesson": 24, "title": "Мой день", "emoji": "🌞",
+     "sentences": [_s("I get up at seven o'clock.", "Я встаю в семь часов."), _s("I brush my teeth.", "Я чищу зубы."), _s("I have breakfast.", "Я завтракаю."),
+                   _s("I go to school.", "Я иду в школу."), _s("In the evening I do my homework.", "Вечером я делаю уроки."),
+                   _s("Then I play with my friends.", "Потом я играю с друзьями.")],
+     "gloss": {"get": "получать (get up — вставать)", "o'clock": "ровно ... часов", "seven": "семь", "brush": "чистить", "homework": "домашнее задание", "evening": "вечер", "breakfast": "завтрак"},
+     "questions": [_q("What time does the girl get up?", ["At six", "At seven", "At eight"], 1), _q("What does she do in the evening?", ["Her homework", "Her breakfast", "Her bed"], 0),
+                   _q("Who does she play with?", ["Her friends", "Her teacher", "Her dog"], 0)]},
+    {"key": "birthday-party", "lesson": 37, "title": "День рождения", "emoji": "🎂",
+     "sentences": [_s("Today is my birthday!", "Сегодня мой день рождения!"), _s("I am ten years old.", "Мне десять лет."),
+                   _s("My birthday is in May.", "Мой день рождения в мае."), _s("Mum has a big cake.", "У мамы большой торт."),
+                   _s("My friends say: Happy birthday!", "Мои друзья говорят: С днём рождения!"), _s("I say: Thank you!", "Я говорю: Спасибо!")],
+     "gloss": {"happy": "счастливый, с (праздником)", "birthday": "день рождения", "cake": "торт", "mum": "мама", "thank": "благодарить"},
+     "questions": [_q("How old is the girl?", ["Nine", "Ten", "Eleven"], 1), _q("When is her birthday?", ["In May", "In June", "In March"], 0),
+                   _q("What does Mum have?", ["A big cake", "A big bag", "A big dog"], 0)]},
+    {"key": "weather-day", "lesson": 29, "title": "Погода", "emoji": "🌦️",
+     "sentences": [_s("It is winter.", "Сейчас зима."), _s("It is cold and snowy.", "Холодно и снежно."), _s("Tom is at home.", "Том дома."),
+                   _s("He is drinking hot tea.", "Он пьёт горячий чай."), _s("Now it is sunny!", "Теперь солнечно!"),
+                   _s("Tom goes out and plays in the snow.", "Том выходит и играет в снегу.")],
+     "gloss": {"winter": "зима", "snowy": "снежный", "cold": "холодный", "hot": "горячий", "sunny": "солнечный", "drinking": "пьёт", "plays": "играет", "goes": "идёт, выходит"},
+     "questions": [_q("What season is it?", ["Summer", "Winter", "Spring"], 1), _q("What is Tom drinking?", ["Hot tea", "Cold juice", "Milk"], 0),
+                   _q("What is the weather now?", ["Sunny", "Rainy", "Windy"], 0)]},
+    {"key": "my-house", "lesson": 28, "title": "Мой дом", "emoji": "🏠",
+     "sentences": [_s("This is my house.", "Это мой дом."), _s("It is big.", "Он большой."), _s("There is a kitchen, a bedroom and a bathroom.", "Есть кухня, спальня и ванная."),
+                   _s("My bag is in the bedroom.", "Моя сумка в спальне."), _s("My cat is under the table in the kitchen.", "Мой кот под столом на кухне."),
+                   _s("I like my house!", "Мне нравится мой дом!")],
+     "gloss": {"table": "стол", "under": "под", "kitchen": "кухня", "bedroom": "спальня", "bathroom": "ванная", "there": "там (there is — есть)", "house": "дом"},
+     "questions": [_q("Where is the bag?", ["In the bedroom", "In the kitchen", "In the bathroom"], 0), _q("Where is the cat?", ["On the bed", "Under the table", "In the garden"], 1),
+                   _q("Is the house big?", ["Yes, it is", "No, it isn't", "I don't know"], 0)]},
+    {"key": "school-day", "lesson": 46, "title": "В школе", "emoji": "🏫",
+     "sentences": [_s("I go to school by bus.", "Я езжу в школу на автобусе."), _s("My teacher is Mr. Brown.", "Мой учитель — мистер Браун."),
+                   _s("In my bag I have a book, a pencil and a ruler.", "В сумке у меня книга, карандаш и линейка."),
+                   _s("I like Art and Music.", "Я люблю рисование и музыку."), _s("I do not like Maths.", "Я не люблю математику."), _s("I like school!", "Мне нравится школа!")],
+     "gloss": {"mr": "мистер", "brown": "Браун (коричневый)", "bus": "автобус", "teacher": "учитель", "book": "книга", "pencil": "карандаш", "ruler": "линейка", "art": "рисование", "music": "музыка", "maths": "математика"},
+     "questions": [_q("How does the girl go to school?", ["By bus", "On foot", "By car"], 0), _q("Who is the teacher?", ["Mr. Brown", "Mr. Black", "Mr. White"], 0),
+                   _q("Which subject does she NOT like?", ["Art", "Music", "Maths"], 2)]},
+    {"key": "jobs-family", "lesson": 47, "title": "Кем работают в моей семье", "emoji": "👩‍⚕️",
+     "sentences": [_s("My mum is a doctor.", "Моя мама — врач."), _s("My dad is a driver.", "Мой папа — водитель."), _s("My grandma is a cook.", "Моя бабушка — повар."),
+                   _s("My grandpa is a farmer.", "Мой дедушка — фермер."), _s("I want to be a pilot!", "Я хочу стать лётчиком!")],
+     "gloss": {"grandma": "бабушка", "grandpa": "дедушка", "doctor": "врач", "driver": "водитель", "cook": "повар", "farmer": "фермер", "pilot": "лётчик", "want": "хотеть"},
+     "questions": [_q("What is Mum?", ["A doctor", "A cook", "A farmer"], 0), _q("Who is a farmer?", ["Dad", "Grandpa", "Grandma"], 1),
+                   _q("What does the child want to be?", ["A pilot", "A driver", "A singer"], 0)]},
+    {"key": "shopping-day", "lesson": 49, "title": "В магазине", "emoji": "🛍️",
+     "sentences": [_s("Kate is in a shop.", "Кейт в магазине."), _s("She likes a red bag.", "Ей нравится красная сумка."), _s("How much is it?", "Сколько это стоит?"),
+                   _s("It's ten pounds.", "Десять фунтов."), _s("It is cheap!", "Это дёшево!"), _s("I'd like it, please.", "Я бы взяла её, пожалуйста."), _s("Here you are. Thank you!", "Вот, держите. Спасибо!")],
+     "gloss": {"kate": "Кейт", "shop": "магазин", "red": "красный", "bag": "сумка", "cheap": "дешёвый", "pounds": "фунты", "it's": "это есть", "i'd": "я бы", "please": "пожалуйста", "thank": "спасибо"},
+     "questions": [_q("What does Kate like?", ["A red bag", "A blue hat", "A green book"], 0), _q("How much is it?", ["Two pounds", "Ten pounds", "Twenty pounds"], 1),
+                   _q("Is it expensive?", ["No, it is cheap", "Yes, it is expensive", "I don't know"], 0)]},
+    {"key": "my-hobbies", "lesson": 30, "title": "Наши увлечения", "emoji": "⚽",
+     "sentences": [_s("I like drawing.", "Я люблю рисовать."), _s("My brother likes football.", "Мой брат любит футбол."), _s("My sister likes swimming.", "Моя сестра любит плавать."),
+                   _s("We play on Saturday.", "Мы играем в субботу."), _s("On Sunday we go cycling.", "В воскресенье мы катаемся на велосипедах."), _s("We love our hobbies!", "Мы любим свои увлечения!")],
+     "gloss": {"drawing": "рисование", "football": "футбол", "swimming": "плавание", "cycling": "езда на велосипеде", "saturday": "суббота", "sunday": "воскресенье", "hobbies": "увлечения"},
+     "questions": [_q("What does the brother like?", ["Football", "Drawing", "Swimming"], 0), _q("Who likes swimming?", ["The sister", "The brother", "The mother"], 0),
+                   _q("What do they do on Sunday?", ["Go cycling", "Go to school", "Play football"], 0)]},
+    {"key": "by-train", "lesson": 50, "title": "Путешествие на поезде", "emoji": "🚆",
+     "sentences": [_s("Sam goes to London by train.", "Сэм едет в Лондон на поезде."), _s("The train is fast.", "Поезд быстрый."), _s("He sees a big bus and a taxi.", "Он видит большой автобус и такси."),
+                   _s("At the station he says: Excuse me, where is the school?", "На вокзале он спрашивает: Простите, где школа?"),
+                   _s("A woman says: Go straight and turn left.", "Женщина отвечает: Идите прямо и поверните налево."), _s("Sam says: Thank you!", "Сэм говорит: Спасибо!")],
+     "gloss": {"sam": "Сэм", "london": "Лондон", "train": "поезд", "station": "вокзал", "taxi": "такси", "excuse": "извините", "woman": "женщина", "straight": "прямо", "turn": "повернуть", "left": "налево", "bus": "автобус", "go": "идти"},
+     "questions": [_q("How does Sam go to London?", ["By train", "By bus", "By plane"], 0), _q("What does Sam ask?", ["Where is the school?", "Where is the shop?", "What time is it?"], 0),
+                   _q("Where must Sam go?", ["Straight and left", "Right", "Back"], 0)]},
+    {"key": "at-the-cafe", "lesson": 51, "title": "В кафе", "emoji": "🍕",
+     "sentences": [_s("Anna and Tom are in a café.", "Анна и Том в кафе."), _s("The waiter says: What would you like?", "Официант спрашивает: Что вы хотите?"),
+                   _s("Anna says: I'd like a pizza, please.", "Анна говорит: Я бы хотела пиццу, пожалуйста."), _s("Tom says: I'd like soup and juice.", "Том говорит: Я бы хотел суп и сок."),
+                   _s("The pizza is delicious!", "Пицца очень вкусная!"), _s("Tom says: The bill, please.", "Том говорит: Счёт, пожалуйста.")],
+     "gloss": {"anna": "Анна", "tom": "Том", "café": "кафе", "waiter": "официант", "would": "бы", "pizza": "пицца", "soup": "суп", "juice": "сок", "delicious": "очень вкусный", "bill": "счёт", "please": "пожалуйста", "i'd": "я бы"},
+     "questions": [_q("What does Anna order?", ["A pizza", "Soup", "A burger"], 0), _q("What does Tom order?", ["Soup and juice", "Pizza", "Salad"], 0),
+                   _q("What does Tom ask for at the end?", ["The bill", "The menu", "A juice"], 0)]},
+]
+STORIES_BY_KEY = {s["key"]: s for s in STORIES}
+
+
+def story_words(story):
+    """Все слова истории (в нижнем регистре, без знаков препинания)."""
+    import re
+    out = []
+    for sen in story["sentences"]:
+        for w in re.findall(r"[A-Za-zé']+", sen["en"]):
+            if w.lower() not in out:
+                out.append(w.lower())
+    return out

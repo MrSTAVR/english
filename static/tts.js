@@ -122,6 +122,32 @@
   }
   window.ttsSpeak = speak;
 
+  /* Читаем список предложений подряд: ttsSpeakSeq(list, {rate, onSentence(i), onDone}) */
+  var seqToken = 0;
+  function stopSeq() { seqToken++; try { if (synth) synth.cancel(); } catch (e) { /* noop */ } }
+  function speakSeq(list, o) {
+    o = o || {};
+    if (!synth || !list || !list.length) { if (o.onDone) o.onDone(); return false; }
+    stopSeq();
+    var token = seqToken, i = 0;
+    function next() {
+      if (token !== seqToken) return;
+      if (i >= list.length) { if (o.onDone) o.onDone(); return; }
+      var idx = i++, clean = stripForSpeech(list[idx]);
+      if (!clean) { next(); return; }
+      var u = new SpeechSynthesisUtterance(clean);
+      u.lang = 'en-US'; if (enVoice) u.voice = enVoice;
+      u.rate = o.rate || 0.85; u.pitch = 1.05; u.volume = 1;
+      u.onstart = function () { if (token === seqToken && o.onSentence) o.onSentence(idx); };
+      u.onend = u.onerror = function () { setTimeout(next, 250); };
+      synth.speak(u);
+    }
+    setTimeout(next, 80);
+    return true;
+  }
+  window.ttsSpeakSeq = speakSeq;
+  window.ttsStop = stopSeq;
+
   /* Кнопка 🔊 рядом со словом/фразой */
   function makeBtn(text, opts) {
     opts = opts || {};
