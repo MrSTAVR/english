@@ -118,7 +118,7 @@ def test_garden_page_opens(make_student):
     r = c.get("/student/garden")
     body = r.get_data(as_text=True)
     assert r.status_code == 200
-    assert "OperationalError" not in body and "garden-scene" in body
+    assert "OperationalError" not in body and "garden-stage" in body
 
 
 def test_extra_lessons_do_not_count_as_main_progress(make_student):

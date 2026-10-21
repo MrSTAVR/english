@@ -1,0 +1,62 @@
+
+/* ============ 🌳 Новый сад: SVG-сцена, альбом находок, превью украшений ============ */
+.garden-stage { border-radius: 20px; overflow: hidden; margin: 10px 0; line-height: 0;
+  box-shadow: 0 6px 18px rgba(60, 110, 60, .18); transition: filter .6s ease; }
+.garden-stage.is-broken { filter: grayscale(.85) brightness(.96); }
+.garden-svg { width: 100%; height: auto; display: block; }
+
+/* появление новой находки и подсветка */
+.g-new { transform-box: fill-box; transform-origin: 50% 100%; animation: g-pop .7s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes g-pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+.g-ring { transform-box: fill-box; transform-origin: center; animation: g-ring 1.1s ease-out 3; }
+@keyframes g-ring { 0% { transform: scale(.4); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+
+/* живность и украшения */
+.g-fl { animation: g-fl 3.2s ease-in-out infinite alternate; }
+@keyframes g-fl { from { transform: translate(0, 0); } to { transform: translate(16px, -10px); } }
+.g-tw { animation: g-tw 1.5s ease-in-out infinite alternate; }
+.g-blink { animation: g-tw 2s ease-in-out infinite alternate; }
+@keyframes g-tw { from { opacity: .2; } to { opacity: 1; } }
+.g-swing { animation: g-swing 3s ease-in-out infinite alternate; }
+@keyframes g-swing { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+.g-spin { animation: g-spin 40s linear infinite; }
+@keyframes g-spin { to { transform: rotate(360deg); } }
+.g-drift { animation: g-drift 50s ease-in-out infinite alternate; }
+@keyframes g-drift { from { transform: translateX(-160px); } to { transform: translateX(160px); } }
+.g-plane { animation: g-plane 16s linear infinite; }
+@keyframes g-plane { from { transform: translateX(-360px); } to { transform: translateX(620px); } }
+.g-snow { animation: g-fall linear infinite; }
+@keyframes g-fall { from { transform: translateY(-400px); } to { transform: translateY(400px); } }
+.g-petal { animation: g-petal linear infinite; }
+@keyframes g-petal { 0% { transform: translate(0, -400px) rotate(0); } 50% { transform: translate(26px, 0) rotate(180deg); }
+  100% { transform: translate(-8px, 400px) rotate(360deg); } }
+.g-shoot { animation: g-shoot 7s ease-in infinite; }
+@keyframes g-shoot { 0% { transform: translate(560px, 30px); opacity: 0; } 8% { opacity: 1; }
+  30% { transform: translate(300px, 120px); opacity: 0; } 100% { transform: translate(300px, 120px); opacity: 0; } }
+.garden-svg.thumb * { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .garden-svg * { animation: none !important; } }
+
+/* шкала серии */
+.streak-bar-wrap { position: relative; height: 24px; background: #ece7fa; border-radius: 999px; overflow: hidden; margin: 12px 0 6px; }
+.streak-bar { height: 100%; min-width: 24px; background: linear-gradient(90deg, var(--green), var(--yellow)); border-radius: 999px; transition: width .8s cubic-bezier(.4, 1.4, .6, 1); }
+.streak-bar-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: .85rem; color: var(--ink); }
+
+/* альбом находок */
+.find-today { font-size: 1.05rem; margin: 4px 0 12px; }
+.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 8px; margin: 8px 0; }
+.album-cell { position: relative; border-radius: 14px; padding: 6px 4px; text-align: center; font-weight: 800;
+  border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: help; }
+.album-day { font-size: .75rem; opacity: .7; }
+.album-mark { font-size: 1.15rem; line-height: 1; }
+.album-done { background: linear-gradient(145deg, #e8fbef, #d2f5e0); color: #178a51; }
+.album-today { background: linear-gradient(145deg, #fff7e0, #ffe08a); color: #8a5a00; border-color: var(--yellow);
+  animation: g-today 1.6s ease-in-out infinite alternate; }
+@keyframes g-today { from { transform: scale(1); } to { transform: scale(1.08); } }
+.album-locked { background: #f1eff7; color: #a39fb8; }
+@media (prefers-reduced-motion: reduce) { .album-today { animation: none; } }
+
+/* превью украшений в магазине и иконка на главной */
+.shop-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+.shop-thumb { border-radius: 12px; overflow: hidden; line-height: 0; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, .12); }
+.gt-tree { width: 46px; height: 46px; flex: none; }
+.gt-svg { width: 100%; height: 100%; display: block; }

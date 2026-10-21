@@ -19,7 +19,7 @@ from database import init_db
 from mascot import build_mascot_ctx
 from routes import register_blueprints
 from template_filters import human_time, match_answer_json, match_cols, match_expected_json, mistakes_count, \
-    shuffle_match, shuffle_sort, shuffle_words, tree_glyph
+    shuffle_match, shuffle_sort, shuffle_words, tree_mini
 
 app = Flask(__name__)
 
@@ -66,7 +66,7 @@ app.jinja_env.filters["shuffle_sort"] = shuffle_sort
 app.jinja_env.filters["mistakes_count"] = mistakes_count
 
 
-app.template_filter("tree_glyph")(tree_glyph)
+app.template_filter("tree_mini")(tree_mini)
 
 
 @app.context_processor

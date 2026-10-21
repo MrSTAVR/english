@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """Фильтры Jinja и перемешивание заданий для шаблонов."""
 
+from garden_scene import tree_mini_svg
 import json
 import random
 from markupsafe import Markup
 
-from garden import TREE_GLYPHS
 from grading import match_columns
 
 
@@ -88,15 +88,6 @@ def mistakes_count(mistakes_json):
         return 0
 
 
-def tree_glyph(glyph_key, scale=None):
-    """SVG-стадия дерева (надёжнее emoji: не зависит от шрифта системы).
-    scale — множитель размера в % от базового (CSS clamp), чтобы сад мог
-    занимать больше половины окна к финальной стадии."""
-    inner = TREE_GLYPHS.get(glyph_key) or TREE_GLYPHS["sprout"]
-    s = scale if scale is not None else 1
-    return Markup(
-        f'<span class="tree-sizer" style="--tree-scale: {s};">'
-        f'<svg class="tree-svg" viewBox="0 0 80 52" '
-        'xmlns="http://www.w3.org/2000/svg">'
-        f'{inner}</svg></span>'
-    )
+def tree_mini(streak_days):
+    """Иконка-деревце для главной ученика (по дню серии)."""
+    return tree_mini_svg(streak_days)

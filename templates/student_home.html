@@ -38,7 +38,7 @@
 
 <!-- Сад: короткий тизер -->
 <a class="garden-teaser glass" href="{{ url_for('garden.garden_page') }}">
-  <span class="gt-tree">{{ tree_stage.glyph | tree_glyph }}</span>
+  <span class="gt-tree">{{ garden.streak_days | tree_mini }}</span>
   <span class="gt-text">
     <b>{{ tree_stage.name }}</b> · 🔥 серия {{ garden.streak_days }} дн. · <svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ garden.coins }} монеток · 🌳 {{ tree_count }} дер.
   </span>

@@ -62,6 +62,9 @@ CREATE TABLE IF NOT EXISTS decorations (
 
 
 
+RETIRED_DECORATIONS = {"rainbow": 30}   # ключ -> цена: выведены из магазина, монеты возвращаются
+
+
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     conn.executescript(SCHEMA)
@@ -78,5 +81,10 @@ def init_db():
         conn.execute("DROP TABLE achievements")
         conn.executescript(SCHEMA)
     # индекс уникальности для новой таблицы ачивок уже задан PRIMARY KEY
+    for key, cost in RETIRED_DECORATIONS.items():
+        conn.execute(
+            "UPDATE garden SET coins = coins + ? * (SELECT COUNT(*) FROM decorations d "
+            "WHERE d.student_id = garden.student_id AND d.deco_key = ?)", (cost, key))
+        conn.execute("DELETE FROM decorations WHERE deco_key = ?", (key,))
     conn.commit()
     conn.close()
