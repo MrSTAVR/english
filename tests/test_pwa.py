@@ -6,6 +6,7 @@ import struct
 from pathlib import Path
 
 from tools import fetch_fonts
+from tests.helpers import N
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "static"
@@ -127,6 +128,6 @@ def test_mobile_assets_wired(anon):
 def test_lesson_uses_pointer_events_not_html5_drag(parent, make_student):
     student = make_student()
     parent.post("/parent/students/1/credit", data={"upto": "2", "action": "add"})
-    html = student.get("/lesson/3").get_data(as_text=True)
+    html = student.get(f"/lesson/{N(3)}").get_data(as_text=True)
     assert "pointerdown" in html and "setPointerCapture" in html
     assert "addEventListener('dragstart', e => {\n      dragged" not in html

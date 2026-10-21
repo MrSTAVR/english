@@ -3,8 +3,13 @@ import re
 import sqlite3
 
 import database
-from curriculum import LESSONS_BY_ID
+from curriculum import LESSONS, LESSONS_BY_ID
 from grading import match_columns
+
+
+def N(n):
+    """id n-го урока в порядке прохождения курса (порядок не равен id)."""
+    return LESSONS[n - 1]["id"]
 
 
 def attempt_id_from(html):

@@ -2,6 +2,7 @@
 """Словарь ученика: слова из пройденных уроков."""
 from curriculum import LESSONS_BY_ID
 from tests.helpers import db_scalar, submit_lesson
+from tests.helpers import N
 
 
 def words_html(client):
@@ -31,8 +32,8 @@ def test_credited_lessons_appear_in_dictionary(parent, make_student):
     sid = db_scalar("SELECT id FROM students WHERE username='masha'")
     parent.post(f"/parent/students/{sid}/credit", data={"upto": "2", "action": "add"})
     html = words_html(student)
-    assert LESSONS_BY_ID[1]["title"] in html and LESSONS_BY_ID[2]["title"] in html
-    assert LESSONS_BY_ID[3]["title"] not in html
+    assert LESSONS_BY_ID[N(1)]["title"] in html and LESSONS_BY_ID[N(2)]["title"] in html
+    assert LESSONS_BY_ID[N(3)]["title"] not in html
 
 
 def test_dictionary_has_search_translation_toggle_and_audio(parent, make_student):

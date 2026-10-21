@@ -12,7 +12,7 @@ import config
 import security
 from curriculum import MAIN_COUNT
 from data.extra_lessons import EXTRA_LESSONS
-from tests.helpers import db_all, submit_lesson
+from tests.helpers import N, db_all, submit_lesson
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -48,17 +48,17 @@ def test_shuffle_words_is_stable_across_processes():
 
 def test_three_clean_in_a_row_gives_achievement(make_student):
     c = make_student()
-    for lid in (1, 2, 3):
-        submit_lesson(c, lid)
+    for n in (1, 2, 3):
+        submit_lesson(c, N(n))
     assert "clean_three" in earned_keys()
 
 
 def test_failure_breaks_clean_run(make_student):
     c = make_student()
-    submit_lesson(c, 1)
-    submit_lesson(c, 2, wrong=True)      # провал сбрасывает серию
-    submit_lesson(c, 2)
-    submit_lesson(c, 3)
+    submit_lesson(c, N(1))
+    submit_lesson(c, N(2), wrong=True)      # провал сбрасывает серию
+    submit_lesson(c, N(2))
+    submit_lesson(c, N(3))
     assert "clean_three" not in earned_keys()
 
 

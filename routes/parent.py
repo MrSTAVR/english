@@ -3,8 +3,7 @@
 
 import json
 from achievements import ACHIEVEMENTS, update_achievements
-from curriculum import ALL_LESSONS, LESSONS_BY_ID
-from data.lessons import LESSONS
+from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID
 from database import get_db
 from datetime import datetime
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
@@ -260,7 +259,7 @@ def parent_dashboard():
                            credit_cards=credit_cards, main_count=len(LESSONS),
                            names_by_id=names_by_id, emojis_by_id=emojis_by_id,
                            student_emojis=STUDENT_EMOJIS,
-                           lesson_titles={l["id"]: l["title"] for l in ALL_LESSONS},
+                           lesson_titles={l["id"]: (f'{l["num"]}. ' if l.get("num") else "") + l["title"] for l in ALL_LESSONS},
                            total_lessons=len(LESSONS))
 
 

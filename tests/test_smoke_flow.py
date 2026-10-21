@@ -6,9 +6,8 @@ import re
 import pytest
 
 from achievements import ACHIEVEMENTS
-from curriculum import LESSONS_BY_ID, MAIN_COUNT
+from curriculum import LESSONS, LESSONS_BY_ID, MAIN_COUNT
 from data.extra_lessons import EXTRA_LESSONS
-from data.lessons import LESSONS
 from tests.helpers import (build_form, db_all, db_scalar, open_lesson,
                            submit_lesson)
 

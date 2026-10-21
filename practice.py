@@ -84,8 +84,30 @@ def _dictation(w):
             "answer": en, "explain": f"{en} — {w['ru']}"}
 
 
+def _letter_extras(lesson, rng, n_listen, n_dict):
+    """Уроки алфавита: услышал название буквы → выбери/напиши букву."""
+    letters = [w["en"].strip() for w in lesson["material"] if w.get("letter")]
+    if len(letters) < 4:
+        return []
+    out = []
+    pool = letters[:]
+    rng.shuffle(pool)
+    for t in pool[:n_listen]:
+        others = [x for x in letters if x != t]
+        opts = rng.sample(others, 3) + [t]
+        rng.shuffle(opts)
+        out.append({"type": "choice", "q": "🔊 Послушай и выбери букву", "audio": t,
+                    "options": opts, "answer": opts.index(t), "explain": f"Это буква {t}."})
+    for t in pool[n_listen:n_listen + n_dict]:
+        out.append({"type": "type_in", "q": "🔊 Послушай и напиши эту букву", "audio": t,
+                    "answer": t, "explain": f"Это буква {t}."})
+    return out
+
+
 def listening_extras(lesson):
     """Два вопроса для итогового теста: на слух (выбор) и диктант."""
+    if lesson.get("letters"):
+        return _letter_extras(lesson, random.Random(lesson["id"] * 17 + 3), 1, 1)
     rng = random.Random(lesson["id"] * 17 + 3)
     mat = lesson.get("material", [])
     cand = mat[:]
@@ -109,6 +131,8 @@ def listening_extras(lesson):
 def practice_extras(lesson):
     """«Ещё потренируемся»: 8 заданий, не влияют на оценку."""
     rng = random.Random(lesson["id"] * 13 + 11)
+    if lesson.get("letters"):
+        return _letter_extras(lesson, rng, 3, 3)
     cand = lesson.get("material", [])[:]
     rng.shuffle(cand)
     out = []

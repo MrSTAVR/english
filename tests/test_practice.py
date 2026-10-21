@@ -27,7 +27,7 @@ def test_every_lesson_has_listening_and_speaking():
     for l in ALL_LESSONS:
         audio_q = [q for q in l["test"] if q.get("audio")]
         assert audio_q, l["id"]
-        assert l["speak"], l["id"]
+        assert l["speak"] or l.get("letters"), l["id"]
         assert l["practice"], l["id"]
         for q in audio_q + [p for p in l["practice"] if p.get("audio")]:
             ok, _ = grade_question(q, q["answer"])

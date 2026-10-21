@@ -168,7 +168,7 @@
           <td>{{ emojis_by_id.get(a.student_id, '') }} {{ names_by_id.get(a.student_id, 'гость') }}</td>
           <td>{{ a.started_at[:16].replace('T', ' ') }}</td>
           <td>{{ a.finished_at[:16].replace('T', ' ') }}</td>
-          <td>{{ a.lesson_id }} · {{ lesson_titles.get(a.lesson_id, '') }}</td>
+          <td>{{ lesson_titles.get(a.lesson_id, a.lesson_id) }}</td>
           <td>{{ a.seconds_spent|human_time }}</td>
           <td>{{ "%.0f"|format(a.score_percent) }}% {{ '✅' if a.passed else '❌' }}</td>
           <td>{{ a.mistakes_json | mistakes_count }}</td>

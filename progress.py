@@ -3,13 +3,13 @@
 
 from datetime import datetime
 
-from curriculum import LESSONS_BY_ID, MAIN_COUNT
+from curriculum import LESSONS, LESSONS_BY_ID
 from stats import compute_stats
 
 
 def lesson_ids_upto(n):
-    """Основные уроки с 1 по n (n ограничено размером курса)."""
-    return set(range(1, max(0, min(int(n), MAIN_COUNT)) + 1))
+    """Первые n уроков основного курса по порядку прохождения."""
+    return {l["id"] for l in LESSONS[:max(0, int(n))]}
 
 
 def credit_lessons(db, student_id, lesson_ids, now=None):

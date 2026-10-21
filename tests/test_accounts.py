@@ -3,7 +3,7 @@
 import re
 
 from curriculum import LESSONS_BY_ID, MAIN_COUNT
-from tests.helpers import (build_form, db_all, db_scalar, open_lesson,
+from tests.helpers import (N, build_form, db_all, db_scalar, open_lesson,
                            submit_lesson)
 
 
@@ -48,18 +48,18 @@ def test_progress_is_isolated(make_student):
 def test_foreign_attempt_rejected(make_student):
     masha = make_student("masha", "Маша", "secret1")
     petya = make_student("petya", "Петя", "secret2", "🐱")
-    submit_lesson(masha, 1)
-    masha_attempt = open_lesson(masha, 2)
-    r = petya.post("/lesson/2/submit",
-                   data=build_form(LESSONS_BY_ID[2], masha_attempt))
+    submit_lesson(masha, N(1))
+    masha_attempt = open_lesson(masha, N(2))
+    r = petya.post(f"/lesson/{N(2)}/submit",
+                   data=build_form(LESSONS_BY_ID[N(2)], masha_attempt))
     assert r.status_code == 400
 
 
 def test_parent_sees_all_students(parent, make_student):
     masha = make_student("masha", "Маша", "secret1", "🦄")
     petya = make_student("petya", "Петя", "secret2", "🐱")
-    submit_lesson(masha, 1)
-    submit_lesson(petya, 1)
+    submit_lesson(masha, N(1))
+    submit_lesson(petya, N(1))
 
     body = parent.get("/parent").get_data(as_text=True)
     assert "Маша" in body and "Петя" in body and "🦄" in body
@@ -69,7 +69,7 @@ def test_parent_sees_all_students(parent, make_student):
 
     assert parent.get("/api/mistakes").get_json() == []
 
-    submit_lesson(petya, 2, wrong=True)
+    submit_lesson(petya, N(2), wrong=True)
     mistakes = parent.get("/api/mistakes").get_json()
     assert mistakes and all(x["student"] == "Петя" for x in mistakes)
 

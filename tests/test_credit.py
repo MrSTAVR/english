@@ -2,6 +2,7 @@
 """Зачёт пройденных уроков родителем."""
 from curriculum import ALL_LESSONS, MAIN_COUNT, LESSONS_BY_ID
 from tests.helpers import db_all, db_scalar, submit_lesson
+from tests.helpers import N
 
 
 def sid_of(username="masha"):
@@ -18,25 +19,25 @@ def home(student):
 
 def test_credit_upto_opens_next_lessons(parent, make_student):
     student = make_student()
-    assert student.get("/lesson/4").status_code != 200          # урок 4 закрыт
+    assert student.get(f"/lesson/{N(4)}").status_code != 200          # урок 4 закрыт
     body = credit(parent, sid_of(), upto="3", action="add")
     assert "зачтено уроков — 3" in body
-    assert student.get("/lesson/4").status_code == 200           # открылся следующий
+    assert student.get(f"/lesson/{N(4)}").status_code == 200           # открылся следующий
     assert "Зачтено родителем" in home(student)
 
 
 def test_credit_specific_lessons_by_checkbox(parent, make_student):
     make_student()
-    credit(parent, sid_of(), lessons=["1", "2"], action="add")
+    credit(parent, sid_of(), lessons=[str(N(1)), str(N(2))], action="add")
     rows = db_all("SELECT lesson_id, passed, manual FROM attempts ORDER BY lesson_id")
-    assert rows == [(1, 1, 1), (2, 1, 1)]
+    assert rows == [(N(1), 1, 1), (N(2), 1, 1)]
 
 
 def test_credit_is_idempotent_and_skips_really_passed(parent, make_student):
     student = make_student()
     submit_lesson(student, 1)                                      # урок 1 пройден по-настоящему
     credit(parent, sid_of(), upto="2", action="add")
-    assert db_all("SELECT lesson_id, manual FROM attempts ORDER BY lesson_id, id") == [(1, 0), (2, 1)]
+    assert db_all("SELECT lesson_id, manual FROM attempts ORDER BY lesson_id, id") == [(N(1), 0), (N(2), 1)]
     body = credit(parent, sid_of(), upto="2", action="add")
     assert "уже пройдены" in body
     assert db_scalar("SELECT COUNT(*) FROM attempts") == 2
@@ -68,10 +69,10 @@ def test_remove_credit_keeps_real_attempts(parent, make_student):
     student = make_student()
     submit_lesson(student, 1)
     credit(parent, sid_of(), upto="2", action="add")
-    body = credit(parent, sid_of(), lessons=["1", "2"], action="remove")
+    body = credit(parent, sid_of(), lessons=[str(N(1)), str(N(2))], action="remove")
     assert "Зачёт снят с уроков: 1" in body
     assert db_all("SELECT lesson_id, manual FROM attempts") == [(1, 0)]
-    assert student.get("/lesson/3").status_code != 200
+    assert student.get(f"/lesson/{N(3)}").status_code != 200
 
 
 def test_credit_validation(parent, make_student):

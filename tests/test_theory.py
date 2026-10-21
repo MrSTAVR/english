@@ -2,6 +2,7 @@
 """Страница теории ученика: правила из пройденных уроков."""
 from curriculum import LESSONS_BY_ID
 from tests.helpers import db_scalar, submit_lesson
+from tests.helpers import N
 
 
 def theory_html(client):
@@ -30,9 +31,9 @@ def test_credited_lessons_have_theory(parent, make_student):
     parent.post(f"/parent/students/{sid}/credit", data={"upto": "3", "action": "add"})
     html = theory_html(student)
     for i in (1, 2, 3):
-        assert LESSONS_BY_ID[i]["theory"]["intro"] in html
-    assert LESSONS_BY_ID[4]["theory"]["intro"] not in html
-    assert 'id="th-search"' in html and 'href="/lesson/3"' in html
+        assert LESSONS_BY_ID[N(i)]["theory"]["intro"] in html
+    assert LESSONS_BY_ID[N(4)]["theory"]["intro"] not in html
+    assert 'id="th-search"' in html and f'href="/lesson/{N(3)}"' in html
 
 
 def test_student_home_links_to_theory(make_student):

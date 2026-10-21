@@ -7,9 +7,8 @@ from achievements import (ACHIEVEMENTS, BY_KEY, CATEGORIES, public, tier_counts,
                           update_achievements, views as achievement_views)
 import config
 from config import PASS_MARK
-from curriculum import ALL_LESSONS, LESSONS_BY_ID, unlocked_lesson_ids
+from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID, unlocked_lesson_ids
 from data.extra_lessons import EXTRA_LESSONS
-from data.lessons import LESSONS
 from database import get_db
 from datetime import datetime
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for

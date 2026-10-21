@@ -51,7 +51,7 @@
     <span class="next-cta-emoji">{{ next_lesson.emoji }}</span>
     <span class="next-cta-text">
       <span class="next-cta-kicker">Твой следующий урок</span>
-      <span class="next-cta-title">Урок {{ next_lesson.id }} — {{ next_lesson.title }}</span>
+      <span class="next-cta-title">Урок {{ next_lesson.num }} — {{ next_lesson.title }}</span>
       <span class="next-cta-sub">~15 минут · тест из {{ next_lesson.test|length }} вопросов</span>
     </span>
     <span class="next-cta-btn">Продолжить ▶️</span>
@@ -79,7 +79,7 @@
       <div class="lesson-card card {{ 'lesson-done' if info.done }} {{ 'lesson-locked' if info.locked }} {{ 'lesson-extra-hidden' if not info.highlight }}">
         <div class="lesson-top">
           <div class="lesson-emoji">{{ l.emoji if info.locked is false or info.done else '🔒' }}</div>
-          <div class="lesson-num">Урок {{ l.id }}</div>
+          <div class="lesson-num">Урок {{ l.num or "" }}</div>
           {% if info.done %}<div class="ribbon">✅ Пройден</div>{% endif %}
           {% if l.id == (next_lesson.id if next_lesson else None) %}<div class="ribbon ribbon-now">▶ Сейчас</div>{% endif %}
         </div>

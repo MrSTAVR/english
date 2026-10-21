@@ -2,7 +2,9 @@
 """Каталог уроков: списки, проверка целостности, разблокировка."""
 
 from data.extra_lessons import EXTRA_LESSONS
-from data.lessons import LESSONS
+from data.course import ORDER
+from data.lessons import LESSONS as _OLD_LESSONS
+from data.new_lessons import NEW_LESSONS
 
 from grading import match_columns
 from practice import augment
@@ -10,6 +12,11 @@ from practice import augment
 
 # Все уроки: основные (с последовательной разблокировкой) + дополнительные
 # (всегда открыты, id >= 101, флаг is_extra).
+_main_by_id = {l["id"]: l for l in _OLD_LESSONS + NEW_LESSONS}
+assert sorted(ORDER) == sorted(_main_by_id), "data/course.py: порядок не совпадает с набором уроков"
+LESSONS = [_main_by_id[i] for i in ORDER]       # основной курс в порядке прохождения
+for _n, _l in enumerate(LESSONS, 1):
+    _l["num"] = _n                                # номер в курсе (id остаётся ключом прогресса)
 ALL_LESSONS = LESSONS + EXTRA_LESSONS
 MAIN_COUNT = len(LESSONS)
 
@@ -74,12 +81,13 @@ def validate_lessons():
 
 
 def unlocked_lesson_ids(stats):
-    unlocked = set()
-    for l in ALL_LESSONS:
-        if l.get("is_extra"):
+    unlocked = {l["id"] for l in EXTRA_LESSONS}      # дополнительные открыты всегда
+    done = stats["completed_ids"]
+    prev = None
+    for i, l in enumerate(LESSONS):
+        # открыт, если пройден предыдущий; уроки, которые уже пройдены или стоят
+        # раньше пройденных (порядок курса мог измениться), остаются открытыми
+        if prev is None or prev["id"] in done or any(x["id"] in done for x in LESSONS[i:]):
             unlocked.add(l["id"])
-            continue
-        prev = l["id"] - 1
-        if prev == 0 or prev in stats["completed_ids"]:
-            unlocked.add(l["id"])
+        prev = l
     return unlocked

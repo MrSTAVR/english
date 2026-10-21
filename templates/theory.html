@@ -20,7 +20,7 @@
 
 {% for l in lessons %}
 <details class="card th-lesson" data-lesson {% if loop.last %}open{% endif %}>
-  <summary><span class="th-title">{{ l.emoji }} Урок {{ l.id if l.id < 1000 else '' }}{{ ': ' if l.id < 1000 else '' }}{{ l.title }}{% if l.is_extra %} <span class="pill pill-soft">доп.</span>{% endif %}</span></summary>
+  <summary><span class="th-title">{{ l.emoji }} {% if l.num %}Урок {{ l.num }}: {% endif %}{{ l.title }}{% if l.is_extra %} <span class="pill pill-soft">доп.</span>{% endif %}</span></summary>
   <p class="theory-intro">{{ l.theory.intro }}</p>
   {% for b in l.theory.blocks %}
     <div class="theory-block card-inner">
