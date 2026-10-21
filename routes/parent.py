@@ -9,6 +9,7 @@ from datetime import datetime
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from garden import cap_streak, get_garden, tree_count_for, tree_stage
 from progress import credit_lessons, lesson_ids_upto, uncredit_lessons
+from seasons import SEASONS, auto_season, get_mode, set_mode
 from security import hash_password
 from stats import compute_stats
 
@@ -218,6 +219,20 @@ def parent_vacation(sid):
     return redirect(url_for("parent.parent_dashboard") + "#students")
 
 
+@bp.route("/parent/season", methods=["POST"])
+def parent_season():
+    """Праздничный сезон: авто (по датам) / всегда включён / выключен."""
+    err = require_role("parent")
+    if err:
+        return err
+    key = request.form.get("season", "")
+    if set_mode(get_db(), key, request.form.get("mode", "")):
+        flash("Настройка праздника сохранена.", "ok")
+    else:
+        flash("Не удалось сохранить настройку.", "error")
+    return redirect(url_for("parent.parent_dashboard") + "#seasons")
+
+
 @bp.route("/parent")
 def parent_dashboard():
     err = require_role("parent")
@@ -296,6 +311,8 @@ def parent_dashboard():
                            credit_cards=credit_cards, main_count=len(LESSONS),
                            names_by_id=names_by_id, emojis_by_id=emojis_by_id,
                            student_emojis=STUDENT_EMOJIS,
+                           seasons=[{"key": k, **v, "mode": get_mode(k), "auto_now": auto_season() == k}
+                                    for k, v in SEASONS.items()],
                            lesson_titles={l["id"]: (f'{l["num"]}. ' if l.get("num") else "") + l["title"] for l in ALL_LESSONS},
                            total_lessons=len(LESSONS))
 

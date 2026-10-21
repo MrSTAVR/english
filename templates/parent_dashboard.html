@@ -96,6 +96,24 @@
   </form>
 </section>
 
+<!-- Праздничные события -->
+<section class="card" id="seasons">
+  <h2>🎉 Праздничные события</h2>
+  <p class="hint">Во время праздника у детей появляются особые слова, викторина и наряды. По умолчанию событие включается само по датам; можно включить его принудительно или выключить.</p>
+  {% for s in seasons %}
+  <form method="post" action="{{ url_for('parent.parent_season') }}" class="vac-form season-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="season" value="{{ s.key }}">
+    <b>{{ s.emoji }} {{ s.title }}</b> <span class="hint">({{ s.dates }}) — сейчас:
+      {% if s.mode == 'on' %}включён вручную{% elif s.mode == 'off' %}выключен{% elif s.auto_now %}идёт по расписанию{% else %}не идёт (ждёт своих дат){% endif %}</span>
+    <label><input type="radio" name="mode" value="auto" {{ 'checked' if s.mode == 'auto' }}> По датам</label>
+    <label><input type="radio" name="mode" value="on" {{ 'checked' if s.mode == 'on' }}> Всегда включён</label>
+    <label><input type="radio" name="mode" value="off" {{ 'checked' if s.mode == 'off' }}> Выключен</label>
+    <button class="btn btn-small btn-primary" type="submit">Сохранить</button>
+  </form>
+  {% endfor %}
+</section>
+
 <!-- Зачёт пройденных уроков -->
 <section class="card" id="credit">
   <h2>✅ Зачесть пройденные уроки</h2>

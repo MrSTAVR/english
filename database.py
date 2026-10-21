@@ -124,6 +124,10 @@ CREATE TABLE IF NOT EXISTS house_place (
     item_key   TEXT NOT NULL,
     PRIMARY KEY (student_id, slot)
 );
+CREATE TABLE IF NOT EXISTS app_settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT
+);
 CREATE TABLE IF NOT EXISTS activity (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL,

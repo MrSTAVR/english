@@ -141,3 +141,26 @@ def test_home_shows_teasers(make_student, monkeypatch):
 def test_sw_knows_new_pages(anon):
     body = anon.get("/sw.js").get_data(as_text=True)
     assert "weekly|boss|halloween" in body
+
+
+def test_parent_controls_halloween(parent, make_student, monkeypatch):
+    c = make_student()
+    monkeypatch.setattr(seasons, "today", lambda: date(2026, 6, 1))
+    assert "Праздничные события" in parent.get("/parent").get_data(as_text=True)
+    assert c.get("/student/halloween").status_code == 302            # по датам — не сезон
+    parent.post("/parent/season", data={"season": "halloween", "mode": "on"})
+    assert c.get("/student/halloween").status_code == 200            # включён вручную
+    monkeypatch.setattr(seasons, "today", lambda: date(2026, 10, 25))
+    parent.post("/parent/season", data={"season": "halloween", "mode": "off"})
+    assert c.get("/student/halloween").status_code == 302            # выключен даже в сезон
+    assert "Хэллоуин!" not in c.get("/student").get_data(as_text=True)
+    parent.post("/parent/season", data={"season": "halloween", "mode": "auto"})
+    assert c.get("/student/halloween").status_code == 200
+    parent.post("/parent/season", data={"season": "bogus", "mode": "on"})
+    assert seasons.get_mode("halloween") in ("auto", "on", "off")
+
+
+def test_season_setting_requires_parent(make_student):
+    c = make_student()
+    c.post("/parent/season", data={"season": "halloween", "mode": "off"})
+    assert db_scalar("SELECT COUNT(*) FROM app_settings") == 0
