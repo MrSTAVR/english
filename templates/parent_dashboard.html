@@ -5,7 +5,7 @@
 <h1>🛠️ Кабинет администратора</h1>
 
 <!-- Обновления сайта -->
-<section class="card" id="updates">
+<section class="card" id="updates" data-pending="{{ 1 if upd.pending else 0 }}" data-state="{{ url_for('parent.parent_updates_state') }}">
   <h2>🔄 Обновления сайта</h2>
   {% set st = upd.status %}
   <p>Установлена версия <b>{{ app_version.full }}</b>{% if app_version.subject %} — <span class="hint">{{ app_version.subject }}</span>{% endif %}</p>
@@ -21,6 +21,7 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       {% if upd.pending %}
         <button class="btn btn-primary" type="button" disabled>⏳ Ждём сервер…</button>
+        <span class="hint" id="upd-wait"></span>
       {% else %}
         <button class="btn btn-primary" type="submit" name="action" value="now">🔄 Обновить сейчас</button>
       {% endif %}
@@ -349,6 +350,28 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+/* «Обновить сейчас»: ждём, пока сервер заберёт просьбу, и перезагружаем страницу сами */
+(function () {
+  var box = document.getElementById('updates');
+  if (!box || box.dataset.pending !== '1') return;
+  var note = document.getElementById('upd-wait'), started = Date.now();
+  function done() { location.reload(); }
+  function tick() {
+    var sec = Math.round((Date.now() - started) / 1000);
+    if (sec > 180) { if (note) note.textContent = 'Сервер не ответил за 3 минуты — проверь, включено ли автообновление на сервере.'; return; }
+    fetch(box.dataset.state, { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (j && !j.pending) return done();
+        if (note) note.textContent = 'прошло ' + sec + ' с';
+        setTimeout(tick, 3000);
+      })
+      .catch(function () { if (note) note.textContent = 'сайт перезапускается…'; setTimeout(tick, 3000); });
+  }
+  setTimeout(tick, 2000);
+})();
+</script>
 <script>
 fetch('/api/mistakes').then(r => r.json()).then(data => {
   const box = document.getElementById('mistakes-box');

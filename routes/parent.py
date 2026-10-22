@@ -8,7 +8,7 @@ from achievements import ACHIEVEMENTS, update_achievements
 from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID
 from database import get_db
 from datetime import datetime
-from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
 from garden import cap_streak, get_garden, tree_count_for, tree_stage
 from report import MAX_WEEKS_BACK, week_report
 from progress import credit_lessons, lesson_ids_upto, uncredit_lessons
@@ -264,6 +264,15 @@ def parent_updates():
     except OSError as e:
         flash(f"Не удалось передать команду серверу: {e}", "error")
     return redirect(url_for("parent.parent_dashboard") + "#updates")
+
+
+@bp.route("/parent/updates/state")
+def parent_updates_state():
+    """Для страницы, ждущей сервер: выполнена ли просьба «Обновить сейчас»."""
+    if session.get("role") != "parent":
+        abort(403)
+    st = updates.status() or {}
+    return jsonify(pending=updates.update_pending(), checked=st.get("checked", ""), version=app_version()["full"])
 
 
 @bp.route("/parent/season", methods=["POST"])

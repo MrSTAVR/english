@@ -53,3 +53,15 @@ def test_student_cannot_touch_updates(make_student):
     c.post("/parent/updates", data={"action": "now"})
     c.post("/parent/updates", data={"action": "auto_off"})
     assert not os.path.exists(_ctrl("update-now")) and not os.path.exists(_ctrl("autoupdate-off"))
+
+
+def test_state_endpoint_for_waiting_page(parent, anon):
+    assert anon.get("/parent/updates/state").status_code == 403
+    assert parent.get("/parent/updates/state").get_json()["pending"] is False
+    parent.post("/parent/updates", data={"action": "now"})
+    html = parent.get("/parent").get_data(as_text=True)
+    assert 'data-pending="1"' in html and "/parent/updates/state" in html
+    assert parent.get("/parent/updates/state").get_json()["pending"] is True
+    os.remove(_ctrl("update-now"))                       # сервер забрал просьбу
+    j = parent.get("/parent/updates/state").get_json()
+    assert j["pending"] is False and j["version"] == version.info()["full"]
