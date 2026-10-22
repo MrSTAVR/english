@@ -31,8 +31,22 @@ bash /opt/english/app/deploy/restore.sh /opt/english/backups/english_app-ГГГ�
 Копия проверяется до начала, текущая база не удаляется, а откладывается как `*.before-restore-…`.
 Если копия лежит на компьютере: сначала `scp C:\english-backups\файл.db.gz root@stavr.mywire.org:/root/`.
 
-## Обновление приложения
-В PyCharm: коммит и Push, затем на сервере:
+## Автообновление (включается один раз)
+```bash
+bash /opt/english/app/deploy/setup-autoupdate.sh
+```
+Сервер раз в 5 минут проверяет ветку `main` на GitHub. Появился новый коммит — запускается `update.sh`
+(копия базы, `git pull`, зависимости, перезапуск, проверка). Если после обновления сайт не поднялся,
+код сам откатывается на прежний коммит, а сломанный коммит больше не ставится — ждём следующий с исправлением.
+
+- Что происходило: `journalctl -u english-autoupdate -n 30 --no-pager`
+- Когда следующая проверка: `systemctl list-timers english-autoupdate.timer`
+- Выключить: `bash /opt/english/app/deploy/setup-autoupdate.sh off`
+- Ручной откат на старый коммит (`git checkout <коммит>`) автообновление не трогает, пока код не вернётся на ветку:
+  `cd /opt/english/app && git checkout main`.
+
+## Обновление приложения вручную
+Если автообновление выключено — в PyCharm коммит и Push, затем на сервере:
 ```bash
 bash /opt/english/app/deploy/update.sh
 ```
