@@ -196,3 +196,36 @@ def word_of_day(pool, st, student_id, today=None):
     weak = [w for w in pool if w["key"] not in st or st[w["key"]]["box"] <= 1] or pool
     seed = zlib.crc32(f"{student_id}-{today.isoformat()}".encode())
     return weak[seed % len(weak)]
+
+
+def words_in_mistakes(results, lesson_id, limit_per_question=2):
+    """Слова курса, на которых ученик ошибся в тесте (вопросы «выбери» и «напиши»).
+
+    Слово ищем в правильном ответе и в тексте вопроса: по-английски — целым словом,
+    по-русски — по переводу («Как по-английски «синий»?» → blue)."""
+    pool = all_words()
+    keys = []
+    for res in results:
+        if res.get("correct") or res.get("type") not in ("choice", "type_in"):
+            continue
+        text = f"{res.get('q', '')} {res.get('correct_answer', '')}".lower()
+        found = []
+        for w in sorted(pool, key=lambda w: (w["lesson"] != lesson_id, -len(w["key"]))):
+            if len(w["key"]) < 3 or w["key"] in keys or w["key"] in found:
+                continue
+            if re.search(r"(?<![a-z])" + re.escape(w["key"]) + r"(?![a-z])", text) or \
+                    (len(w["ru"]) >= 3 and re.search(r"(?<![а-яё])" + re.escape(w["ru"].lower()) + r"(?![а-яё])", text)):
+                found.append(w["key"])
+            if len(found) >= limit_per_question:
+                break
+        keys.extend(found)
+    return keys
+
+
+def send_mistakes(db, student_id, results, lesson_id):
+    """Слова из ошибок теста — в коробку 0 (повторить сегодня). Возвращает список английских слов."""
+    keys = words_in_mistakes(results, lesson_id)
+    for k in keys:
+        record(db, student_id, k, ok=False)
+    by_key = {w["key"]: w["en"] for w in all_words()}
+    return [by_key[k] for k in keys]

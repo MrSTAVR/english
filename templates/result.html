@@ -43,6 +43,7 @@
 
 <section class="card">
   <h2>Разбор теста 🧐</h2>
+  {% if to_review %}<p class="hint">🔁 Слова из ошибок отправлены в повторение — потренируем их ещё: <b>{{ to_review|join(', ') }}</b></p>{% endif %}
   {% for r in results %}
     <div class="review-item {{ 'rev-ok' if r.correct else 'rev-bad' }}">
       <div>{{ '✅' if r.correct else '❌' }} <b>{{ r.q }}</b></div>

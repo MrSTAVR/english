@@ -21,7 +21,7 @@ from seasons import active_season, advent_open, content
 from garden import award_coins, get_garden, on_vacation, refresh_garden, touch_streak, tree_count_for, tree_stage
 from grading import grade_question
 from mascot import build_mascot_ctx
-from review import counts as review_counts, learned_pool, state as review_state, word_of_day
+from review import counts as review_counts, learned_pool, send_mistakes, state as review_state, word_of_day
 from stats import compute_stats
 
 from routes.common import get_student_or_none, require_role
@@ -258,6 +258,7 @@ def submit_test(lesson_id):
          total, correct, json.dumps(mistakes, ensure_ascii=False),
          json.dumps({"results": results}, ensure_ascii=False), attempt_id))
     db.commit()
+    to_review = send_mistakes(db, student["id"], results, lesson_id)     # ошибки — в повторение слов
 
     stats = compute_stats(db, student["id"])
     _row, goal_coins, goal_done = goals.add(db, student["id"], stats, len(learned_pool(stats)),
@@ -282,7 +283,7 @@ def submit_test(lesson_id):
     return render_template("result.html", mascot=mascot,
                            lesson=lesson, percent=percent, passed=passed, need=need,
                            correct=correct, total=total,
-                           seconds=seconds, results=results,
+                           seconds=seconds, results=results, to_review=to_review,
                            coins_earned=coins_earned,
                            coins_total=garden["coins"],
                            streak_days=garden["streak_days"],

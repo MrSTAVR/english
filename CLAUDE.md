@@ -17,7 +17,7 @@
 - `app.py` — приложение; `routes/*.py` — blueprint-ы (`student`, `parent`, `garden`, `games`, `stories`, `writing`, `review`, `wardrobe`, `house`, `season`, `speak`, `pwa`, `auth`, `system`); регистрируются в `routes/__init__.py`.
 - `database.py` — схема `SCHEMA` и миграции в `init_db()` (`PRAGMA table_info` + `ALTER TABLE`). Новая таблица = `CREATE TABLE IF NOT EXISTS` в схеме. При удалении ученика чистим его строки во всех таблицах (`routes/parent.py: delete_student`).
 - Контент: `data/lessons.py`, `new_lessons.py`, `more_lessons.py`, `extra_lessons.py` → `curriculum.py` собирает `LESSONS` / `ALL_LESSONS` / `LESSONS_BY_ID`. Порядок прохождения задаёт `data/course.py` (`ORDER`), он не равен id урока. Диалоги — `data/dialogs.py`, истории — `data/stories.py`, праздники — `data/halloween.py`, `data/newyear.py` (слова, викторина, тексты страницы; у Нового года ещё `ADVENT` — 31 окошко), эмодзи — `data/emoji.py`.
-- Логика: `stats.py` (`compute_stats`), `achievements.py` (ачивки через `_m(...)`), `garden.py` (серия дней, монеты), `review.py` (повторение, система Лейтнера), `goals.py` (цель дня; своя цель родителя — таблица `goal_settings`), `report.py` (недельный отчёт в кабинете родителя, `/parent?week=N`), `wardrobe.py`, `house.py`, `stickers.py`, `weekly.py` (недельный челлендж и босс), `seasons.py` (праздничные сезоны), `activity.py` (журнал занятий по дням), `writing.py`, `practice.py`, `mascot.py`.
+- Логика: `stats.py` (`compute_stats`), `achievements.py` (ачивки через `_m(...)`), `garden.py` (серия дней, монеты), `review.py` (повторение, система Лейтнера; ошибки теста урока → `send_mistakes` кладёт слова в коробку 0), `goals.py` (цель дня; своя цель родителя — таблица `goal_settings`), `report.py` (недельный отчёт в кабинете родителя, `/parent?week=N`), `wardrobe.py`, `house.py`, `stickers.py`, `weekly.py` (недельный челлендж и босс), `seasons.py` (праздничные сезоны), `activity.py` (журнал занятий по дням), `writing.py`, `practice.py`, `mascot.py`.
 - Фронтенд: `templates/` (Jinja), `static/` (`style.css`, `theme.css` — тема перекрывает style.css, `games.js`, `stories.js`, `writing.js`, `chick.js` — рисунок цыплёнка и наряды, `house.js`, `mascot.js`, `tts.js`, `sw.js`, `pwa.js`…).
 
 ## Важные правила и ловушки
@@ -36,18 +36,17 @@
 
 ## Как делаем изменения
 1. Небольшой шаг → тесты (добавляем новые в `tests/`) → проверка в браузере для UI (Playwright + Chromium, если нужно).
-2. Публикация делается целиком самостоятельно (как «Commit and Push» в PyCharm): тесты зелёные → коммит → push в рабочую ветку → PR через REST API (`gh api repos/MrSTAVR/english/pulls -X POST …`; GraphQL в облачных сессиях закрыт, `gh pr …` не работает) → сразу merge (`gh api repos/MrSTAVR/english/pulls/<N>/merge -X PUT`). Если тесты красные или merge не прошёл — не сливать, сообщить владельцу.
+2. Публикация делается целиком самостоятельно (как «Commit and Push» в PyCharm): тесты зелёные → коммит → push в рабочую ветку → PR через REST API (`gh api repos/MrSTAVR/english/pulls -X POST …`; GraphQL в облачных сессиях закрыт, `gh pr …` не работает) → дождаться зелёного CI (GitHub Actions `tests`: Python 3.11 как на сервере, `pytest`; статус — `gh api repos/MrSTAVR/english/commits/<sha>/check-runs`) → merge (`gh api repos/MrSTAVR/english/pulls/<N>/merge -X PUT`). Если тесты или CI красные или merge не прошёл — не сливать, сообщить владельцу.
 3. Выкатка: сервер сам подтягивает `main` раз в 5 минут (`deploy/autoupdate.sh` + таймер `english-autoupdate.timer`, включается `deploy/setup-autoupdate.sh`), при поломке откатывается; кабинет администратора управляет им через «записки» в `/opt/english/data/control` (`updates.py`, блок «Обновления сайта»: журнал, «Обновить сейчас», вкл/выкл). Сервер Claude недоступен — проверить выкатку нельзя; если владелец сообщает о проблеме, смотреть `journalctl -u english-autoupdate`. Новые таблицы БД — только аддитивно (`CREATE TABLE IF NOT EXISTS`/`ALTER TABLE ADD`), чтобы откат кода не ломал базу.
 4. Крупные фичи согласуем списком заранее; отложенное — в бэклоги ниже (English Fun и кабинет логопеда — отдельно).
 
 ## Бэклог: English Fun (отложено)
-- Ошибки из тестов уроков автоматически отправлять в повторение слов (Лейтнер), а не только в список у администратора.
 - Карта курса: наглядный путь по всем урокам (где сейчас, что впереди).
 - Новые уроки и истории после 51-го (время, сравнения, Past Simple, школа, путешествия) — темы согласовать.
 - Кабинет администратора: «тепловая карта» занятий по дням и динамика среднего балла; топ трудных слов с кнопкой «в повторение».
 - Остальные сезоны: 8 Марта, Пасха, день рождения и т.д. (каркас — `seasons.py`); повтор праздника «каждый год» в те же даты.
 - Фоны за помощником, питомец Чик-чика.
-- Техническое: CI на GitHub Actions (pytest на каждый PR — подстраховка автослияния); заменить широкие `except Exception` на конкретные с логированием; прогон страниц на ширине телефона.
+- Техническое: заменить широкие `except Exception` на конкретные с логированием; прогон страниц на ширине телефона.
 
 ## Бэклог: кабинет логопеда
 Решения владельца: окна — конкретные слоты; занятие 45 мин; стоимость своя у каждого ребёнка, абонементов нет; семья записывается и отменяет не позже чем за сутки; дети сами не заходят.
