@@ -4,6 +4,7 @@
 import json
 import logging
 import sqlite3
+import tempfile
 
 import backup_db
 import database
@@ -416,7 +417,7 @@ def parent_dashboard():
                       "hard_count": len(hard_words(db, st["id"]))})
     season = active_season()
     return _admin("overview.html", tab="overview", cards=cards, total_lessons=len(LESSONS),
-                  upd=updates.view(app_version()["commit"]),
+                  upd=updates.view(app_version()["commit"]), tg=tg.settings(db),
                   season=SEASONS.get(season) if season else None,
                   logoped_count=db.execute("SELECT COUNT(*) FROM sp_logopeds").fetchone()[0])
 
@@ -547,8 +548,9 @@ def parent_telegram():
             tg.send_message(s["tg_token"], s["tg_chat"], "👋 Проверка связи из кабинета администратора English Fun.")
             flash("Сообщение отправлено — проверьте Telegram 📨", "ok")
         elif action == "backup":
-            path = backup_db.make_backup(database.DB_PATH, backup_db.default_dir(), backup_db.default_keep())
-            tg.send_backup(db, path, force=True)
+            # сайту (systemd, ProtectSystem=strict) нельзя писать в папку копий — делаем во временной и удаляем
+            with tempfile.TemporaryDirectory() as tmp:
+                tg.send_backup(db, backup_db.make_backup(database.DB_PATH, tmp), force=True)
             flash("Копия базы отправлена в Telegram 💾", "ok")
         elif action in ("backups_on", "backups_off"):
             tg.save(db, tg_backups="1" if action == "backups_on" else "0")
@@ -564,6 +566,8 @@ def parent_telegram():
     except (OSError, sqlite3.Error, RuntimeError) as e:
         log.exception("копия базы для Telegram")
         flash(f"Копия базы не сделалась: {e}", "error")
+    if request.form.get("back") == "overview":
+        return redirect(url_for("parent.parent_dashboard"))
     return redirect(url_for("parent.parent_telegram"))
 
 

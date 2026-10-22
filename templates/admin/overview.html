@@ -8,6 +8,15 @@
     {% elif upd.status %}<span class="adm-ok">актуальная</span>{% else %}<span class="hint">автообновление не настроено</span>{% endif %}
   </a>
   {% if season %}<a class="adm-chip" href="{{ url_for('parent.parent_holidays') }}">{{ season.emoji }} Сейчас: {{ season.title }}</a>{% endif %}
+  {% if tg.linked %}
+  <form method="post" action="{{ url_for('parent.parent_telegram') }}" class="adm-chip-form" onsubmit="this.querySelector('button').textContent='⏳ Делаю копию…'">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="back" value="overview">
+    <button class="adm-chip" type="submit" name="action" value="backup" title="Сделать копию базы и отправить в Telegram">💾 Бэкап в Telegram</button>
+  </form>
+  {% else %}
+  <a class="adm-chip" href="{{ url_for('parent.parent_telegram') }}" title="Копии базы в Telegram">🤖 Подключить Telegram</a>
+  {% endif %}
   {% if logoped_count %}<a class="adm-chip" href="{{ url_for('parent.parent_logopeds_page') }}">👩‍⚕️ Логопедов: {{ logoped_count }}</a>{% endif %}
 </div>
 

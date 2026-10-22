@@ -982,9 +982,13 @@ button, input, select, textarea { font-family: inherit; }
 .admin-tabs a{flex:none;padding:8px 14px;border-radius:99px;text-decoration:none;font-weight:800;font-size:.92rem;
   color:var(--primary-dark,#5a3fd6);background:var(--surface);border:1.5px solid var(--border);white-space:nowrap}
 .admin-tabs a.on{background:linear-gradient(135deg,#7c5cff,#a58bff);color:#fff;border-color:transparent;box-shadow:0 3px 0 #5a3fd6}
+@media (min-width:641px){.admin-tabs{flex-wrap:wrap;overflow:visible}}
 .adm-status{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .adm-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;background:var(--surface);
   border:1.5px solid var(--border);text-decoration:none;color:inherit;font-weight:700;font-size:.88rem}
+.adm-chip-form{display:contents}
+button.adm-chip{font:inherit;font-weight:700;font-size:.88rem;cursor:pointer;color:inherit}
+button.adm-chip:hover{border-color:var(--primary)}
 .adm-ok{color:#2f9a4b;font-weight:800}
 .adm-on{background:#dff5e3;color:#2c6b3a}
 .adm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}

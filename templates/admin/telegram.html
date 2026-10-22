@@ -39,7 +39,7 @@
     {% else %}<span class="pill pill-warn">Ежедневная копия: выключена</span>{% endif %}
   </p>
   <p>Последняя отправка: {% if tg.tg_last %}<b>{{ tg.tg_last }}</b>{% else %}<span class="hint">ещё не было</span>{% endif %}</p>
-  <form method="post" class="upd-actions">
+  <form method="post" class="upd-actions" onsubmit="if (event.submitter && event.submitter.value === 'backup') event.submitter.textContent = '⏳ Делаю копию и отправляю…'">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button class="btn btn-primary" type="submit" name="action" value="backup">💾 Отправить копию сейчас</button>
     <button class="btn" type="submit" name="action" value="test">📨 Проверить связь</button>
