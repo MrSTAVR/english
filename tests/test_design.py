@@ -57,3 +57,8 @@ def test_lesson_test_has_progress_bar(make_student):
     html = c.get("/lesson/1").get_data(as_text=True)
     assert 'id="test-progress"' in html and "function unansweredQuestions()" in html
     assert html.count("unansweredQuestions()") >= 3          # и полоска, и проверка перед отправкой
+
+
+def test_house_has_tabs(make_student):
+    html = make_student().get("/student/house").get_data(as_text=True)
+    assert 'id="hs-tabs"' in html and 'data-slot="wall"' in html and 'data-slot="floor"' in html

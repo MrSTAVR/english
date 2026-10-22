@@ -284,3 +284,43 @@ html[data-theme="dark"] .tp-bar { background: var(--line); }
 .mascot-balloon::after { border-right-color: var(--line); border-bottom-color: var(--line); }
 .mascot-balloon .mb-name { background: var(--yellow); color: var(--ink); box-shadow: 0 2px 0 var(--yellow-deep); }
 html[data-theme="dark"] .mascot-balloon { background: var(--surface); color: var(--ink); box-shadow: 0 5px 0 #0E0B1F, 0 12px 24px rgba(0, 0, 0, .4); }
+
+/* ============================================================
+   Карта курса: пройденные — жёлтые кружки, текущий — синий с кольцом, закрытые — песочные
+   ============================================================ */
+.map-progress { height: 14px; background: #F3EBDA; }
+.map-progress > div { background: var(--primary); }
+html[data-theme="dark"] .map-progress { background: var(--line); }
+.map-part { border-color: var(--line); box-shadow: var(--shadow); }
+.map-part-done { border-color: #9ED9B4; }
+.map-done { background: var(--yellow); box-shadow: 0 5px 0 var(--yellow-deep); }
+.map-open { background: var(--sky); border: 2px solid var(--primary); box-shadow: 0 5px 0 var(--line-deep); }
+.map-current { background: var(--primary); box-shadow: 0 0 0 6px var(--surface), 0 0 0 9px var(--primary), 0 9px 0 4px rgba(30, 42, 69, .18); }
+.map-locked { background: #ECE4D3; box-shadow: 0 5px 0 #D8CDB6; }
+html[data-theme="dark"] .map-locked { background: #2B2640; box-shadow: 0 5px 0 #0E0B1F; }
+.map-num { color: var(--ink); border-color: var(--line-deep); background: var(--surface); }
+.map-here { color: var(--primary); text-transform: uppercase; letter-spacing: .06em; font-size: .78rem; }
+html[data-theme="dark"] .map-here { color: #8FB4FF; }
+
+/* ============================================================
+   Сад и домик
+   ============================================================ */
+/* на телефоне «⬅ Мои уроки» не нужны — есть нижнее меню */
+@media (max-width: 640px) { .has-tabbar a.btn-small[href="/student"], .has-tabbar .garden-side > a.btn[href="/student"] { display: none; } }
+
+/* показатели сада — плитка 2×2 */
+.garden-side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: start; }
+.garden-side .mini-card { margin: 0; padding: 12px 10px; }
+.garden-side .mini-num { font-size: 1.6rem; }
+.garden-side .mini-label { font-size: .82rem; font-weight: 700; color: var(--muted); line-height: 1.3; }
+.garden-side > .btn { grid-column: 1 / -1; }
+
+/* домик: вкладки разделов и карточки предметов */
+.hs-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 10px; margin: 14px 0 4px; scrollbar-width: thin; }
+.hs-tab { flex: none; min-height: 42px; padding: 0 16px; border-radius: 999px; font: inherit; font-weight: 900; font-size: .95rem;
+  cursor: pointer; background: var(--surface); color: var(--ink); border: 2px solid var(--line); }
+.hs-tab.on { background: var(--primary); color: #FFFFFF; border-color: var(--primary); box-shadow: 0 3px 0 var(--primary-deep); }
+.hs-tabs:not([hidden]) ~ #house .wd-section > h2 { display: none; }
+.wd-section[hidden] { display: none; }
+.wd-item.is-on { border-color: #9ED9B4; box-shadow: 0 4px 0 #9ED9B4; }
+.wd-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
