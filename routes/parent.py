@@ -3,6 +3,7 @@
 
 import json
 import goals
+import updates
 from achievements import ACHIEVEMENTS, update_achievements
 from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID
 from database import get_db
@@ -14,6 +15,7 @@ from progress import credit_lessons, lesson_ids_upto, uncredit_lessons
 from seasons import SEASONS, get_dates, get_mode, in_season, set_dates, set_mode
 from security import hash_password
 from stats import compute_stats
+from version import info as app_version
 
 from routes.common import require_role
 
@@ -242,6 +244,28 @@ def parent_goal(sid):
     return redirect(url_for("parent.parent_dashboard") + "#students")
 
 
+@bp.route("/parent/updates", methods=["POST"])
+def parent_updates():
+    """Обновления сайта: action=now (обновить сейчас) / auto_on / auto_off."""
+    err = require_role("parent")
+    if err:
+        return err
+    action = request.form.get("action")
+    try:
+        if action == "now":
+            updates.request_update()
+            flash("Запрос отправлен: сервер проверит GitHub и обновится в течение минуты. Обнови страницу чуть позже. 🔄", "ok")
+        elif action in ("auto_on", "auto_off"):
+            updates.set_auto(action == "auto_on")
+            flash("Автообновление включено ✅" if action == "auto_on" else
+                  "Автообновление выключено: новые версии ставятся только кнопкой.", "ok")
+        else:
+            abort(400)
+    except OSError as e:
+        flash(f"Не удалось передать команду серверу: {e}", "error")
+    return redirect(url_for("parent.parent_dashboard") + "#updates")
+
+
 @bp.route("/parent/season", methods=["POST"])
 def parent_season():
     """Праздничный сезон: авто (по датам) / всегда включён / выключен."""
@@ -349,7 +373,7 @@ def parent_dashboard():
                            credit_cards=credit_cards, main_count=len(LESSONS),
                            names_by_id=names_by_id, emojis_by_id=emojis_by_id,
                            student_emojis=STUDENT_EMOJIS, weeks_back=weeks_back,
-                           max_weeks_back=MAX_WEEKS_BACK,
+                           max_weeks_back=MAX_WEEKS_BACK, upd=updates.view(app_version()["commit"]),
                            goal_limits=(goals.MAX_LESSONS, goals.MAX_WORDS),
                            seasons=[{"key": k, **v, "mode": get_mode(k), "custom": get_dates(k), "auto_now": in_season(k)}
                                     for k, v in SEASONS.items()],

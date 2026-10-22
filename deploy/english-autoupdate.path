@@ -1,0 +1,9 @@
+[Unit]
+Description=English Fun: обновить сразу по кнопке в кабинете администратора
+
+[Path]
+PathExists=/opt/english/data/control/update-now
+Unit=english-autoupdate.service
+
+[Install]
+WantedBy=paths.target

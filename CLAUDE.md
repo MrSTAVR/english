@@ -36,7 +36,7 @@
 ## Как делаем изменения
 1. Небольшой шаг → тесты (добавляем новые в `tests/`) → проверка в браузере для UI (Playwright + Chromium, если нужно).
 2. Публикация делается целиком самостоятельно (как «Commit and Push» в PyCharm): тесты зелёные → коммит → push в рабочую ветку → PR через REST API (`gh api repos/MrSTAVR/english/pulls -X POST …`; GraphQL в облачных сессиях закрыт, `gh pr …` не работает) → сразу merge (`gh api repos/MrSTAVR/english/pulls/<N>/merge -X PUT`). Если тесты красные или merge не прошёл — не сливать, сообщить владельцу.
-3. Выкатка: сервер сам подтягивает `main` раз в 5 минут (`deploy/autoupdate.sh` + таймер `english-autoupdate.timer`, включается `deploy/setup-autoupdate.sh`), при поломке откатывается. Сервер Claude недоступен — проверить выкатку нельзя; если владелец сообщает о проблеме, смотреть `journalctl -u english-autoupdate`. Новые таблицы БД — только аддитивно (`CREATE TABLE IF NOT EXISTS`/`ALTER TABLE ADD`), чтобы откат кода не ломал базу.
+3. Выкатка: сервер сам подтягивает `main` раз в 5 минут (`deploy/autoupdate.sh` + таймер `english-autoupdate.timer`, включается `deploy/setup-autoupdate.sh`), при поломке откатывается; кабинет администратора управляет им через «записки» в `/opt/english/data/control` (`updates.py`, блок «Обновления сайта»: журнал, «Обновить сейчас», вкл/выкл). Сервер Claude недоступен — проверить выкатку нельзя; если владелец сообщает о проблеме, смотреть `journalctl -u english-autoupdate`. Новые таблицы БД — только аддитивно (`CREATE TABLE IF NOT EXISTS`/`ALTER TABLE ADD`), чтобы откат кода не ломал базу.
 4. Крупные фичи согласуем списком заранее; отложенное — в бэклог (ниже).
 
 ## Бэклог (отложено)
