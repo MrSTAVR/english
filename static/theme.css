@@ -747,3 +747,12 @@ html[data-theme="dark"] .map-locked { background: #2b2640; } html[data-theme="da
 html[data-theme="dark"] .heat-cell.heat-0 { background: #2b2640; }
 html[data-theme="dark"] .adm-nums span { background: #241f3d; } html[data-theme="dark"] .adm-dot { background: #2b2640; }
 html[data-theme="dark"] .adm-on { background: #1f3d27; color: #9fe0ad; }
+
+/* ---------- самые узкие телефоны (360px) ---------- */
+.login-card { max-width: 100%; box-sizing: border-box; }
+code, pre { overflow-wrap: anywhere; }
+pre { white-space: pre-wrap; }
+@media (max-width: 380px) {
+  .topbar nav a { padding: 9px 6px; font-size: .86rem; gap: 3px; }
+  .topbar nav a.nav-exit { padding: 9px 8px; }
+}
