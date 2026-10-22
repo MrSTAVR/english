@@ -7,7 +7,7 @@ VENV=/opt/english/venv
 
 set -a; . /etc/english.env; set +a
 sudo -u english env ENGLISH_APP_DB="$ENGLISH_APP_DB" ENGLISH_BACKUP_DIR="$ENGLISH_BACKUP_DIR" \
-  "$VENV/bin/python" "$APP_DIR/backup_db.py"
+  "$VENV/bin/python" "$APP_DIR/backup_db.py" --no-telegram
 
 cd "$APP_DIR"
 git pull --ff-only

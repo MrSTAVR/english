@@ -1,0 +1,68 @@
+{% extends "admin/_layout.html" %}
+{% block admin_title %}Telegram{% endblock %}
+{% block admin %}
+<section class="card">
+  <h2>🤖 Telegram-бот администратора</h2>
+  <p class="hint">Бот присылает вам в Telegram резервную копию базы каждую ночь (около 03:17).
+    Бот личный: он пишет только в один привязанный чат.</p>
+
+  {% if not tg.tg_token %}
+  <h3>Шаг 1. Создайте бота</h3>
+  <ol class="tg-steps">
+    <li>Откройте в Telegram <b>@BotFather</b> и отправьте <code>/newbot</code>.</li>
+    <li>Придумайте имя и адрес бота (адрес должен заканчиваться на <code>bot</code>).</li>
+    <li>BotFather пришлёт токен вида <code>123456789:AA…</code>. Скопируйте его сюда:</li>
+  </ol>
+  <form method="post" class="inline-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="password" name="token" placeholder="Токен бота" autocomplete="off" required>
+    <button class="btn btn-primary" type="submit" name="action" value="token">Подключить</button>
+  </form>
+
+  {% elif not tg.tg_chat %}
+  <p>Бот <b>{{ tg.tg_chat_name }}</b> подключён ✅ (токен {{ tg.token_hint }})</p>
+  <h3>Шаг 2. Привяжите свой чат</h3>
+  <ol class="tg-steps">
+    <li>Найдите бота <b>{{ tg.tg_chat_name }}</b> в Telegram и нажмите «Запустить» (или отправьте <code>/start</code>).</li>
+    <li>Сразу после этого нажмите кнопку ниже — бот запомнит ваш чат и напишет вам.</li>
+  </ol>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-primary" type="submit" name="action" value="link">🔗 Привязать чат</button>
+    <button class="btn btn-small" type="submit" name="action" value="forget">Другой бот</button>
+  </form>
+
+  {% else %}
+  <p>Привязан чат: <b>{{ tg.tg_chat_name }}</b> · токен {{ tg.token_hint }}</p>
+  <p>
+    {% if tg.backups_on %}<span class="pill pill-soft">Ежедневная копия: включена</span>
+    {% else %}<span class="pill pill-warn">Ежедневная копия: выключена</span>{% endif %}
+  </p>
+  <p>Последняя отправка: {% if tg.tg_last %}<b>{{ tg.tg_last }}</b>{% else %}<span class="hint">ещё не было</span>{% endif %}</p>
+  <form method="post" class="upd-actions">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-primary" type="submit" name="action" value="backup">💾 Отправить копию сейчас</button>
+    <button class="btn" type="submit" name="action" value="test">📨 Проверить связь</button>
+    {% if tg.backups_on %}
+    <button class="btn btn-small" type="submit" name="action" value="backups_off">Выключить ежедневную копию</button>
+    {% else %}
+    <button class="btn btn-small" type="submit" name="action" value="backups_on">Включить ежедневную копию</button>
+    {% endif %}
+  </form>
+  <details class="upd-log">
+    <summary>Отключить бота</summary>
+    <form method="post" onsubmit="return confirm('Отключить бота? Копии перестанут приходить в Telegram.')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <p class="hint">Копии продолжат сохраняться на сервере, но в Telegram приходить перестанут.</p>
+      <button class="btn btn-small" type="submit" name="action" value="forget">Отключить</button>
+    </form>
+  </details>
+  {% endif %}
+</section>
+<section class="card">
+  <h2>🔒 Важно</h2>
+  <p class="hint">В копии базы есть все данные учеников (имена, прогресс, записи логопеда).
+    Не пересылайте эти файлы и не добавляйте бота в группы. Копия из Telegram восстанавливается так же,
+    как с сервера: <code>deploy/restore.sh</code> (см. OPERATIONS.md).</p>
+</section>
+{% endblock %}
