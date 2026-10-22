@@ -739,3 +739,4 @@ html[data-theme="dark"] .upd-log pre { background: #221e33; color: #d8d2ee; }
   border: 2px solid var(--line-deep); border-radius: 16px; background: #fff; box-shadow: inset 0 2px 0 rgba(90, 63, 214, .05); }
 html[data-theme="dark"] .sp-form input, html[data-theme="dark"] .sp-form select, html[data-theme="dark"] .sp-form textarea {
   background: #15122e; color: var(--ink); border-color: var(--line-deep); box-shadow: none; }
+html[data-theme="dark"] .sp-sound-done { background: #1f3d27; border-color: #2f6b3d; } html[data-theme="dark"] .sp-bar { background: #2b2640; }

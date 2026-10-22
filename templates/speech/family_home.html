@@ -3,8 +3,22 @@
 {% block content %}
 <h1>🏠 Кабинет родителя</h1>
 <p class="subtitle">{{ c.child_name }}{% if logoped %} · логопед: {{ logoped.name }}{% endif %}</p>
+{% if sounds %}
+<section class="card">
+  <h2>🔤 Наши звуки</h2>
+  <div class="sp-sounds">
+    {% for s in sounds %}
+    <div class="sp-sound sp-sound-family{{ ' sp-sound-done' if s.done }}">
+      <b class="sp-sound-name">{{ s.sound }}</b>
+      <span>{{ s.family }}</span>
+      <div class="sp-bar"><div style="width: {{ s.percent }}%"></div></div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 <section class="card sp-soon">
   <h2>🗓️ Скоро здесь</h2>
-  <p class="hint">Расписание занятий и запись на свободное время, домашние задания и успехи по звукам.</p>
+  <p class="hint">Расписание занятий и запись на свободное время, домашние задания.</p>
 </section>
 {% endblock %}

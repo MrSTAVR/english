@@ -885,3 +885,19 @@ button, input, select, textarea { font-family: inherit; }
 .sp-wide{grid-column:1/-1}
 .sp-soon{opacity:.75}
 .sp-admin-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+.sp-sounds{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-bottom:12px}
+.sp-sound{display:grid;grid-template-columns:auto minmax(0,1fr);min-width:0;gap:6px 10px;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+.sp-sound .sp-bar,.sp-sound input[type=text],.sp-sound .sp-sound-btns{grid-column:1/-1}
+.sp-sound-name{font-size:1.5rem;min-width:2.2em;text-align:center}
+.sp-sound select{min-height:40px;padding:6px 8px;font-size:.92rem}
+.sp-sound input[type=text]{min-height:40px;padding:6px 10px;font-size:.9rem}
+.sp-sound-btns{display:flex;gap:6px;justify-content:flex-end}
+.sp-sound-btns .btn{min-height:38px;padding:6px 12px}
+.sp-bar{height:8px;border-radius:99px;background:#eee9ff;overflow:hidden}
+.sp-bar>div{height:100%;background:linear-gradient(90deg,#a58bff,#2fd08c);border-radius:99px}
+.sp-sound-done{border-color:#9fd3a9;background:#eefaf0}
+.sp-sound-family span{font-weight:700}
+.sp-add-sound{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sp-history ul{margin:6px 0;padding-left:20px}
+.sp-form textarea{resize:vertical;line-height:1.4}
+.sp-sound select,.sp-sound input[type=text]{width:100%;min-width:0;box-sizing:border-box}
