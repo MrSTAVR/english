@@ -96,3 +96,17 @@ def mistakes_count(mistakes_json):
 def tree_mini(streak_days):
     """Иконка-деревце для главной ученика (по дню серии)."""
     return tree_mini_svg(streak_days)
+
+
+# эмодзи и значки-символы: в интерфейсе их нет (дизайн 3.0) — остаются только картинки к словам
+EMOJI_RE = __import__("re").compile(
+    "[\U0001F000-\U0001FAFF☀-☄☇-✔✗-➿⬀-⯿⌀-⏿️‍⃣]")
+# стрелки ← →, звёзды ★ ☆ и крестик ✕ — не цветные значки, их оставляем
+
+
+def noemoji(text):
+    """Убирает эмодзи из текста интерфейса (названия уроков, баннеры, сообщения)."""
+    if text is None:
+        return ""
+    s = EMOJI_RE.sub("", str(text))
+    return " ".join(s.split()).replace(" !", "!").replace(" ?", "?").replace(" .", ".").replace(" ,", ",")

@@ -2,7 +2,7 @@
 {% block admin_title %}Ошибки{% endblock %}
 {% block admin %}
 <section class="card">
-  <h2>❌ Все ошибки (чтобы разобрать дома)</h2>
+  <h2>Все ошибки (чтобы разобрать дома)</h2>
   <div id="mistakes-box"><p>Загрузка…</p></div>
 </section>
 {% endblock %}
@@ -11,7 +11,7 @@
 fetch('/api/mistakes').then(r => r.json()).then(data => {
   const box = document.getElementById('mistakes-box');
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
-  if (!data.length) { box.innerHTML = '<p>Ошибок нет — молодцы! 🌟</p>'; return; }
+  if (!data.length) { box.innerHTML = '<p>Ошибок нет — молодцы!</p>'; return; }
   let html = '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Дата</th><th>Ученик</th><th>Урок</th><th>Вопрос</th><th>Ответ ученика</th><th>Правильно</th><th>Подсказка</th></tr></thead><tbody>';
   for (const m of data) {
     html += `<tr><td>${esc(m.date)}</td><td>${esc(m.student)}</td><td>${esc(m.lesson_title)}</td><td>${esc(m.question)}</td>

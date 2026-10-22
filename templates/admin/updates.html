@@ -2,7 +2,7 @@
 {% block admin_title %}Обновления{% endblock %}
 {% block admin %}
 <section class="card" id="updates" data-pending="{{ 1 if upd.pending else 0 }}" data-state="{{ url_for('parent.parent_updates_state') }}">
-  <h2>🔄 Обновления сайта</h2>
+  <h2>Обновления сайта</h2>
   {% set st = upd.status %}
   <p>Установлена версия <b>{{ app_version.full }}</b>{% if app_version.subject %} — <span class="hint">{{ app_version.subject }}</span>{% endif %}</p>
   {% if st %}
@@ -16,10 +16,10 @@
     <form method="post" action="{{ url_for('parent.parent_updates') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       {% if upd.pending %}
-        <button class="btn btn-primary" type="button" disabled>⏳ Ждём сервер…</button>
+        <button class="btn btn-primary" type="button" disabled>Ждём сервер…</button>
         <span class="hint" id="upd-wait"></span>
       {% else %}
-        <button class="btn btn-primary" type="submit" name="action" value="now">🔄 Обновить сейчас</button>
+        <button class="btn btn-primary" type="submit" name="action" value="now">Обновить сейчас</button>
       {% endif %}
     </form>
     <form method="post" action="{{ url_for('parent.parent_updates') }}">
@@ -36,7 +36,7 @@
   <p class="hint">Автообновление: сервер раз в 5 минут смотрит, есть ли новая версия на GitHub, и ставит её сам.
     Если после обновления сайт не запустился — он сам вернётся к прежней версии.</p>
   <details class="upd-log"{% if upd.pending %} open{% endif %}>
-    <summary>📜 Журнал обновлений{% if upd.log %} (последние {{ upd.log|length }} строк, свежие сверху){% endif %}</summary>
+    <summary>Журнал обновлений{% if upd.log %} (последние {{ upd.log|length }} строк, свежие сверху){% endif %}</summary>
     {% if upd.log %}<pre>{{ upd.log|join('\n') }}</pre>{% else %}<p class="hint">Пока пусто.</p>{% endif %}
   </details>
 </section>

@@ -2,26 +2,26 @@
 {% block title %}Истории — English Fun{% endblock %}
 {% block content %}
 <div class="dict-head">
-  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
-  <h1>📖 Истории</h1>
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">← Мои уроки</a>
+  <h1>Истории</h1>
 </div>
 <p class="subtitle">Читай короткие рассказы и нажимай на любое слово — покажу перевод. А можно послушать историю на слух и ответить на вопросы! Открыто историй: {{ opened }} из {{ total }}.</p>
 <div class="st-grid">
 {% for it in items %}
   {% if it.open %}
   <div class="card st-card">
-    <div class="st-emoji">{{ it.emoji }}</div>
-    <div class="st-title">{{ it.title }}</div>
+    
+    <div class="st-title">{{ it.title|noemoji }}</div>
     <div class="st-modes">
-      <a class="btn btn-small btn-primary" href="{{ url_for('stories.story_page', key=it.key, mode='read') }}">📖 Читать{% if 'read' in it.done %} ✅{% endif %}</a>
-      <a class="btn btn-small btn-secondary" href="{{ url_for('stories.story_page', key=it.key, mode='listen') }}">🎧 Слушать{% if 'listen' in it.done %} ✅{% endif %}</a>
+      <a class="btn btn-small btn-primary" href="{{ url_for('stories.story_page', key=it.key, mode='read') }}">Читать{% if 'read' in it.done %} {% endif %}</a>
+      <a class="btn btn-small btn-secondary" href="{{ url_for('stories.story_page', key=it.key, mode='listen') }}">Слушать{% if 'listen' in it.done %} {% endif %}</a>
     </div>
   </div>
   {% else %}
   <div class="card st-card st-locked">
-    <div class="st-emoji">🔒</div>
-    <div class="st-title">{{ it.title }}</div>
-    <div class="st-note">Откроется после урока {{ it.lesson_num }}: {{ it.lesson_title }}</div>
+    <div class="st-emoji"></div>
+    <div class="st-title">{{ it.title|noemoji }}</div>
+    <div class="st-note">Откроется после урока {{ it.lesson_num }}: {{ it.lesson_title|noemoji }}</div>
   </div>
   {% endif %}
 {% endfor %}

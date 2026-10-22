@@ -2,44 +2,44 @@
 {% block title %}Моя теория — English Fun{% endblock %}
 {% block content %}
 <div class="dict-head">
-  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
-  <h1>📚 Моя теория</h1>
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">← Мои уроки</a>
+  <h1>Моя теория</h1>
 </div>
 
 {% if lessons %}
 <p class="subtitle">Правила из всех пройденных уроков: <b>{{ lessons|length }}</b>. Открывай нужный урок и перечитывай.</p>
 
 <div class="dict-tools card">
-  <input type="search" id="th-search" placeholder="🔎 Найти правило…" autocomplete="off">
+  <input type="search" id="th-search" placeholder="Найти правило…" autocomplete="off">
   <div class="th-buttons">
     <button type="button" class="btn btn-small" id="th-open">Раскрыть все</button>
     <button type="button" class="btn btn-small" id="th-close">Свернуть все</button>
   </div>
 </div>
-<p id="th-empty" class="hint hidden">Ничего не нашлось 🙈</p>
+<p id="th-empty" class="hint hidden">Ничего не нашлось</p>
 
 {% for l in lessons %}
 <details class="card th-lesson" data-lesson {% if loop.last %}open{% endif %}>
-  <summary><span class="th-title">{{ l.emoji }} {% if l.num %}Урок {{ l.num }}: {% endif %}{{ l.title }}{% if l.is_extra %} <span class="pill pill-soft">доп.</span>{% endif %}</span></summary>
+  <summary><span class="th-title">{% if l.num %}Урок {{ l.num }}: {% endif %}{{ l.title|noemoji }}{% if l.is_extra %} <span class="pill pill-soft">доп.</span>{% endif %}</span></summary>
   <p class="theory-intro">{{ l.theory.intro }}</p>
   {% for b in l.theory.blocks %}
     <div class="theory-block card-inner">
-      <h3>{{ b.title }}</h3>
+      <h3>{{ b.title|noemoji }}</h3>
       <p>{{ b.text | safe }}</p>
     </div>
   {% endfor %}
   {% if l.theory.tip %}
-    <div class="theory-tip">💡 <b>Совет:</b> {{ l.theory.tip }}</div>
+    <div class="theory-tip"><b>Совет:</b> {{ l.theory.tip }}</div>
   {% endif %}
-  <p><a class="btn btn-small" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Повторить урок 🔁</a></p>
+  <p><a class="btn btn-small" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Повторить урок</a></p>
 </details>
 {% endfor %}
 {% else %}
 <section class="card hero">
-  <div class="big-emoji">🌱</div>
+  <div class="big-emoji"></div>
   <h2>Теории пока нет</h2>
   <p>Пройди первый урок — и его правила появятся здесь.</p>
-  <a class="btn btn-primary" href="{{ url_for('student.student_home') }}">К урокам ▶️</a>
+  <a class="btn btn-primary" href="{{ url_for('student.student_home') }}">К урокам ▶</a>
 </section>
 {% endif %}
 {% endblock %}

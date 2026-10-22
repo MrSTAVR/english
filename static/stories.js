@@ -12,12 +12,12 @@
 
   /* ---------- плеер ---------- */
   var player = el('div', 'card st-player');
-  var playBtn = el('button', 'btn btn-primary', listen ? '▶ Слушать историю' : '🔊 Прочитать вслух'); playBtn.type = 'button';
-  var slowLbl = el('label', 'st-slow', '<input type="checkbox"> 🐢 Помедленнее');
+  var playBtn = el('button', 'btn btn-primary', listen ? '▶ Слушать историю' : '<svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Прочитать вслух'); playBtn.type = 'button';
+  var slowLbl = el('label', 'st-slow', '<input type="checkbox"> Помедленнее');
   slowLbl.querySelector('input').onchange = function (e) { slow = e.target.checked; };
   player.appendChild(playBtn); player.appendChild(slowLbl);
   if (listen) player.appendChild(el('p', 'st-hint', 'Текст спрятан — слушай внимательно, потом ответь на вопросы. Можно слушать сколько хочешь раз!'));
-  else player.appendChild(el('p', 'st-hint', 'Нажми на любое слово, чтобы узнать перевод. Значок 🇷🇺 показывает перевод предложения.'));
+  else player.appendChild(el('p', 'st-hint', 'Нажми на любое слово, чтобы узнать перевод. Кнопка RU показывает перевод предложения.'));
   root.appendChild(player);
 
   /* ---------- текст ---------- */
@@ -31,10 +31,10 @@
       var w = el('span', 'st-w', esc(tok)); w.dataset.w = key;
       row.appendChild(w);
     });
-    var tr = el('button', 'st-tr', '🇷🇺'); tr.type = 'button'; tr.title = 'Перевод предложения';
+    var tr = el('button', 'st-tr', 'RU'); tr.type = 'button'; tr.title = 'Перевод предложения';
     var ru = el('span', 'st-ru hidden', esc(sen.ru));
     tr.onclick = function () { ru.classList.toggle('hidden'); };
-    var sp = el('button', 'st-sp', '🔊'); sp.type = 'button'; sp.title = 'Послушать предложение';
+    var sp = el('button', 'st-sp', '<svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg>'); sp.type = 'button'; sp.title = 'Послушать предложение';
     sp.onclick = function () { stop(); say(sen.en, slow ? 0.65 : 0.85); };
     row.appendChild(sp); row.appendChild(tr); row.appendChild(ru);
     text.appendChild(row); rows.push(row);
@@ -43,7 +43,7 @@
   text.appendChild(pop);
   root.appendChild(text);
   if (listen) {
-    var peek = el('button', 'btn btn-small', '👀 Показать текст'); peek.type = 'button';
+    var peek = el('button', 'btn btn-small', 'Показать текст'); peek.type = 'button';
     peek.onclick = function () { text.classList.remove('masked'); peek.remove(); };
     root.insertBefore(peek, text);
   }
@@ -53,7 +53,7 @@
     [].forEach.call(text.querySelectorAll('.st-w.on'), function (x) { x.classList.remove('on'); });
     w.classList.add('on');
     var key = w.dataset.w, tr = S.gloss[key] || '';
-    pop.innerHTML = '<b>' + esc(w.textContent.replace(/[.,!?:;]/g, '')) + '</b> — ' + (tr ? esc(tr) : '<i>перевода нет</i>') + ' <button type="button" class="st-sp">🔊</button>';
+    pop.innerHTML = '<b>' + esc(w.textContent.replace(/[.,!?:;]/g, '')) + '</b> — ' + (tr ? esc(tr) : '<i>перевода нет</i>') + ' <button type="button" class="st-sp"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></button>';
     pop.querySelector('.st-sp').onclick = function () { say(w.textContent.replace(/[.,!?:;]/g, '')); };
     pop.classList.remove('hidden');
     say(w.textContent.replace(/[.,!?:;]/g, ''));
@@ -62,12 +62,12 @@
   /* ---------- чтение вслух по предложениям ---------- */
   function stop() {
     if (window.ttsStop) window.ttsStop();
-    playing = false; playBtn.textContent = listen ? '▶ Слушать историю' : '🔊 Прочитать вслух';
+    playing = false; playBtn.innerHTML = listen ? '▶ Слушать историю' : '<svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Прочитать вслух';
     rows.forEach(function (r) { r.classList.remove('now'); });
   }
   playBtn.onclick = function () {
     if (playing) { stop(); return; }
-    playing = true; playBtn.textContent = '⏸ Стоп';
+    playing = true; playBtn.textContent = 'Стоп';
     window.ttsSpeakSeq(S.sentences.map(function (s) { return s.en; }), {
       rate: slow ? 0.65 : 0.85,
       onSentence: function (i) { rows.forEach(function (r, j) { r.classList.toggle('now', j === i && !listen); }); },
@@ -77,7 +77,7 @@
 
   /* ---------- вопросы ---------- */
   var box = el('div', 'card st-quiz');
-  box.appendChild(el('h2', null, '❓ Проверь себя'));
+  box.appendChild(el('h2', null, 'Проверь себя'));
   var qi = 0, correct = 0, saved = false;
   var area = el('div'); box.appendChild(area); root.appendChild(box);
   function ask() {
@@ -105,9 +105,9 @@
   function finish() {
     text.classList.remove('masked'); if (typeof peek !== 'undefined' && peek.parentNode) peek.remove();
     var total = S.questions.length;
-    area.innerHTML = '<div class="rv-fb ok">🎉 Готово! Верных ответов: ' + correct + ' из ' + total + '.' + (correct === total ? ' Идеально!' : '') + '</div>';
-    var again = el('a', 'btn btn-small btn-secondary', '🔁 Ещё раз'); again.href = location.href;
-    var other = el('a', 'btn btn-small', listen ? '📖 Прочитать текст' : '🎧 Послушать на слух'); other.href = '?mode=' + (listen ? 'read' : 'listen');
+    area.innerHTML = '<div class="rv-fb ok">Готово! Верных ответов: ' + correct + ' из ' + total + '.' + (correct === total ? ' Идеально!' : '') + '</div>';
+    var again = el('a', 'btn btn-small btn-secondary', 'Ещё раз'); again.href = location.href;
+    var other = el('a', 'btn btn-small', listen ? 'Прочитать текст' : 'Послушать на слух'); other.href = '?mode=' + (listen ? 'read' : 'listen');
     var back = el('a', 'btn btn-small btn-primary', 'Все истории ▶'); back.href = '/student/stories';
     area.appendChild(again); area.appendChild(document.createTextNode(' ')); area.appendChild(other); area.appendChild(document.createTextNode(' ')); area.appendChild(back);
     document.dispatchEvent(new CustomEvent('game:end', { detail: { stars: correct, story: true } }));
@@ -117,7 +117,7 @@
       body: JSON.stringify({ key: S.key, mode: S.mode, correct: correct }) })
       .then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
         if (!j) return;
-        if (j.coins) area.insertBefore(el('p', 'st-coins', '+' + j.coins + ' 🪙 за первое прохождение!'), area.children[1]);
+        if (j.coins) area.insertBefore(el('p', 'st-coins', '+' + j.coins + ' монеток за первое прохождение!'), area.children[1]);
         if (j.newAchievements && j.newAchievements.length) {
           setTimeout(function () { document.dispatchEvent(new CustomEvent('ach:new', { detail: { list: j.newAchievements } })); }, 1200);
         }

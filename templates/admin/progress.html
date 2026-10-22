@@ -4,7 +4,7 @@
 {% set wk0 = cards[0].week if cards else none %}
 <div class="week-nav adm-week-nav">
   {% if weeks_back < max_weeks_back %}<a class="btn btn-small" href="{{ url_for('parent.parent_progress', week=weeks_back + 1) }}">← прошлая</a>{% endif %}
-  <b>📅 Неделя{% if wk0 %} {{ wk0.monday.strftime('%d.%m') }} — {{ wk0.sunday.strftime('%d.%m.%Y') }}{% endif %}</b>
+  <b>Неделя{% if wk0 %} {{ wk0.monday.strftime('%d.%m') }} — {{ wk0.sunday.strftime('%d.%m.%Y') }}{% endif %}</b>
   {% if weeks_back > 0 %}
     <a class="btn btn-small" href="{{ url_for('parent.parent_progress', week=weeks_back - 1) }}">следующая →</a>
     <a class="btn btn-small" href="{{ url_for('parent.parent_progress') }}">эта неделя</a>
@@ -13,27 +13,27 @@
 
 {% for card in cards %}{% set w = card.week %}
 <section class="card" id="s{{ card.student.id }}">
-  <h2>{{ card.student.emoji }} {{ card.student.display_name }}</h2>
+  <h2>{{ card.student.display_name }}</h2>
   <p class="hint">Дней с занятиями: {{ w.active_days }} из 7 · {{ w.minutes }} мин. · цель дня {{ w.goal_days }} раз</p>
   <div class="week-days">
     {% for d in w.days %}
     <div class="week-day{{ ' wd-active' if d.active }}{{ ' wd-vac' if d.vacation and not d.active }}{{ ' wd-future' if d.future }}"
          title="{{ d.date.strftime('%d.%m') }}: действий {{ d.acts }}, тесты {{ d.minutes }} мин., слов {{ d.words }}">
       <b>{{ d.label }}</b>
-      <span class="wd-mark">{% if d.goal %}🎯{% elif d.active %}✅{% elif d.vacation %}🏖{% elif d.future %}·{% else %}—{% endif %}</span>
+      <span class="wd-mark">{% if d.goal %}{% elif d.active %}{% elif d.vacation %}{% elif d.future %}·{% else %}—{% endif %}</span>
       <small>{{ d.date.strftime('%d.%m') }}</small>
     </div>
     {% endfor %}
   </div>
   <div class="week-stats">
-    <span>⏱ <b>{{ w.minutes }}</b> мин. в тестах</span>
-    <span>🔁 <b>{{ w.words }}</b> слов повторено</span>
-    {% for k in w.kinds %}<span>{{ k.emoji }} {{ k.label }}: <b>{{ k.n }}</b></span>{% endfor %}
-    <span>📝 средний балл: <b>{% if w.avg_score is not none %}{{ w.avg_score }}%{% else %}—{% endif %}</b></span>
+    <span><b>{{ w.minutes }}</b> мин. в тестах</span>
+    <span><b>{{ w.words }}</b> слов повторено</span>
+    {% for k in w.kinds %}<span>{{ k.label }}: <b>{{ k.n }}</b></span>{% endfor %}
+    <span>средний балл: <b>{% if w.avg_score is not none %}{{ w.avg_score }}%{% else %}—{% endif %}</b></span>
   </div>
   {% if w.lessons %}
   <details><summary><b>Тесты за неделю ({{ w.lessons|length }})</b></summary>
-    <ul class="week-list">{% for l in w.lessons %}<li>{{ l.day }} · {{ l.title }} — <b>{{ l.score }}%</b> {{ '✅' if l.passed else '🔁 не сдан' }}</li>{% endfor %}</ul>
+    <ul class="week-list">{% for l in w.lessons %}<li>{{ l.day }} · {{ l.title|noemoji }} — <b>{{ l.score }}%</b> {{ '' if l.passed else 'не сдан' }}</li>{% endfor %}</ul>
   </details>
   {% endif %}
   {% if w.top_mistakes %}
@@ -72,26 +72,26 @@
 
   <h4>Трудные слова</h4>
   {% if card.hard %}
-  <p>{% for h in card.hard %}<span class="pill pill-soft" title="ошибок {{ h.bad }}, верно {{ h.ok }}">{{ h.en }} — {{ h.ru }} · ✗{{ h.bad }}</span> {% endfor %}</p>
+  <p>{% for h in card.hard %}<span class="pill pill-soft" title="ошибок {{ h.bad }}, верно {{ h.ok }}">{{ h.en }} — {{ h.ru }} · ошибок {{ h.bad }}</span> {% endfor %}</p>
   <form method="post" action="{{ url_for('parent.parent_review_hard', sid=card.student.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="btn btn-small" type="submit">🔁 Отправить в повторение на сегодня</button>
+    <button class="btn btn-small" type="submit">Отправить в повторение на сегодня</button>
   </form>
-  {% else %}<p class="hint">Трудных слов нет 🎉</p>{% endif %}
+  {% else %}<p class="hint">Трудных слов нет</p>{% endif %}
 </section>
 {% else %}
 <section class="card"><p class="hint">Прогресс появится, когда будет создан аккаунт ученика.</p></section>
 {% endfor %}
 
 <details class="card">
-  <summary><b>📚 Все уроки: попытки, лучший результат, время</b></summary>
+  <summary><b>Все уроки: попытки, лучший результат, время</b></summary>
   <div class="tbl-wrap"><table class="tbl">
     <thead><tr><th>Урок</th><th>Статус</th><th>Попыток</th><th>Лучший результат</th><th>Время</th></tr></thead>
     <tbody>
       {% for row in lessons %}
       <tr class="{{ 'row-done' if row.passed }}">
-        <td>{{ row.lesson.emoji }} {{ row.lesson.title }}{% if row.lesson.is_extra %} <span class="pill pill-soft">доп.</span>{% endif %}</td>
-        <td>{{ '✅ пройден' if row.passed else ('🟡 пыталась' if row.tries else '⬜ не начат') }}</td>
+        <td>{{ row.lesson.title|noemoji }}{% if row.lesson.is_extra %} <span class="pill pill-soft">доп.</span>{% endif %}</td>
+        <td>{{ 'пройден' if row.passed else ('пыталась' if row.tries else 'не начат') }}</td>
         <td>{{ row.tries }}</td>
         <td>{% if row.best_score is not none %}{{ "%.0f"|format(row.best_score) }}%{% else %}—{% endif %}</td>
         <td>{{ row.time_spent|human_time }}</td>
@@ -102,18 +102,18 @@
 </details>
 
 <details class="card">
-  <summary><b>🕒 История занятий (последние {{ attempts|length }})</b></summary>
+  <summary><b>История занятий (последние {{ attempts|length }})</b></summary>
   {% if attempts %}
   <div class="tbl-wrap"><table class="tbl">
     <thead><tr><th>Ученик</th><th>Начало</th><th>Урок</th><th>Время</th><th>Результат</th><th>Ошибок</th></tr></thead>
     <tbody>
       {% for a in attempts %}
       <tr class="{{ 'row-fail' if not a.passed }}">
-        <td>{{ emojis_by_id.get(a.student_id, '') }} {{ names_by_id.get(a.student_id, 'гость') }}</td>
+        <td>{{ names_by_id.get(a.student_id, 'гость') }}</td>
         <td>{{ a.started_at[:16].replace('T', ' ') }}</td>
-        <td>{{ lesson_titles.get(a.lesson_id, a.lesson_id) }}</td>
+        <td>{{ lesson_titles.get(a.lesson_id, a.lesson_id)|noemoji }}</td>
         <td>{{ a.seconds_spent|human_time }}</td>
-        <td>{{ "%.0f"|format(a.score_percent) }}% {{ '✅' if a.passed else '❌' }}</td>
+        <td>{{ "%.0f"|format(a.score_percent) }}% {{ '' if a.passed else '' }}</td>
         <td>{{ a.mistakes_json | mistakes_count }}</td>
       </tr>
       {% endfor %}

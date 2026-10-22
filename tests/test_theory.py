@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Страница теории ученика: правила из пройденных уроков."""
+from template_filters import noemoji
 from curriculum import LESSONS_BY_ID
 from tests.helpers import db_scalar, submit_lesson
 from tests.helpers import N
@@ -20,7 +21,7 @@ def test_theory_only_for_passed_lessons(make_student):
     submit_lesson(student, 1)
     html = theory_html(student)
     t1 = LESSONS_BY_ID[1]["theory"]
-    assert t1["intro"] in html and t1["blocks"][0]["title"] in html and t1["tip"] in html
+    assert t1["intro"] in html and noemoji(t1["blocks"][0]["title"]) in html and t1["tip"] in html
     assert LESSONS_BY_ID[2]["theory"]["intro"] not in html
     assert "Правила из всех пройденных уроков: <b>1</b>" in html
 

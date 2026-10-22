@@ -2,11 +2,11 @@
 {% block title %}Занятие — кабинет логопеда{% endblock %}
 {% block content %}
 <div class="dict-head">
-  <a class="btn btn-small" href="{{ url_for('speech.logoped_schedule') }}">⬅ Расписание</a>
-  <h1>🗓️ {{ s.child_name }}</h1>
+  <a class="btn btn-small" href="{{ url_for('speech.logoped_schedule') }}">← Расписание</a>
+  <h1>{{ s.child_name }}</h1>
 </div>
 <p class="subtitle">{{ day }}, {{ s.time }}–{{ s.end }} · <span class="sp-sess-st sp-st-{{ s.status }}">{{ s.status_text }}</span>
-  {% if s.series_id %} · 🔁 каждую неделю{% endif %}{% if s.source == 'family' %} · 🙋 записались сами{% endif %}
+  {% if s.series_id %} · каждую неделю{% endif %}{% if s.source == 'family' %} · записались сами{% endif %}
   {% if s.status == 'cancelled' and s.cancelled_by == 'family' %} · отменили родители{% endif %}</p>
 <p><a href="{{ url_for('speech.logoped_client', cid=s.client_id) }}">Карточка ученика →</a></p>
 
@@ -16,7 +16,7 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% for key, text in statuses.items() if key != s.status %}
     <button class="btn {{ 'btn-primary' if key == 'done' else 'btn-small' }}" type="submit" name="action" value="{{ key }}">
-      {{ {'planned': '↩️', 'done': '✅', 'cancelled': '✖️', 'noshow': '🚫'}[key] }} {{ text }}</button>
+      {{ {'planned': '↩', 'done': '', 'cancelled': '✖', 'noshow': ''}[key] }} {{ text }}</button>
     {% endfor %}
   </form>
   <form method="post" class="sp-form">
@@ -28,7 +28,7 @@
 </section>
 
 <details class="card">
-  <summary><b>↔️ Перенести</b></summary>
+  <summary><b>↔Перенести</b></summary>
   <form method="post" class="sp-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Дата <input type="date" name="day" required value="{{ s.start[:10] }}"></label>
@@ -40,6 +40,6 @@
 
 <form method="post" onsubmit="return confirm('Удалить занятие совсем? Обычно лучше отметить «отменено».');">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <button class="btn btn-small" type="submit" name="action" value="delete">🗑 Удалить (создано по ошибке)</button>
+  <button class="btn btn-small" type="submit" name="action" value="delete">Удалить (создано по ошибке)</button>
 </form>
 {% endblock %}

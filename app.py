@@ -23,7 +23,7 @@ from mascot import build_mascot_ctx
 from version import info as app_version
 from routes import register_blueprints
 from security import load_secret_key
-from template_filters import human_time, is_russian_answer, match_answer_json, match_cols, match_expected_json, mistakes_count, \
+from template_filters import human_time, noemoji, is_russian_answer, match_answer_json, match_cols, match_expected_json, mistakes_count, \
     shuffle_match, shuffle_sort, shuffle_words, tree_mini
 
 app = Flask(__name__)
@@ -78,6 +78,7 @@ app.jinja_env.filters["mistakes_count"] = mistakes_count
 app.template_filter("tree_mini")(tree_mini)
 
 app.jinja_env.filters["medal"] = medal
+app.jinja_env.filters["noemoji"] = noemoji
 
 
 @app.context_processor

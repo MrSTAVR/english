@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Карта курса: все основные уроки по порядку, пройденные со звёздами, текущий, закрытые."""
 from curriculum import LESSONS
+from template_filters import noemoji
 from tests.helpers import N, db_scalar, submit_lesson
 
 
@@ -14,8 +15,8 @@ def test_map_shows_progress(make_student, parent):
     sid = db_scalar("SELECT id FROM students")
     parent.post(f"/parent/students/{sid}/credit", data={"lessons": str(N(2)), "action": "add"})
     html = c.get("/student/map").get_data(as_text=True)
-    assert "⭐⭐⭐" in html and "✔️ зачтено" in html and "Пройдено 2 из" in html
-    assert LESSONS[2]["title"] in html.split('id="map-current"')[1][:600]
+    assert "★★★" in html and "зачтено" in html and "Пройдено 2 из" in html
+    assert noemoji(LESSONS[2]["title"]) in html.split('id="map-current"')[1][:600]
 
 
 def test_map_link_on_home_and_access(make_student, anon):

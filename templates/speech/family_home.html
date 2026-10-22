@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Кабинет родителя{% endblock %}
 {% block content %}
-<h1>🏠 Кабинет родителя</h1>
+<h1>Кабинет родителя</h1>
 <p class="subtitle">{{ c.child_name }}{% if logoped %} · логопед: {{ logoped.name }}{% endif %}</p>
 <section class="card">
-  <h2>📅 Занятия</h2>
+  <h2>Занятия</h2>
   {% for s in upcoming %}
   {% if loop.first and s.status == 'planned' %}<span class="sp-next-kicker">Ближайшее занятие</span>{% endif %}
   <div class="sp-fam-sess{{ ' sp-st-' ~ s.status }}{{ ' sp-next' if loop.first and s.status == 'planned' }}"><span><b>{{ s.day }}</b>, {{ s.time }}–{{ s.end }}</span>
@@ -20,7 +20,7 @@
   {% else %}
   <p class="hint">Ближайших занятий пока нет.</p>
   {% endfor %}
-  {% if has_slots %}<p><a class="btn btn-primary" href="{{ url_for('speech.family_book') }}">🙋 Записаться на свободное время</a></p>
+  {% if has_slots %}<p><a class="btn btn-primary" href="{{ url_for('speech.family_book') }}">Записаться на свободное время</a></p>
   {% else %}<p class="hint">Свободных окон для записи сейчас нет.</p>{% endif %}
   {% if past %}
   <details><summary>Прошедшие</summary>
@@ -31,7 +31,7 @@
 
 {% if sounds %}
 <section class="card">
-  <h2>🔤 Наши звуки</h2>
+  <h2>Наши звуки</h2>
   <div class="sp-sounds">
     {% for s in sounds %}
     <div class="sp-sound sp-sound-family{{ ' sp-sound-done' if s.done }}">
@@ -44,7 +44,7 @@
 </section>
 {% endif %}
 <section class="card sp-soon">
-  <h2>🗓️ Скоро здесь</h2>
+  <h2>Скоро здесь</h2>
   <p class="hint">Домашние задания.</p>
 </section>
 {% endblock %}

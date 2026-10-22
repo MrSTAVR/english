@@ -392,3 +392,143 @@ html[data-theme="dark"] .theme-toggle { background: var(--surface); border-color
   .home-hero > .today-row > .tcard { margin: 0; }
   .home-hero > :only-child { grid-column: 1 / -1; }
 }
+
+/* контурные иконки (вместо цветных эмодзи) */
+.ico { width: 1.2em; height: 1.2em; vertical-align: -.22em; flex: none; }
+.stars { color: var(--yellow-deep); letter-spacing: 1px; }
+.ico-green { color: #1E8A4C; } .ico-blue { color: var(--primary); }
+html[data-theme="dark"] .ico-green { color: #5FD38D; } html[data-theme="dark"] .ico-blue { color: #8FB4FF; }
+.welcome-avatar { display: flex; align-items: center; justify-content: center; background: var(--surface); border: 2px solid var(--line); box-shadow: 0 3px 0 var(--shade); }
+.welcome-avatar .logo-mark { width: 76%; height: 76%; }
+.next-cta-emoji { background: none; border: 0; box-shadow: none; }
+.next-cta-emoji svg { width: 100%; height: 100%; }
+.tile-grid .tile-emoji .ico { width: 30px; height: 30px; }
+.tile-grid .tile:nth-child(4n+1) .tile-emoji, .tile-grid .tile:nth-child(4n+4) .tile-emoji { color: var(--primary-dark); }
+.tile-grid .tile:nth-child(4n+2) .tile-emoji, .tile-grid .tile:nth-child(4n+3) .tile-emoji { color: #8A5A00; }
+html[data-theme="dark"] .tile-grid .tile .tile-emoji { color: #8FB4FF; }
+html[data-theme="dark"] .tile-grid .tile:nth-child(4n+2) .tile-emoji, html[data-theme="dark"] .tile-grid .tile:nth-child(4n+3) .tile-emoji { color: #FFC83D; }
+.map-node .ico { width: 30px; height: 30px; color: var(--ink); }
+.map-locked .ico { width: 24px; height: 24px; color: #6E6553; }
+.map-current, .map-open { color: #FFFFFF; }
+.map-pos { font-size: 1.6rem; font-weight: 900; }
+.map-open .map-pos { color: var(--primary-dark); }
+html[data-theme="dark"] .map-node .ico { color: #1E2A45; } html[data-theme="dark"] .map-locked .ico { color: #B3ADD3; }
+
+/* ============================================================
+   Только цвета макета: полоски прогресса, карточки, плашки без градиентов
+   ============================================================ */
+:root { --accent: #1E4FA8; }
+html[data-theme="dark"] { --accent: #8FB4FF; }
+
+/* полоски прогресса: синие, выполнено — зелёное, серия сада — зелёная */
+.progress-bar, .rv-bar, .goal-bar, .trow-bar { background: #F3EBDA; border-color: var(--line); }
+html[data-theme="dark"] .progress-bar, html[data-theme="dark"] .rv-bar, html[data-theme="dark"] .goal-bar, html[data-theme="dark"] .trow-bar { background: var(--line); }
+.progress-fill, .mini-fill, .rv-fill, .goal-bar i, .trow-bar i, .sp-bar > div, .map-progress > div { background: var(--primary); }
+.trow.ok .trow-bar i, .goal-card.goal-done .goal-bar i, .sp-sound-done .sp-bar > div { background: var(--green); }
+.trow.ok .trow-num { color: var(--ok-ink); }
+.streak-bar { background: var(--green); }
+.trend-bar { background: var(--primary); } .trend-low { background: #D9661A; }
+.heat-1 { background: #DDF5E7; } .heat-2 { background: #9ED9B4; } .heat-3 { background: #1E9E5A; } .heat-4 { background: #146C3E; }
+html[data-theme="dark"] .progress-fill, html[data-theme="dark"] .mini-fill, html[data-theme="dark"] .rv-fill,
+html[data-theme="dark"] .goal-bar i, html[data-theme="dark"] .trow-bar i { background: #8FB4FF; }
+html[data-theme="dark"] .trow.ok .trow-bar i { background: #5FD38D; }
+
+/* карточки и плашки */
+.stat-c1, .stat-c3 { background: var(--sky); border-color: var(--line); }
+.stat-c2, .stat-c4 { background: var(--sand); border-color: var(--line); }
+.lesson-card.lesson-done { background: var(--surface); border-color: #9ED9B4; box-shadow: 0 4px 0 #9ED9B4; }
+.result-pass { background: var(--surface); border-color: #9ED9B4; box-shadow: 0 5px 0 #9ED9B4; }
+.result-fail { background: var(--surface); border-color: #F5C49B; box-shadow: 0 5px 0 #F5C49B; }
+.goal-card.goal-done { background: var(--ok-bg); border-color: #9ED9B4; }
+.rv-wod, .tcard-wod { background: var(--sand); color: var(--ink); border-color: #F3DFA6; }
+.theory-block { background: var(--sky); border: 2px solid var(--line); border-left: 2px solid var(--line); }
+.word-bank, .ach-earned, .album-today { background: var(--sand); }
+.album-done { background: var(--ok-bg); color: var(--ok-ink); }
+.garden-teaser { background: var(--ok-bg); box-shadow: none; border: 2px solid #9ED9B4; }
+.badge-popup { background: var(--yellow); color: var(--ink); box-shadow: 0 4px 0 var(--yellow-deep); }
+.sk-gold { background: var(--surface); border-color: var(--yellow); box-shadow: 0 0 0 3px var(--sand); }
+.ribbon { background: var(--green); } .ribbon-now { background: var(--primary); }
+.tile-badge { background: var(--primary); }
+.fc-front, .g-card, .ls-play, .dlg-row.me .dlg-bubble { background: var(--primary); color: #FFFFFF; }
+.fc-back { background: var(--green); }
+.g-card.open, .g-card.gone { background: var(--surface); color: var(--ink); }
+.hl { background: linear-gradient(transparent 62%, #FFE08A 62%); }
+html[data-theme="dark"] .rv-wod, html[data-theme="dark"] .tcard-wod { background: var(--sand); color: var(--ink); border-color: #4A3C1F; }
+html[data-theme="dark"] .theory-block { background: #1E2A4D; border-color: var(--line); }
+html[data-theme="dark"] .lesson-card.lesson-done, html[data-theme="dark"] .result-pass, html[data-theme="dark"] .result-fail { background: var(--surface); }
+html[data-theme="dark"] .goal-card.goal-done, html[data-theme="dark"] .garden-teaser { background: #183D2A; border-color: #2F6B4A; }
+
+/* --- текст и мелочи --- */
+button { color: inherit; }
+input, select, textarea { color: var(--ink); }
+.hint, p.hint, span.hint, .shop-cat, .adm-dot, .week-day, .wd-mark, .week-day b, .week-day small { color: var(--muted); }
+.theory-block b, .theory-block strong, .theory-intro b { color: var(--primary-dark); }
+.theory-block i, .theory-block em { color: var(--primary); }
+.theory-tip { background: var(--sand); color: var(--ink); border-color: #F3DFA6; }
+.tts-btn, .say-btn, .dlg-say, .st-sp, .st-tr { color: var(--primary); }
+.shop-price { color: #8A5A00; }
+.wrong-answer { color: var(--oops-ink); } .right-answer { color: var(--ok-ink); }
+.wd-state { color: var(--ok-ink); }
+.dlg-ava { background: var(--sand); }
+.lesson-card.lesson-locked { border-color: var(--line); }
+.lesson-card.lesson-locked h3, .lesson-card.lesson-locked p { color: var(--muted); }
+html[data-theme="dark"] .theory-block b, html[data-theme="dark"] .theory-block strong, html[data-theme="dark"] .theory-intro b,
+html[data-theme="dark"] .theory-block i, html[data-theme="dark"] .theory-block em, html[data-theme="dark"] .theory-block h3 { color: #8FB4FF; }
+html[data-theme="dark"] .theory-intro { color: var(--muted); }
+html[data-theme="dark"] .theory-tip, html[data-theme="dark"] .theory-tip b { background: var(--sand); color: #FFE3A3; border-color: #4A3C1F; }
+html[data-theme="dark"] .tts-btn, html[data-theme="dark"] .say-btn, html[data-theme="dark"] .st-sp, html[data-theme="dark"] .st-tr { color: #8FB4FF; }
+html[data-theme="dark"] .shop-price { color: var(--yellow); }
+html[data-theme="dark"] .stat { border-color: var(--line); }
+html[data-theme="dark"] .hint, html[data-theme="dark"] .shop-cat, html[data-theme="dark"] .week-day, html[data-theme="dark"] .adm-dot { color: var(--muted); }
+
+/* --- адвент-календарь: палитра макета --- */
+.adv-door { background: var(--surface); border: 2px solid var(--line); color: var(--ink); box-shadow: 0 4px 0 var(--shade); }
+.adv-today { background: var(--sand); border-color: var(--yellow); box-shadow: 0 4px 0 var(--yellow-deep); }
+.adv-open { background: var(--ok-bg); border-color: #9ED9B4; color: var(--ok-ink); }
+.adv-locked { background: #F3EBDA; border-color: var(--line); color: var(--muted); box-shadow: none; }
+html[data-theme="dark"] .adv-door { background: var(--surface); color: var(--ink); border-color: var(--line); box-shadow: 0 4px 0 #0E0B1F; }
+html[data-theme="dark"] .adv-today { background: var(--sand); border-color: var(--yellow); }
+html[data-theme="dark"] .adv-open { background: #183D2A; color: #8FE3B0; border-color: #2F6B4A; }
+html[data-theme="dark"] .adv-locked { background: #241F3D; color: var(--muted); }
+
+/* --- награды: карточки и полоски в палитре (медали остаются рисунками) --- */
+.ach-card, .ach-card.is-earned.tier-bronze, .ach-card.is-earned.tier-silver, .ach-card.is-earned.tier-gold, .ach-card.is-earned.tier-legend {
+  background: var(--surface); border-color: var(--line); box-shadow: 0 4px 0 var(--shade); }
+.ach-card.is-locked { background: #F3EBDA; box-shadow: none; }
+.ach-prog-fill { background: var(--primary); }
+.ach-card-date { color: var(--muted); }
+html[data-theme="dark"] .ach-card, html[data-theme="dark"] .ach-card.is-earned.tier-bronze, html[data-theme="dark"] .ach-card.is-earned.tier-silver,
+html[data-theme="dark"] .ach-card.is-earned.tier-gold, html[data-theme="dark"] .ach-card.is-earned.tier-legend { background: var(--surface); border-color: var(--line); box-shadow: 0 4px 0 #0E0B1F; }
+html[data-theme="dark"] .ach-card.is-locked { background: #241F3D; }
+html[data-theme="dark"] .ach-prog-fill { background: #8FB4FF; }
+
+/* --- ещё остатки старой палитры --- */
+.ach-card .ach-prog-fill, .ach-card[class*="tier-"] .ach-prog-fill { background: var(--primary); }
+.ach-card.is-earned .ach-card-date { color: var(--muted); }
+.tier-chip.tier-bronze, .tier-chip.tier-silver, .tier-chip.tier-gold, .tier-chip.tier-legend { background: var(--surface); border-color: var(--line); }
+html[data-theme="dark"] .ach-card .ach-prog-fill { background: #8FB4FF; }
+html[data-theme="dark"] .ach-card.is-earned .ach-card-date { color: var(--muted); }
+html[data-theme="dark"] .tier-chip.tier-bronze, html[data-theme="dark"] .tier-chip.tier-silver,
+html[data-theme="dark"] .tier-chip.tier-gold, html[data-theme="dark"] .tier-chip.tier-legend { background: var(--surface); border-color: var(--line); }
+.stage-msg { color: var(--muted); }
+.btn-danger { background: #B8322F; color: #FFFFFF; box-shadow: 0 3px 0 #8A2522; }
+.pill-warn { background: var(--sand); color: #8A5A00; border-color: #F3DFA6; }
+html[data-theme="dark"] .pill-warn { background: var(--sand); color: #FFE3A3; }
+html[data-theme="dark"] .stat-c1, html[data-theme="dark"] .stat-c3 { background: #1E2A4D; border-color: var(--line); color: var(--line); }
+html[data-theme="dark"] .stat-c2, html[data-theme="dark"] .stat-c4 { background: var(--sand); border-color: var(--line); color: var(--line); }
+html[data-theme="dark"] .lesson-card.lesson-done { border-color: #2F6B4A; box-shadow: 0 4px 0 #0E0B1F; }
+html[data-theme="dark"] .done-score, html[data-theme="dark"] .right-answer { color: #8FE3B0; }
+html[data-theme="dark"] .wrong-answer { color: #FFB27A; }
+html[data-theme="dark"] .lesson-card.lesson-locked h3, html[data-theme="dark"] .lesson-card.lesson-locked p, html[data-theme="dark"] .btn-locked { color: var(--muted); }
+html[data-theme="dark"] .btn-locked { background: #241F3D; box-shadow: 0 3px 0 #0E0B1F; }
+.stat { border-color: var(--line); color: var(--line); }
+.adm-dot.on { background: var(--ok-bg); color: var(--ok-ink); } .adm-dot.goal { background: var(--green); color: #FFFFFF; }
+.adm-dot.vac { background: var(--sky); color: var(--primary-dark); }
+html[data-theme="dark"] .adm-dot.on { background: #183D2A; color: #8FE3B0; } html[data-theme="dark"] .adm-dot.vac { background: #1E2A4D; color: #8FB4FF; }
+.adm-avatar { width: 52px; height: 52px; border-radius: 18px; background: #FFE7A3; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; font-weight: 900; color: var(--ink); flex: none; }
+html[data-theme="dark"] .adm-avatar { background: var(--sand); color: #FFE3A3; }
+.ach-hero-fill { background: var(--yellow); }
+.theme-toggle .icon { color: var(--muted); }
+.stat-icon { color: var(--primary); }
+.login-art { color: var(--primary); }

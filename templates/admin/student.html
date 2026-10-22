@@ -2,11 +2,11 @@
 {% block admin_title %}{{ st.display_name }}{% endblock %}
 {% block admin %}
 <div class="dict-head">
-  <a class="btn btn-small" href="{{ url_for('parent.parent_students') }}">⬅ Ученики</a>
-  <h2 class="adm-title">{{ st.emoji }} {{ st.display_name }} <code>{{ st.username }}</code></h2>
+  <a class="btn btn-small" href="{{ url_for('parent.parent_students') }}">← Ученики</a>
+  <h2 class="adm-title">{{ st.display_name }} <code>{{ st.username }}</code></h2>
 </div>
-<p class="subtitle">🏅 наград {{ earned_count }} из {{ achievements_total }}{% if last %} · последнее занятие {{ last }}{% endif %}
-  · <a href="{{ url_for('parent.parent_progress') }}#s{{ st.id }}">📈 прогресс по неделям</a></p>
+<p class="subtitle">наград {{ earned_count }} из {{ achievements_total }}{% if last %} · последнее занятие {{ last }}{% endif %}
+  · <a href="{{ url_for('parent.parent_progress') }}#s{{ st.id }}">прогресс по неделям</a></p>
 <div class="adm-nums adm-nums-wide">
   <span><b>{{ stats.lessons_completed }}/{{ total_lessons }}</b><small>уроков пройдено</small></span>
   <span><b>{% if stats.avg_score %}{{ "%.0f"|format(stats.avg_score) }}%{% else %}—{% endif %}</b><small>средний балл</small></span>
@@ -14,12 +14,12 @@
   <span><b>{{ stats.total_mistakes }}</b><small>ошибок всего</small></span>
   <span><b>{{ stats.words_learned }}</b><small>слов пройдено</small></span>
   <span><b>{{ stats.total_seconds|human_time }}</b><small>время занятий</small></span>
-  {% if stats.speak_tries %}<span><b>🎤 {{ stats.speak_words }}</b><small>слов произнесено вслух</small></span>{% endif %}
+  {% if stats.speak_tries %}<span><b>{{ stats.speak_words }}</b><small>слов произнесено вслух</small></span>{% endif %}
 </div>
 
 <div class="adm-grid">
   <section class="card">
-    <h3>🎯 Цель дня</h3>
+    <h3>Цель дня</h3>
     <p class="hint">Сейчас: {{ goal[0] }} ур. + {{ goal[1] }} слов повторения. Стандарт — 1 урок и 10 слов.</p>
     <form method="post" action="{{ url_for('parent.parent_goal', sid=st.id) }}" class="sp-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -30,8 +30,8 @@
   </section>
 
   <section class="card">
-    <h3>🎂 День рождения</h3>
-    <p class="hint">Неделю после даты у ученика праздник: поздравление, слова, викторина и подарок 🎁.</p>
+    <h3>День рождения</h3>
+    <p class="hint">Неделю после даты у ученика праздник: поздравление, слова, викторина и подарок.</p>
     <form method="post" action="{{ url_for('parent.parent_birthday', sid=st.id) }}" class="sp-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>Дата <input type="date" name="birthday" value="{{ st.birthday or '' }}"></label>
@@ -40,11 +40,11 @@
   </section>
 
   <section class="card">
-    <h3>🏖 Каникулы</h3>
+    <h3>Каникулы</h3>
     {% if vacation %}
     <form method="post" action="{{ url_for('parent.parent_vacation', sid=st.id) }}" class="vac-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <span class="pill pill-soft">🏖 каникулы {{ vacation.start_day }} — {{ vacation.end_day }}</span>
+      <span class="pill pill-soft">каникулы {{ vacation.start_day }} — {{ vacation.end_day }}</span>
       <button class="btn btn-small" type="submit" name="action" value="cancel">Отменить</button>
     </form>
     {% else %}
@@ -59,20 +59,20 @@
   </section>
 
   <section class="card">
-    <h3>🌳 Сад</h3>
-    <p>{{ tree_stage.emoji }} серия <b>{{ garden.streak_days }}</b> дн. · <svg class="icon icon-coin"><use href="#i-coin"/></svg> <b>{{ garden.coins }}</b>
-      · 🌳 {{ tree_count }} дер. · украшений {{ deco_count }}{% if garden.broken %} <span class="pill pill-warn">🍂 прервана</span>{% endif %}</p>
+    <h3>Сад</h3>
+    <p>серия <b>{{ garden.streak_days }}</b> дн. · <svg class="icon icon-coin"><use href="#i-coin"/></svg> <b>{{ garden.coins }}</b>
+      · {{ tree_count }} дер. · украшений {{ deco_count }}{% if garden.broken %} <span class="pill pill-warn">прервана</span>{% endif %}</p>
     <form method="post" action="{{ url_for('parent.parent_update_garden', sid=st.id) }}" class="sp-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>Дней серии <input type="number" name="streak_days" min="0" max="999" placeholder="{{ garden.streak_days }}"></label>
       <label>Монетки <input type="number" name="coins" min="0" max="9999" placeholder="{{ garden.coins }}"></label>
-      <button class="btn btn-small sp-wide" type="submit">💾 Обновить сад</button>
+      <button class="btn btn-small sp-wide" type="submit">Обновить сад</button>
     </form>
   </section>
 </div>
 
 <details class="card" id="credit">
-  <summary><b>✅ Зачесть пройденные уроки</b></summary>
+  <summary><b>Зачесть пройденные уроки</b></summary>
   <p class="hint">Если ребёнок уже прошёл уроки в другой версии, отметьте их — проходить заново не придётся,
     следующие уроки откроются. Монетки и серия дней не меняются.</p>
   <form method="post" action="{{ url_for('parent.credit_student_lessons', sid=st.id) }}">
@@ -86,31 +86,31 @@
       {% for row in credit_rows %}
       <label class="credit-item credit-{{ row.state }}">
         <input type="checkbox" name="lessons" value="{{ row.lesson.id }}" {% if row.state == 'done' %}disabled checked{% endif %}>
-        <span>{{ row.lesson.emoji }} {{ row.lesson.title }}
+        <span>{{ row.lesson.title|noemoji }}
           {% if row.lesson.is_extra %}<span class="pill pill-soft">доп.</span>{% endif %}
           {% if row.state == 'credited' %}<small>зачтён родителем</small>{% elif row.state == 'done' %}<small>пройден</small>{% endif %}</span>
       </label>
       {% endfor %}
     </div>
     <div class="credit-actions">
-      <button class="btn btn-primary" type="submit" name="action" value="add">✅ Зачесть выбранные</button>
+      <button class="btn btn-primary" type="submit" name="action" value="add">Зачесть выбранные</button>
       <button class="btn btn-small" type="submit" name="action" value="remove"
-              onclick="return confirm('Снять зачёт с выбранных уроков? Настоящие пройденные тесты останутся.');">↩️ Снять зачёт</button>
+              onclick="return confirm('Снять зачёт с выбранных уроков? Настоящие пройденные тесты останутся.');">↩Снять зачёт</button>
     </div>
   </form>
 </details>
 
 <details class="card adm-danger">
-  <summary><b>🔑 Пароль и удаление</b></summary>
+  <summary><b>Пароль и удаление</b></summary>
   <form method="post" action="{{ url_for('parent.reset_student_password', sid=st.id) }}" class="inline-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="password" name="password" placeholder="новый пароль" minlength="4" required>
-    <button class="btn btn-small" type="submit">🔑 Сменить пароль</button>
+    <button class="btn btn-small" type="submit">Сменить пароль</button>
   </form>
   <form method="post" action="{{ url_for('parent.delete_student', sid=st.id) }}"
         onsubmit="return confirm('Удалить аккаунт {{ st.display_name }} и весь прогресс? Это нельзя отменить.');">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="btn btn-danger" type="submit">🗑 Удалить аккаунт</button>
+    <button class="btn btn-danger" type="submit">Удалить аккаунт</button>
   </form>
 </details>
 {% endblock %}

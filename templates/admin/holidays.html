@@ -7,7 +7,7 @@
 <div class="adm-grid" id="seasons">
   {% for s in seasons %}
   <section class="card adm-season">
-    <h2>{{ s.emoji }} {{ s.title }}
+    <h2>{{ s.title|noemoji }}
       {% if s.mode == 'on' %}<span class="pill pill-warn">включён вручную</span>
       {% elif s.mode == 'off' %}<span class="pill pill-soft">выключен</span>
       {% elif s.auto_now %}<span class="pill adm-on">идёт сейчас</span>

@@ -73,3 +73,15 @@ def test_logoped_menu(logoped):
     for label in ("Сегодня", "Расписание", "Ученики"):
         assert f"<span>{label}</span>" in html
     assert "Чик-чик" not in html and "English Fun" not in html
+
+
+def test_no_color_emoji_in_interface(make_student, parent):
+    import html as H
+    from template_filters import EMOJI_RE, noemoji
+    assert noemoji("Гласные и согласные 🔤") == "Гласные и согласные" and noemoji("Ура! 🎉 Молодец") == "Ура! Молодец"
+    c = make_student()
+    for client, url in ((c, "/student"), (c, "/student/map"), (c, "/student/games"), (parent, "/parent"), (parent, "/parent/progress")):
+        body = client.get(url).get_data(as_text=True)
+        body = re.sub(r"<script.*?</script>|<style.*?</style>", "", body, flags=re.S)
+        text = H.unescape(re.sub(r"<[^>]+>", " ", body))
+        assert not EMOJI_RE.findall(text), (url, set(EMOJI_RE.findall(text)))

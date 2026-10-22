@@ -2,32 +2,32 @@
 {% block title %}Карта курса — English Fun{% endblock %}
 {% block content %}
 <div class="dict-head">
-  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
-  <h1>🗺️ Карта курса</h1>
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">← Мои уроки</a>
+  <h1>Карта курса</h1>
 </div>
-<p class="subtitle">Пройдено {{ done }} из {{ total }} уроков.{% if current %} Ты сейчас здесь: <b>{{ current.lesson.title }}</b> 🐥{% else %} Весь курс пройден — ты чемпион! 🏆{% endif %}</p>
+<p class="subtitle">Пройдено {{ done }} из {{ total }} уроков.{% if current %} Ты сейчас здесь: <b>{{ current.lesson.title|noemoji }}</b> {% else %} Весь курс пройден — ты чемпион! {% endif %}</p>
 <div class="map-progress"><div style="width: {{ (100 * done / total)|round|int }}%"></div></div>
 
 {% set wave = [0, 1, 2, 1, 0, -1, -2, -1] %}
 {% for part in parts %}
 <section class="map-part{{ ' map-part-done' if part.done }}">
-  <h2 class="map-part-title">{{ part.title }}{% if part.done %} ✅{% endif %}</h2>
+  <h2 class="map-part-title">{{ part.title|noemoji }}{% if part.done %} {% endif %}</h2>
   <div class="map-path">
     {% for n in part.nodes %}
     {% set cls = 'map-done' if n.done else ('map-current' if n.current else ('map-locked' if n.locked else 'map-open')) %}
     <div class="map-row" style="--x: {{ wave[loop.index0 % 8] }}">
       {% if n.locked %}
-      <span class="map-node {{ cls }}" title="Откроется позже"><span class="map-ico">🔒</span><span class="map-num">{{ n.pos }}</span></span>
+      <span class="map-node {{ cls }}" title="Откроется позже"><svg class="ico" aria-hidden="true"><use href="#o-lock"/></svg><span class="map-num">{{ n.pos }}</span></span>
       {% else %}
-      <a class="map-node {{ cls }}" href="{{ url_for('student.lesson_page', lesson_id=n.lesson.id) }}" title="{{ n.lesson.title }}"
+      <a class="map-node {{ cls }}" href="{{ url_for('student.lesson_page', lesson_id=n.lesson.id) }}" title="{{ n.lesson.title|noemoji }}"
          {% if n.current %}id="map-current"{% endif %}>
-        <span class="map-ico">{{ n.lesson.emoji }}</span><span class="map-num">{{ n.pos }}</span>
+        {% if n.done %}<svg class="ico" aria-hidden="true"><use href="#o-check"/></svg><span class="map-num">{{ n.pos }}</span>{% else %}<span class="map-pos">{{ n.pos }}</span>{% endif %}
         {% if n.current %}<svg class="map-chick" aria-hidden="true"><use href="#i-chick"/></svg>{% endif %}
       </a>
       {% endif %}
       <span class="map-label">
-        <b>{{ n.lesson.title }}</b>
-        {% if n.done %}<span class="map-stars">{% if n.credited %}✔️ зачтено{% else %}{{ '⭐' * n.stars }}{{ '☆' * (3 - n.stars) }}{% endif %}</span>
+        <b>{{ n.lesson.title|noemoji }}</b>
+        {% if n.done %}<span class="map-stars">{% if n.credited %}зачтено{% else %}<span class="stars">{{ '★' * n.stars }}{{ '☆' * (3 - n.stars) }}</span>{% endif %}</span>
         {% elif n.current %}<span class="map-here">ты здесь!</span>{% endif %}
       </span>
     </div>

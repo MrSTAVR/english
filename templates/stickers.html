@@ -2,15 +2,15 @@
 {% block title %}Мои наклейки — English Fun{% endblock %}
 {% block content %}
 <div class="dict-head">
-  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
-  <h1>🏷️ Мои наклейки</h1>
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">← Мои уроки</a>
+  <h1>Мои наклейки</h1>
 </div>
 <p class="subtitle">За каждую пройденную тему — наклейка. Золотая рамка — если тест сдан на 100%! Собрано: {{ got }} из {{ items|length }}, золотых: {{ gold }}.</p>
 <div class="sk-grid">
 {% for s in items %}
-  <div class="sk{{ ' sk-got' if s.got }}{{ ' sk-gold' if s.gold }}" title="{{ s.title if s.got else 'Пройди тему, чтобы получить' }}">
-    <div class="sk-emoji">{{ s.emoji if s.got else '❔' }}</div>
-    <div class="sk-name">{{ s.title if s.got else ('Тема ' ~ s.num if s.num else 'Секрет') }}</div>
+  <div class="sk{{ ' sk-got' if s.got }}{{ ' sk-gold' if s.gold }}" title="{{ (s.title if s.got else 'Пройди тему, чтобы получить')|noemoji }}">
+    <div class="sk-emoji">{{ s.emoji if s.got else '' }}</div>
+    <div class="sk-name">{{ (s.title if s.got else ('Тема ' ~ s.num if s.num else 'Секрет'))|noemoji }}</div>
   </div>
 {% endfor %}
 </div>

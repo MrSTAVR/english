@@ -130,7 +130,7 @@ def test_roles_are_separated(logoped, make_student, flask_app, anon):
 
 def test_speech_pages_look_separate_and_logout(logoped):
     html = logoped.get("/logoped/home").get_data(as_text=True)
-    assert "🗣️" in html and "Логопед" in html and "MASCOT_SETTINGS" not in html and "English Fun" not in html
+    assert "logo-badge" in html and "Логопед" in html and "MASCOT_SETTINGS" not in html and "English Fun" not in html
     assert logoped.get("/logout").headers["Location"].endswith("/logoped")
 
 

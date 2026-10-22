@@ -84,9 +84,9 @@ def test_broken_streak_removes_everything(parent, make_student):
     assert body.count("Сначала позанимайся") == len(garden.DECORATIONS)
 
 
-def test_student_home_teaser_uses_mini_tree(make_student):
+def test_student_home_garden_tile_has_outline_icon(make_student):
     c = make_student()
-    assert "gt-svg" in c.get("/student").get_data(as_text=True)
+    assert '#o-sprout' in c.get("/student").get_data(as_text=True)    # дизайн 3.0: контурные значки
 
 
 def test_retired_rainbow_is_refunded(parent, make_student):

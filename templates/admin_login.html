@@ -2,13 +2,13 @@
 {% block title %}Администратор — English Fun{% endblock %}
 {% block content %}
 <section class="card admin-login">
-  <h1>🛠️ Кабинет администратора</h1>
+  <h1>Кабинет администратора</h1>
   <p class="hint">Аккаунты учеников, прогресс и обновления сайта.</p>
   <form method="post" action="{{ url_for('auth.login_parent') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="password" name="password" placeholder="Пароль администратора" required autocomplete="current-password" autofocus>
     <button type="submit" class="btn btn-secondary">Войти</button>
   </form>
-  <p><a class="btn btn-small" href="{{ url_for('auth.index') }}">⬅ На главную</a></p>
+  <p><a class="btn btn-small" href="{{ url_for('auth.index') }}">← На главную</a></p>
 </section>
 {% endblock %}
