@@ -37,7 +37,9 @@ def test_autoupdate_units():
     timer = (DEPLOY / "english-autoupdate.timer").read_text(encoding="utf-8")
     assert "Type=oneshot" in svc and "/opt/english/app/deploy/autoupdate.sh" in svc
     assert "OnUnitActiveSec=5min" in timer and "WantedBy=timers.target" in timer
-    for name in ("english-autoupdate.service", "english-autoupdate.timer"):
+    path = (DEPLOY / "english-autoupdate.path").read_text(encoding="utf-8")
+    assert "PathExists=/opt/english/data/control/update-now" in path and "Unit=english-autoupdate.service" in path
+    for name in ("english-autoupdate.service", "english-autoupdate.timer", "english-autoupdate.path"):
         assert b"\r" not in (DEPLOY / name).read_bytes()
 
 
@@ -74,8 +76,12 @@ def test_autoupdate_updates_and_rolls_back(tmp_path):
     _git(work, "push", "-q", "origin", "main")
     subprocess.run(["git", "clone", "-q", "-b", "main", str(origin), str(app)], check=True, capture_output=True)
 
+    ctrl = tmp_path / "control"
     env = {**os.environ, "APP_DIR": str(app), "VENV": str(tmp_path / "venv"), "STATE": str(tmp_path / "state"),
-           "PATH": f"{fake}:{os.environ['PATH']}"}
+           "CTRL": str(ctrl), "AUTOUPDATE_SYNC": "0", "PATH": f"{fake}:{os.environ['PATH']}"}
+
+    def result():
+        return dict(l.split("=", 1) for l in (ctrl / "status").read_text().splitlines())["result"]
 
     def run():
         return subprocess.run(["bash", str(DEPLOY / "autoupdate.sh")], env=env, capture_output=True, text=True)
@@ -84,13 +90,14 @@ def test_autoupdate_updates_and_rolls_back(tmp_path):
         return subprocess.run(["git", "rev-parse", "HEAD"], cwd=app, capture_output=True, text=True).stdout.strip()
 
     r = run()                                                  # нечего обновлять
-    assert r.returncode == 0 and r.stdout == ""
+    assert r.returncode == 0 and r.stdout == "" and result() == "up-to-date"
 
     (work / "v.txt").write_text("2")
     _git(work, "commit", "-qam", "v2")
     _git(work, "push", "-q", "origin", "main")
     r = run()
     assert r.returncode == 0 and "Обновление" in r.stdout and (app / "v.txt").read_text() == "2"
+    assert result() == "updated" and "Готово" in (ctrl / "update.log").read_text()
     good = head()
 
     (work / "BROKEN").write_text("x")                           # сломанное обновление
@@ -99,18 +106,31 @@ def test_autoupdate_updates_and_rolls_back(tmp_path):
     _git(work, "push", "-q", "origin", "main")
     r = run()
     assert r.returncode == 1 and "откат" in r.stdout and head() == good and not (app / "BROKEN").exists()
+    assert result() == "rolled-back"
     r = run()                                                  # тот же сломанный коммит не повторяем
-    assert r.returncode == 0 and r.stdout == "" and head() == good
+    assert r.returncode == 0 and r.stdout == "" and head() == good and result() == "bad"
+    (ctrl / "update-now").write_text("1")                      # кнопка «Обновить сейчас» пробует снова
+    r = run()
+    assert r.returncode == 1 and "(по кнопке)" in r.stdout and head() == good
+    assert not (ctrl / "update-now").exists()
 
     (work / "BROKEN").unlink()                                  # исправление приходит следующим коммитом
     _git(work, "commit", "-qam", "fix")
     _git(work, "push", "-q", "origin", "main")
+    (ctrl / "autoupdate-off").write_text("1")                  # автообновление выключено в кабинете
+    r = run()
+    assert r.returncode == 0 and head() == good and result() == "available"
+    (ctrl / "update-now").write_text("1")                      # …но кнопка работает
     r = run()
     assert r.returncode == 0 and head() != good and not (tmp_path / "state" / "bad-commit").exists()
+    (ctrl / "update-now").write_text("1")
+    r = run()
+    assert "обновлений нет" in r.stdout and result() == "up-to-date"
+    (ctrl / "autoupdate-off").unlink()
 
     _git(app, "checkout", "-q", "--detach", good)              # ручной откат родителем — не трогаем
     (work / "v.txt").write_text("3")
     _git(work, "commit", "-qam", "v3")
     _git(work, "push", "-q", "origin", "main")
     r = run()
-    assert r.returncode == 0 and "пропущено" in r.stdout and head() == good
+    assert r.returncode == 0 and head() == good and result() == "not-main"

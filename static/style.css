@@ -867,3 +867,9 @@ button, input, select, textarea { font-family: inherit; }
 .admin-corner:hover,.admin-corner:focus-visible{opacity:1}
 .admin-login{max-width:420px;margin:40px auto;text-align:center}
 .admin-login form{display:flex;flex-direction:column;gap:10px;margin:14px 0}
+/* Кабинет администратора: обновления */
+.upd-actions{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin:10px 0}
+.upd-actions form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.upd-log summary{cursor:pointer;font-weight:700}
+.upd-log pre{max-height:320px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-size:.8rem;line-height:1.45;
+  background:#f6f4fb;border-radius:12px;padding:10px 12px;margin-top:8px}

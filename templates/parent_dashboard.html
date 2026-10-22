@@ -4,6 +4,46 @@
 
 <h1>🛠️ Кабинет администратора</h1>
 
+<!-- Обновления сайта -->
+<section class="card" id="updates">
+  <h2>🔄 Обновления сайта</h2>
+  {% set st = upd.status %}
+  <p>Установлена версия <b>{{ app_version.full }}</b>{% if app_version.subject %} — <span class="hint">{{ app_version.subject }}</span>{% endif %}</p>
+  {% if st %}
+  <p>Последняя проверка сервером: <b>{{ st.checked }}</b> — {{ st.result_text }}.
+    {% if upd.available %}<br><span class="pill pill-warn">Есть новая версия {{ upd.remote_short }}</span> {{ st.remote_subject }}{% endif %}</p>
+  {% else %}
+  <p class="hint">Сервер ещё не присылал отчётов: автообновление не включено или ещё не запускалось
+    (на сервере: <code>bash /opt/english/app/deploy/setup-autoupdate.sh</code>).</p>
+  {% endif %}
+  <div class="upd-actions">
+    <form method="post" action="{{ url_for('parent.parent_updates') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if upd.pending %}
+        <button class="btn btn-primary" type="button" disabled>⏳ Ждём сервер…</button>
+      {% else %}
+        <button class="btn btn-primary" type="submit" name="action" value="now">🔄 Обновить сейчас</button>
+      {% endif %}
+    </form>
+    <form method="post" action="{{ url_for('parent.parent_updates') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if upd.auto %}
+        <span class="pill pill-soft">Автообновление: включено</span>
+        <button class="btn btn-small" type="submit" name="action" value="auto_off">Выключить</button>
+      {% else %}
+        <span class="pill pill-warn">Автообновление: выключено</span>
+        <button class="btn btn-small" type="submit" name="action" value="auto_on">Включить</button>
+      {% endif %}
+    </form>
+  </div>
+  <p class="hint">Автообновление: сервер раз в 5 минут смотрит, есть ли новая версия на GitHub, и ставит её сам.
+    Если после обновления сайт не запустился — он сам вернётся к прежней версии.</p>
+  <details class="upd-log"{% if upd.pending %} open{% endif %}>
+    <summary>📜 Журнал обновлений{% if upd.log %} (последние {{ upd.log|length }} строк, свежие сверху){% endif %}</summary>
+    {% if upd.log %}<pre>{{ upd.log|join('\n') }}</pre>{% else %}<p class="hint">Пока пусто.</p>{% endif %}
+  </details>
+</section>
+
 <!-- Аккаунты учеников -->
 <section class="card" id="students">
   <h2>👶 Аккаунты учеников ({{ students|length }})</h2>
