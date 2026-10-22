@@ -77,9 +77,9 @@ def test_parent_sees_mistakes(parent, make_student):
     submit_lesson(c, 1, wrong=True)
     expected = len(LESSONS_BY_ID[1]["test"])
 
-    body = parent.get("/parent").get_data(as_text=True)
-    m = re.search(r'<span class="stat-num">(\d+)</span><span class="stat-label">'
-                  r'ошибок за всё время', body)
+    sid = db_scalar("SELECT id FROM students")
+    body = parent.get(f"/parent/students/{sid}").get_data(as_text=True)
+    m = re.search(r'<span><b>(\d+)</b><small>ошибок всего', body)
     assert m and int(m.group(1)) == expected
 
     mistakes = parent.get("/api/mistakes").get_json()

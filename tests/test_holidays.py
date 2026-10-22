@@ -52,7 +52,7 @@ def test_yearly_custom_dates(parent, make_student, monkeypatch):
     assert c.get("/student/march8").status_code == 200                 # через три года — снова праздник
     _day(monkeypatch, date(2029, 3, 2))
     assert c.get("/student/march8").status_code == 302
-    assert "каждый год" in parent.get("/parent").get_data(as_text=True)
+    assert "каждый год" in parent.get("/parent/holidays").get_data(as_text=True)
     parent.post("/parent/season", data={"season": "march8", "mode": "auto", "date_from": "2026-03-05", "date_to": "2026-03-09"})
     _day(monkeypatch, date(2029, 3, 7))
     assert c.get("/student/march8").status_code == 302                 # без галочки — только 2026 год

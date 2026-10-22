@@ -1,0 +1,34 @@
+{% extends "admin/_layout.html" %}
+{% block admin_title %}Праздники{% endblock %}
+{% block admin %}
+<p class="hint">Во время праздника у детей появляются особые слова, викторина и наряды для Чик-чика. По умолчанию праздник
+  включается сам по датам; можно задать свои даты (и «каждый год»), включить принудительно или выключить.
+  День рождения — в настройках ученика.</p>
+<div class="adm-grid" id="seasons">
+  {% for s in seasons %}
+  <section class="card adm-season">
+    <h2>{{ s.emoji }} {{ s.title }}
+      {% if s.mode == 'on' %}<span class="pill pill-warn">включён вручную</span>
+      {% elif s.mode == 'off' %}<span class="pill pill-soft">выключен</span>
+      {% elif s.auto_now %}<span class="pill adm-on">идёт сейчас</span>
+      {% else %}<span class="pill pill-soft">ждёт своих дат</span>{% endif %}</h2>
+    <p class="hint">{% if s.custom %}Свои даты: {{ s.custom[0].strftime('%d.%m' if s.yearly else '%d.%m.%Y') }} — {{ s.custom[1].strftime('%d.%m' if s.yearly else '%d.%m.%Y') }}{{ ' каждый год' if s.yearly }}
+      {% else %}Даты: {{ s.dates }}{% endif %}</p>
+    <form method="post" action="{{ url_for('parent.parent_season') }}" class="sp-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="season" value="{{ s.key }}">
+      <fieldset class="adm-radio sp-wide">
+        <label><input type="radio" name="mode" value="auto" {{ 'checked' if s.mode == 'auto' }}> По датам</label>
+        <label><input type="radio" name="mode" value="on" {{ 'checked' if s.mode == 'on' }}> Включён</label>
+        <label><input type="radio" name="mode" value="off" {{ 'checked' if s.mode == 'off' }}> Выключен</label>
+      </fieldset>
+      <label>Свои даты: с <input type="date" name="date_from" value="{{ s.custom[0].isoformat() if s.custom }}"></label>
+      <label>по <input type="date" name="date_to" value="{{ s.custom[1].isoformat() if s.custom }}"></label>
+      <label class="sp-check sp-wide"><input type="checkbox" name="yearly" value="1" {{ 'checked' if s.yearly }}> каждый год в эти числа</label>
+      <span class="hint sp-wide">Пусто — стандартные даты.</span>
+      <button class="btn btn-small btn-primary sp-wide" type="submit">Сохранить</button>
+    </form>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

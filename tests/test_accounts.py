@@ -64,8 +64,7 @@ def test_parent_sees_all_students(parent, make_student):
     body = parent.get("/parent").get_data(as_text=True)
     assert "Маша" in body and "Петя" in body and "🦄" in body
     assert db_scalar("SELECT COUNT(*) FROM attempts WHERE passed=1") == 2
-    m = re.search(rf'<span class="stat-num">(\d+)/{MAIN_COUNT}</span>', body)
-    assert m and m.group(1) == "1"        # общий прогресс — по лучшим, не сумма
+    assert body.count(f"<b>1</b>/{MAIN_COUNT} уроков") == 2      # у каждого — свой прогресс
 
     assert parent.get("/api/mistakes").get_json() == []
 

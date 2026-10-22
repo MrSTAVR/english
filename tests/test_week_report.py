@@ -123,10 +123,11 @@ def test_week_report_previous_week_and_vacation(flask_app, make_student):
 def test_dashboard_shows_week(parent, make_student):
     c = make_student()
     submit_lesson(c, N(1))
-    html = parent.get("/parent").get_data(as_text=True)
-    assert 'id="week"' in html and "дней с занятиями: 1 из 7" in html and "Тесты за неделю" in html
-    assert "🎯 Цель дня: 1 ур. + 10 слов" in html
-    html = parent.get("/parent?week=1").get_data(as_text=True)
-    assert "дней с занятиями: 0 из 7" in html and "эта неделя" in html
-    assert parent.get("/parent?week=-5").status_code == 200
-    assert parent.get("/parent?week=abc").status_code == 200
+    html = parent.get("/parent/progress").get_data(as_text=True)
+    assert "Дней с занятиями: 1 из 7" in html and "Тесты за неделю" in html
+    sid = db_scalar("SELECT id FROM students")
+    assert "Сейчас: 1 ур. + 10 слов" in parent.get(f"/parent/students/{sid}").get_data(as_text=True)
+    html = parent.get("/parent/progress?week=1").get_data(as_text=True)
+    assert "Дней с занятиями: 0 из 7" in html and "эта неделя" in html
+    assert parent.get("/parent/progress?week=-5").status_code == 200
+    assert parent.get("/parent/progress?week=abc").status_code == 200

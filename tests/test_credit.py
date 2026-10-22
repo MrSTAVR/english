@@ -52,8 +52,8 @@ def test_credit_does_not_fake_stats_or_rewards(parent, make_student):
     assert {"first_lesson", "three_lessons", "five_lessons"} <= keys   # за уроки — выдаются
     html = home(student)
     assert "Лучший результат: <b>100%" not in html
-    body = parent.get("/parent").get_data(as_text=True)
-    assert "тестов сдано всего</span>" in body and '<span class="stat-num">0</span><span class="stat-label">тестов сдано всего' in body
+    body = parent.get(f"/parent/students/{sid_of()}").get_data(as_text=True)
+    assert "<span><b>0</b><small>тестов сдано</small></span>" in body
 
 
 def test_real_attempt_after_credit_replaces_score(parent, make_student):
@@ -108,7 +108,7 @@ def test_credit_only_affects_chosen_student(parent, make_student):
 def test_dashboard_shows_credit_section(parent, make_student):
     make_student()
     credit(parent, sid_of(), lessons=["1"], action="add")
-    body = parent.get("/parent").get_data(as_text=True)
+    body = parent.get(f"/parent/students/{sid_of()}").get_data(as_text=True)
     assert "Зачесть пройденные уроки" in body and "зачтён родителем" in body
 
 
