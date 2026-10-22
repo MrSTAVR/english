@@ -25,7 +25,7 @@ def verify_password(stored, password):
         digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"),
                                      bytes.fromhex(salt_hex), PBKDF2_ROUNDS)
         return hmac.compare_digest(digest.hex(), digest_hex)
-    except Exception:
+    except (ValueError, TypeError, AttributeError):   # испорченный или пустой хеш — пароль не подходит
         return False
 
 

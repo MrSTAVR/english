@@ -9,6 +9,7 @@
 """
 
 from csrf import init_csrf
+import logging
 import os
 import sys
 
@@ -26,6 +27,8 @@ from template_filters import human_time, is_russian_answer, match_answer_json, m
     shuffle_match, shuffle_sort, shuffle_words, tree_mini
 
 app = Flask(__name__)
+if not logging.getLogger().handlers:           # журнал приложения: под systemd — в journalctl -u english
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
 # В боевом режиме отказываемся стартовать с небезопасными настройками

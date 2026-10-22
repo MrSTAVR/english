@@ -6,7 +6,7 @@ from datetime import datetime
 
 import activity
 from achievements import public, update_achievements
-from curriculum import ALL_LESSONS, LESSONS_BY_ID, unlocked_lesson_ids
+from curriculum import LESSONS_BY_ID, unlocked_lesson_ids
 from data.dialogs import DIALOGS, DIALOGS_BY_KEY, character
 from database import get_db
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for

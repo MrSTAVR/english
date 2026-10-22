@@ -75,7 +75,7 @@ def main(argv=None):
     args = p.parse_args(argv)
     try:
         path = make_backup(config.DB_PATH, args.dir, args.keep)
-    except Exception as e:           # понятная ошибка вместо трейсбека (для cron/логов)
+    except (OSError, sqlite3.Error, RuntimeError) as e:   # понятная ошибка вместо трейсбека (для cron/логов)
         print(f"ОШИБКА резервной копии: {e}", file=sys.stderr)
         return 1
     print(f"Копия создана: {path} ({os.path.getsize(path) // 1024} КБ)")
