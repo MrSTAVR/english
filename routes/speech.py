@@ -71,6 +71,7 @@ def logoped_home():
     db, me = ctx
     return render_template("speech/logoped_home.html", me=me, clients=speech.clients(db, me["id"]),
                            today_sessions=sched.for_day(db, me["id"], sched.today()),
+                           events=sched.unseen_events(db, me["id"]),
                            archived=speech.clients(db, me["id"], archived=True), age=speech.age_text,
                            min_password=speech.MIN_PASSWORD, username_re=speech.USERNAME_RE)
 
@@ -253,6 +254,41 @@ def logoped_session(sid):
     return redirect(url_for("speech.logoped_session", sid=sid))
 
 
+@bp.route("/logoped/slots", methods=["POST"])
+def logoped_slots():
+    """Свободные окна: action=add (день, времена, длительность, на сколько недель) / delete."""
+    ctx, err = _current("logoped")
+    if err:
+        return err
+    db, me = ctx
+    f = request.form
+    if f.get("action") == "delete":
+        db.execute("DELETE FROM sp_slots WHERE id=? AND logoped_id=?", (f.get("id", type=int), me["id"]))
+        db.commit()
+        flash("Окно удалено.", "ok")
+        return redirect(request.referrer or url_for("speech.logoped_schedule"))
+    day, times = speech.parse_date(f.get("day")), sched.parse_times(f.get("times"))
+    if not day or not times:
+        flash("Укажите дату и хотя бы одно время, например «15:00, 15:45».", "error")
+        return redirect(url_for("speech.logoped_schedule") + "#slots")
+    created, skipped = sched.add_slots(db, me["id"], day, times, f.get("minutes", sched.DEFAULT_MINUTES, type=int),
+                                       f.get("weeks", 1, type=int))
+    flash(f"Окон добавлено: {created}." + (f" Пропущено (занято, выходной или прошло): {skipped}." if skipped else ""),
+          "ok" if created else "error")
+    monday = sched.today() - timedelta(days=sched.today().weekday())
+    return redirect(url_for("speech.logoped_schedule", week=((day - monday).days // 7) or None))
+
+
+@bp.route("/logoped/events/seen", methods=["POST"])
+def logoped_events_seen():
+    ctx, err = _current("logoped")
+    if err:
+        return err
+    db, me = ctx
+    sched.mark_seen(db, me["id"])
+    return redirect(url_for("speech.logoped_home"))
+
+
 @bp.route("/logoped/series/<int:series_id>/stop", methods=["POST"])
 def logoped_series_stop(series_id):
     ctx, err = _current("logoped")
@@ -306,5 +342,37 @@ def family_home():
     logoped = db.execute("SELECT name FROM sp_logopeds WHERE id=?", (client["logoped_id"],)).fetchone()
     return render_template("speech/family_home.html", c=client, logoped=logoped,
                            sounds=speech.sound_map(db, client["id"]),
-                           upcoming=sched.client_sessions(db, client["id"], client["logoped_id"], limit=4),
+                           upcoming=[{**x, "can_cancel": sched.can_family_cancel(x)}
+                                     for x in sched.client_sessions(db, client["id"], client["logoped_id"], limit=4)],
+                           has_slots=bool(sched.bookable(db, client["logoped_id"])),
                            past=sched.client_sessions(db, client["id"], client["logoped_id"], upcoming=False, limit=5))
+
+
+@bp.route("/family/book", methods=["GET", "POST"])
+def family_book():
+    ctx, err = _current("family")
+    if err:
+        return err
+    db, client = ctx
+    if request.method == "POST":
+        _sid, error = sched.book_slot(db, client, request.form.get("slot_id", type=int))
+        if error:
+            flash(error, "error")
+            return redirect(url_for("speech.family_book"))
+        flash("Вы записаны! Занятие появилось в списке. Отменить можно не позже чем за сутки.", "ok")
+        return redirect(url_for("speech.family_home"))
+    days = {}
+    for x in sched.bookable(db, client["logoped_id"]):
+        days.setdefault(x["day"], []).append(x)
+    return render_template("speech/family_book.html", c=client, days=days)
+
+
+@bp.route("/family/sessions/<int:sid>/cancel", methods=["POST"])
+def family_cancel(sid):
+    ctx, err = _current("family")
+    if err:
+        return err
+    db, client = ctx
+    error = sched.family_cancel(db, client, sid)
+    flash(error or "Занятие отменено. Логопед увидит это в своём кабинете.", "error" if error else "ok")
+    return redirect(url_for("speech.family_home"))

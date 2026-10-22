@@ -242,10 +242,28 @@ CREATE TABLE IF NOT EXISTS sp_sessions (            -- очные занятия
     series_id  INTEGER,
     source     TEXT NOT NULL DEFAULT 'logoped',     -- кто назначил: logoped / family
     note       TEXT DEFAULT '',
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    cancelled_by TEXT                               -- кто отменил: logoped / family
 );
 CREATE INDEX IF NOT EXISTS idx_sp_sessions_logoped_start ON sp_sessions (logoped_id, start);
 CREATE INDEX IF NOT EXISTS idx_sp_sessions_client ON sp_sessions (client_id, start);
+CREATE TABLE IF NOT EXISTS sp_slots (               -- свободные окна для самозаписи родителей
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    logoped_id INTEGER NOT NULL,
+    start      TEXT NOT NULL,                       -- 'YYYY-MM-DD HH:MM'
+    minutes    INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sp_slots_logoped_start ON sp_slots (logoped_id, start);
+CREATE TABLE IF NOT EXISTS sp_events (              -- «Новое от родителей»: записи и отмены
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    logoped_id INTEGER NOT NULL,
+    client_id  INTEGER NOT NULL,
+    kind       TEXT NOT NULL,                       -- booked / cancelled
+    start      TEXT NOT NULL,                       -- время занятия
+    created_at TEXT NOT NULL,
+    seen       INTEGER DEFAULT 0
+);
 CREATE TABLE IF NOT EXISTS sp_days_off (            -- выходные и отпуск логопеда
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     logoped_id INTEGER NOT NULL,
@@ -286,6 +304,9 @@ def init_db():
         conn.execute("DROP TABLE achievements")
         conn.executescript(SCHEMA)
     # индекс уникальности для новой таблицы ачивок уже задан PRIMARY KEY
+    sp_cols = {r[1] for r in conn.execute("PRAGMA table_info(sp_sessions)")}
+    if sp_cols and "cancelled_by" not in sp_cols:
+        conn.execute("ALTER TABLE sp_sessions ADD COLUMN cancelled_by TEXT")   # logoped / family
     for key, cost in RETIRED_DECORATIONS.items():
         conn.execute(
             "UPDATE garden SET coins = coins + ? * (SELECT COUNT(*) FROM decorations d "

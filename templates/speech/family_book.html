@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Запись на занятие — кабинет родителя{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('speech.family_home') }}">⬅ Назад</a>
+  <h1>🙋 Запись на занятие</h1>
+</div>
+<p class="subtitle">{{ c.child_name }} · выберите свободное время. Записаться и отменить запись можно не позже чем за сутки.</p>
+{% for day, slots in days.items() %}
+<section class="card">
+  <h2>{{ day }}</h2>
+  <div class="sp-book">
+    {% for x in slots %}
+    <form method="post" onsubmit="return confirm('Записаться на {{ day }}, {{ x.time }}?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="slot_id" value="{{ x.id }}">
+      <button class="btn btn-secondary" type="submit">{{ x.time }}–{{ x.end }}</button>
+    </form>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<section class="card"><p class="hint">Свободных окон сейчас нет — загляните позже или напишите логопеду.</p></section>
+{% endfor %}
+{% endblock %}

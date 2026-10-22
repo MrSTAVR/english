@@ -3,6 +3,21 @@
 {% block content %}
 <h1>👩‍⚕️ Здравствуйте, {{ me.name }}!</h1>
 
+{% if events %}
+<section class="card sp-events">
+  <h2>🔔 Новое от родителей ({{ events|length }})</h2>
+  <ul>
+    {% for e in events %}
+    <li>{{ '🙋 Записались' if e.kind == 'booked' else '✖️ Отменили' }}: <b>{{ e.child_name }}</b> — {{ e.when }}</li>
+    {% endfor %}
+  </ul>
+  <form method="post" action="{{ url_for('speech.logoped_events_seen') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-small" type="submit">👌 Понятно</button>
+  </form>
+</section>
+{% endif %}
+
 <section class="card">
   <h2>📅 Сегодня</h2>
   {% for s in today_sessions %}{% include "speech/_session_row.html" %}{% else %}<p class="hint">Сегодня занятий нет.</p>{% endfor %}
