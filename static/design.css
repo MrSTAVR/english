@@ -165,3 +165,82 @@ html[data-theme="dark"] body.area-speech textarea { background: #1A2026; border-
 /* ---------- узкие телефоны ---------- */
 select, input, textarea { max-width: 100%; box-sizing: border-box; }
 .sp-btns { flex-wrap: wrap; justify-content: flex-end; }
+
+/* ============================================================
+   Меню ученицы: на компьютере — в шапке, на телефоне — внизу экрана.
+   Шестая ячейка нижнего меню — место Чик-чика (он сидит на краю меню и ничего не закрывает).
+   ============================================================ */
+.tabbar { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.tab-icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.tab-mascot { display: none; }
+
+@media (max-width: 640px) {
+  /* страница урока: меню не нужно — только «Главная» и «Выйти» */
+  body:not(.has-tabbar) .tabbar .tab:not(.on) { display: none; }
+
+  body.has-tabbar { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .has-tabbar .topbar { backdrop-filter: none; -webkit-backdrop-filter: none; flex-wrap: nowrap; }
+  .has-tabbar .topbar nav { width: auto; flex: none; gap: 6px; }
+  .has-tabbar .topbar nav a.nav-exit { flex: none; padding: 9px 10px; }
+  .has-tabbar .theme-toggle { position: static; flex: none; }
+  .has-tabbar .tabbar { position: fixed; z-index: 900; left: 0; right: 0; bottom: 0; display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; flex-wrap: nowrap;
+    padding: 6px max(4px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
+    background: var(--surface); border-top: 2px solid var(--line); box-shadow: 0 -4px 14px rgba(30, 42, 69, .06); }
+  .has-tabbar .topbar nav .tabbar .tab { flex-direction: column; gap: 2px; min-height: 50px; padding: 4px 0; margin: 0;
+    border-radius: 14px; font-size: .72rem; font-weight: 800; color: var(--muted); background: none; box-shadow: none;
+    justify-content: center; white-space: nowrap; }
+  .has-tabbar .topbar nav .tabbar .tab.on { color: var(--primary); font-weight: 900; background: none; box-shadow: none; }
+  .has-tabbar .tab-icon { width: 25px; height: 25px; }
+  .has-tabbar .tab-mascot { display: block; }
+
+  /* Чик-чик в своей ячейке */
+  .has-tabbar .mascot { right: max(2px, calc(100vw / 12 - 33px)); bottom: calc(30px + env(safe-area-inset-bottom)); gap: 10px; }
+  .has-tabbar .mascot-body { width: 66px; height: 66px; padding: 5px 6px 7px; border-radius: 50%; box-sizing: border-box;
+    background: var(--surface); border: 2px solid var(--line); box-shadow: 0 3px 0 var(--shade); filter: none; }
+  .has-tabbar .mascot-balloon { max-width: min(320px, calc(100vw - 32px)); }
+  /* спрятан: над меню выглядывает только макушка */
+  .has-tabbar .mascot-reopen { right: max(8px, calc(100vw / 12 - 24px)); bottom: calc(58px + env(safe-area-inset-bottom));
+    width: 48px; height: 26px; border: 0; border-radius: 24px 24px 0 0; background: none; box-shadow: none; overflow: hidden; z-index: 950; }
+  .has-tabbar .mascot-reopen svg { width: 48px; height: 48px; }
+}
+
+/* ============================================================
+   Главная ученицы
+   ============================================================ */
+/* баннеры праздников: спокойные плашки одного цвета со стрелкой, без радуги */
+.season-banner { display: flex; align-items: center; gap: 10px; text-align: left; border-radius: 20px; padding: 12px 16px;
+  font-weight: 900; color: #FFFFFF; text-decoration: none; background: #2B2140; box-shadow: 0 4px 0 rgba(0, 0, 0, .28); }
+.season-banner:hover { filter: brightness(1.06); }
+.season-halloween { background: #2B2140; }
+.season-newyear { background: #1F5FA8; }
+.season-advent { background: #B8322F; }
+.season-march8 { background: #C8407F; }
+.season-easter { background: #2F8F55; color: #FFFFFF; }
+.season-birthday { background: #D9467A; }
+html[data-theme="dark"] .season-banner { box-shadow: 0 4px 0 #0E0B1F; }
+
+/* «Следующий урок»: текст слева, кнопка «Продолжить» жёлтая */
+.next-cta { border-radius: 28px; }
+.next-cta-btn { background: var(--yellow); color: var(--ink); box-shadow: 0 4px 0 var(--yellow-deep); }
+@media (max-width: 640px) {
+  .next-cta { flex-direction: row; flex-wrap: wrap; align-items: flex-start; text-align: left; gap: 12px; padding: 18px; }
+  .next-cta-text { order: 1; flex: 1 1 0; min-width: 0; }
+  .next-cta-emoji { order: 2; width: 64px; height: 64px; font-size: 2.1rem; flex: none; }
+  .next-cta-btn { order: 3; flex: 1 0 100%; margin: 4px 0 0; text-align: center; padding: 14px; border-radius: 18px; font-size: 1.1rem; }
+}
+
+/* плитки: значок слева, голубые и песочные вперемешку, как в макете */
+.tile-grid .tile { flex-direction: row; align-items: center; text-align: left; gap: 10px; padding: 12px; border: 0;
+  background: var(--sky); box-shadow: none; }
+.tile-grid .tile:nth-child(4n+2), .tile-grid .tile:nth-child(4n+3) { background: var(--sand); }
+.tile-grid .tile:hover { transform: translateY(-2px); box-shadow: 0 4px 0 var(--shade); }
+.tile-text { display: flex; flex-direction: column; min-width: 0; }
+.tile-grid .tile-emoji { font-size: 1.7rem; flex: none; }
+.tile-grid .tile b { font-size: 1rem; line-height: 1.2; }
+.tile-grid .tile-badge { top: -6px; right: -4px; }
+.tile-grid .tile-emoji svg { height: 2.2rem; }
+.tile-grid .tile small { color: var(--muted); }
+.tile-grid .tile-locked { background: #F3EBDA; }
+html[data-theme="dark"] .tile-grid .tile-locked { background: #241F3D; }
+@media (max-width: 520px) { .tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

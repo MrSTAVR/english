@@ -37,3 +37,16 @@ def test_chick_has_one_beak():
 def test_manifest_colors(anon):
     data = anon.get("/manifest.webmanifest").get_json()
     assert data["theme_color"] == "#FFF7E8"
+
+
+def test_student_tabbar(make_student):
+    c = make_student()
+    body = c.get("/student").get_data(as_text=True)
+    assert 'class="has-tabbar"' in body and 'class="tabbar"' in body
+    for label in ("Главная", "Карта", "Сад", "Домик", "Награды"):
+        assert f"<span>{label}</span>" in body
+    assert 'class="tab on" aria-current="page"' in body
+    garden = c.get("/student/garden").get_data(as_text=True)
+    assert 'href="/student/garden" class="tab on"' in garden
+    lesson = c.get("/lesson/1").get_data(as_text=True)          # в уроке нижнего меню нет
+    assert 'class="has-tabbar"' not in lesson
