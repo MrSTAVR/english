@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ c.child_name }} — кабинет логопеда{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('speech.logoped_home') }}">⬅ Ученики</a>
+  <h1>🧒 {{ c.child_name }}{% if c.archived %} <span class="pill pill-warn">в архиве</span>{% endif %}</h1>
+</div>
+<p class="subtitle">{% if c.birth_date %}{{ age(c.birth_date) }} · {% endif %}{{ c.parent_name or 'родитель не указан' }}{% if c.phone %} · <a href="tel:{{ c.phone }}">{{ c.phone }}</a>{% endif %}</p>
+
+<section class="card">
+  <h2>📇 Данные</h2>
+  <form method="post" action="{{ url_for('speech.logoped_client_edit', cid=c.id) }}" class="sp-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Имя ребёнка <input type="text" name="child_name" maxlength="60" required value="{{ c.child_name }}"></label>
+    <label>Дата рождения <input type="date" name="birth_date" value="{{ c.birth_date or '' }}"></label>
+    <label>Родитель <input type="text" name="parent_name" maxlength="60" value="{{ c.parent_name or '' }}"></label>
+    <label>Телефон <input type="tel" name="phone" maxlength="30" value="{{ c.phone or '' }}"></label>
+    <button type="submit" class="btn btn-primary sp-wide" name="action" value="contacts">Сохранить</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>🔑 Вход для родителей</h2>
+  <p>Логин: <code>{{ c.username }}</code> · страница входа: <b>{{ request.host_url }}family</b></p>
+  <form method="post" action="{{ url_for('speech.logoped_client_edit', cid=c.id) }}" class="inline-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="text" name="password" minlength="{{ min_password }}" required placeholder="новый пароль" autocomplete="new-password">
+    <button class="btn btn-small" type="submit" name="action" value="password">Сменить пароль</button>
+  </form>
+</section>
+
+<section class="card sp-soon">
+  <h2>🗓️ Скоро здесь</h2>
+  <p class="hint">Диагноз и программа занятий, звуковая карта, расписание, домашние задания и оплата.</p>
+</section>
+
+<form method="post" action="{{ url_for('speech.logoped_client_edit', cid=c.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if c.archived %}
+  <button class="btn btn-small" type="submit" name="action" value="restore">↩️ Вернуть из архива</button>
+  {% else %}
+  <button class="btn btn-small" type="submit" name="action" value="archive"
+          onclick="return confirm('Перенести {{ c.child_name }} в архив? Вход для родителей закроется, данные сохранятся.');">🗄️ В архив (занятия закончены)</button>
+  {% endif %}
+</form>
+{% endblock %}

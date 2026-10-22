@@ -79,5 +79,7 @@ def login_parent():
 
 @bp.route("/logout")
 def logout():
+    role = session.get("role")
     session.clear()
-    return redirect(url_for("auth.index"))
+    back = {"logoped": "speech.logoped_login", "family": "speech.family_login"}.get(role, "auth.index")
+    return redirect(url_for(back))

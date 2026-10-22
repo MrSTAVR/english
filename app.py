@@ -12,7 +12,7 @@ from csrf import init_csrf
 import os
 import sys
 
-from flask import Flask, g, session
+from flask import Flask, g, request, session
 
 import config
 from database import init_db
@@ -81,7 +81,8 @@ app.jinja_env.filters["medal"] = medal
 def inject_mascot():
     """Добавляет переменную `mascot` во все шаблоны: кто на какой странице,
     чтобы JS-помощник знал, что говорить и когда."""
-    return {"mascot": build_mascot_ctx(), "app_version": app_version()}
+    return {"mascot": build_mascot_ctx(), "app_version": app_version(),
+            "speech_area": request.blueprint == "speech"}
 
 
 @app.context_processor

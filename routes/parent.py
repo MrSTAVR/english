@@ -3,6 +3,7 @@
 
 import json
 import goals
+import speech
 import updates
 from achievements import ACHIEVEMENTS, update_achievements
 from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID
@@ -244,6 +245,34 @@ def parent_goal(sid):
     return redirect(url_for("parent.parent_dashboard") + "#students")
 
 
+@bp.route("/parent/logopeds", methods=["POST"])
+def parent_logopeds():
+    """Аккаунты логопедов: action=add (логин, имя, пароль) / password (новый пароль)."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    action = request.form.get("action")
+    if action == "add":
+        _id, error = speech.create_logoped(db, (request.form.get("username") or "").strip(),
+                                           request.form.get("name") or "", request.form.get("password") or "")
+        flash(error or "Аккаунт логопеда создан. Вход: /logoped 👩‍⚕️", "error" if error else "ok")
+    elif action == "password":
+        password = request.form.get("password") or ""
+        lid = request.form.get("id", type=int)
+        if len(password) < speech.MIN_PASSWORD:
+            flash(f"Пароль должен быть не короче {speech.MIN_PASSWORD} символов.", "error")
+        elif not db.execute("SELECT 1 FROM sp_logopeds WHERE id=?", (lid,)).fetchone():
+            abort(404)
+        else:
+            db.execute("UPDATE sp_logopeds SET password_hash=? WHERE id=?", (hash_password(password), lid))
+            db.commit()
+            flash("Пароль логопеда обновлён 🔑", "ok")
+    else:
+        abort(400)
+    return redirect(url_for("parent.parent_dashboard") + "#logopeds")
+
+
 @bp.route("/parent/updates", methods=["POST"])
 def parent_updates():
     """Обновления сайта: action=now (обновить сейчас) / auto_on / auto_off."""
@@ -382,7 +411,10 @@ def parent_dashboard():
                            credit_cards=credit_cards, main_count=len(LESSONS),
                            names_by_id=names_by_id, emojis_by_id=emojis_by_id,
                            student_emojis=STUDENT_EMOJIS, weeks_back=weeks_back,
-                           max_weeks_back=MAX_WEEKS_BACK, upd=updates.view(app_version()["commit"]),
+                           max_weeks_back=MAX_WEEKS_BACK, min_sp_password=speech.MIN_PASSWORD,
+                           logopeds=db.execute("SELECT l.*, (SELECT COUNT(*) FROM sp_clients c WHERE c.logoped_id=l.id "
+                                               "AND c.archived=0) AS n FROM sp_logopeds l ORDER BY l.name").fetchall(),
+                           upd=updates.view(app_version()["commit"]),
                            goal_limits=(goals.MAX_LESSONS, goals.MAX_WORDS),
                            seasons=[{"key": k, **v, "mode": get_mode(k), "custom": get_dates(k), "auto_now": in_season(k)}
                                     for k, v in SEASONS.items()],
