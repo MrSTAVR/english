@@ -11,9 +11,10 @@
   <div class="hs-scene" id="hs-scene" aria-label="Домик Чик-чика"></div>
   <div class="wd-coins"><svg class="icon icon-coin"><use href="#i-coin"/></svg> <b>{{ coins }}</b> монеток</div>
 </section>
+<div class="hs-tabs" id="hs-tabs" role="tablist" aria-label="Что обустраиваем" hidden></div>
 <div id="house" data-placed='{{ placed | tojson }}' data-outfit='{{ outfit | tojson }}'>
 {% for slot in slots %}
-  <section class="wd-section">
+  <section class="wd-section" data-slot="{{ slot.key }}">
     <h2>{{ slot.emoji }} {{ slot.title }}</h2>
     <div class="wd-grid">
     {% for it in items if it.slot == slot.key %}
@@ -43,4 +44,31 @@
 {% endfor %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='house.js') }}?v=1"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='house.js') }}?v=1"></script>
+<script>
+/* вкладки «Стены / Пол / Окно…»: показываем один раздел, выбор помним до конца сеанса */
+(function () {
+  var box = document.getElementById('hs-tabs');
+  var sections = Array.prototype.slice.call(document.querySelectorAll('.wd-section[data-slot]'));
+  if (!box || sections.length < 2) return;
+  var saved = null;
+  try { saved = sessionStorage.getItem('house_tab'); } catch (e) {}
+  function show(key) {
+    sections.forEach(function (sec) { sec.hidden = sec.dataset.slot !== key; });
+    Array.prototype.forEach.call(box.children, function (b) {
+      var on = b.dataset.slot === key;
+      b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    try { sessionStorage.setItem('house_tab', key); } catch (e) {}
+  }
+  sections.forEach(function (sec) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'hs-tab'; b.setAttribute('role', 'tab'); b.dataset.slot = sec.dataset.slot;
+    b.textContent = sec.querySelector('h2').textContent.trim();
+    b.addEventListener('click', function () { show(sec.dataset.slot); });
+    box.appendChild(b);
+  });
+  box.hidden = false;
+  show(sections.some(function (s) { return s.dataset.slot === saved; }) ? saved : sections[0].dataset.slot);
+})();
+</script>{% endblock %}
