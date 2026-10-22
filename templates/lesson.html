@@ -142,6 +142,11 @@
 <section class="card step hidden" id="step-test">
   <h2>Шаг 4 — Итоговый тест 📝</h2>
   <p>Ответь на {{ lesson.test|length }} вопросов. Чтобы урок считался пройденным, нужно набрать минимум {{ need }}%. Не торопись!</p>
+  <div class="test-progress" id="test-progress" aria-live="polite">
+    <span class="tp-label">Отвечено</span>
+    <span class="tp-bar"><span class="tp-fill"></span></span>
+    <span class="tp-num">0/{{ lesson.test|length }}</span>
+  </div>
   <form method="post" action="{{ url_for('student.submit_test', lesson_id=lesson.id) }}" id="test-form">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
@@ -598,9 +603,8 @@ function checkDndExercise(btn) {
   }
 }
 
-// защита от ухода без сохранения времени + проверка, что ответ на каждый вопрос выбран
-document.getElementById('test-form').addEventListener('submit', function (e) {
-  document.getElementById('seconds-input').value = Math.round(Date.now() / 1000 - START_TS);
+// вопросы теста без ответа (номера с 1) — для проверки перед отправкой и для полоски «отвечено»
+function unansweredQuestions() {
   const unanswered = [];
   document.querySelectorAll('.question').forEach(qDiv => {
     const qi = qDiv.dataset.qindex;
@@ -622,6 +626,30 @@ document.getElementById('test-form').addEventListener('submit', function (e) {
       if (inp && !inp.value.trim()) unanswered.push(+qi + 1);
     }
   });
+  return unanswered;
+}
+
+// полоска «Отвечено k из N» над тестом
+(function () {
+  const form = document.getElementById('test-form');
+  const bar = document.getElementById('test-progress');
+  if (!form || !bar) return;
+  const total = document.querySelectorAll('.question').length;
+  function update() {
+    const done = total - unansweredQuestions().length;
+    bar.querySelector('.tp-fill').style.width = (total ? 100 * done / total : 0) + '%';
+    bar.querySelector('.tp-num').textContent = done + '/' + total;
+    bar.classList.toggle('tp-all', done === total);
+  }
+  ['change', 'input', 'click', 'pointerup', 'drop', 'touchend'].forEach(ev =>
+    form.addEventListener(ev, () => setTimeout(update, 60)));
+  update();
+})();
+
+// защита от ухода без сохранения времени + проверка, что ответ на каждый вопрос выбран
+document.getElementById('test-form').addEventListener('submit', function (e) {
+  document.getElementById('seconds-input').value = Math.round(Date.now() / 1000 - START_TS);
+  const unanswered = unansweredQuestions();
   if (unanswered.length > 0) {
     e.preventDefault();
     alert('Остались вопросы без ответа: ' + unanswered.join(', ') + ' 🙂\nОтветь на все — тогда проверим!');

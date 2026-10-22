@@ -244,3 +244,43 @@ html[data-theme="dark"] .season-banner { box-shadow: 0 4px 0 #0E0B1F; }
 .tile-grid .tile-locked { background: #F3EBDA; }
 html[data-theme="dark"] .tile-grid .tile-locked { background: #241F3D; }
 @media (max-width: 520px) { .tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ============================================================
+   Урок и тест
+   ============================================================ */
+.stepper i { background: var(--surface); border-color: var(--line-deep); color: var(--muted); }
+.stepper li.active i { background: var(--primary); border-color: var(--primary); color: #FFFFFF; }
+.stepper li.done i { background: var(--green); border-color: var(--green); color: #FFFFFF; }
+
+/* варианты ответа — крупные плитки */
+.question .options, .exercise .options { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.opt { position: relative; display: flex; align-items: center; min-height: 56px; padding: 12px 16px; border-radius: 18px;
+  background: var(--surface); border: 2px solid var(--line); box-shadow: 0 4px 0 var(--shade); font-weight: 900; font-size: 1.08rem; }
+.opt input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.opt:has(input:focus-visible) { outline: 3px solid rgba(37, 99, 201, .45); outline-offset: 2px; }
+.opt:has(input:checked) { background: var(--sky); border-color: var(--primary); box-shadow: 0 4px 0 var(--primary); color: var(--ink); }
+html[data-theme="dark"] .opt { background: var(--surface); box-shadow: 0 4px 0 #0E0B1F; }
+html[data-theme="dark"] .opt:has(input:checked) { background: #1E2A4D; border-color: #8FB4FF; box-shadow: 0 4px 0 #3B6FD8; }
+
+/* ответ в тренировке — плашка «Верно!» / «Почти!» */
+.ex-result:empty { display: none; }
+.ex-result.ok, .ex-result.bad { display: block; margin-top: 10px; padding: 10px 14px; border-radius: 16px; font-weight: 900; }
+.ex-result.ok { background: var(--ok-bg); color: var(--ok-ink); }
+.ex-result.bad { background: var(--oops-bg); color: var(--oops-ink); }
+
+/* полоска «Отвечено k из N» над тестом */
+.test-progress { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px; margin: 0 -6px 12px;
+  padding: 10px 12px; border-radius: 16px; background: var(--surface); border: 2px solid var(--line); box-shadow: 0 3px 0 var(--shade); }
+.tp-label { font-weight: 800; color: var(--muted); font-size: .9rem; }
+.tp-bar { flex: 1; height: 14px; border-radius: 999px; background: #F3EBDA; overflow: hidden; }
+html[data-theme="dark"] .tp-bar { background: var(--line); }
+.tp-fill { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--yellow); transition: width .25s ease; }
+.tp-all .tp-fill { background: var(--green); }
+.tp-num { font-weight: 900; font-variant-numeric: tabular-nums; }
+@media (min-width: 641px) { .test-progress { top: 84px; } }
+
+/* облачко Чик-чика как в макете: белое, бежевая рамка, тень снизу, подпись на жёлтом */
+.mascot-balloon { background: var(--surface); border: 2px solid var(--line); box-shadow: 0 5px 0 var(--shade), 0 12px 24px rgba(30, 42, 69, .12); backdrop-filter: none; }
+.mascot-balloon::after { border-right-color: var(--line); border-bottom-color: var(--line); }
+.mascot-balloon .mb-name { background: var(--yellow); color: var(--ink); box-shadow: 0 2px 0 var(--yellow-deep); }
+html[data-theme="dark"] .mascot-balloon { background: var(--surface); color: var(--ink); box-shadow: 0 5px 0 #0E0B1F, 0 12px 24px rgba(0, 0, 0, .4); }
