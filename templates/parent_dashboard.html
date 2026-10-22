@@ -200,6 +200,32 @@
   {% endfor %}
 </section>
 
+<!-- Логопеды -->
+<section class="card" id="logopeds">
+  <h2>👩‍⚕️ Логопеды</h2>
+  <p class="hint">Отдельная часть сайта для логопеда и родителей его учеников. Вход логопеда — <b>{{ request.host_url }}logoped</b>,
+    родителей — <b>{{ request.host_url }}family</b> (их аккаунты создаёт логопед).</p>
+  {% for l in logopeds %}
+  <form method="post" action="{{ url_for('parent.parent_logopeds') }}" class="inline-form sp-admin-row">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="id" value="{{ l.id }}">
+    <span><b>{{ l.name }}</b> · <code>{{ l.username }}</code> · учеников: {{ l.n }}</span>
+    <input type="password" name="password" minlength="{{ min_sp_password }}" required placeholder="новый пароль" autocomplete="new-password">
+    <button class="btn btn-small" type="submit" name="action" value="password">🔑 Сменить пароль</button>
+  </form>
+  {% endfor %}
+  <details{% if not logopeds %} open{% endif %}>
+    <summary><b>➕ Новый логопед</b></summary>
+    <form method="post" action="{{ url_for('parent.parent_logopeds') }}" class="sp-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Имя (как увидят родители) <input type="text" name="name" maxlength="60" required placeholder="Елена Петровна"></label>
+      <label>Логин <input type="text" name="username" maxlength="20" required pattern="[a-zA-Z0-9_.\-]{2,20}" autocapitalize="off"></label>
+      <label>Пароль (от {{ min_sp_password }} символов) <input type="password" name="password" minlength="{{ min_sp_password }}" required autocomplete="new-password"></label>
+      <button class="btn btn-primary" type="submit" name="action" value="add">Создать</button>
+    </form>
+  </details>
+</section>
+
 <!-- Праздничные события -->
 <section class="card" id="seasons">
   <h2>🎉 Праздничные события</h2>

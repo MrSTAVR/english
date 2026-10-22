@@ -12,11 +12,11 @@
 <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="English Fun">
+<meta name="apple-mobile-web-app-title" content="{{ 'Логопед' if speech_area else 'English Fun' }}">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="{{ url_for('static', filename='fonts.css') }}?v=1">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=26">
-<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=23">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=27">
+<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=24">
 <link rel="stylesheet" href="{{ url_for('static', filename='achievements.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=1">
 </head>
@@ -86,8 +86,12 @@
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.6" fill="#ffd54f" stroke="#e5a600" stroke-width="1.6"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5.3 5.3L7 7M17 17l1.7 1.7M18.7 5.3L17 7M7 17l-1.7 1.7" stroke="#e5a600" stroke-width="2" stroke-linecap="round"/></symbol>
 </svg>
 <header class="topbar">
-  <a href="/" class="logo"><svg class="logo-mark"><use href="#i-chick"/></svg><span>English Fun</span></a>
   {% set ep = request.endpoint or '' %}
+  {% if speech_area %}
+  <a href="{{ url_for('speech.logoped_home' if session.get('role') == 'logoped' else 'speech.family_home') }}" class="logo"><span class="logo-emoji">🗣️</span><span>Логопед</span></a>
+  {% else %}
+  <a href="/" class="logo"><svg class="logo-mark"><use href="#i-chick"/></svg><span>English Fun</span></a>
+  {% endif %}
   <nav>
     {% if session.get('role') == 'student' %}
       <a href="{{ url_for('student.student_home') }}" class="{{ 'on' if ep in ('student.student_home', 'student.lesson_page', 'student.submit_test') }}"><svg class="icon"><use href="#i-book"/></svg><span>Мои уроки</span></a>
@@ -95,6 +99,12 @@
       <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
     {% elif session.get('role') == 'parent' %}
       <a href="{{ url_for('parent.parent_dashboard') }}" class="{{ 'on' if ep.startswith('parent.') }}"><svg class="icon"><use href="#i-shield"/></svg><span>Администратор</span></a>
+      <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
+    {% elif session.get('role') == 'logoped' %}
+      <a href="{{ url_for('speech.logoped_home') }}" class="{{ 'on' if ep.startswith('speech.logoped') }}"><span>👩‍⚕️ Мои ученики</span></a>
+      <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
+    {% elif session.get('role') == 'family' %}
+      <a href="{{ url_for('speech.family_home') }}" class="on"><span>🏠 Кабинет родителя</span></a>
       <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
     {% endif %}
     <button type="button" class="theme-toggle" id="theme-toggle" title="Тёмная / светлая тема" aria-label="Переключить тёмную и светлую тему">
@@ -118,17 +128,19 @@
 {% block content %}{% endblock %}
 </main>
 
-<footer class="footer"><svg class="icon"><use href="#i-chick"/></svg> Сделано с любовью для изучения английского
+<footer class="footer">{% if speech_area %}🗣️ Логопедические занятия{% else %}<svg class="icon"><use href="#i-chick"/></svg> Сделано с любовью для изучения английского{% endif %}
   <span class="app-version" title="{{ app_version.subject }}">{{ app_version.full }}</span></footer>
 
 
-{# ---------- Анимированный помощник Чик-чик (правый нижний угол) ---------- #}
-<script>window.MASCOT_SETTINGS = {{ mascot|tojson }};</script>
+{# ---------- Анимированный помощник Чик-чик (правый нижний угол); в логопедической части его нет ---------- #}
 <script src="{{ url_for('static', filename='theme.js') }}?v=1"></script>
+{% if not speech_area %}
+<script>window.MASCOT_SETTINGS = {{ mascot|tojson }};</script>
 <script src="{{ url_for('static', filename='chick.js') }}?v=3"></script>
 <script src="{{ url_for('static', filename='mascot.js') }}?v=12"></script>
 <script src="{{ url_for('static', filename='tts.js') }}?v=3"></script>
 <script src="{{ url_for('static', filename='pwa.js') }}?v=2"></script>
+{% endif %}
 <script src="{{ url_for('static', filename='mobile.js') }}?v=2"></script>
 
 {% block scripts %}{% endblock %}

@@ -51,7 +51,7 @@ BEHIND_PROXY = _env_flag("ENGLISH_BEHIND_PROXY", False)
 
 # --- Ограничение попыток входа ----------------------------------------------
 LOGIN_WINDOW_SEC = 600                                   # окно подсчёта неудач: 10 минут
-LOGIN_LIMITS = {"ip": 10, "student": 8, "parent": 20}   # допустимо неудач за окно
+LOGIN_LIMITS = {"ip": 10, "student": 8, "parent": 20, "logoped": 10, "family": 8}   # допустимо неудач за окно
 
 
 def production_problems():

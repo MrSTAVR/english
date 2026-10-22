@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Мои ученики — кабинет логопеда{% endblock %}
+{% block content %}
+<h1>👩‍⚕️ Здравствуйте, {{ me.name }}!</h1>
+
+<section class="card">
+  <h2>🧒 Ученики ({{ clients|length }})</h2>
+  {% if clients %}
+  <div class="sp-list">
+    {% for c in clients %}
+    <a class="sp-row" href="{{ url_for('speech.logoped_client', cid=c.id) }}">
+      <b>{{ c.child_name }}</b>{% if c.birth_date %} <span class="hint">· {{ age(c.birth_date) }}</span>{% endif %}
+      <span class="sp-sub">{{ c.parent_name or '—' }}{% if c.phone %} · {{ c.phone }}{% endif %}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="hint">Учеников пока нет — добавьте первого ниже.</p>
+  {% endif %}
+</section>
+
+<section class="card" id="add">
+  <h2>➕ Новый ученик</h2>
+  <form method="post" action="{{ url_for('speech.logoped_client_add') }}" class="sp-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Имя ребёнка <input type="text" name="child_name" maxlength="60" required placeholder="Петя Иванов"></label>
+    <label>Дата рождения <input type="date" name="birth_date"></label>
+    <label>Родитель <input type="text" name="parent_name" maxlength="60" placeholder="Анна (мама)"></label>
+    <label>Телефон <input type="tel" name="phone" maxlength="30" placeholder="+7 900 000-00-00"></label>
+    <p class="hint sp-wide">Логин и пароль для «Кабинета родителя» — передайте их родителям. Вход: <b>{{ request.host_url }}family</b></p>
+    <label>Логин для родителей <input type="text" name="username" maxlength="20" required pattern="{{ username_re }}" autocapitalize="off" placeholder="petya"></label>
+    <label>Пароль (от {{ min_password }} символов) <input type="text" name="password" minlength="{{ min_password }}" required autocomplete="new-password"></label>
+    <button type="submit" class="btn btn-primary sp-wide">Добавить ученика</button>
+  </form>
+</section>
+
+{% if archived %}
+<details class="card">
+  <summary><b>🗄️ Архив ({{ archived|length }})</b> — занятия закончены</summary>
+  <div class="sp-list">
+    {% for c in archived %}
+    <a class="sp-row" href="{{ url_for('speech.logoped_client', cid=c.id) }}"><b>{{ c.child_name }}</b> <span class="sp-sub">{{ c.parent_name or '' }}</span></a>
+    {% endfor %}
+  </div>
+</details>
+{% endif %}
+{% endblock %}

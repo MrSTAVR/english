@@ -178,6 +178,27 @@ CREATE TABLE IF NOT EXISTS decorations (
     deco_key   TEXT NOT NULL,                  -- ключ из DECORATIONS
     slot       INTEGER NOT NULL                 -- слот на дереве (0..MAX_SLOTS-1)
 );
+-- Логопедическая часть (префикс sp_): логопеды и их ученики (семейные аккаунты)
+CREATE TABLE IF NOT EXISTS sp_logopeds (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    username      TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    name          TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at    TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS sp_clients (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    logoped_id    INTEGER NOT NULL,
+    child_name    TEXT NOT NULL,
+    birth_date    TEXT,                             -- ISO-дата или NULL
+    parent_name   TEXT,
+    phone         TEXT,
+    username      TEXT NOT NULL UNIQUE COLLATE NOCASE,   -- вход в «Кабинет родителя»
+    password_hash TEXT NOT NULL,
+    archived      INTEGER DEFAULT 0,                -- занятия закончены: скрыт из списка, вход закрыт
+    created_at    TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sp_clients_logoped ON sp_clients (logoped_id);
 CREATE TABLE IF NOT EXISTS login_failures (
     id    INTEGER PRIMARY KEY AUTOINCREMENT,
     scope TEXT NOT NULL,                       -- ip / student / parent

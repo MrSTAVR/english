@@ -873,3 +873,15 @@ button, input, select, textarea { font-family: inherit; }
 .upd-log summary{cursor:pointer;font-weight:700}
 .upd-log pre{max-height:320px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-size:.8rem;line-height:1.45;
   background:#f6f4fb;border-radius:12px;padding:10px 12px;margin-top:8px}
+/* Логопедическая часть */
+.logo-emoji{font-size:1.6rem;line-height:1}
+.sp-list{display:flex;flex-direction:column;gap:8px}
+.sp-row{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;padding:10px 12px;border:1px solid var(--border);border-radius:12px;
+  text-decoration:none;color:inherit;background:var(--surface)}
+.sp-row:hover{border-color:#a58bff}
+.sp-sub{flex-basis:100%;font-size:.88rem;opacity:.75}
+.sp-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 14px;align-items:end}
+.sp-form label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:.9rem}
+.sp-wide{grid-column:1/-1}
+.sp-soon{opacity:.75}
+.sp-admin-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}

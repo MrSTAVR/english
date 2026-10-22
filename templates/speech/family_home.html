@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Кабинет родителя{% endblock %}
+{% block content %}
+<h1>🏠 Кабинет родителя</h1>
+<p class="subtitle">{{ c.child_name }}{% if logoped %} · логопед: {{ logoped.name }}{% endif %}</p>
+<section class="card sp-soon">
+  <h2>🗓️ Скоро здесь</h2>
+  <p class="hint">Расписание занятий и запись на свободное время, домашние задания и успехи по звукам.</p>
+</section>
+{% endblock %}
