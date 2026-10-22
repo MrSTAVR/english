@@ -24,14 +24,15 @@
   <p><a class="btn btn-small" href="{{ url_for('speech.logoped_schedule') }}">Всё расписание →</a></p>
 </section>
 
-<section class="card">
+<section class="card" id="clients">
   <h2>🧒 Ученики ({{ clients|length }})</h2>
   {% if clients %}
   <div class="sp-list">
     {% for c in clients %}
     <a class="sp-row" href="{{ url_for('speech.logoped_client', cid=c.id) }}">
-      <b>{{ c.child_name }}</b>{% if c.birth_date %} <span class="hint">· {{ age(c.birth_date) }}</span>{% endif %}
-      <span class="sp-sub">{{ c.parent_name or '—' }}{% if c.phone %} · {{ c.phone }}{% endif %}</span>
+      <span class="sp-ava" aria-hidden="true">{{ c.child_name[:1] }}</span>
+      <span class="sp-who"><b>{{ c.child_name }}</b>{% if c.birth_date %} <span class="hint">· {{ age(c.birth_date) }}</span>{% endif %}
+      <span class="sp-sub">{{ c.parent_name or '—' }}{% if c.phone %} · {{ c.phone }}{% endif %}</span></span>
     </a>
     {% endfor %}
   </div>
