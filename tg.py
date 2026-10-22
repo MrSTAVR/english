@@ -3,9 +3,11 @@
 
 Настройки хранятся в таблице app_settings (вводятся в кабинете администратора):
 tg_token — токен бота от @BotFather, tg_chat — id чата администратора,
-tg_chat_name — как чат называется, tg_backups — "1"/"0", tg_last — итог последней отправки.
+tg_chat_name — как чат называется, tg_backups — "1"/"0", tg_last — итог последней отправки,
+tg_server — адрес сервера (запоминается из кабинета) для инструкции по восстановлению.
 Работает и без Flask: backup_db.py вызывает send_backup() из cron.
 """
+import html
 import json
 import logging
 import mimetypes
@@ -21,7 +23,7 @@ log = logging.getLogger(__name__)
 API = "https://api.telegram.org"
 TIMEOUT = 60
 MAX_FILE = 50 * 1024 * 1024          # бот не может отправить файл больше 50 МБ
-KEYS = ("tg_token", "tg_chat", "tg_chat_name", "tg_backups", "tg_last")
+KEYS = ("tg_token", "tg_chat", "tg_chat_name", "tg_backups", "tg_last", "tg_server")
 
 
 class TgError(Exception):
@@ -127,11 +129,38 @@ def send_message(token, chat, text):
     return call(token, "sendMessage", {"chat_id": chat, "text": text})
 
 
-def send_document(token, chat, path, caption=""):
+def send_document(token, chat, path, caption="", html_caption=False):
     size = os.path.getsize(path)
     if size > MAX_FILE:
         raise TgError(f"файл {size // (1024 * 1024)} МБ — больше лимита Telegram 50 МБ")
-    return call(token, "sendDocument", {"chat_id": chat, "caption": caption}, "document", path)
+    fields = {"chat_id": chat, "caption": caption}
+    if html_caption:
+        fields["parse_mode"] = "HTML"
+    return call(token, "sendDocument", fields, "document", path)
+
+
+BACKUPS_ON_SERVER = "/opt/english/backups"
+
+
+def restore_help(path, server="", on_server=True):
+    """Подпись к копии: размер и как восстановить из неё базу (HTML, в лимите подписи Telegram 1024 символа)."""
+    name = html.escape(os.path.basename(path))
+    host = html.escape(server or "адрес-сервера")
+    kb = max(1, os.path.getsize(path) // 1024)
+    lines = [f"💾 <b>Резервная копия English Fun</b> · {kb} КБ", "",
+             "<b>Как восстановить базу из этой копии:</b>",
+             "1. Скачайте файл на компьютер (в «Загрузки»).",
+             "2. В PowerShell отправьте его на сервер:",
+             f"<code>scp \"$HOME\\Downloads\\{name}\" root@{host}:/root/</code>",
+             f"3. Зайдите на сервер (<code>ssh root@{host}</code>) и выполните:",
+             f"<code>bash /opt/english/app/deploy/restore.sh /root/{name}</code>",
+             "",
+             "Копия проверяется до начала. Текущая база не удаляется — откладывается как "
+             "<code>*.before-restore-…</code>, сайт перезапускается сам."]
+    if on_server:
+        lines += ["", "Если копия ещё есть на сервере, шаги 1–2 не нужны:",
+                  f"<code>bash /opt/english/app/deploy/restore.sh {BACKUPS_ON_SERVER}/{name}</code>"]
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------- бэкапы
@@ -140,15 +169,16 @@ def _stamp(db, text):
     save(db, tg_last=f"{time.strftime('%d.%m.%Y %H:%M')} — {text}")
 
 
-def send_backup(db, path, force=False):
-    """Отправляет копию базы администратору. True — отправлено, False — не настроено/выключено.
-    force=True — отправить, даже если ежедневная отправка выключена (кнопка в кабинете)."""
+def send_backup(db, path, force=False, on_server=True):
+    """Отправляет копию базы администратору с инструкцией по восстановлению.
+    True — отправлено, False — не настроено/выключено.
+    force=True — отправить, даже если ежедневная отправка выключена (кнопка в кабинете);
+    on_server=False — копия на сервере не сохраняется (ручная), в инструкции нет пути на сервере."""
     s = settings(db)
     if not s["linked"] or not (s["backups_on"] or force):
         return False
-    kb = max(1, os.path.getsize(path) // 1024)
     try:
-        send_document(s["tg_token"], s["tg_chat"], path, f"💾 Резервная копия English Fun · {kb} КБ")
+        send_document(s["tg_token"], s["tg_chat"], path, restore_help(path, s["tg_server"], on_server), True)
     except TgError as e:
         _stamp(db, f"❌ не отправлено: {e}")
         raise

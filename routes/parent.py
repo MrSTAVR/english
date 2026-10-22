@@ -528,16 +528,20 @@ def parent_telegram():
     if err:
         return err
     db = get_db()
+    s = tg.settings(db)
+    host = request.host.split(":")[0]
+    if s["tg_token"] and host not in ("localhost", "127.0.0.1", s["tg_server"]):
+        tg.save(db, tg_server=host)                    # для инструкции «как восстановить» в подписи к копии
     if request.method == "GET":
         return _admin("telegram.html", tab="telegram", tg=tg.settings(db))
-    s = tg.settings(db)
     action = request.form.get("action")
     try:
         if action == "token":
             token = (request.form.get("token") or "").strip()
             name = tg.check_token(token)
             tg.forget(db)
-            tg.save(db, tg_token=token, tg_chat_name=name)
+            tg.save(db, tg_token=token, tg_chat_name=name,
+                    tg_server=None if host in ("localhost", "127.0.0.1") else host)
             flash(f"Бот {name} подключён ✅ Теперь откройте его в Telegram, нажмите «Запустить» и вернитесь сюда.", "ok")
         elif action == "link":
             chat, name = tg.find_chat(s["tg_token"])
@@ -550,7 +554,7 @@ def parent_telegram():
         elif action == "backup":
             # сайту (systemd, ProtectSystem=strict) нельзя писать в папку копий — делаем во временной и удаляем
             with tempfile.TemporaryDirectory() as tmp:
-                tg.send_backup(db, backup_db.make_backup(database.DB_PATH, tmp), force=True)
+                tg.send_backup(db, backup_db.make_backup(database.DB_PATH, tmp), force=True, on_server=False)
             flash("Копия базы отправлена в Telegram 💾", "ok")
         elif action in ("backups_on", "backups_off"):
             tg.save(db, tg_backups="1" if action == "backups_on" else "0")
