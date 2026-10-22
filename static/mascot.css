@@ -11,9 +11,9 @@
 
 /* ---------- облачко с репликой ---------- */
 .mascot-balloon { position: relative; max-width: min(330px, 74vw); box-sizing: border-box;
-  background: rgba(255, 255, 255, .96); color: var(--ink); border: 2px solid rgba(124, 92, 255, .22);
+  background: rgba(255, 255, 255, .96); color: var(--ink); border: 2px solid rgba(37, 99, 201, .22);
   border-radius: 22px 22px 6px 22px; padding: 22px 38px 12px 16px;
-  box-shadow: 0 14px 34px rgba(90, 63, 214, .22); backdrop-filter: blur(8px);
+  box-shadow: 0 14px 34px rgba(30, 42, 69, .22); backdrop-filter: blur(8px);
   font-weight: 700; line-height: 1.4; font-size: .98rem;
   opacity: 0; transform: translateY(12px) scale(.86); transform-origin: 90% 100%;
   transition: opacity .25s ease, transform .35s cubic-bezier(.2, .9, .3, 1.35); pointer-events: none; }
@@ -21,23 +21,23 @@
 .mascot-balloon.collapsed { opacity: 0; transform: translateY(8px) scale(.9); pointer-events: none; }
 .mascot-balloon .mb-name { position: absolute; top: -11px; left: 14px; font-size: .72rem; font-weight: 900;
   letter-spacing: .03em; color: #fff; padding: 3px 11px; border-radius: 999px;
-  background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: 0 3px 8px rgba(124, 92, 255, .35); }
+  background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: 0 3px 8px rgba(37, 99, 201, .35); }
 .mascot-balloon .mb-text { white-space: pre-line; }
 .mascot-balloon .mb-text .caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -2px;
   background: var(--primary); animation: mb-caret .6s steps(1) infinite; }
 @keyframes mb-caret { 50% { opacity: 0; } }
 .mascot-balloon .mb-close { position: absolute; top: 6px; right: 7px; width: 26px; height: 26px; border: 0; border-radius: 50%;
   background: transparent; color: var(--muted); font-size: .95rem; line-height: 1; cursor: pointer; }
-.mascot-balloon .mb-close:hover { background: #f1ecff; color: var(--primary-dark); }
+.mascot-balloon .mb-close:hover { background: var(--tint); color: var(--primary-dark); }
 .mascot-balloon::after { content: ""; position: absolute; right: 30px; bottom: -9px; width: 16px; height: 16px;
-  background: inherit; border-right: 2px solid rgba(124, 92, 255, .22); border-bottom: 2px solid rgba(124, 92, 255, .22);
+  background: inherit; border-right: 2px solid rgba(37, 99, 201, .22); border-bottom: 2px solid rgba(37, 99, 201, .22);
   transform: rotate(45deg); border-radius: 0 0 5px 0; }
 
 /* ---------- сам персонаж ---------- */
 .mascot-body { position: relative; width: 104px; height: 108px; padding: 0; border: 0; background: none; cursor: pointer;
   transform-origin: 50% 96%; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-  -webkit-user-select: none; user-select: none; filter: drop-shadow(0 8px 10px rgba(90, 63, 214, .18)); }
-.mascot-body:focus-visible { outline: 3px solid rgba(124, 92, 255, .5); outline-offset: 4px; border-radius: 24px; }
+  -webkit-user-select: none; user-select: none; filter: drop-shadow(0 8px 10px rgba(30, 42, 69, .18)); }
+.mascot-body:focus-visible { outline: 3px solid rgba(37, 99, 201, .5); outline-offset: 4px; border-radius: 24px; }
 .mascot-body.is-gone { visibility: hidden; }
 .m-puff { width: 100%; height: 100%; transform-origin: 50% 94%; transform: scale(var(--puff, 1));
   transition: transform .25s cubic-bezier(.3, 1.6, .5, 1); }
@@ -68,12 +68,12 @@
 .chick.s-blink.s-happy .ec-l, .chick.s-blink.s-happy .ec-r { display: none; }
 .chick.s-blink.s-happy .eh { display: inline; }
 
-/* --- клюв «говорит» --- */
-.chick .c-beak-low { transform-origin: 60px 78px; transform: scaleY(.55); }
-.chick.is-talking .c-beak-low { animation: c-talk .2s ease-in-out infinite alternate; }
-@keyframes c-talk { from { transform: scaleY(.55); } to { transform: scaleY(1.45); } }
-.chick.s-happy .c-beak-low { transform: scaleY(1.2); }
-.chick.s-wide .c-beak-low { transform: scaleY(1.5); }
+/* --- клюв «говорит»: клюв один, при разговоре он шевелится (нижней половинки нет — выглядело как два клюва) --- */
+.chick .c-beak-low { display: none; }
+.chick .c-beak { transform-box: view-box; transform-origin: 60px 66px; }
+.chick.is-talking .c-beak { animation: c-talk .2s ease-in-out infinite alternate; }
+@keyframes c-talk { from { transform: scaleY(.85); } to { transform: scaleY(1.25); } }
+.chick.s-wide .c-beak { transform: scaleY(1.2); }
 
 /* --- эффекты вокруг головы --- */
 .chick .fx { opacity: 0; transform-box: fill-box; transform-origin: center; }
@@ -177,7 +177,7 @@
 /* ---------- кнопка «вернуть помощника» ---------- */
 .mascot-reopen { position: fixed; z-index: 998; width: 52px; height: 52px; border-radius: 50%; padding: 0; cursor: pointer;
   right: max(14px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom));
-  border: 3px solid #ffd54f; background: #fff; box-shadow: 0 6px 16px rgba(90, 63, 214, .25); }
+  border: 3px solid #ffd54f; background: #fff; box-shadow: 0 6px 16px rgba(30, 42, 69, .25); }
 .mascot-reopen svg { width: 100%; height: 100%; display: block; }
 .mascot-reopen:hover { transform: scale(1.08); }
 

@@ -8,7 +8,7 @@
 
 /* ---------- медаль ---------- */
 .medal { --s: 88px; display: inline-block; width: var(--s); height: calc(var(--s) * 1.12); flex: none; position: relative; line-height: 0; }
-.medal-svg { width: 100%; height: 100%; overflow: visible; display: block; filter: drop-shadow(0 4px 4px rgba(90, 63, 214, .22)); }
+.medal-svg { width: 100%; height: 100%; overflow: visible; display: block; filter: drop-shadow(0 4px 4px rgba(30, 42, 69, .22)); }
 .medal .m-shine { animation: m-shine 5s ease-in-out infinite; }
 .tier-gold .medal .m-shine, .medal.tier-gold .m-shine { animation-duration: 3.6s; }
 .medal.tier-legend .m-shine { animation-duration: 2.8s; }
@@ -33,9 +33,9 @@
 .ach-card-date { font-size: .76rem; font-weight: 800; color: var(--muted); margin-top: 4px; letter-spacing: .02em; }
 .ach-card.is-earned .ach-card-date { color: #8a6d1c; }
 .ach-prog { height: 10px; border-radius: 999px; background: #ece7fa; margin-top: 6px; overflow: hidden; border: 1.5px solid var(--line); }
-.ach-prog-fill { height: 100%; border-radius: 999px; background: repeating-linear-gradient(-45deg, var(--primary) 0 8px, #8f73ff 8px 16px); min-width: 6px; }
+.ach-prog-fill { height: 100%; border-radius: 999px; background: repeating-linear-gradient(-45deg, var(--primary) 0 8px, #8FB4FF 8px 16px); min-width: 6px; }
 .tier-bronze .ach-prog-fill { background: var(--t-bronze); } .tier-silver .ach-prog-fill { background: var(--t-silver); }
-.tier-gold .ach-prog-fill { background: var(--t-gold); } .tier-legend .ach-prog-fill { background: linear-gradient(90deg, #ff7ab6, #ffd54f, #6fe3b0, #7c5cff); }
+.tier-gold .ach-prog-fill { background: var(--t-gold); } .tier-legend .ach-prog-fill { background: linear-gradient(90deg, #ff7ab6, #ffd54f, #6fe3b0, var(--primary)); }
 
 /* ---------- страница коллекции ---------- */
 .ach-hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; align-items: center; }
@@ -52,7 +52,7 @@
 .tier-chip.tier-bronze { background: var(--t-bronze-bg); border-color: #f4c7a0; } .tier-chip.tier-bronze i { background: var(--t-bronze); }
 .tier-chip.tier-silver { background: var(--t-silver-bg); border-color: #c9d3ea; } .tier-chip.tier-silver i { background: var(--t-silver); }
 .tier-chip.tier-gold { background: var(--t-gold-bg); border-color: #ffd54f; } .tier-chip.tier-gold i { background: var(--t-gold); }
-.tier-chip.tier-legend { background: var(--t-legend-bg); border-color: #d9b8ff; } .tier-chip.tier-legend i { background: linear-gradient(135deg, #ff7ab6, #7c5cff); }
+.tier-chip.tier-legend { background: var(--t-legend-bg); border-color: #d9b8ff; } .tier-chip.tier-legend i { background: linear-gradient(135deg, #ff7ab6, var(--primary)); }
 .ach-cat { display: flex; align-items: center; gap: 10px; margin: 22px 0 4px; }
 .pill-link { text-decoration: none; transition: transform .12s; } .pill-link:hover { transform: translateY(-1px); }
 @media (max-width: 760px) { .ach-hero { grid-template-columns: 1fr; } .ach-cards { grid-template-columns: 1fr; } }
@@ -93,7 +93,7 @@ body.ceremony .mascot { z-index: 1010; }
   color: #3b2a00; background: #ffd54f; box-shadow: 0 3px 0 #b88a00; animation: ach-up .5s .25s cubic-bezier(.3, 1.5, .5, 1) both; }
 .tier-bronze .ach-tierlabel { background: #f4a261; color: #4a2300; box-shadow: 0 3px 0 #a8561d; }
 .tier-silver .ach-tierlabel { background: #e6ecf8; color: #2b3552; box-shadow: 0 3px 0 #8d9ab8; }
-.tier-legend .ach-tierlabel { background: linear-gradient(90deg, #ff7ab6, #ffd54f, #6fe3b0, #7c5cff); color: #2a1450; box-shadow: 0 3px 0 #5a3fd6; }
+.tier-legend .ach-tierlabel { background: linear-gradient(90deg, #ff7ab6, #ffd54f, #6fe3b0, var(--primary)); color: #2a1450; box-shadow: 0 3px 0 var(--primary-dark); }
 .ach-medal-big { position: relative; border: 0; background: none; padding: 0; cursor: pointer; --s: 190px; margin: 6px 0 0;
   animation: medal-in 1s cubic-bezier(.25, 1.3, .4, 1) both; -webkit-tap-highlight-color: transparent; }
 .ach-medal-big .medal { --s: 190px; }

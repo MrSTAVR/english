@@ -21,6 +21,7 @@
 - Фронтенд: `templates/` (Jinja), `static/` (`style.css`, `theme.css` — тема перекрывает style.css, `games.js`, `stories.js`, `writing.js`, `chick.js` — рисунок цыплёнка и наряды, `house.js`, `mascot.js`, `tts.js`, `sw.js`, `pwa.js`…).
 
 ## Важные правила и ловушки
+- **Дизайн:** ориентир — макет «English Fun — дизайн-ориентир» в Claude Design (https://claude.ai/artifact/ExEnrW7GntAQH3XFo2r4RD). English Fun: кремовый фон `#FFF7E8`, синий акцент `#2563C9`, жёлтый `#FFC83D` (Чик-чик и главная кнопка), белые карточки с рамкой 2px `#F0E3C8` и тенью снизу, Nunito. Логопед и семья (`body.area-speech`): бирюза `#1F6F66`, Manrope, тонкие рамки без теней, без Чик-чика. Цвета — только через переменные (`--primary`, `--tint`, `--line`…), их задаёт `static/design.css` (подключён последним, там же тёмные темы обеих частей). Шрифты локальные (`tools/fetch_fonts.py`). У Чик-чика один клюв.
 - **Телефон:** вёрстка должна помещаться в 360px без горизонтальной прокрутки (узкие правки — в конце `theme.css`).
 - **Кэш статики:** при правке JS/CSS поднимай `?v=N` у подключения в `templates/base.html` (или в шаблоне страницы), иначе у ребёнка останется старый файл. `sw.js` версионируется сам.
 - **CSRF:** в формах — скрытое поле `csrf_token()`; в `fetch` — заголовок `X-CSRF-Token` из `<meta name="csrf-token">`.
