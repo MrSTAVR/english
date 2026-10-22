@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+"""Дизайн 3.0: файл стилей подключён, логопедическая часть в своём стиле, шрифты локальные, у Чик-чика один клюв."""
+import re
+from pathlib import Path
+
+STATIC = Path(__file__).resolve().parent.parent / "static"
+
+
+def test_design_css_is_last_and_versioned(anon):
+    body = anon.get("/").get_data(as_text=True)
+    links = re.findall(r'href="/static/([\w.]+\.css)\?v=\d+"', body)
+    assert links[-1] == "design.css"
+    assert 'class="area-speech"' not in body
+
+
+def test_speech_area_has_own_style(anon):
+    assert 'class="area-speech"' in anon.get("/logoped").get_data(as_text=True)
+    css = (STATIC / "design.css").read_text(encoding="utf-8")
+    assert "body.area-speech" in css and "Manrope" in css
+    assert 'html[data-theme="dark"] body.area-speech' in css
+
+
+def test_fonts_are_local():
+    css = (STATIC / "fonts.css").read_text(encoding="utf-8")
+    assert "'Manrope'" in css and "'Nunito'" in css and "gstatic" not in css
+    for rel in re.findall(r"url\(([^)]+\.woff2)\)", css):
+        assert (STATIC / rel).is_file(), rel
+
+
+def test_chick_has_one_beak():
+    css = (STATIC / "mascot.css").read_text(encoding="utf-8")
+    assert re.search(r"\.chick \.c-beak-low \{ display: none; \}", css)
+    assert "is-talking .c-beak {" in css
+    assert 'class="c-beak"' in (STATIC / "chick.js").read_text(encoding="utf-8")
+
+
+def test_manifest_colors(anon):
+    data = anon.get("/manifest.webmanifest").get_json()
+    assert data["theme_color"] == "#FFF7E8"

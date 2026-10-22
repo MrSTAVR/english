@@ -30,7 +30,7 @@
           '<g class="brows"><path d="M39 50 L52 46" stroke="#3b2a6b" stroke-width="2.6" stroke-linecap="round"/>' +
             '<path d="M81 50 L68 46" stroke="#3b2a6b" stroke-width="2.6" stroke-linecap="round"/></g>' +
         '</g>' +
-        '<path d="M51 66 Q60 62 69 66 L60 77 Z" fill="#FB8C00"/>' +
+        '<path class="c-beak" d="M51 66 Q60 62 69 66 L60 77 Z" fill="#FB8C00"/>' +
         '<g class="c-beak-low"><path d="M53 75 Q60 85 67 75 Z" fill="#F57C00"/></g>' +
         '@@OUTFIT@@' +
       '</g>' +

@@ -6,7 +6,7 @@
   var meta = document.querySelector('meta[name=theme-color]');
   function apply(t) {
     root.setAttribute('data-theme', t);
-    if (meta) meta.setAttribute('content', t === 'dark' ? '#14112a' : '#7c5cff');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#16132B' : '#FFF7E8');
     if (btn) btn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
   }
   function saved() { try { var t = localStorage.getItem('theme'); return t === 'dark' || t === 'light' ? t : null; } catch (e) { return null; } }

@@ -1,0 +1,167 @@
+/* ============================================================
+   English Fun — дизайн 3.0 (макет «English Fun — дизайн-ориентир» в Claude Design).
+   Тёплый кремовый фон, синий акцент, жёлтый — Чик-чик и главная кнопка,
+   белые карточки с рамкой 2px и «объёмной» тенью снизу. Шрифт Nunito.
+   Логопедическая часть (body.area-speech) — спокойная: бирюза, Manrope, тонкие рамки без теней.
+   Подключается ПОСЛЕДНИМ и переопределяет style.css и theme.css.
+   ============================================================ */
+
+:root {
+  --primary: #2563C9;          /* синий акцент */
+  --primary-dark: #1E4FA8;
+  --primary-deep: #173F87;     /* тень синей кнопки */
+  --yellow: #FFC83D;           /* Чик-чик и главная кнопка */
+  --yellow-deep: #D99A00;
+  --green: #1E9E5A;
+  --green-deep: #157A44;
+  --ink: #1E2A45;
+  --muted: #5E6478;
+  --line: #F0E3C8;             /* рамка карточек */
+  --line-deep: #E3CFA4;
+  --shade: #EAD9B5;            /* «объёмная» тень снизу */
+  --tint: #FFF3D9;             /* песочная подложка */
+  --sky: #E3EDFC;              /* голубая плитка */
+  --sand: #FFEFC2;             /* песочная плитка */
+  --surface: #FFFFFF;
+  --border: #F0E3C8;
+  --page: #FFF7E8;
+  --radius: 24px;
+  --shadow: 0 4px 0 var(--shade);
+  --shadow-lg: 0 6px 0 var(--line-deep), 0 14px 26px rgba(30, 42, 69, .08);
+  --ok-bg: #DDF5E7; --ok-ink: #146C3E;
+  --oops-bg: #FFE9D6; --oops-ink: #9A3B00;
+}
+
+body { background: var(--page); color: var(--ink); background-attachment: scroll; }
+.container { color: var(--ink); }
+h1, h2, h3 { color: var(--ink); font-weight: 900; }
+a { color: var(--primary); }
+
+/* ---------- шапка ---------- */
+.topbar { background: #FFFFFF; border: 2px solid var(--line); box-shadow: 0 3px 0 var(--shade); }
+.logo span { background: none; -webkit-background-clip: initial; background-clip: initial; color: var(--ink); font-weight: 900; }
+.topbar nav a { color: var(--ink); }
+.topbar nav a:hover { background: var(--tint); }
+.topbar nav a.on { background: var(--primary); color: #FFFFFF; box-shadow: 0 3px 0 var(--primary-deep); }
+.topbar nav a.nav-exit { color: var(--muted); }
+
+/* ---------- карточки, плашки ---------- */
+.card, .glass { background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.card-inner { background: var(--tint); border: 2px solid var(--line); }
+.lesson-card:hover, .stat:hover, .ach:hover { box-shadow: var(--shadow-lg); }
+.pill-soft { background: var(--sand); color: #8A5A00; border: 2px solid #F3DFA6; }
+.chip { background: var(--surface); border-color: var(--line); }
+.chip:hover, .tile:hover, a.week-card:hover { border-color: var(--primary); }
+.tile { background: var(--surface); border-color: var(--line); box-shadow: var(--shadow); }
+.mini-progress { background: #F3EBDA; border-color: var(--line); }
+.mini-fill { background: var(--primary); }
+.tbl { border-color: var(--line); }
+.tbl th { background: var(--tint); color: var(--ink); border-bottom-color: var(--line); }
+.tbl td, .tbl th { border-bottom-color: #F3EBDA; }
+.hl { background: linear-gradient(transparent 62%, #FFE08A 62%); }
+
+/* ---------- кнопки ---------- */
+.btn-primary { background: var(--primary); color: #FFFFFF; box-shadow: 0 4px 0 var(--primary-deep); }
+.btn-primary:hover { box-shadow: 0 5px 0 var(--primary-deep); }
+.btn-primary:active { box-shadow: 0 1px 0 var(--primary-deep); }
+.btn-secondary { background: var(--yellow); color: var(--ink); box-shadow: 0 4px 0 var(--yellow-deep); }
+.btn-secondary:hover { box-shadow: 0 5px 0 var(--yellow-deep); }
+.btn-secondary:active { box-shadow: 0 1px 0 var(--yellow-deep); }
+.btn-big { background: var(--green); box-shadow: 0 5px 0 var(--green-deep); }
+.btn-small { background: var(--surface); color: var(--ink); border: 2px solid var(--line); box-shadow: 0 3px 0 var(--shade); }
+.btn-locked { background: #ECE4D3; color: #6E6553; box-shadow: 0 3px 0 #D8CDB6; }
+
+/* ---------- поля ---------- */
+input[type=text], input[type=password], input[type=number], input[type=search], input[type=date], input[type=time],
+select, textarea, .typein, .login-card input, .student-form input, .student-form select {
+  border-color: var(--line-deep); color: var(--ink); background: #FFFFFF; box-shadow: none;
+}
+input:focus, select:focus, textarea:focus, .typein:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 201, .18); }
+
+/* ---------- ответы ---------- */
+.flash-success { background: var(--ok-bg); border-color: #9ED9B4; color: var(--ok-ink); }
+.flash-error { background: var(--oops-bg); border-color: #F5C49B; color: var(--oops-ink); }
+
+/* ---------- вход ---------- */
+.login-card:nth-child(1), .login-card:nth-child(2) { border-color: var(--line); box-shadow: var(--shadow); }
+.hero-chick { filter: drop-shadow(0 8px 10px rgba(30, 42, 69, .12)); }
+
+/* ---------- кабинет администратора: вкладки ---------- */
+.admin-tabs a { color: var(--ink); background: var(--surface); border-color: var(--line); }
+.admin-tabs a.on { background: var(--primary); color: #FFFFFF; border-color: transparent; box-shadow: 0 3px 0 var(--primary-deep); }
+.adm-chip { background: var(--surface); border-color: var(--line); }
+.adm-ok { color: var(--ok-ink); }
+
+/* ============================================================
+   Тёмная тема English Fun (вечерняя)
+   ============================================================ */
+html[data-theme="dark"] {
+  --primary: #3B6FD8; --primary-dark: #8FB4FF; --primary-deep: #0E0B1F;
+  --yellow-deep: #B88300;
+  --ink: #F2EFFF; --muted: #B3ADD3;
+  --line: #322C57; --line-deep: #433A72; --shade: #0E0B1F;
+  --tint: #2A2550; --sky: #1E2A4D; --sand: #3A2F1A;
+  --surface: #221E3D; --border: #322C57; --page: #16132B;
+  --shadow: 0 4px 0 #0E0B1F; --shadow-lg: 0 6px 0 #0E0B1F, 0 14px 26px rgba(0, 0, 0, .35);
+  --ok-bg: #183D2A; --ok-ink: #8FE3B0; --oops-bg: #45260F; --oops-ink: #FFB27A;
+}
+html[data-theme="dark"] body { background: var(--page); color: var(--ink); }
+html[data-theme="dark"] .topbar { background: #1C1835; border-color: var(--line); box-shadow: 0 3px 0 #0E0B1F; }
+html[data-theme="dark"] .card, html[data-theme="dark"] .glass { background: var(--surface); }
+html[data-theme="dark"] .card-inner { background: var(--tint); }
+html[data-theme="dark"] .btn-secondary { color: #1E2A45; }
+html[data-theme="dark"] .btn-small { background: var(--surface); color: var(--ink); border-color: var(--line); box-shadow: 0 3px 0 #0E0B1F; }
+html[data-theme="dark"] .pill-soft { background: var(--sand); color: #FFE3A3; border-color: #4A3C1F; }
+html[data-theme="dark"] .mini-progress { background: var(--line); }
+html[data-theme="dark"] .mini-fill { background: #8FB4FF; }
+html[data-theme="dark"] input[type=text], html[data-theme="dark"] input[type=password], html[data-theme="dark"] input[type=number],
+html[data-theme="dark"] input[type=search], html[data-theme="dark"] input[type=date], html[data-theme="dark"] input[type=time],
+html[data-theme="dark"] select, html[data-theme="dark"] textarea, html[data-theme="dark"] .typein {
+  background: #1C1835; color: var(--ink); border-color: var(--line-deep);
+}
+html[data-theme="dark"] .container a:not([class]) { color: #8FB4FF; }
+html[data-theme="dark"] .topbar nav a, html[data-theme="dark"] .admin-tabs a { color: var(--ink); }
+html[data-theme="dark"] .topbar nav a.on, html[data-theme="dark"] .admin-tabs a.on { color: #FFFFFF; }
+html[data-theme="dark"] .btn-primary, html[data-theme="dark"] a.btn-primary { color: #FFFFFF; }
+
+/* ============================================================
+   Логопедическая часть: спокойный деловой стиль (Manrope, бирюза)
+   ============================================================ */
+body.area-speech {
+  --primary: #1F6F66; --primary-dark: #164F49; --primary-deep: #123F3A;
+  --ink: #1C2230; --muted: #5B6270;
+  --line: #E6E3DB; --line-deep: #D9D5CB; --shade: transparent;
+  --tint: #E2F0EC; --surface: #FFFFFF; --border: #E6E3DB; --page: #F5F4F0;
+  --radius: 20px; --shadow: none; --shadow-lg: 0 8px 20px rgba(28, 34, 48, .08);
+  --ok-bg: #DDF5E7; --ok-ink: #146C3E; --oops-bg: #FCE4DC; --oops-ink: #8A3612;
+  font-family: Manrope, system-ui, sans-serif;
+}
+body.area-speech h1, body.area-speech h2, body.area-speech h3 { font-weight: 800; }
+body.area-speech .card, body.area-speech .glass { border-width: 1px; box-shadow: none; }
+body.area-speech .topbar { border-width: 1px; box-shadow: none; }
+body.area-speech .btn { border-radius: 12px; font-weight: 700; }
+body.area-speech .btn:hover, body.area-speech .btn:active { transform: none; }
+body.area-speech .btn-primary, body.area-speech .btn-primary:hover, body.area-speech .btn-primary:active { box-shadow: none; }
+body.area-speech .btn-secondary { background: var(--tint); color: var(--primary-dark); box-shadow: none; }
+body.area-speech .btn-small { border-width: 1px; box-shadow: none; }
+body.area-speech .btn-danger { box-shadow: none; }
+body.area-speech .topbar nav a.on { box-shadow: none; }
+
+html[data-theme="dark"] body.area-speech {
+  --primary: #3FB5A5; --primary-dark: #9FE0D4; --primary-deep: #0E1A18;
+  --ink: #E8ECEF; --muted: #9AA4AE;
+  --line: #2E363F; --line-deep: #3A444E; --tint: #183A36;
+  --surface: #1E242B; --border: #2E363F; --page: #14181D;
+  --ok-bg: #1F3D27; --ok-ink: #9FE0AD; --oops-bg: #3D2219; --oops-ink: #F4B49A;
+}
+html[data-theme="dark"] body.area-speech .topbar { background: #1A2026; }
+html[data-theme="dark"] body.area-speech .btn-primary, html[data-theme="dark"] body.area-speech .topbar nav a.on { color: #0E1A18; }
+html[data-theme="dark"] body.area-speech .container a:not([class]) { color: #9FE0D4; }
+html[data-theme="dark"] body.area-speech input[type=text], html[data-theme="dark"] body.area-speech input[type=password],
+html[data-theme="dark"] body.area-speech input[type=number], html[data-theme="dark"] body.area-speech input[type=date],
+html[data-theme="dark"] body.area-speech input[type=time], html[data-theme="dark"] body.area-speech select,
+html[data-theme="dark"] body.area-speech textarea { background: #1A2026; border-color: var(--line-deep); }
+
+/* ---------- узкие телефоны ---------- */
+select, input, textarea { max-width: 100%; box-sizing: border-box; }
+.sp-btns { flex-wrap: wrap; justify-content: flex-end; }
