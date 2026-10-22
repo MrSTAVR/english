@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Служебные страницы: проверка работоспособности, robots.txt, понятные страницы ошибок."""
 
-from flask import Blueprint, Response, render_template
+from flask import Blueprint, Response, jsonify, render_template
 
 from database import get_db
 
@@ -21,6 +21,13 @@ def healthz():
     """Для мониторинга: отвечает «ok», если приложение и база работают."""
     get_db().execute("SELECT 1").fetchone()
     return Response("ok", mimetype="text/plain", headers={"Cache-Control": "no-store"})
+
+
+@bp.route("/version")
+def version():
+    """Какая версия кода сейчас работает (для проверки после обновления)."""
+    from version import info
+    return jsonify(info())
 
 
 @bp.route("/robots.txt")

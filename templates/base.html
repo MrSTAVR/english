@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="English Fun">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="{{ url_for('static', filename='fonts.css') }}?v=1">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=23">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=24">
 <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=22">
 <link rel="stylesheet" href="{{ url_for('static', filename='achievements.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=1">
@@ -118,7 +118,8 @@
 {% block content %}{% endblock %}
 </main>
 
-<footer class="footer"><svg class="icon"><use href="#i-chick"/></svg> Сделано с любовью для изучения английского</footer>
+<footer class="footer"><svg class="icon"><use href="#i-chick"/></svg> Сделано с любовью для изучения английского
+  <span class="app-version" title="{{ app_version.subject }}">{{ app_version.full }}</span></footer>
 
 
 {# ---------- Анимированный помощник Чик-чик (правый нижний угол) ---------- #}
