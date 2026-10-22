@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Файлы развёртывания: скрипты синтаксически верны и не испорчены Windows-переводами строк."""
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -7,7 +8,7 @@ from pathlib import Path
 import pytest
 
 DEPLOY = Path(__file__).resolve().parent.parent / "deploy"
-SCRIPTS = ["setup.sh", "update.sh", "restore.sh", "check.sh"]
+SCRIPTS = ["setup.sh", "update.sh", "restore.sh", "check.sh", "autoupdate.sh", "setup-autoupdate.sh"]
 
 
 @pytest.mark.parametrize("name", SCRIPTS)
@@ -29,3 +30,87 @@ def test_service_and_caddy_templates():
 def test_setup_does_not_touch_xray_port():
     setup = (DEPLOY / "setup.sh").read_text(encoding="utf-8")
     assert 'HTTPS_PORT="${HTTPS_PORT:-8443}"' in setup and ":443" not in setup
+
+
+def test_autoupdate_units():
+    svc = (DEPLOY / "english-autoupdate.service").read_text(encoding="utf-8")
+    timer = (DEPLOY / "english-autoupdate.timer").read_text(encoding="utf-8")
+    assert "Type=oneshot" in svc and "/opt/english/app/deploy/autoupdate.sh" in svc
+    assert "OnUnitActiveSec=5min" in timer and "WantedBy=timers.target" in timer
+    for name in ("english-autoupdate.service", "english-autoupdate.timer"):
+        assert b"\r" not in (DEPLOY / name).read_bytes()
+
+
+def _git(cwd, *args):
+    subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *args], cwd=cwd, check=True,
+                   capture_output=True)
+
+
+@pytest.mark.skipif(not (shutil.which("git") and shutil.which("flock") and shutil.which("bash")),
+                    reason="нужны git, flock и bash")
+def test_autoupdate_updates_and_rolls_back(tmp_path):
+    """Песочница: «GitHub» — локальный bare-репозиторий; systemctl/curl/pip — заглушки.
+    update.sh в песочнице делает git pull и «падает», если в коде есть файл BROKEN."""
+    origin, work, app = tmp_path / "origin.git", tmp_path / "work", tmp_path / "app"
+    fake = tmp_path / "bin"
+    fake.mkdir()
+    for tool in ("systemctl", "curl"):
+        (fake / tool).write_text("#!/bin/sh\nexit 0\n")
+        (fake / tool).chmod(0o755)
+    (tmp_path / "venv" / "bin").mkdir(parents=True)
+    (tmp_path / "venv" / "bin" / "pip").write_text("#!/bin/sh\nexit 0\n")
+    (tmp_path / "venv" / "bin" / "pip").chmod(0o755)
+
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(origin)], check=True)
+    subprocess.run(["git", "clone", "-q", str(origin), str(work)], check=True, capture_output=True)
+    (work / "deploy").mkdir()
+    (work / "deploy" / "update.sh").write_text(
+        "#!/usr/bin/env bash\nset -e\ncd \"$APP_DIR\"\ngit pull -q --ff-only\n[ ! -f BROKEN ]\n")
+    (work / "requirements.txt").write_text("")
+    (work / "v.txt").write_text("1")
+    _git(work, "checkout", "-q", "-b", "main")
+    _git(work, "add", ".")
+    _git(work, "commit", "-qm", "v1")
+    _git(work, "push", "-q", "origin", "main")
+    subprocess.run(["git", "clone", "-q", "-b", "main", str(origin), str(app)], check=True, capture_output=True)
+
+    env = {**os.environ, "APP_DIR": str(app), "VENV": str(tmp_path / "venv"), "STATE": str(tmp_path / "state"),
+           "PATH": f"{fake}:{os.environ['PATH']}"}
+
+    def run():
+        return subprocess.run(["bash", str(DEPLOY / "autoupdate.sh")], env=env, capture_output=True, text=True)
+
+    def head():
+        return subprocess.run(["git", "rev-parse", "HEAD"], cwd=app, capture_output=True, text=True).stdout.strip()
+
+    r = run()                                                  # нечего обновлять
+    assert r.returncode == 0 and r.stdout == ""
+
+    (work / "v.txt").write_text("2")
+    _git(work, "commit", "-qam", "v2")
+    _git(work, "push", "-q", "origin", "main")
+    r = run()
+    assert r.returncode == 0 and "Обновление" in r.stdout and (app / "v.txt").read_text() == "2"
+    good = head()
+
+    (work / "BROKEN").write_text("x")                           # сломанное обновление
+    _git(work, "add", ".")
+    _git(work, "commit", "-qm", "broken")
+    _git(work, "push", "-q", "origin", "main")
+    r = run()
+    assert r.returncode == 1 and "откат" in r.stdout and head() == good and not (app / "BROKEN").exists()
+    r = run()                                                  # тот же сломанный коммит не повторяем
+    assert r.returncode == 0 and r.stdout == "" and head() == good
+
+    (work / "BROKEN").unlink()                                  # исправление приходит следующим коммитом
+    _git(work, "commit", "-qam", "fix")
+    _git(work, "push", "-q", "origin", "main")
+    r = run()
+    assert r.returncode == 0 and head() != good and not (tmp_path / "state" / "bad-commit").exists()
+
+    _git(app, "checkout", "-q", "--detach", good)              # ручной откат родителем — не трогаем
+    (work / "v.txt").write_text("3")
+    _git(work, "commit", "-qam", "v3")
+    _git(work, "push", "-q", "origin", "main")
+    r = run()
+    assert r.returncode == 0 and "пропущено" in r.stdout and head() == good

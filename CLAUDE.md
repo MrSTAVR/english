@@ -10,7 +10,7 @@
 ## Команды
 - Запуск: `pip install -r requirements-dev.txt`, затем `python app.py` (http://localhost:5000). Пароль родителя по умолчанию `1234` (только для разработки).
 - Тесты: `pytest` (конфиг в `pytest.ini`). **Перед каждым коммитом тесты должны быть зелёными.** Тесты идут с отключённым CSRF.
-- Деплой на сервер (Debian, Caddy + systemd): `bash /opt/english/app/deploy/update.sh`. Новые таблицы БД создаются сами при старте.
+- Деплой на сервер (Debian, Caddy + systemd): автоматически из `main` раз в 5 минут; вручную — `bash /opt/english/app/deploy/update.sh`. Новые таблицы БД создаются сами при старте.
 - Новые файлы не забывать добавлять в git (в PyCharm — «Add to VCS»).
 
 ## Структура
@@ -34,7 +34,7 @@
 ## Как делаем изменения
 1. Небольшой шаг → тесты (добавляем новые в `tests/`) → проверка в браузере для UI (Playwright + Chromium, если нужно).
 2. Публикация делается целиком самостоятельно (как «Commit and Push» в PyCharm): тесты зелёные → коммит → push в рабочую ветку → PR через REST API (`gh api repos/MrSTAVR/english/pulls -X POST …`; GraphQL в облачных сессиях закрыт, `gh pr …` не работает) → сразу merge (`gh api repos/MrSTAVR/english/pulls/<N>/merge -X PUT`). Если тесты красные или merge не прошёл — не сливать, сообщить владельцу.
-3. После слияния напомни владельцу выкатить на сервер: `bash /opt/english/app/deploy/update.sh` (сервер Claude недоступен).
+3. Выкатка: сервер сам подтягивает `main` раз в 5 минут (`deploy/autoupdate.sh` + таймер `english-autoupdate.timer`, включается `deploy/setup-autoupdate.sh`), при поломке откатывается. Сервер Claude недоступен — проверить выкатку нельзя; если владелец сообщает о проблеме, смотреть `journalctl -u english-autoupdate`. Новые таблицы БД — только аддитивно (`CREATE TABLE IF NOT EXISTS`/`ALTER TABLE ADD`), чтобы откат кода не ломал базу.
 4. Крупные фичи согласуем списком заранее; отложенное — в бэклог (ниже).
 
 ## Бэклог (отложено)

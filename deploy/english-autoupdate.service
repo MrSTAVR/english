@@ -1,0 +1,8 @@
+[Unit]
+Description=English Fun: автообновление из GitHub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/env bash /opt/english/app/deploy/autoupdate.sh
