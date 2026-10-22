@@ -7,6 +7,32 @@
 </div>
 <p class="subtitle">{% if c.birth_date %}{{ age(c.birth_date) }} · {% endif %}{{ c.parent_name or 'родитель не указан' }}{% if c.phone %} · <a href="tel:{{ c.phone }}">{{ c.phone }}</a>{% endif %}</p>
 
+<section class="card" id="schedule">
+  <h2>📅 Занятия</h2>
+  {% for x in series %}
+  <form method="post" action="{{ url_for('speech.logoped_series_stop', series_id=x.id) }}" class="inline-form sp-admin-row"
+        onsubmit="return confirm('Остановить повторение? Будущие занятия из него удалятся.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <span>🔁 {{ x.text }} ({{ x.minutes }} мин)</span>
+    <button class="btn btn-small" type="submit">Остановить</button>
+  </form>
+  {% endfor %}
+  {% if upcoming %}
+  <h4>Ближайшие</h4>
+  {% for s in upcoming %}<div class="sp-sess-day">{{ s.day }}</div>{% include "speech/_session_row.html" %}{% endfor %}
+  {% else %}<p class="hint">Занятий не назначено.</p>{% endif %}
+  {% if past %}
+  <details><summary>Прошедшие ({{ past|length }})</summary>
+    {% for s in past %}<div class="sp-sess-day">{{ s.day }}</div>{% include "speech/_session_row.html" %}{% endfor %}
+  </details>
+  {% endif %}
+  {% if not c.archived %}
+  <details><summary><b>➕ Назначить занятие</b></summary>
+    {% set client = c %}{% include "speech/_session_form.html" %}
+  </details>
+  {% endif %}
+</section>
+
 <section class="card" id="sounds">
   <h2>🔤 Звуковая карта <span class="pill pill-soft">родители видят упрощённо</span></h2>
   {% if sounds %}
@@ -84,8 +110,8 @@
 </section>
 
 <section class="card sp-soon">
-  <h2>🗓️ Скоро здесь</h2>
-  <p class="hint">Расписание, домашние задания и оплата.</p>
+  <h2>📝 Скоро здесь</h2>
+  <p class="hint">Домашние задания и оплата.</p>
 </section>
 
 <form method="post" action="{{ url_for('speech.logoped_client_edit', cid=c.id) }}">

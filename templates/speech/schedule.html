@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Расписание — кабинет логопеда{% endblock %}
+{% block content %}
+<h1>📅 Расписание</h1>
+<div class="week-nav">
+  <a class="btn btn-small" href="{{ url_for('speech.logoped_schedule', week=shift - 1) }}">←</a>
+  <b>{{ monday.day }} {{ months[monday.month - 1] }} — {{ sunday.day }} {{ months[sunday.month - 1] }}</b>
+  <a class="btn btn-small" href="{{ url_for('speech.logoped_schedule', week=shift + 1) }}">→</a>
+  {% if shift %}<a class="btn btn-small" href="{{ url_for('speech.logoped_schedule') }}">Сегодня</a>{% endif %}
+</div>
+
+<div class="sp-week">
+  {% for d in days %}
+  <section class="sp-day{{ ' sp-day-today' if d.today }}{{ ' sp-day-off' if d.off }}">
+    <h3>{{ d.title }}{% if d.today %} · сегодня{% endif %}{% if d.off %} · 🏖 выходной{% endif %}</h3>
+    {% for s in d.sessions %}{% include "speech/_session_row.html" %}{% else %}<p class="hint">—</p>{% endfor %}
+  </section>
+  {% endfor %}
+</div>
+
+<details class="card" id="add"{{ ' open' if clients and not week_total }}>
+  <summary><b>➕ Назначить занятие</b></summary>
+  {% if clients %}{% set client = none %}{% include "speech/_session_form.html" %}
+  {% else %}<p class="hint">Сначала добавьте учеников.</p>{% endif %}
+</details>
+
+<details class="card" id="days-off">
+  <summary><b>🏖 Выходные и отпуск</b>{% if days_off %} ({{ days_off|length }}){% endif %}</summary>
+  {% for o in days_off %}
+  <form method="post" action="{{ url_for('speech.logoped_days_off') }}" class="inline-form sp-admin-row">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ o.id }}">
+    <span>{{ o.text }}{% if o.note %} — {{ o.note }}{% endif %}</span>
+    <button class="btn btn-small" type="submit" name="action" value="delete">Удалить</button>
+  </form>
+  {% endfor %}
+  <form method="post" action="{{ url_for('speech.logoped_days_off') }}" class="sp-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>С <input type="date" name="start_day" required></label>
+    <label>По (пусто — один день) <input type="date" name="end_day"></label>
+    <label>Заметка <input type="text" name="note" maxlength="100" placeholder="отпуск"></label>
+    <button class="btn btn-small sp-wide" type="submit" name="action" value="add">Сохранить</button>
+  </form>
+  <p class="hint">В выходные повторяющиеся занятия не создаются, а позже здесь не будет и свободных окон для записи.</p>
+</details>
+{% endblock %}

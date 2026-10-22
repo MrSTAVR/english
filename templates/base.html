@@ -15,8 +15,8 @@
 <meta name="apple-mobile-web-app-title" content="{{ 'Логопед' if speech_area else 'English Fun' }}">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="{{ url_for('static', filename='fonts.css') }}?v=1">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=29">
-<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=25">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=30">
+<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=26">
 <link rel="stylesheet" href="{{ url_for('static', filename='achievements.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=1">
 </head>
@@ -101,7 +101,8 @@
       <a href="{{ url_for('parent.parent_dashboard') }}" class="{{ 'on' if ep.startswith('parent.') }}"><svg class="icon"><use href="#i-shield"/></svg><span>Администратор</span></a>
       <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
     {% elif session.get('role') == 'logoped' %}
-      <a href="{{ url_for('speech.logoped_home') }}" class="{{ 'on' if ep.startswith('speech.logoped') }}"><span>👩‍⚕️ Мои ученики</span></a>
+      <a href="{{ url_for('speech.logoped_home') }}" class="{{ 'on' if ep.startswith('speech.logoped') and ep not in ('speech.logoped_schedule', 'speech.logoped_session') }}"><span>👩‍⚕️ Ученики</span></a>
+      <a href="{{ url_for('speech.logoped_schedule') }}" class="{{ 'on' if ep in ('speech.logoped_schedule', 'speech.logoped_session') }}"><span>📅 Расписание</span></a>
       <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
     {% elif session.get('role') == 'family' %}
       <a href="{{ url_for('speech.family_home') }}" class="on"><span>🏠 Кабинет родителя</span></a>

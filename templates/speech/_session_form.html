@@ -1,0 +1,17 @@
+{# форма «назначить занятие»; client — если вызывается из карточки ученика #}
+<form method="post" action="{{ url_for('speech.logoped_session_add') }}" class="sp-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if client %}
+  <input type="hidden" name="client_id" value="{{ client.id }}"><input type="hidden" name="back" value="client">
+  {% else %}
+  <label class="sp-wide">Ученик
+    <select name="client_id" required><option value="">— выберите —</option>
+      {% for c in clients %}<option value="{{ c.id }}">{{ c.child_name }}</option>{% endfor %}</select></label>
+  {% endif %}
+  <label>Дата <input type="date" name="day" required value="{{ today }}"></label>
+  <label>Время <input type="time" name="time" required step="300" value="16:00"></label>
+  <label>Минут <input type="number" name="minutes" min="15" max="180" step="5" value="{{ default_minutes }}"></label>
+  <label class="sp-check"><input type="checkbox" name="repeat" value="1"> Повторять каждую неделю</label>
+  <label>…до (необязательно) <input type="date" name="until"></label>
+  <button class="btn btn-primary sp-wide" type="submit">📅 Назначить</button>
+</form>

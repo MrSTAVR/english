@@ -901,3 +901,24 @@ button, input, select, textarea { font-family: inherit; }
 .sp-history ul{margin:6px 0;padding-left:20px}
 .sp-form textarea{resize:vertical;line-height:1.4}
 .sp-sound select,.sp-sound input[type=text]{width:100%;min-width:0;box-sizing:border-box}
+/* расписание логопеда */
+.sp-week{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:12px 0}
+.sp-day{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:10px 12px}
+.sp-day h3{margin:0 0 8px;font-size:1rem}
+.sp-day-today{border:2px solid #7c5cff}
+.sp-day-off{background:#eef6ff}
+.sp-day .hint{margin:0}
+.sp-sess{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;padding:8px 10px;margin:6px 0;border-radius:12px;
+  border-left:5px solid #7c5cff;background:#f6f3ff;text-decoration:none;color:inherit}
+.sp-sess-time{font-weight:800;font-variant-numeric:tabular-nums}
+.sp-sess-st{font-size:.8rem;font-weight:800;padding:2px 8px;border-radius:99px;background:#eee9ff}
+.sp-sess-mark{background:#ffe3c2;color:#9a5b00}
+.sp-st-done{border-left-color:#2fa04b;background:#eefaf0}
+.sp-st-cancelled{border-left-color:#bbb;background:#f4f4f6;opacity:.7}
+.sp-st-cancelled b,.sp-st-cancelled .sp-sess-time{text-decoration:line-through}
+.sp-st-noshow{border-left-color:#e8454b;background:#fff1f1}
+.sp-sess-day{font-size:.8rem;font-weight:800;opacity:.7;margin-top:8px}
+.sp-status-btns{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.sp-check{flex-direction:row!important;align-items:center;gap:8px!important}
+.sp-check input{width:auto!important;min-height:0!important}
+.sp-fam-sess{padding:8px 10px;margin:6px 0;border-radius:12px;background:#f6f3ff;border-left:5px solid #7c5cff}

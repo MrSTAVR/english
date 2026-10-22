@@ -2,6 +2,8 @@
 """Логопедическая часть: вход и кабинет логопеда, «Кабинет родителя» для семей учеников."""
 import ratelimit
 import speech
+import speech_schedule as sched
+from datetime import timedelta
 from database import get_db
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
 from security import hash_password, verify_password
@@ -68,6 +70,7 @@ def logoped_home():
         return err
     db, me = ctx
     return render_template("speech/logoped_home.html", me=me, clients=speech.clients(db, me["id"]),
+                           today_sessions=sched.for_day(db, me["id"], sched.today()),
                            archived=speech.clients(db, me["id"], archived=True), age=speech.age_text,
                            min_password=speech.MIN_PASSWORD, username_re=speech.USERNAME_RE)
 
@@ -98,7 +101,11 @@ def logoped_client(cid):
     return render_template("speech/logoped_client.html", me=me, c=client, age=speech.age_text,
                            min_password=speech.MIN_PASSWORD, card=speech.get_card(db, cid), sounds=sounds,
                            free_groups=[(g, [x for x in group if x not in in_work]) for g, group in speech.SOUND_GROUPS],
-                           stages=speech.STAGES, history=speech.sound_history(db, cid))
+                           stages=speech.STAGES, history=speech.sound_history(db, cid),
+                           upcoming=sched.client_sessions(db, cid, me["id"]),
+                           past=sched.client_sessions(db, cid, me["id"], upcoming=False, limit=8),
+                           series=sched.series_of(db, cid), default_minutes=sched.DEFAULT_MINUTES,
+                           today=sched.today().isoformat())
 
 
 @bp.route("/logoped/clients/<int:cid>/card", methods=["POST"])
@@ -162,6 +169,123 @@ def logoped_client_edit(cid):
     return back
 
 
+# ---------------------------------------------------------------- расписание
+
+@bp.route("/logoped/schedule")
+def logoped_schedule():
+    ctx, err = _current("logoped")
+    if err:
+        return err
+    db, me = ctx
+    shift = max(-104, min(104, request.args.get("week", 0, type=int)))
+    monday = sched.today() - timedelta(days=sched.today().weekday()) + timedelta(weeks=shift)
+    days = sched.week(db, me["id"], monday)
+    return render_template("speech/schedule.html", me=me, days=days, shift=shift,
+                           week_total=sum(len(d["sessions"]) for d in days),
+                           monday=monday, sunday=monday + timedelta(days=6), clients=speech.clients(db, me["id"]),
+                           days_off=sched.days_off(db, me["id"]), default_minutes=sched.DEFAULT_MINUTES,
+                           today=sched.today().isoformat(), months=sched.MONTHS)
+
+
+@bp.route("/logoped/sessions/add", methods=["POST"])
+def logoped_session_add():
+    ctx, err = _current("logoped")
+    if err:
+        return err
+    db, me = ctx
+    f = request.form
+    cid = f.get("client_id", type=int)
+    back = f.get("back") == "client" and cid
+    target = url_for("speech.logoped_client", cid=cid) + "#schedule" if back else None
+    client = speech.client_of(db, me["id"], cid)
+    start = sched.parse_start(f.get("day"), f.get("time"))
+    minutes = f.get("minutes", sched.DEFAULT_MINUTES, type=int)
+    if not client or client["archived"]:
+        error = "Выберите ученика."
+    elif not start:
+        error = "Укажите дату и время."
+    elif f.get("repeat"):
+        end_day = speech.parse_date(f.get("until")) if f.get("until") else None
+        _id, error = sched.add_series(db, me["id"], cid, start, minutes, end_day)
+    else:
+        _id, error = sched.add_session(db, me["id"], cid, start, minutes)
+    if error:
+        flash(error, "error")
+    else:
+        flash(f"Занятие назначено: {client['child_name']}, {sched.day_text(start.date())} в {start:%H:%M}"
+              + (", каждую неделю" if f.get("repeat") else "") + ".", "ok")
+    if target:
+        return redirect(target)
+    monday = sched.today() - timedelta(days=sched.today().weekday())
+    shift = ((start.date() - monday).days // 7) if start else 0
+    return redirect(url_for("speech.logoped_schedule", week=shift or None))
+
+
+@bp.route("/logoped/sessions/<int:sid>", methods=["GET", "POST"])
+def logoped_session(sid):
+    ctx, err = _current("logoped")
+    if err:
+        return err
+    db, me = ctx
+    s = sched.get_session(db, me["id"], sid) or abort(404)
+    if request.method == "GET":
+        return render_template("speech/session.html", me=me, s=sched.decorate(s), statuses=sched.STATUSES,
+                               day=sched.day_text(sched.parse_start(s["start"][:10], s["start"][11:]).date()))
+    action = request.form.get("action")
+    if action in sched.STATUSES:
+        sched.set_status(db, sid, action, request.form.get("note"))
+        flash(f"Отмечено: {sched.STATUSES[action]}.", "ok")
+    elif action == "note":
+        sched.set_status(db, sid, s["status"], request.form.get("note") or "")
+        flash("Заметка сохранена.", "ok")
+    elif action == "move":
+        start = sched.parse_start(request.form.get("day"), request.form.get("time"))
+        error = sched.move_session(db, me["id"], sid, start, request.form.get("minutes", s["minutes"], type=int)) \
+            if start else "Укажите дату и время."
+        flash(error or "Занятие перенесено.", "error" if error else "ok")
+    elif action == "delete":
+        db.execute("DELETE FROM sp_sessions WHERE id=?", (sid,))
+        db.commit()
+        flash("Занятие удалено.", "ok")
+        return redirect(url_for("speech.logoped_schedule"))
+    else:
+        abort(400)
+    return redirect(url_for("speech.logoped_session", sid=sid))
+
+
+@bp.route("/logoped/series/<int:series_id>/stop", methods=["POST"])
+def logoped_series_stop(series_id):
+    ctx, err = _current("logoped")
+    if err:
+        return err
+    db, me = ctx
+    row = db.execute("SELECT client_id FROM sp_series WHERE id=? AND logoped_id=?", (series_id, me["id"])).fetchone() \
+        or abort(404)
+    sched.stop_series(db, me["id"], series_id)
+    flash("Повторяющееся занятие остановлено, будущие занятия из него удалены.", "ok")
+    return redirect(url_for("speech.logoped_client", cid=row["client_id"]) + "#schedule")
+
+
+@bp.route("/logoped/days-off", methods=["POST"])
+def logoped_days_off():
+    ctx, err = _current("logoped")
+    if err:
+        return err
+    db, me = ctx
+    if request.form.get("action") == "delete":
+        db.execute("DELETE FROM sp_days_off WHERE id=? AND logoped_id=?", (request.form.get("id", type=int), me["id"]))
+        db.commit()
+        flash("Выходные удалены.", "ok")
+    else:
+        d1, d2 = speech.parse_date(request.form.get("start_day")), speech.parse_date(request.form.get("end_day"))
+        if not d1:
+            flash("Укажите дату.", "error")
+        else:
+            ok, msg = sched.add_days_off(db, me["id"], d1, d2 or d1, request.form.get("note"))
+            flash(msg, "ok" if ok else "error")
+    return redirect(url_for("speech.logoped_schedule") + "#days-off")
+
+
 # ---------------------------------------------------------------- кабинет родителя
 
 @bp.route("/family", methods=["GET", "POST"])
@@ -181,4 +305,6 @@ def family_home():
     db, client = ctx
     logoped = db.execute("SELECT name FROM sp_logopeds WHERE id=?", (client["logoped_id"],)).fetchone()
     return render_template("speech/family_home.html", c=client, logoped=logoped,
-                           sounds=speech.sound_map(db, client["id"]))
+                           sounds=speech.sound_map(db, client["id"]),
+                           upcoming=sched.client_sessions(db, client["id"], client["logoped_id"], limit=4),
+                           past=sched.client_sessions(db, client["id"], client["logoped_id"], upcoming=False, limit=5))
