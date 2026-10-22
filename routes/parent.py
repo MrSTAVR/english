@@ -11,7 +11,7 @@ from flask import Blueprint, abort, flash, jsonify, redirect, render_template, r
 from garden import cap_streak, get_garden, tree_count_for, tree_stage
 from report import MAX_WEEKS_BACK, week_report
 from progress import credit_lessons, lesson_ids_upto, uncredit_lessons
-from seasons import SEASONS, auto_season, get_dates, get_mode, set_dates, set_mode
+from seasons import SEASONS, get_dates, get_mode, in_season, set_dates, set_mode
 from security import hash_password
 from stats import compute_stats
 
@@ -72,7 +72,7 @@ def delete_student(sid):
     db.execute("DELETE FROM achievements WHERE student_id=?", (sid,))
     db.execute("DELETE FROM decorations WHERE student_id=?", (sid,))
     db.execute("DELETE FROM garden WHERE student_id=?", (sid,))
-    for table in ("wardrobe_items", "wardrobe_wear", "story_done", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal", "goal_settings", "vacations", "activity", "weekly_done", "boss_wins", "season_log", "house_items", "house_place"):
+    for table in ("wardrobe_items", "wardrobe_wear", "story_done", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal", "goal_settings", "vacations", "activity", "weekly_done", "boss_wins", "season_log", "advent", "house_items", "house_place"):
         db.execute(f"DELETE FROM {table} WHERE student_id=?", (sid,))
     db.execute("DELETE FROM students WHERE id=?", (sid,))
     db.commit()
@@ -351,7 +351,7 @@ def parent_dashboard():
                            student_emojis=STUDENT_EMOJIS, weeks_back=weeks_back,
                            max_weeks_back=MAX_WEEKS_BACK,
                            goal_limits=(goals.MAX_LESSONS, goals.MAX_WORDS),
-                           seasons=[{"key": k, **v, "mode": get_mode(k), "custom": get_dates(k), "auto_now": auto_season() == k}
+                           seasons=[{"key": k, **v, "mode": get_mode(k), "custom": get_dates(k), "auto_now": in_season(k)}
                                     for k, v in SEASONS.items()],
                            lesson_titles={l["id"]: (f'{l["num"]}. ' if l.get("num") else "") + l["title"] for l in ALL_LESSONS},
                            total_lessons=len(LESSONS))

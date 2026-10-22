@@ -1,9 +1,9 @@
-/* Хэллоуин: озвучка карточек и викторина */
+/* Праздничный сезон (Хэллоуин, Новый год): озвучка карточек и викторина */
 (function () {
   'use strict';
   function say(t) { if (window.ttsSpeak) window.ttsSpeak(t); }
   [].forEach.call(document.querySelectorAll('[data-say]'), function (b) { b.addEventListener('click', function () { say(b.dataset.say); }); });
-  var root = document.getElementById('halloween'), host = document.getElementById('hw-quiz');
+  var root = document.getElementById('season-quiz'), host = document.getElementById('hw-quiz');
   if (!root || !host) return;
   var words = JSON.parse(root.dataset.words || '[]'), len = parseInt(root.dataset.len, 10) || 8, need = parseInt(root.dataset.pass, 10) || 6;
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
@@ -35,13 +35,13 @@
 
   function end() {
     var win = ok >= need;
-    var msg = el('p', '', win ? 'Отлично! Ты настоящий охотник за привидениями!' : 'Почти! Нужно ' + need + ' верных — попробуй ещё раз.');
-    host.appendChild(el('div', 'big-emoji', win ? '🎃' : '👻'));
+    var msg = el('p', '', win ? root.dataset.win : 'Почти! Нужно ' + need + ' верных — попробуй ещё раз.');
+    host.appendChild(el('div', 'big-emoji', win ? root.dataset.winEmoji : root.dataset.loseEmoji));
     host.appendChild(el('h3', '', 'Верно: ' + ok + ' из ' + order.length));
     host.appendChild(msg);
     var again = el('button', 'btn btn-primary', 'Ещё раз 🔁'); again.type = 'button'; again.onclick = function () { location.reload(); };
     host.appendChild(again);
-    fetch('/api/halloween', {
+    fetch(root.dataset.api, {
       method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf() },
       body: JSON.stringify({ correct: ok })

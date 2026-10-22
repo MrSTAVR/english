@@ -839,3 +839,22 @@ button, input, select, textarea { font-family: inherit; }
 .week-stats{display:flex;flex-wrap:wrap;gap:8px 16px;margin:6px 0 10px}
 .week-list{margin:4px 0 10px;padding-left:20px}
 .week-list li{margin:2px 0}
+/* Новый год: снегопад, баннеры, адвент-календарь */
+.snow{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+.snow span{position:absolute;top:-24px;color:#bcd8ff;opacity:.75;animation-name:snow-fall;animation-timing-function:linear;animation-iteration-count:infinite}
+@keyframes snow-fall{to{transform:translateY(110vh) translateX(30px) rotate(200deg)}}
+@media (prefers-reduced-motion: reduce){.snow{display:none}}
+.season-newyear{background:linear-gradient(90deg,#2f86d6,#2fa04b)}
+.season-advent{background:linear-gradient(90deg,#c0282f,#e8a317)}
+.adv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin:12px 0}
+.adv-door{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:104px;padding:10px 6px;
+  border-radius:16px;border:2px dashed #e8b7b9;background:#fff6f0;color:#8a3b3f;font:inherit;text-align:center;cursor:pointer}
+.adv-door .adv-num{position:absolute;top:4px;left:8px;font-weight:900;font-size:.85rem;opacity:.7}
+.adv-door .adv-pic{font-size:2rem}
+.adv-door small{font-size:.75rem}
+.adv-today{border:2px solid #e8454b;background:#ffe9e0;box-shadow:0 0 0 4px rgba(232,69,75,.15)}
+.adv-open{border:2px solid #9fd3a9;background:#eefaf0;color:#25603a}
+.adv-open b{font-size:.9rem;line-height:1.15}
+.adv-locked{cursor:default;opacity:.5;border-style:solid;border-color:#e6e0f2;background:#f6f4fb;color:#8a83a3}
+.adv-pop{animation:adv-pop .45s ease}
+@keyframes adv-pop{0%{transform:scale(.8) rotateY(90deg)}100%{transform:none}}

@@ -158,6 +158,14 @@ CREATE TABLE IF NOT EXISTS season_log (
     correct    INTEGER DEFAULT 0,
     PRIMARY KEY (student_id, season, day)
 );
+CREATE TABLE IF NOT EXISTS advent (
+    student_id INTEGER NOT NULL,
+    year       INTEGER NOT NULL,
+    day        INTEGER NOT NULL,                -- 1..31 декабря
+    coins      INTEGER DEFAULT 0,               -- сколько монет дало окошко
+    opened_at  TEXT NOT NULL,
+    PRIMARY KEY (student_id, year, day)
+);
 CREATE TABLE IF NOT EXISTS vacations (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL,

@@ -1,12 +1,22 @@
 # -*- coding: utf-8 -*-
-"""Сезонные события. Пока только Хэллоуин (по умолчанию 15 октября — 3 ноября); остальные сезоны — в планах.
-Родитель может включить сезон принудительно или выключить его (настройка в кабинете родителя)."""
+"""Сезонные события: Хэллоуин (15 октября — 3 ноября) и Новый год (15 декабря — 14 января).
+Родитель может включить сезон принудительно или выключить его (настройка в кабинете родителя).
+К Новому году относится адвент-календарь: окошки с 1 по 31 декабря."""
 from datetime import datetime
 
 SEASONS = {
-    "halloween": {"title": "Хэллоуин", "emoji": "🎃", "dates": "с 15 октября по 3 ноября"},
+    "halloween": {"title": "Хэллоуин", "emoji": "🎃", "dates": "с 15 октября по 3 ноября",
+                  "start": (10, 15), "end": (11, 3)},
+    "newyear": {"title": "Новый год", "emoji": "🎄", "dates": "с 15 декабря по 14 января",
+                "start": (12, 15), "end": (1, 14)},
 }
 MODES = ("auto", "on", "off")
+
+
+def content(key):
+    """Слова, викторина и тексты сезона: модуль data/<key>.py."""
+    import importlib
+    return importlib.import_module(f"data.{key}")
 
 
 def today():
@@ -46,14 +56,24 @@ def set_dates(db, key, d1, d2):
     return True
 
 
+def _in_window(d, start, end):
+    """(месяц, день) — окно может переходить через Новый год (start > end)."""
+    md = (d.month, d.day)
+    return start <= md <= end if start <= end else (md >= start or md <= end)
+
+
+def in_season(key, day=None):
+    """Идёт ли сезон по календарю (свои даты родителя заменяют стандартные)."""
+    d = day or today()
+    custom = get_dates(key)
+    if custom:
+        return custom[0] <= d <= custom[1]
+    return _in_window(d, SEASONS[key]["start"], SEASONS[key]["end"])
+
+
 def auto_season(day=None):
     d = day or today()
-    custom = get_dates("halloween")
-    if custom:
-        return "halloween" if custom[0] <= d <= custom[1] else None
-    if (d.month == 10 and d.day >= 15) or (d.month == 11 and d.day <= 3):
-        return "halloween"
-    return None
+    return next((k for k in SEASONS if in_season(k, d)), None)
 
 
 def get_mode(key="halloween"):
@@ -75,9 +95,15 @@ def active_season(day=None):
     """Ключ сезона, который идёт сейчас, или None. С явной датой считает только по календарю."""
     if day is not None:
         return auto_season(day)
-    mode = get_mode("halloween")
-    if mode == "off":
-        return None
-    if mode == "on":
-        return "halloween"
-    return auto_season()
+    modes = {k: get_mode(k) for k in SEASONS}
+    on = [k for k, m in modes.items() if m == "on"]
+    if on:
+        return on[0]
+    d = today()
+    return next((k for k, m in modes.items() if m == "auto" and in_season(k, d)), None)
+
+
+def advent_open(day=None):
+    """Адвент-календарь: весь декабрь, если родитель не выключил Новый год."""
+    d = day or today()
+    return d.month == 12 and get_mode("newyear") != "off"

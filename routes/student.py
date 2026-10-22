@@ -16,7 +16,8 @@ from datetime import datetime
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
 import activity
 import weekly
-from seasons import active_season
+import seasons
+from seasons import active_season, advent_open, content
 from garden import award_coins, get_garden, on_vacation, refresh_garden, touch_streak, tree_count_for, tree_stage
 from grading import grade_question
 from mascot import build_mascot_ctx
@@ -139,6 +140,7 @@ def student_home():
     rv_state = review_state(db, student["id"])
     rv_due, rv_new, rv_mastered = review_counts(rv_pool, rv_state)
     goal = goals.view(db, student["id"], stats, len(rv_pool))
+    season, adv = active_season(), advent_open()
     return render_template("student_home.html", goal=goal, rv_pool=len(rv_pool), rv_ready=rv_due + min(rv_new, 10),
                            rv_mastered=rv_mastered, wod=word_of_day(rv_pool, rv_state, student["id"]), mascot=mascot, speaking=config.SPEAKING,
                            name=student["display_name"],
@@ -156,7 +158,11 @@ def student_home():
                            earned_count=earned_count,
                            garden=garden,
                            on_vacation=on_vacation(db, student["id"]),
-                           season=active_season(), weekly=weekly.status(db, student["id"]),
+                           season=season, season_banner=content(season).BANNER if season else "",
+                           advent=adv, advent_today_open=adv and bool(db.execute(
+                               "SELECT 1 FROM advent WHERE student_id=? AND year=? AND day=?",
+                               (student["id"], seasons.today().year, seasons.today().day)).fetchone()),
+                           weekly=weekly.status(db, student["id"]),
                            weekly_got=weekly_got,
                            tree_stage=tree_stage(garden["streak_days"]),
                            tree_count=tree_count_for(garden["streak_days"]))

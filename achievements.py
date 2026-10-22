@@ -83,6 +83,8 @@ ACHIEVEMENTS = [
     _m("boss_1", "⚔️", "Победитель босса", "Побеждён первый босс недели.", "silver", "games", "boss_wins", 1),
     _m("boss_3", "🛡️", "Охотник на боссов", "Побеждено 3 босса.", "gold", "games", "boss_wins", 3),
     _m("halloween_1", "🎃", "Хэллоуин!", "Пройдена викторина Хэллоуина.", "bronze", "games", "halloween_done", 1),
+    _m("newyear_1", "🎄", "С Новым годом!", "Пройдена новогодняя викторина.", "bronze", "games", "newyear_done", 1),
+    _m("advent_10", "🗓️", "Адвент-календарь", "Открыто 10 окошек адвент-календаря.", "silver", "games", "advent_opened", 10),
     _m("story_1", "📖", "Первая история", "Прочитана первая история.", "bronze", "games", "stories_done", 1),
     _m("story_8", "📚", "Книжный червячок", "Прочитано 8 историй.", "silver", "games", "stories_done", 8),
     _m("story_all", "🏛️", "Библиотекарь", "Прочитаны все истории!", "gold", "games", "stories_done", len(STORIES)),
