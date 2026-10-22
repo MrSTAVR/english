@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ season.title }} — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
+  <h1>{{ season.emoji }} {{ season.title }}</h1>
+</div>
+<p class="subtitle">{{ intro }}</p>
+{% if advent %}<a class="season-banner season-advent" href="{{ url_for('season.advent_page') }}">🗓️ Адвент-календарь: каждый день декабря — новое окошко →</a>{% endif %}
+<section class="card hw-phrase"><b>{{ data.PHRASE.en }}</b> — {{ data.PHRASE.ru }} <button class="btn btn-small hw-say" type="button" data-say="{{ data.PHRASE.en }}">🔊</button></section>
+<div class="hw-grid">
+{% for w in data.WORDS %}
+  <button type="button" class="card hw-card" data-say="{{ w.en }}"><span class="hw-pic">{{ w.pic }}</span><b>{{ w.en }}</b><small>{{ w.ru }}</small></button>
+{% endfor %}
+</div>
+<section class="card" id="season-quiz" data-words='{{ data.WORDS | tojson }}' data-len="{{ data.QUIZ_LEN }}" data-pass="{{ data.PASS_MARK }}"
+         data-api="{{ url_for('season.api_season', key=key) }}" data-win="{{ data.WIN_TEXT }}"
+         data-win-emoji="{{ data.WIN_EMOJI }}" data-lose-emoji="{{ data.LOSE_EMOJI }}">
+  <h2>{{ season.emoji }} Викторина{% if done_today %} ✅ (сегодня уже пройдена){% endif %}</h2>
+  <div id="hw-quiz"></div>
+</section>
+<p><a class="btn btn-secondary" href="{{ url_for('wardrobe.wardrobe_page') }}">🎩 В гардероб</a></p>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='season.js') }}?v=2"></script>{% endblock %}

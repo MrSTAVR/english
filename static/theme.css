@@ -727,3 +727,7 @@ a.week-card:hover { border-color: var(--primary); }
 html[data-theme="dark"] .week-day { background: #2b2640; color: #a9a2c4; }
 html[data-theme="dark"] .week-day.wd-active { background: #1f3d27; color: #9fe0ad; }
 html[data-theme="dark"] .week-day.wd-vac { background: #1d3049; color: #9cc4f0; }
+html[data-theme="dark"] .adv-door { background: #3a2626; color: #ffc9c4; border-color: #6b3c3e; }
+html[data-theme="dark"] .adv-today { background: #4a2a2a; border-color: #e8454b; }
+html[data-theme="dark"] .adv-open { background: #1f3d27; color: #9fe0ad; border-color: #2f6b3d; }
+html[data-theme="dark"] .adv-locked { background: #2b2640; color: #a9a2c4; border-color: #3a3456; }

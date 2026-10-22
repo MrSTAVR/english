@@ -27,7 +27,8 @@
 </div>
 
 {% if on_vacation %}<p class="hint vacation-note">🏖 У тебя каникулы — серия дней не сгорит. Можно отдыхать или заниматься, как хочется!</p>{% endif %}
-{% if season == 'halloween' %}<a class="season-banner" href="{{ url_for('season.halloween_page') }}">🎃 Хэллоуин! Новые слова, викторина и наряды — только пока идёт праздник →</a>{% endif %}
+{% if season %}<a class="season-banner season-{{ season }}" href="{{ url_for('season.season_page', key=season) }}">{{ season_banner }}</a>{% endif %}
+{% if advent %}<a class="season-banner season-advent" href="{{ url_for('season.advent_page') }}">🗓️ Адвент-календарь: {{ 'окошко на сегодня ждёт тебя! 🎁' if not advent_today_open else 'сегодняшнее окошко открыто ✅' }} →</a>{% endif %}
 
 <!-- 2. Кнопка «Следующий урок» -->
 {% if next_lesson %}

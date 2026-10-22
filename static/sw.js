@@ -4,7 +4,7 @@ const CACHE = "english-" + VERSION;
 const OFFLINE_URL = "/offline";
 const PAGES = "english-pages";   // страницы, посещённые ребёнком: доступны без сети
 // Что можно открыть офлайн: уроки, игры, истории, письмо, повторение, слова, теория, главная ученика.
-const OFFLINE_OK = [/^\/student$/, /^\/lesson\/\d+$/, /^\/student\/(games|dialogs|stories|writing|review|words|theory|wardrobe|weekly|boss|halloween|house|stickers)(\/.*)?$/];
+const OFFLINE_OK = [/^\/student$/, /^\/lesson\/\d+$/, /^\/student\/(games|dialogs|stories|writing|review|words|theory|wardrobe|weekly|boss|halloween|newyear|advent|house|stickers)(\/.*)?$/];
 const okOffline = (path) => OFFLINE_OK.some((re) => re.test(path));
 const PRECACHE = __PRECACHE__;
 

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Адвент-календарь — English Fun{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
+  <h1>🗓️ Адвент-календарь</h1>
+</div>
+<p class="subtitle">Каждый день декабря открывается новое окошко с английским словом. Открой окошко в его день — получишь {{ coins }} монетку 🪙. Пропущенные окошки тоже можно открыть, просто без монетки.</p>
+<p class="hint" id="adv-msg" aria-live="polite"></p>
+<div class="adv-grid" id="advent">
+{% for d in days %}
+  {% if d.open %}
+  <button type="button" class="adv-door adv-open{{ ' adv-today' if d.today }}" data-say="{{ d.en }}" title="Послушать">
+    <span class="adv-num">{{ d.day }}</span><span class="adv-pic">{{ d.pic }}</span><b>{{ d.en }}</b><small>{{ d.ru }}</small>
+  </button>
+  {% elif d.can %}
+  <button type="button" class="adv-door{{ ' adv-today' if d.today }}" data-day="{{ d.day }}" title="Открыть окошко">
+    <span class="adv-num">{{ d.day }}</span><span class="adv-pic">{{ '🎁' if d.today else '✉️' }}</span><small>{{ 'Открой меня!' if d.today else 'пропущено' }}</small>
+  </button>
+  {% else %}
+  <div class="adv-door adv-locked" title="Откроется {{ d.day }} декабря"><span class="adv-num">{{ d.day }}</span><span class="adv-pic">🔒</span></div>
+  {% endif %}
+{% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='advent.js') }}?v=1"></script>{% endblock %}

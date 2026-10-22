@@ -70,6 +70,12 @@
   var STAR5 = 'M0 -1 L.29 -.4 L.95 -.3 L.47 .15 L.59 .8 L0 .5 L-.59 .8 L-.47 .15 L-.95 -.3 L-.29 -.4Z';
   function starAt(x, y, r, fill) { return '<path transform="translate(' + x + ' ' + y + ') scale(' + r + ')" d="' + STAR5 + '" fill="' + fill + '"/>'; }
   function heartAt(x, y, k, fill) { return '<path transform="translate(' + x + ' ' + y + ') scale(' + k + ')" d="M0 3 C-9 -4 -5 -10 0 -5 C5 -10 9 -4 0 3Z" fill="' + fill + '"/>'; }
+  function snowflakeAt(x, y, r, color) {
+    var d = [[1, 0], [.5, .866], [-.5, .866]].map(function (v) {
+      return 'M' + (x - v[0] * r) + ' ' + (y - v[1] * r) + ' L' + (x + v[0] * r) + ' ' + (y + v[1] * r);
+    }).join(' ');
+    return '<path d="' + d + '" stroke="' + color + '" stroke-width="2" stroke-linecap="round"/>';
+  }
   var ART = {
     /* --- шапки --- */
     'hat-cap': '<path d="M40 43 Q41 21 60 21 Q79 21 80 43 Z" fill="#3D7BFF" stroke="#2A5DD0" stroke-width="2"/><path d="M60 21 L60 43" stroke="#2A5DD0" stroke-width="1.5"/><circle cx="60" cy="21" r="3" fill="#2A5DD0"/><path d="M70 41 Q94 37 96 45 Q82 49 69 46 Z" fill="#2A5DD0"/>',
@@ -103,7 +109,12 @@
     'hat-witch': '<ellipse cx="60" cy="42" rx="30" ry="6" fill="#2B1B47" stroke="#160C2B" stroke-width="2"/><path d="M46 42 L58 8 Q61 2 66 8 L74 42 Z" fill="#3A2563" stroke="#241540" stroke-width="2" stroke-linejoin="round"/><path d="M48 35 L72 35" stroke="#FF8A1F" stroke-width="5"/><rect x="56" y="31" width="8" height="8" rx="1.5" fill="none" stroke="#FFD54F" stroke-width="2"/>',
     'hat-pumpkin': '<ellipse cx="60" cy="30" rx="22" ry="15" fill="#FF8A1F" stroke="#D96A00" stroke-width="2"/><path d="M50 18 Q46 30 50 43 M60 15 Q57 30 60 45 M70 18 Q74 30 70 43" stroke="#D96A00" stroke-width="1.8" fill="none"/><path d="M58 15 Q57 8 62 6 Q64 10 62 15Z" fill="#4FBF6B" stroke="#2F9A4B" stroke-width="1.5"/>',
     'face-vampire': '<path d="M53 75 L56 84 L59 75Z M61 75 L64 84 L67 75Z" fill="#fff" stroke="#C9C2E6" stroke-width="1"/>',
-    'neck-batbow': '<path d="M60 98 L48 90 Q44 96 40 92 Q42 102 50 102 Q56 104 60 100 Q64 104 70 102 Q78 102 80 92 Q76 96 72 90 Z" fill="#2B1B47" stroke="#160C2B" stroke-width="1.5" stroke-linejoin="round"/><circle cx="60" cy="98" r="3" fill="#FF8A1F"/>'
+    'neck-batbow': '<path d="M60 98 L48 90 Q44 96 40 92 Q42 102 50 102 Q56 104 60 100 Q64 104 70 102 Q78 102 80 92 Q76 96 72 90 Z" fill="#2B1B47" stroke="#160C2B" stroke-width="1.5" stroke-linejoin="round"/><circle cx="60" cy="98" r="3" fill="#FF8A1F"/>',
+    /* --- сезон Новый год --- */
+    'hat-antlers': '<path d="M46 40 L41 18 M43 28 L34 23 M42 22 L47 12 M74 40 L79 18 M77 28 L86 23 M78 22 L73 12" stroke="#A0602D" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M37 46 Q60 30 83 46" stroke="#E8454B" stroke-width="4.5" fill="none" stroke-linecap="round"/><circle cx="60" cy="38" r="3.4" fill="#FFD54F" stroke="#E8A317" stroke-width="1.2"/>',
+    'hat-pompom': '<path d="M40 44 Q40 18 60 18 Q80 18 80 44 Z" fill="#E8454B" stroke="#C0282F" stroke-width="2"/><path d="M43 31 Q60 25 77 31" stroke="#fff" stroke-width="4" fill="none"/><rect x="37" y="39" width="46" height="9" rx="4.5" fill="#fff" stroke="#DAD3F2" stroke-width="1.5"/><circle cx="60" cy="15" r="7" fill="#fff" stroke="#DAD3F2" stroke-width="1.5"/>',
+    'face-snowflakes': '<circle cx="46" cy="58" r="10" fill="rgba(190,225,255,.45)" stroke="#4BA3E8" stroke-width="2.6"/><circle cx="74" cy="58" r="10" fill="rgba(190,225,255,.45)" stroke="#4BA3E8" stroke-width="2.6"/>' + snowflakeAt(46, 58, 6.5, '#fff') + snowflakeAt(74, 58, 6.5, '#fff') + '<path d="M56 57 Q60 54 64 57" stroke="#4BA3E8" stroke-width="2.6" fill="none"/><path d="M36 56 L29 53 M84 56 L91 53" stroke="#4BA3E8" stroke-width="2.6" stroke-linecap="round"/>',
+    'neck-garland': '<path d="M33 92 Q60 108 87 92" stroke="#2F9A4B" stroke-width="2" fill="none"/>' + [[37, 95], [44, 99.5], [52, 102.5], [60, 103.5], [68, 102.5], [76, 99.5], [83, 95]].map(function (p, i) { return '<ellipse cx="' + p[0] + '" cy="' + (p[1] + 3) + '" rx="2.8" ry="4" fill="' + ['#FF5D5D', '#FFD54F', '#4BA3E8', '#6FD883', '#FF5D8F', '#FFD54F', '#B79CFF'][i] + '" stroke="rgba(0,0,0,.15)"/>'; }).join('')
   };
   var ORDER = ['hat', 'face', 'neck'];
 

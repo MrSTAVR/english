@@ -54,6 +54,11 @@ ITEMS += [
     {"key": "hat-pumpkin", "slot": "hat", "name": "Тыква на голове", "cost": 26, "source": "halloween"},
     {"key": "face-vampire", "slot": "face", "name": "Клыки вампира", "cost": 16, "source": "halloween"},
     {"key": "neck-batbow", "slot": "neck", "name": "Бабочка-летучая мышь", "cost": 14, "source": "halloween"},
+    # сезон Новый год
+    {"key": "hat-antlers", "slot": "hat", "name": "Оленьи рожки", "cost": 18, "source": "newyear"},
+    {"key": "hat-pompom", "slot": "hat", "name": "Шапка с помпоном", "cost": 22, "source": "newyear"},
+    {"key": "face-snowflakes", "slot": "face", "name": "Очки-снежинки", "cost": 16, "source": "newyear"},
+    {"key": "neck-garland", "slot": "neck", "name": "Гирлянда-огоньки", "cost": 14, "source": "newyear"},
 ]
 for _i in ITEMS:
     _i.setdefault("source", "shop")

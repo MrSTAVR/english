@@ -16,9 +16,12 @@ def _game_stats(db, student_id):
     st = db.execute(f"SELECT COUNT(DISTINCT key) a, COALESCE(SUM(mode='listen'),0) b FROM story_done {where}", args).fetchone()
     wk = db.execute(f"SELECT COUNT(*) FROM weekly_done {where}", args).fetchone()[0]
     bw = db.execute(f"SELECT COUNT(*) FROM boss_wins {where}", args).fetchone()[0]
-    hw = db.execute(f"SELECT COUNT(*) FROM season_log {where}{' AND' if where else ' WHERE'} season='halloween' AND correct>=6", args).fetchone()[0]
+    and_ = " AND" if where else " WHERE"
+    hw = db.execute(f"SELECT COUNT(*) FROM season_log {where}{and_} season='halloween' AND correct>=6", args).fetchone()[0]
+    ny = db.execute(f"SELECT COUNT(*) FROM season_log {where}{and_} season='newyear' AND correct>=6", args).fetchone()[0]
+    adv = db.execute(f"SELECT COUNT(*) FROM advent {where}", args).fetchone()[0]
     hb = db.execute(f"SELECT COUNT(*) FROM house_items {where}", args).fetchone()[0]
-    return {"house_bought": hb, "weeks_done": wk, "boss_wins": bw, "halloween_done": hw, "games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d, "wardrobe_bought": w,
+    return {"house_bought": hb, "weeks_done": wk, "boss_wins": bw, "halloween_done": hw, "newyear_done": ny, "advent_opened": adv, "games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d, "wardrobe_bought": w,
             "stories_done": st["a"], "stories_listened": st["b"],
             "writing_played": g["wp"], "writing_perfect": g["wperf"]}
 

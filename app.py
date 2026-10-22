@@ -12,7 +12,7 @@ from csrf import init_csrf
 import os
 import sys
 
-from flask import Flask, g
+from flask import Flask, g, session
 
 import config
 from database import init_db
@@ -81,6 +81,15 @@ def inject_mascot():
     """Добавляет переменную `mascot` во все шаблоны: кто на какой странице,
     чтобы JS-помощник знал, что говорить и когда."""
     return {"mascot": build_mascot_ctx()}
+
+
+@app.context_processor
+def inject_snow():
+    """Снегопад на страницах ученика, пока идёт Новый год."""
+    if session.get("role") != "student":
+        return {"snow": False}
+    from seasons import active_season
+    return {"snow": active_season() == "newyear"}
 
 
 init_csrf(app)
