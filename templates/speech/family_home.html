@@ -6,7 +6,8 @@
 <section class="card">
   <h2>📅 Занятия</h2>
   {% for s in upcoming %}
-  <div class="sp-fam-sess{{ ' sp-st-' ~ s.status }}"><span><b>{{ s.day }}</b>, {{ s.time }}–{{ s.end }}</span>
+  {% if loop.first and s.status == 'planned' %}<span class="sp-next-kicker">Ближайшее занятие</span>{% endif %}
+  <div class="sp-fam-sess{{ ' sp-st-' ~ s.status }}{{ ' sp-next' if loop.first and s.status == 'planned' }}"><span><b>{{ s.day }}</b>, {{ s.time }}–{{ s.end }}</span>
     {% if s.status != 'planned' %}<span class="sp-sess-st">{{ s.status_text }}</span>{% endif %}
     {% if s.can_cancel %}
     <form method="post" action="{{ url_for('speech.family_cancel', sid=s.id) }}" class="sp-fam-cancel"

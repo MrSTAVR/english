@@ -3,6 +3,8 @@
 import re
 from pathlib import Path
 
+from tests.test_speech import logoped  # noqa: F401  (фикстура)
+
 STATIC = Path(__file__).resolve().parent.parent / "static"
 
 
@@ -62,3 +64,12 @@ def test_lesson_test_has_progress_bar(make_student):
 def test_house_has_tabs(make_student):
     html = make_student().get("/student/house").get_data(as_text=True)
     assert 'id="hs-tabs"' in html and 'data-slot="wall"' in html and 'data-slot="floor"' in html
+
+
+
+def test_logoped_menu(logoped):
+    html = logoped.get("/logoped/home").get_data(as_text=True)
+    assert "area-speech has-tabbar sp-logoped" in html and 'id="clients"' in html
+    for label in ("Сегодня", "Расписание", "Ученики"):
+        assert f"<span>{label}</span>" in html
+    assert "Чик-чик" not in html and "English Fun" not in html
