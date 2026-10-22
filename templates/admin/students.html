@@ -1,0 +1,29 @@
+{% extends "admin/_layout.html" %}
+{% block admin_title %}Ученики{% endblock %}
+{% block admin %}
+<section class="card">
+  <h2>👶 Ученики ({{ rows|length }})</h2>
+  {% for r in rows %}{% set st = r.student %}
+  <a class="sp-row adm-student-row" href="{{ url_for('parent.parent_student', sid=st.id) }}">
+    <b>{{ st.emoji }} {{ st.display_name }}</b> <code>{{ st.username }}</code>
+    <span class="sp-sub">{{ r.stats.lessons_completed }}/{{ total_lessons }} уроков{% if r.last %} · последнее занятие {{ r.last }}{% endif %}
+      {% if st.birthday %} · 🎂 {{ st.birthday[8:10] }}.{{ st.birthday[5:7] }}{% endif %} · ⚙️ настроить ›</span>
+  </a>
+  {% else %}
+  <p class="hint">Аккаунтов пока нет — создайте первый ниже, и ребёнок сможет войти по логину и паролю. 😉</p>
+  {% endfor %}
+</section>
+
+<section class="card" id="add">
+  <h2>➕ Новый ученик</h2>
+  <form method="post" action="{{ url_for('parent.add_student') }}" class="sp-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Имя (как увидит ребёнок) <input type="text" name="display_name" placeholder="Маша" maxlength="40" required></label>
+    <label>Логин для входа <input type="text" name="username" placeholder="masha" maxlength="20" required
+             pattern="[a-zA-Z0-9_.\-]{2,20}" autocapitalize="off"></label>
+    <label>Пароль (мин. 4 символа) <input type="password" name="password" placeholder="••••" minlength="4" required></label>
+    <label>Аватарка <select name="emoji">{% for e in student_emojis %}<option value="{{ e }}">{{ e }}</option>{% endfor %}</select></label>
+    <button type="submit" class="btn btn-primary sp-wide">Создать аккаунт 🎉</button>
+  </form>
+</section>
+{% endblock %}

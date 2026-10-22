@@ -48,7 +48,7 @@ def test_admin_creates_logoped_with_validation(parent):
     r = parent.post("/parent/logopeds", data={"action": "add", "name": "Е2", "username": "ELENA", "password": "secret12"},
                     follow_redirects=True)
     assert "уже занят" in r.get_data(as_text=True)
-    html = parent.get("/parent").get_data(as_text=True)
+    html = parent.get("/parent/logopeds").get_data(as_text=True)
     assert 'id="logopeds"' in html and "<code>elena</code>" in html
 
 

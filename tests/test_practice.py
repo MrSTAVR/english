@@ -6,6 +6,7 @@ from curriculum import ALL_LESSONS, validate_lessons
 from grading import grade_question
 from practice import _variants, practice_extras, speak_items, listening_extras
 from stats import compute_stats
+from tests.helpers import db_scalar
 
 
 def test_variants_clean():
@@ -91,7 +92,8 @@ def test_speak_stats_and_parent_view(flask_app, make_student, parent):
     with flask_app.app_context():
         st = compute_stats(get_db())
     assert st["speak_words"] == 2 and st["speak_perfect"] == 1 and st["speak_tries"] == 4
-    assert "слов произнесено вслух" in parent.get("/parent").get_data(as_text=True)
+    sid = db_scalar("SELECT id FROM students")
+    assert "слов произнесено вслух" in parent.get(f"/parent/students/{sid}").get_data(as_text=True)
 
 
 def test_speak_page_and_lesson_blocks(make_student):

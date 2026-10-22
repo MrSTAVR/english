@@ -745,3 +745,5 @@ html[data-theme="dark"] .sp-st-done { background: #1f3d27; } html[data-theme="da
 html[data-theme="dark"] .sp-st-cancelled { background: #26232f; } html[data-theme="dark"] .sp-day-off { background: #1d3049; }
 html[data-theme="dark"] .map-locked { background: #2b2640; } html[data-theme="dark"] .map-num { background: #1b1730; } html[data-theme="dark"] .map-progress { background: #2b2640; }
 html[data-theme="dark"] .heat-cell.heat-0 { background: #2b2640; }
+html[data-theme="dark"] .adm-nums span { background: #241f3d; } html[data-theme="dark"] .adm-dot { background: #2b2640; }
+html[data-theme="dark"] .adm-on { background: #1f3d27; color: #9fe0ad; }

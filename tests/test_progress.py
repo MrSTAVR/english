@@ -39,8 +39,8 @@ def test_hard_words_and_send_to_review(make_student, parent):
     db.commit()
     hard = report.hard_words(db, sid)
     assert [h["key"] for h in hard] == ["cat", "dog"] and hard[0]["ru"] == "кот"      # выученное (pen) не трудное
-    html = parent.get("/parent").get_data(as_text=True)
-    assert 'id="progress"' in html and "cat — кот · ✗4" in html and "Календарь занятий" in html
+    html = parent.get("/parent/progress").get_data(as_text=True)
+    assert f'id="s{sid}"' in html and "cat — кот · ✗4" in html and "Календарь за 12 недель" in html
     r = parent.post(f"/parent/students/{sid}/review_hard", follow_redirects=True).get_data(as_text=True)
     assert "Слов отправлено в повторение на сегодня: 2" in r
     assert db_all("SELECT key, box, due FROM word_review WHERE key IN ('cat','dog') ORDER BY key") == \

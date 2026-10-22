@@ -13,7 +13,7 @@ from flask import Blueprint, abort, flash, jsonify, redirect, render_template, r
 from garden import cap_streak, get_garden, tree_count_for, tree_stage
 from report import MAX_WEEKS_BACK, activity_heatmap, hard_words, score_trend, week_report
 from progress import credit_lessons, lesson_ids_upto, uncredit_lessons
-from seasons import SEASONS, dates_text, get_dates, get_mode, in_season, is_yearly, set_dates, set_mode, set_yearly
+from seasons import SEASONS, active_season, dates_text, get_dates, get_mode, in_season, is_yearly, set_dates, set_mode, set_yearly
 from security import hash_password
 from stats import compute_stats
 from version import info as app_version
@@ -24,6 +24,12 @@ bp = Blueprint("parent", __name__)
 
 
 STUDENT_EMOJIS = ["🦄", "🐱", "🐰", "🦊", "🐼", "🐥", "🦋", "🌈", "🚀", "🎀", "🐢", "🦁"]
+
+
+def _student_page():
+    """Куда вернуться после действия с учеником: на его страницу (или к списку)."""
+    sid = (request.view_args or {}).get("sid")
+    return url_for("parent.parent_student", sid=sid) if sid else url_for("parent.parent_students")
 
 
 def valid_username(name):
@@ -59,7 +65,7 @@ def add_student():
              datetime.now().isoformat(timespec="seconds")))
         db.commit()
         flash(f"Аккаунт для {display_name} создан! 🎉", "success")
-    return redirect(url_for("parent.parent_dashboard") + "#students")
+    return redirect(_student_page())
 
 
 @bp.route("/parent/students/<int:sid>/delete", methods=["POST"])
@@ -80,7 +86,7 @@ def delete_student(sid):
     db.execute("DELETE FROM students WHERE id=?", (sid,))
     db.commit()
     flash(f"Аккаунт {student['display_name']} удалён вместе с его прогрессом.", "success")
-    return redirect(url_for("parent.parent_dashboard") + "#students")
+    return redirect(url_for("parent.parent_students"))
 
 
 @bp.route("/parent/students/<int:sid>/reset_password", methods=["POST"])
@@ -91,7 +97,7 @@ def reset_student_password(sid):
     password = request.form.get("password") or ""
     if len(password) < 4:
         flash("Новый пароль должен быть не короче 4 символов.", "error")
-        return redirect(url_for("parent.parent_dashboard") + "#students")
+        return redirect(_student_page())
     db = get_db()
     student = db.execute("SELECT * FROM students WHERE id=?", (sid,)).fetchone()
     if not student:
@@ -100,7 +106,7 @@ def reset_student_password(sid):
                (hash_password(password), sid))
     db.commit()
     flash(f"Пароль для {student['display_name']} обновлён 🔑", "success")
-    return redirect(url_for("parent.parent_dashboard") + "#students")
+    return redirect(_student_page())
 
 
 @bp.route("/parent/students/<int:sid>/garden", methods=["POST"])
@@ -128,7 +134,7 @@ def parent_update_garden(sid):
     coins = _num("coins")
     if streak is None and coins is None:
         flash("Ничего не изменено — заполни хотя бы одно поле.", "error")
-        return redirect(url_for("parent.parent_dashboard") + "#students")
+        return redirect(_student_page())
     if streak is not None:
         streak = cap_streak(streak)  # серия ограничена STREAK_CAP днями
         # синхронизируем last_study_day с реальностью, чтобы refresh не сбросил серию
@@ -148,7 +154,7 @@ def parent_update_garden(sid):
     db.commit()
     flash(f"Сад для {student['display_name']} обновлён: серия {streak if streak is not None else g['streak_days']} дн., "
           f"монет {coins if coins is not None else g['coins']} 🌳", "success")
-    return redirect(url_for("parent.parent_dashboard") + "#students")
+    return redirect(_student_page())
 
 
 @bp.route("/parent/students/<int:sid>/credit", methods=["POST"])
@@ -161,7 +167,7 @@ def credit_student_lessons(sid):
     student = db.execute("SELECT * FROM students WHERE id=?", (sid,)).fetchone()
     if not student:
         abort(404)
-    back = redirect(url_for("parent.parent_dashboard") + "#credit")
+    back = redirect(url_for("parent.parent_student", sid=sid) + "#credit")
     ids = set()
     for raw in request.form.getlist("lessons"):
         if raw.isdigit():
@@ -207,21 +213,21 @@ def parent_vacation(sid):
                    (sid, today.isoformat()))
         db.commit()
         flash("Каникулы отменены.", "ok")
-        return redirect(url_for("parent.parent_dashboard") + "#students")
+        return redirect(_student_page())
     try:
         d1 = datetime.strptime(request.form.get("start_day", ""), "%Y-%m-%d").date()
         d2 = datetime.strptime(request.form.get("end_day", ""), "%Y-%m-%d").date()
     except ValueError:
         flash("Укажите даты начала и конца каникул.", "error")
-        return redirect(url_for("parent.parent_dashboard") + "#students")
+        return redirect(_student_page())
     if d2 < d1 or (d2 - d1).days > 60 or d2 < today:
         flash("Даты некорректны: конец не раньше начала, не дольше 60 дней, не в прошлом.", "error")
-        return redirect(url_for("parent.parent_dashboard") + "#students")
+        return redirect(_student_page())
     db.execute("INSERT INTO vacations (student_id, start_day, end_day) VALUES (?,?,?)",
                (sid, d1.isoformat(), d2.isoformat()))
     db.commit()
     flash("Каникулы сохранены: серия в эти дни не сгорит. 🏖", "ok")
-    return redirect(url_for("parent.parent_dashboard") + "#students")
+    return redirect(_student_page())
 
 
 @bp.route("/parent/students/<int:sid>/birthday", methods=["POST"])
@@ -238,11 +244,11 @@ def parent_birthday(sid):
         value = datetime.strptime(raw, "%Y-%m-%d").date().isoformat() if raw else None
     except ValueError:
         flash("Дата рождения некорректна.", "error")
-        return redirect(url_for("parent.parent_dashboard") + "#students")
+        return redirect(_student_page())
     db.execute("UPDATE students SET birthday=? WHERE id=?", (value, sid))
     db.commit()
     flash("День рождения сохранён 🎂 — в эти дни у ученика будет праздник." if value else "День рождения убран.", "ok")
-    return redirect(url_for("parent.parent_dashboard") + "#students")
+    return redirect(_student_page())
 
 
 @bp.route("/parent/students/<int:sid>/goal", methods=["POST"])
@@ -263,7 +269,7 @@ def parent_goal(sid):
     else:
         flash(f"Цель: уроков от 0 до {goals.MAX_LESSONS}, слов от 0 до {goals.MAX_WORDS}, "
               "и хотя бы что-то одно больше нуля.", "error")
-    return redirect(url_for("parent.parent_dashboard") + "#students")
+    return redirect(_student_page())
 
 
 @bp.route("/parent/students/<int:sid>/review_hard", methods=["POST"])
@@ -280,7 +286,7 @@ def parent_review_hard(sid):
                    [(datetime.now().date().isoformat(), sid, k) for k in keys])
     db.commit()
     flash(f"Слов отправлено в повторение на сегодня: {len(keys)} 🔁" if keys else "Трудных слов нет 🎉", "ok")
-    return redirect(url_for("parent.parent_dashboard") + "#progress")
+    return redirect(url_for("parent.parent_progress") + f"#s{sid}")
 
 
 @bp.route("/parent/logopeds", methods=["POST"])
@@ -308,7 +314,7 @@ def parent_logopeds():
             flash("Пароль логопеда обновлён 🔑", "ok")
     else:
         abort(400)
-    return redirect(url_for("parent.parent_dashboard") + "#logopeds")
+    return redirect(url_for("parent.parent_logopeds_page"))
 
 
 @bp.route("/parent/updates", methods=["POST"])
@@ -330,7 +336,7 @@ def parent_updates():
             abort(400)
     except OSError as e:
         flash(f"Не удалось передать команду серверу: {e}", "error")
-    return redirect(url_for("parent.parent_dashboard") + "#updates")
+    return redirect(url_for("parent.parent_updates_page"))
 
 
 @bp.route("/parent/updates/state")
@@ -359,108 +365,152 @@ def parent_season():
             d1 = None
         if d1 is None or d2 < d1:
             flash("Укажите обе даты праздника, конец — не раньше начала (или очистите обе, чтобы вернуть стандартные).", "error")
-            return redirect(url_for("parent.parent_dashboard") + "#seasons")
+            return redirect(url_for("parent.parent_holidays"))
     if set_mode(db, key, request.form.get("mode", "")) and set_dates(db, key, d1, d2):
         set_yearly(db, key, bool(request.form.get("yearly")) and d1 is not None)
         flash("Настройка праздника сохранена.", "ok")
     else:
         flash("Не удалось сохранить настройку.", "error")
-    return redirect(url_for("parent.parent_dashboard") + "#seasons")
+    return redirect(url_for("parent.parent_holidays"))
+
+
+def _students(db):
+    return db.execute("SELECT * FROM students ORDER BY created_at ASC").fetchall()
+
+
+def _admin(template, **ctx):
+    """Страница кабинета администратора (общий каркас с вкладками — templates/admin/_layout.html)."""
+    return render_template(f"admin/{template}", **ctx)
+
+
+def _last_activity(db, sid):
+    r = db.execute("SELECT MAX(d) FROM (SELECT MAX(day) d FROM activity WHERE student_id=? "
+                   "UNION SELECT MAX(substr(finished_at, 1, 10)) FROM attempts WHERE student_id=? AND COALESCE(manual, 0)=0 "
+                   "UNION SELECT MAX(day) FROM daily_goal WHERE student_id=?)", (sid, sid, sid)).fetchone()[0]
+    return datetime.strptime(r, "%Y-%m-%d").strftime("%d.%m.%Y") if r else None
 
 
 @bp.route("/parent")
 def parent_dashboard():
+    """Обзор: компактная карточка на каждого ученика и короткий статус сайта."""
     err = require_role("parent")
     if err:
         return err
     db = get_db()
-    weeks_back = request.args.get("week", 0, type=int)
-    weeks_back = max(0, min(MAX_WEEKS_BACK, weeks_back or 0))
-
-    # Аккаунты учеников + их персональная статистика
-    students = db.execute(
-        "SELECT * FROM students ORDER BY created_at ASC").fetchall()
-    student_cards = []
-    for st in students:
+    cards = []
+    for st in _students(db):
         sstats = compute_stats(db, st["id"])
-        earned = {r["key"] for r in db.execute(
-            "SELECT key FROM achievements WHERE student_id=?", (st["id"],)).fetchall()}
-        sgarden = get_garden(db, st["id"])
-        vac = db.execute("SELECT * FROM vacations WHERE student_id=? AND end_day>=? "
-                         "ORDER BY start_day LIMIT 1",
+        garden = get_garden(db, st["id"])
+        vac = db.execute("SELECT * FROM vacations WHERE student_id=? AND end_day>=? ORDER BY start_day LIMIT 1",
                          (st["id"], datetime.now().date().isoformat())).fetchone()
-        student_cards.append({"student": st, "stats": sstats, "vacation": vac,
-                              "goal": goals.target(db, st["id"]),
-                              "week": week_report(db, st["id"], weeks_back),
-                              "heatmap": activity_heatmap(db, st["id"]), "trend": score_trend(db, st["id"]),
-                              "hard": hard_words(db, st["id"]),
-                              "earned_count": len(earned),
-                              "garden": sgarden,
-                              "tree_stage": tree_stage(sgarden["streak_days"]),
-                              "tree_count": tree_count_for(sgarden["streak_days"]),
-                              "deco_count": db.execute(
-                                  "SELECT COUNT(*) c FROM decorations WHERE student_id=?",
-                                  (st["id"],)).fetchone()["c"]})
+        cards.append({"student": st, "stats": sstats, "garden": garden, "vacation": vac,
+                      "tree_stage": tree_stage(garden["streak_days"]), "goal": goals.target(db, st["id"]),
+                      "week": week_report(db, st["id"]), "last": _last_activity(db, st["id"]),
+                      "hard_count": len(hard_words(db, st["id"]))})
+    season = active_season()
+    return _admin("overview.html", tab="overview", cards=cards, total_lessons=len(LESSONS),
+                  upd=updates.view(app_version()["commit"]),
+                  season=SEASONS.get(season) if season else None,
+                  logoped_count=db.execute("SELECT COUNT(*) FROM sp_logopeds").fetchone()[0])
 
-    # Зачёт уроков: состояние каждого урока для каждого ученика
-    credit_cards = []
-    for card in student_cards:
-        sst = card["stats"]
-        rows = [{"lesson": l,
-                 "state": ("credited" if l["id"] in sst["credited_ids"] else
-                           "done" if l["id"] in sst["completed_ids"] else "none")}
-                for l in ALL_LESSONS]
-        credit_cards.append({"student": card["student"], "rows": rows})
 
-    stats = compute_stats(db)  # общая сводка по всем детям
-    attempts = list(reversed(stats["attempts"]))  # свежие сверху
+@bp.route("/parent/students")
+def parent_students():
+    """Ученики: список и новый аккаунт."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    rows = [{"student": st, "stats": compute_stats(db, st["id"]), "last": _last_activity(db, st["id"])}
+            for st in _students(db)]
+    return _admin("students.html", tab="students", rows=rows, total_lessons=len(LESSONS),
+                  student_emojis=STUDENT_EMOJIS)
 
-    # Сводка по урокам (основные + дополнительные)
+
+@bp.route("/parent/students/<int:sid>")
+def parent_student(sid):
+    """Настройки одного ученика: цель дня, день рождения, каникулы, сад, зачёт уроков, пароль."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    st = db.execute("SELECT * FROM students WHERE id=?", (sid,)).fetchone() or abort(404)
+    sstats = compute_stats(db, sid)
+    garden = get_garden(db, sid)
+    vac = db.execute("SELECT * FROM vacations WHERE student_id=? AND end_day>=? ORDER BY start_day LIMIT 1",
+                     (sid, datetime.now().date().isoformat())).fetchone()
+    rows = [{"lesson": l, "state": ("credited" if l["id"] in sstats["credited_ids"] else
+                                    "done" if l["id"] in sstats["completed_ids"] else "none")} for l in ALL_LESSONS]
+    earned = db.execute("SELECT COUNT(*) FROM achievements WHERE student_id=?", (sid,)).fetchone()[0]
+    return _admin("student.html", tab="students", st=st, stats=sstats, garden=garden, vacation=vac,
+                  tree_stage=tree_stage(garden["streak_days"]), tree_count=tree_count_for(garden["streak_days"]),
+                  deco_count=db.execute("SELECT COUNT(*) FROM decorations WHERE student_id=?", (sid,)).fetchone()[0],
+                  goal=goals.target(db, sid), goal_limits=(goals.MAX_LESSONS, goals.MAX_WORDS), credit_rows=rows,
+                  main_count=len(LESSONS), total_lessons=len(LESSONS), earned_count=earned,
+                  achievements_total=len(ACHIEVEMENTS), last=_last_activity(db, sid))
+
+
+@bp.route("/parent/progress")
+def parent_progress():
+    """Прогресс: неделя, 12 недель, уроки и история занятий."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    weeks_back = max(0, min(MAX_WEEKS_BACK, request.args.get("week", 0, type=int) or 0))
+    students = _students(db)
+    cards = [{"student": st, "week": week_report(db, st["id"], weeks_back), "heatmap": activity_heatmap(db, st["id"]),
+              "trend": score_trend(db, st["id"]), "hard": hard_words(db, st["id"])} for st in students]
+    stats = compute_stats(db)
     lesson_rows = []
     for l in ALL_LESSONS:
         la = [a for a in stats["attempts"] if a["lesson_id"] == l["id"]]
         best = max(la, key=lambda a: a["score_percent"], default=None)
-        time_spent = sum(a["seconds_spent"] or 0 for a in la)
-        lesson_rows.append({
-            "lesson": l,
-            "tries": len(la),
-            "passed": l["id"] in stats["completed_ids"],
-            "best_score": best["score_percent"] if best else None,
-            "time_spent": time_spent,
-        })
+        lesson_rows.append({"lesson": l, "tries": len(la), "passed": l["id"] in stats["completed_ids"],
+                            "best_score": best["score_percent"] if best else None,
+                            "time_spent": sum(a["seconds_spent"] or 0 for a in la)})
+    return _admin("progress.html", tab="progress", cards=cards, weeks_back=weeks_back, max_weeks_back=MAX_WEEKS_BACK,
+                  lessons=lesson_rows, attempts=list(reversed(stats["attempts"]))[:100],
+                  names_by_id={st["id"]: st["display_name"] for st in students},
+                  emojis_by_id={st["id"]: st["emoji"] for st in students},
+                  lesson_titles={l["id"]: (f'{l["num"]}. ' if l.get("num") else "") + l["title"] for l in ALL_LESSONS})
 
-    earned = {}
-    for r in db.execute(
-            "SELECT a.student_id, a.key, a.earned_at, s.display_name, s.emoji "
-            "FROM achievements a JOIN students s ON s.id = a.student_id").fetchall():
-        earned[(r["student_id"], r["key"])] = r
-    achievements = [{**{k: v for k, v in a.items() if k != "check"},
-                     "earned": any(k[1] == a["key"] for k in earned),
-                     "who": ", ".join(f"{v['emoji']} {v['display_name']}"
-                                      for k, v in earned.items() if k[1] == a["key"]),
-                     "earned_at": next((v["earned_at"] for k, v in earned.items()
-                                        if k[1] == a["key"]), None)}
-                    for a in ACHIEVEMENTS]
 
-    names_by_id = {st["id"]: st["display_name"] for st in students}
-    emojis_by_id = {st["id"]: st["emoji"] for st in students}
+@bp.route("/parent/mistakes")
+def parent_mistakes():
+    err = require_role("parent")
+    if err:
+        return err
+    return _admin("mistakes.html", tab="mistakes")
 
-    return render_template("parent_dashboard.html",
-                           stats=stats, lessons=lesson_rows,
-                           attempts=attempts, achievements=achievements,
-                           students=students, student_cards=student_cards,
-                           credit_cards=credit_cards, main_count=len(LESSONS),
-                           names_by_id=names_by_id, emojis_by_id=emojis_by_id,
-                           student_emojis=STUDENT_EMOJIS, weeks_back=weeks_back,
-                           max_weeks_back=MAX_WEEKS_BACK, min_sp_password=speech.MIN_PASSWORD,
-                           logopeds=db.execute("SELECT l.*, (SELECT COUNT(*) FROM sp_clients c WHERE c.logoped_id=l.id "
-                                               "AND c.archived=0) AS n FROM sp_logopeds l ORDER BY l.name").fetchall(),
-                           upd=updates.view(app_version()["commit"]),
-                           goal_limits=(goals.MAX_LESSONS, goals.MAX_WORDS),
-                           seasons=[{"key": k, **v, "dates": dates_text(k), "mode": get_mode(k), "custom": get_dates(k), "yearly": is_yearly(k), "auto_now": in_season(k)}
-                                    for k, v in SEASONS.items()],
-                           lesson_titles={l["id"]: (f'{l["num"]}. ' if l.get("num") else "") + l["title"] for l in ALL_LESSONS},
-                           total_lessons=len(LESSONS))
+
+@bp.route("/parent/holidays")
+def parent_holidays():
+    err = require_role("parent")
+    if err:
+        return err
+    return _admin("holidays.html", tab="holidays",
+                  seasons=[{"key": k, **v, "dates": dates_text(k), "mode": get_mode(k), "custom": get_dates(k),
+                            "yearly": is_yearly(k), "auto_now": in_season(k)} for k, v in SEASONS.items()])
+
+
+@bp.route("/parent/logopeds")
+def parent_logopeds_page():
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    return _admin("logopeds.html", tab="logopeds", min_sp_password=speech.MIN_PASSWORD,
+                  logopeds=db.execute("SELECT l.*, (SELECT COUNT(*) FROM sp_clients c WHERE c.logoped_id=l.id "
+                                      "AND c.archived=0) AS n FROM sp_logopeds l ORDER BY l.name").fetchall())
+
+
+@bp.route("/parent/updates")
+def parent_updates_page():
+    err = require_role("parent")
+    if err:
+        return err
+    return _admin("updates.html", tab="updates", upd=updates.view(app_version()["commit"]))
 
 
 @bp.route("/api/mistakes")

@@ -105,7 +105,7 @@ def test_login_with_valid_token(anon, csrf_on):
 def test_parent_can_add_student_through_real_forms(anon, csrf_on):
     tok = token_from(anon.get("/").get_data(as_text=True))
     anon.post("/login/parent", data={"password": config.PARENT_PASSWORD, "csrf_token": tok})
-    tok = token_from(anon.get("/parent").get_data(as_text=True))
+    tok = token_from(anon.get("/parent/students").get_data(as_text=True))
     r = anon.post("/parent/students/add", follow_redirects=True, data={
         "display_name": "Маша", "username": "masha", "password": "secret1",
         "emoji": "🦄", "csrf_token": tok})

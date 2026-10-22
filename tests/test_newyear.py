@@ -108,7 +108,7 @@ def test_advent_achievement(make_student, monkeypatch):
 def test_parent_turns_newyear_off_hides_advent(parent, make_student, monkeypatch):
     c = make_student()
     _day(monkeypatch, date(2026, 12, 20))
-    assert "🎄 Новый год" in parent.get("/parent").get_data(as_text=True)
+    assert "🎄 Новый год" in parent.get("/parent/holidays").get_data(as_text=True)
     parent.post("/parent/season", data={"season": "newyear", "mode": "off"})
     assert c.get("/student/newyear").status_code == 302 and c.get("/student/advent").status_code == 302
     body = c.get("/student").get_data(as_text=True)

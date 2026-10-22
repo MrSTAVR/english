@@ -146,7 +146,7 @@ def test_sw_knows_new_pages(anon):
 def test_parent_controls_halloween(parent, make_student, monkeypatch):
     c = make_student()
     monkeypatch.setattr(seasons, "today", lambda: date(2026, 6, 1))
-    assert "Праздничные события" in parent.get("/parent").get_data(as_text=True)
+    assert "Свои даты" in parent.get("/parent/holidays").get_data(as_text=True)
     assert c.get("/student/halloween").status_code == 302            # по датам — не сезон
     parent.post("/parent/season", data={"season": "halloween", "mode": "on"})
     assert c.get("/student/halloween").status_code == 200            # включён вручную
@@ -176,7 +176,7 @@ def test_parent_sets_custom_dates(parent, make_student, monkeypatch):
     assert c.get("/student/halloween").status_code == 200
     monkeypatch.setattr(seasons, "today", lambda: date(2026, 10, 25))   # стандартные даты больше не работают
     assert c.get("/student/halloween").status_code == 302
-    assert "15.12.2026" in parent.get("/parent").get_data(as_text=True)
+    assert "15.12.2026" in parent.get("/parent/holidays").get_data(as_text=True)
     parent.post("/parent/season", data={"season": "halloween", "mode": "auto", "date_from": "", "date_to": ""})
     assert db_scalar("SELECT COUNT(*) FROM app_settings WHERE key LIKE '%_from'") == 0 and c.get("/student/halloween").status_code == 200
 

@@ -976,3 +976,46 @@ button, input, select, textarea { font-family: inherit; }
 .season-easter{background:linear-gradient(90deg,#8ee59b,#ffd54f);color:#3b2a6b}
 .season-birthday{background:linear-gradient(90deg,#ff5d8f,#7c5cff,#2fd08c)}
 .season-gift{font-size:1.1rem;border:2px solid #ffd54f;background:#fff8dc}
+/* Кабинет администратора: вкладки и карточки */
+.admin-head h1{margin-bottom:8px}
+.admin-tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 10px;margin-bottom:8px;scrollbar-width:thin}
+.admin-tabs a{flex:none;padding:8px 14px;border-radius:99px;text-decoration:none;font-weight:800;font-size:.92rem;
+  color:var(--primary-dark,#5a3fd6);background:var(--surface);border:1.5px solid var(--border);white-space:nowrap}
+.admin-tabs a.on{background:linear-gradient(135deg,#7c5cff,#a58bff);color:#fff;border-color:transparent;box-shadow:0 3px 0 #5a3fd6}
+.adm-status{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.adm-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;background:var(--surface);
+  border:1.5px solid var(--border);text-decoration:none;color:inherit;font-weight:700;font-size:.88rem}
+.adm-ok{color:#2f9a4b;font-weight:800}
+.adm-on{background:#dff5e3;color:#2c6b3a}
+.adm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.adm-card{display:flex;flex-direction:column;gap:10px;margin:0}
+.adm-card-head{display:flex;gap:12px;align-items:center}
+.adm-card-head h2{margin:0;font-size:1.3rem}
+.adm-avatar{font-size:2.2rem;line-height:1}
+.adm-progress{display:flex;align-items:center;gap:10px}
+.adm-progress .mini-progress{flex:1;width:auto;margin:0}
+.adm-nums{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
+.adm-nums span{display:flex;flex-direction:column;background:#f6f3ff;border-radius:12px;padding:6px 2px}
+.adm-nums b{font-size:1rem}
+.adm-nums small{font-size:.68rem;opacity:.7}
+.adm-week{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.adm-dot{width:26px;height:26px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.62rem;
+  font-weight:800;background:#ece8f6;color:#8a83a3}
+.adm-dot.on{background:#8ee59b;color:#1f5f2e}.adm-dot.goal{background:#2fa04b;color:#fff}
+.adm-dot.vac{background:#d6e9ff;color:#3a5f8a}.adm-dot.future{opacity:.4}
+.adm-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.adm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:14px}
+.adm-grid>.card{margin:0}
+.adm-grid h3,.adm-season h2{margin-top:0}
+.adm-season h2{font-size:1.15rem;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.adm-radio{display:flex;flex-wrap:wrap;gap:6px 16px;border:0;padding:0;margin:0}
+.adm-radio label{flex-direction:row!important;align-items:center;gap:6px!important;font-weight:700}
+.adm-radio input{width:auto!important;min-height:0!important}
+.adm-title{margin:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.adm-title code{font-size:.9rem}
+.adm-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.adm-danger summary{color:#c0282f}
+.adm-danger form{margin:10px 0}
+.adm-student-row b{font-size:1.05rem}
+.adm-nums-wide{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));margin-bottom:14px}
+.adm-nums-wide b{font-size:1.2rem}

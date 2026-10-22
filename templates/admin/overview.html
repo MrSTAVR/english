@@ -1,0 +1,50 @@
+{% extends "admin/_layout.html" %}
+{% block admin_title %}Обзор{% endblock %}
+{% block admin %}
+<div class="adm-status">
+  <a class="adm-chip" href="{{ url_for('parent.parent_updates_page') }}" title="Обновления сайта">
+    🔄 {{ app_version.version }}
+    {% if upd.available %}<span class="pill pill-warn">есть новая версия</span>
+    {% elif upd.status %}<span class="adm-ok">актуальная</span>{% else %}<span class="hint">автообновление не настроено</span>{% endif %}
+  </a>
+  {% if season %}<a class="adm-chip" href="{{ url_for('parent.parent_holidays') }}">{{ season.emoji }} Сейчас: {{ season.title }}</a>{% endif %}
+  {% if logoped_count %}<a class="adm-chip" href="{{ url_for('parent.parent_logopeds_page') }}">👩‍⚕️ Логопедов: {{ logoped_count }}</a>{% endif %}
+</div>
+
+{% if cards %}
+<div class="adm-cards">
+  {% for c in cards %}{% set st = c.student %}{% set s = c.stats %}{% set w = c.week %}
+  <section class="card adm-card">
+    <div class="adm-card-head">
+      <span class="adm-avatar">{{ st.emoji }}</span>
+      <div><h2>{{ st.display_name }}</h2>
+        <span class="hint">{% if c.last %}последнее занятие {{ c.last }}{% else %}занятий ещё не было{% endif %}
+          {% if c.vacation %} · 🏖 каникулы до {{ c.vacation.end_day[8:10] }}.{{ c.vacation.end_day[5:7] }}{% endif %}</span></div>
+    </div>
+    <div class="adm-progress">
+      <div class="mini-progress"><div class="mini-fill" style="width: {{ 100 * s.lessons_completed / total_lessons }}%"></div></div>
+      <span><b>{{ s.lessons_completed }}</b>/{{ total_lessons }} уроков</span>
+    </div>
+    <div class="adm-nums">
+      <span title="средний балл"><b>{% if s.avg_score %}{{ "%.0f"|format(s.avg_score) }}%{% else %}—{% endif %}</b><small>средний балл</small></span>
+      <span title="серия дней"><b>{{ c.tree_stage.emoji }} {{ c.garden.streak_days }}</b><small>дней подряд</small></span>
+      <span title="монетки"><b>{{ c.garden.coins }}</b><small>монеток</small></span>
+      <span title="время занятий"><b>{{ s.total_seconds|human_time }}</b><small>всего занятий</small></span>
+    </div>
+    <div class="adm-week" title="эта неделя">
+      {% for d in w.days %}<span class="adm-dot{{ ' on' if d.active }}{{ ' goal' if d.goal }}{{ ' vac' if d.vacation and not d.active }}{{ ' future' if d.future }}" title="{{ d.label }} {{ d.date.strftime('%d.%m') }}">{{ d.label }}</span>{% endfor %}
+      <span class="hint">{{ w.active_days }}/7 дн. · 🎯 {{ w.goal_days }}</span>
+    </div>
+    {% if c.hard_count %}<p class="hint">🧩 Трудных слов: {{ c.hard_count }}</p>{% endif %}
+    <div class="adm-actions">
+      <a class="btn btn-small" href="{{ url_for('parent.parent_progress') }}#s{{ st.id }}">📈 Прогресс</a>
+      <a class="btn btn-small" href="{{ url_for('parent.parent_student', sid=st.id) }}">⚙️ Настройки</a>
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% else %}
+<section class="card"><p>Учеников пока нет.</p>
+  <a class="btn btn-primary" href="{{ url_for('parent.parent_students') }}#add">➕ Создать первого ученика</a></section>
+{% endif %}
+{% endblock %}
