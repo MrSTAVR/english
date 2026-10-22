@@ -825,3 +825,17 @@ button, input, select, textarea { font-family: inherit; }
 .sk-got{background:#fff;border:3px solid #c9b8ff;opacity:1;transform:rotate(-2deg)}.sk-got:nth-child(even){transform:rotate(2deg)}
 .sk-gold{border-color:#FFC947;box-shadow:0 0 0 3px #FFE9A8,0 4px 10px rgba(232,163,23,.35);background:linear-gradient(135deg,#fff,#fff6d6)}
 .sk-emoji{font-size:2.6rem;line-height:1.1}.sk-name{font-size:.8rem;font-weight:700;margin-top:4px}
+/* Недельный отчёт родителю */
+.week-nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.week-box{border:2px solid var(--border);border-radius:16px;padding:10px 14px;margin:10px 0;background:var(--surface)}
+.week-box>summary{cursor:pointer;font-size:1.05rem;padding:6px 0}
+.week-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:10px 0}
+.week-day{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border-radius:12px;background:#f3f0fb;color:#8a83a3}
+.week-day small{font-size:.72rem}
+.week-day .wd-mark{font-size:1.2rem}
+.week-day.wd-active{background:#dff5e3;color:#2c6b3a}
+.week-day.wd-vac{background:#e3f1ff;color:#3a5f8a}
+.week-day.wd-future{opacity:.5}
+.week-stats{display:flex;flex-wrap:wrap;gap:8px 16px;margin:6px 0 10px}
+.week-list{margin:4px 0 10px;padding-left:20px}
+.week-list li{margin:2px 0}

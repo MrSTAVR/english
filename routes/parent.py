@@ -2,12 +2,14 @@
 """Кабинет родителя: аккаунты учеников, статистика, API ошибок."""
 
 import json
+import goals
 from achievements import ACHIEVEMENTS, update_achievements
 from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID
 from database import get_db
 from datetime import datetime
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from garden import cap_streak, get_garden, tree_count_for, tree_stage
+from report import MAX_WEEKS_BACK, week_report
 from progress import credit_lessons, lesson_ids_upto, uncredit_lessons
 from seasons import SEASONS, auto_season, get_dates, get_mode, set_dates, set_mode
 from security import hash_password
@@ -70,7 +72,7 @@ def delete_student(sid):
     db.execute("DELETE FROM achievements WHERE student_id=?", (sid,))
     db.execute("DELETE FROM decorations WHERE student_id=?", (sid,))
     db.execute("DELETE FROM garden WHERE student_id=?", (sid,))
-    for table in ("wardrobe_items", "wardrobe_wear", "story_done", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal", "vacations", "activity", "weekly_done", "boss_wins", "season_log", "house_items", "house_place"):
+    for table in ("wardrobe_items", "wardrobe_wear", "story_done", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal", "goal_settings", "vacations", "activity", "weekly_done", "boss_wins", "season_log", "house_items", "house_place"):
         db.execute(f"DELETE FROM {table} WHERE student_id=?", (sid,))
     db.execute("DELETE FROM students WHERE id=?", (sid,))
     db.commit()
@@ -219,6 +221,27 @@ def parent_vacation(sid):
     return redirect(url_for("parent.parent_dashboard") + "#students")
 
 
+@bp.route("/parent/students/<int:sid>/goal", methods=["POST"])
+def parent_goal(sid):
+    """Цель дня ученика: сколько уроков и слов повторения."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    if not db.execute("SELECT 1 FROM students WHERE id=?", (sid,)).fetchone():
+        abort(404)
+    try:
+        lessons, words = int(request.form.get("lessons", "")), int(request.form.get("words", ""))
+    except ValueError:
+        lessons = words = -1
+    if goals.set_target(db, sid, lessons, words):
+        flash(f"Цель дня сохранена: уроков — {lessons}, слов — {words}. 🎯", "ok")
+    else:
+        flash(f"Цель: уроков от 0 до {goals.MAX_LESSONS}, слов от 0 до {goals.MAX_WORDS}, "
+              "и хотя бы что-то одно больше нуля.", "error")
+    return redirect(url_for("parent.parent_dashboard") + "#students")
+
+
 @bp.route("/parent/season", methods=["POST"])
 def parent_season():
     """Праздничный сезон: авто (по датам) / всегда включён / выключен."""
@@ -250,6 +273,8 @@ def parent_dashboard():
     if err:
         return err
     db = get_db()
+    weeks_back = request.args.get("week", 0, type=int)
+    weeks_back = max(0, min(MAX_WEEKS_BACK, weeks_back or 0))
 
     # Аккаунты учеников + их персональная статистика
     students = db.execute(
@@ -264,6 +289,8 @@ def parent_dashboard():
                          "ORDER BY start_day LIMIT 1",
                          (st["id"], datetime.now().date().isoformat())).fetchone()
         student_cards.append({"student": st, "stats": sstats, "vacation": vac,
+                              "goal": goals.target(db, st["id"]),
+                              "week": week_report(db, st["id"], weeks_back),
                               "earned_count": len(earned),
                               "garden": sgarden,
                               "tree_stage": tree_stage(sgarden["streak_days"]),
@@ -321,7 +348,9 @@ def parent_dashboard():
                            students=students, student_cards=student_cards,
                            credit_cards=credit_cards, main_count=len(LESSONS),
                            names_by_id=names_by_id, emojis_by_id=emojis_by_id,
-                           student_emojis=STUDENT_EMOJIS,
+                           student_emojis=STUDENT_EMOJIS, weeks_back=weeks_back,
+                           max_weeks_back=MAX_WEEKS_BACK,
+                           goal_limits=(goals.MAX_LESSONS, goals.MAX_WORDS),
                            seasons=[{"key": k, **v, "mode": get_mode(k), "custom": get_dates(k), "auto_now": auto_season() == k}
                                     for k, v in SEASONS.items()],
                            lesson_titles={l["id"]: (f'{l["num"]}. ' if l.get("num") else "") + l["title"] for l in ALL_LESSONS},

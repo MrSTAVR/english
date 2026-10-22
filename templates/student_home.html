@@ -65,7 +65,7 @@
   <div class="tcard{{ ' tcard-done' if goal.done }}">
     <div class="tcard-head"><span class="tcard-title">🎯 Цель на сегодня</span>
       <span class="tcard-tag">{% if goal.done %}выполнена! +{{ goal.coins }} 🪙{% else %}награда {{ goal.coins }} 🪙{% endif %}</span></div>
-    {% if goal.need_lessons %}{{ trow('📚', 'Пройти урок', goal.lessons, goal.need_lessons) }}{% endif %}
+    {% if goal.need_lessons %}{{ trow('📚', 'Пройти урок' if goal.need_lessons == 1 else 'Пройти уроки', goal.lessons, goal.need_lessons) }}{% endif %}
     {% if goal.need_words %}{{ trow('🔁', 'Повторить слова', goal.words, goal.need_words) }}{% endif %}
   </div>
   {% endif %}

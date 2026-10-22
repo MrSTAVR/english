@@ -724,3 +724,6 @@ a.week-card:hover { border-color: var(--primary); }
 .wod-en { font-size: 1.6rem; font-weight: 900; }
 .wod-tr { color: var(--muted); font-weight: 700; }
 .wod-say { width: 46px; height: 46px; border-radius: 50%; border: 0; cursor: pointer; font-size: 1.2rem; background: var(--primary); color: #fff; box-shadow: 0 3px 0 var(--primary-deep); }
+html[data-theme="dark"] .week-day { background: #2b2640; color: #a9a2c4; }
+html[data-theme="dark"] .week-day.wd-active { background: #1f3d27; color: #9fe0ad; }
+html[data-theme="dark"] .week-day.wd-vac { background: #1d3049; color: #9cc4f0; }

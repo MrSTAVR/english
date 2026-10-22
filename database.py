@@ -73,6 +73,11 @@ CREATE TABLE IF NOT EXISTS daily_goal (
     done         INTEGER DEFAULT 0,
     PRIMARY KEY (student_id, day)
 );
+CREATE TABLE IF NOT EXISTS goal_settings (
+    student_id   INTEGER PRIMARY KEY,           -- цель дня, заданная родителем
+    lessons      INTEGER NOT NULL,
+    words        INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS game_scores (
     student_id   INTEGER NOT NULL,
     game         TEXT NOT NULL,

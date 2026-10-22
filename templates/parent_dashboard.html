@@ -56,6 +56,15 @@
               </form>
             </details>
             {% endif %}
+            <details class="vac-box">
+              <summary>🎯 Цель дня: {{ card.goal[0] }} ур. + {{ card.goal[1] }} слов</summary>
+              <form method="post" action="{{ url_for('parent.parent_goal', sid=st.id) }}" class="vac-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label>Уроков <input type="number" name="lessons" min="0" max="{{ goal_limits[0] }}" value="{{ card.goal[0] }}" required></label>
+                <label>Слов повторить <input type="number" name="words" min="0" max="{{ goal_limits[1] }}" step="1" value="{{ card.goal[1] }}" required></label>
+                <button class="btn btn-small" type="submit" title="Стандарт — 1 урок и 10 слов">Сохранить</button>
+              </form>
+            </details>
           </td>
           <td class="actions-cell">
             <form method="post" action="{{ url_for('parent.reset_student_password', sid=st.id) }}" class="inline-form">
@@ -94,6 +103,60 @@
       </select></label>
     <button type="submit" class="btn btn-primary">Создать аккаунт 🎉</button>
   </form>
+</section>
+
+<!-- Недельный отчёт -->
+<section class="card" id="week">
+  {% set wk0 = student_cards[0].week if student_cards else none %}
+  <h2>📅 Неделя{% if wk0 %}: {{ wk0.monday.strftime('%d.%m') }} — {{ wk0.sunday.strftime('%d.%m.%Y') }}{% endif %}</h2>
+  <div class="week-nav">
+    {% if weeks_back < max_weeks_back %}<a class="btn btn-small" href="{{ url_for('parent.parent_dashboard', week=weeks_back + 1) }}#week">← прошлая</a>{% endif %}
+    {% if weeks_back > 0 %}
+      <a class="btn btn-small" href="{{ url_for('parent.parent_dashboard', week=weeks_back - 1) }}#week">следующая →</a>
+      <a class="btn btn-small" href="{{ url_for('parent.parent_dashboard') }}#week">эта неделя</a>
+    {% else %}<span class="hint">текущая неделя</span>{% endif %}
+  </div>
+  {% for card in student_cards %}{% set w = card.week %}
+  <details class="week-box" {% if student_cards|length == 1 %}open{% endif %}>
+    <summary>{{ card.student.emoji }} <b>{{ card.student.display_name }}</b> —
+      дней с занятиями: {{ w.active_days }} из 7 · {{ w.minutes }} мин. · цель дня {{ w.goal_days }} раз</summary>
+    <div class="week-days">
+      {% for d in w.days %}
+      <div class="week-day{{ ' wd-active' if d.active }}{{ ' wd-vac' if d.vacation and not d.active }}{{ ' wd-future' if d.future }}"
+           title="{{ d.date.strftime('%d.%m') }}: действий {{ d.acts }}, тесты {{ d.minutes }} мин., слов {{ d.words }}">
+        <b>{{ d.label }}</b>
+        <span class="wd-mark">{% if d.goal %}🎯{% elif d.active %}✅{% elif d.vacation %}🏖{% elif d.future %}·{% else %}—{% endif %}</span>
+        <small>{{ d.date.strftime('%d.%m') }}</small>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="week-stats">
+      <span>⏱ <b>{{ w.minutes }}</b> мин. в тестах</span>
+      <span>🔁 <b>{{ w.words }}</b> слов повторено</span>
+      {% for k in w.kinds %}<span>{{ k.emoji }} {{ k.label }}: <b>{{ k.n }}</b></span>{% endfor %}
+      <span>📝 средний балл: <b>{% if w.avg_score is not none %}{{ w.avg_score }}%{% else %}—{% endif %}</b></span>
+    </div>
+    {% if w.lessons %}
+    <h4>Тесты за неделю</h4>
+    <ul class="week-list">
+      {% for l in w.lessons %}<li>{{ l.day }} · {{ l.title }} — <b>{{ l.score }}%</b> {{ '✅' if l.passed else '🔁 не сдан' }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% if w.top_mistakes %}
+    <h4>Частые ошибки (всего {{ w.mistakes_total }})</h4>
+    <ul class="week-list">
+      {% for m in w.top_mistakes %}<li>{{ m.q }} → <b>{{ m.correct }}</b>{% if m.n > 1 %} <span class="pill pill-warn">×{{ m.n }}</span>{% endif %}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% if w.hard_words %}
+    <h4>Трудные слова в повторении</h4>
+    <p>{% for h in w.hard_words %}<span class="pill pill-soft">{{ h.key }} · ошибок {{ h.n_bad }}</span> {% endfor %}</p>
+    {% endif %}
+    {% if not w.active_days %}<p class="hint">За эту неделю занятий не было.</p>{% endif %}
+  </details>
+  {% else %}
+  <p class="hint">Отчёт появится, когда будет создан аккаунт ученика.</p>
+  {% endfor %}
 </section>
 
 <!-- Праздничные события -->
