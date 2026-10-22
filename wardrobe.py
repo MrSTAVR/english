@@ -59,6 +59,9 @@ ITEMS += [
     {"key": "hat-pompom", "slot": "hat", "name": "Шапка с помпоном", "cost": 22, "source": "newyear"},
     {"key": "face-snowflakes", "slot": "face", "name": "Очки-снежинки", "cost": 16, "source": "newyear"},
     {"key": "neck-garland", "slot": "neck", "name": "Гирлянда-огоньки", "cost": 14, "source": "newyear"},
+    # сезоны 8 Марта и Пасха
+    {"key": "hat-tulip", "slot": "hat", "name": "Тюльпан", "cost": 18, "source": "march8"},
+    {"key": "hat-eggshell", "slot": "hat", "name": "Скорлупка", "cost": 20, "source": "easter"},
 ]
 for _i in ITEMS:
     _i.setdefault("source", "shop")

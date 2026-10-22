@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="{{ 'Логопед' if speech_area else 'English Fun' }}">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="{{ url_for('static', filename='fonts.css') }}?v=1">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=35">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=36">
 <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=28">
 <link rel="stylesheet" href="{{ url_for('static', filename='achievements.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=1">
@@ -137,7 +137,7 @@
 <script src="{{ url_for('static', filename='theme.js') }}?v=1"></script>
 {% if not speech_area %}
 <script>window.MASCOT_SETTINGS = {{ mascot|tojson }};</script>
-<script src="{{ url_for('static', filename='chick.js') }}?v=3"></script>
+<script src="{{ url_for('static', filename='chick.js') }}?v=4"></script>
 <script src="{{ url_for('static', filename='mascot.js') }}?v=12"></script>
 <script src="{{ url_for('static', filename='tts.js') }}?v=3"></script>
 <script src="{{ url_for('static', filename='pwa.js') }}?v=2"></script>

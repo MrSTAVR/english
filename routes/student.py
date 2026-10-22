@@ -159,6 +159,8 @@ def student_home():
                            garden=garden,
                            on_vacation=on_vacation(db, student["id"]),
                            season=season, season_banner=content(season).BANNER if season else "",
+                           birthday_banner=content("birthday").BANNER.format(name=student["display_name"])
+                           if seasons.birthday_active(student["birthday"]) else "",
                            advent=adv, advent_today_open=adv and bool(db.execute(
                                "SELECT 1 FROM advent WHERE student_id=? AND year=? AND day=?",
                                (student["id"], seasons.today().year, seasons.today().day)).fetchone()),

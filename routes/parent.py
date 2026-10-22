@@ -13,7 +13,7 @@ from flask import Blueprint, abort, flash, jsonify, redirect, render_template, r
 from garden import cap_streak, get_garden, tree_count_for, tree_stage
 from report import MAX_WEEKS_BACK, activity_heatmap, hard_words, score_trend, week_report
 from progress import credit_lessons, lesson_ids_upto, uncredit_lessons
-from seasons import SEASONS, get_dates, get_mode, in_season, set_dates, set_mode
+from seasons import SEASONS, dates_text, get_dates, get_mode, in_season, is_yearly, set_dates, set_mode, set_yearly
 from security import hash_password
 from stats import compute_stats
 from version import info as app_version
@@ -75,7 +75,7 @@ def delete_student(sid):
     db.execute("DELETE FROM achievements WHERE student_id=?", (sid,))
     db.execute("DELETE FROM decorations WHERE student_id=?", (sid,))
     db.execute("DELETE FROM garden WHERE student_id=?", (sid,))
-    for table in ("wardrobe_items", "wardrobe_wear", "story_done", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal", "goal_settings", "vacations", "activity", "weekly_done", "boss_wins", "season_log", "advent", "house_items", "house_place"):
+    for table in ("wardrobe_items", "wardrobe_wear", "story_done", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal", "goal_settings", "vacations", "activity", "weekly_done", "boss_wins", "season_log", "advent", "birthday_gifts", "house_items", "house_place"):
         db.execute(f"DELETE FROM {table} WHERE student_id=?", (sid,))
     db.execute("DELETE FROM students WHERE id=?", (sid,))
     db.commit()
@@ -224,6 +224,27 @@ def parent_vacation(sid):
     return redirect(url_for("parent.parent_dashboard") + "#students")
 
 
+@bp.route("/parent/students/<int:sid>/birthday", methods=["POST"])
+def parent_birthday(sid):
+    """День рождения ученика — личный праздник (пусто — убрать)."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    if not db.execute("SELECT 1 FROM students WHERE id=?", (sid,)).fetchone():
+        abort(404)
+    raw = (request.form.get("birthday") or "").strip()
+    try:
+        value = datetime.strptime(raw, "%Y-%m-%d").date().isoformat() if raw else None
+    except ValueError:
+        flash("Дата рождения некорректна.", "error")
+        return redirect(url_for("parent.parent_dashboard") + "#students")
+    db.execute("UPDATE students SET birthday=? WHERE id=?", (value, sid))
+    db.commit()
+    flash("День рождения сохранён 🎂 — в эти дни у ученика будет праздник." if value else "День рождения убран.", "ok")
+    return redirect(url_for("parent.parent_dashboard") + "#students")
+
+
 @bp.route("/parent/students/<int:sid>/goal", methods=["POST"])
 def parent_goal(sid):
     """Цель дня ученика: сколько уроков и слов повторения."""
@@ -340,6 +361,7 @@ def parent_season():
             flash("Укажите обе даты праздника, конец — не раньше начала (или очистите обе, чтобы вернуть стандартные).", "error")
             return redirect(url_for("parent.parent_dashboard") + "#seasons")
     if set_mode(db, key, request.form.get("mode", "")) and set_dates(db, key, d1, d2):
+        set_yearly(db, key, bool(request.form.get("yearly")) and d1 is not None)
         flash("Настройка праздника сохранена.", "ok")
     else:
         flash("Не удалось сохранить настройку.", "error")
@@ -435,7 +457,7 @@ def parent_dashboard():
                                                "AND c.archived=0) AS n FROM sp_logopeds l ORDER BY l.name").fetchall(),
                            upd=updates.view(app_version()["commit"]),
                            goal_limits=(goals.MAX_LESSONS, goals.MAX_WORDS),
-                           seasons=[{"key": k, **v, "mode": get_mode(k), "custom": get_dates(k), "auto_now": in_season(k)}
+                           seasons=[{"key": k, **v, "dates": dates_text(k), "mode": get_mode(k), "custom": get_dates(k), "yearly": is_yearly(k), "auto_now": in_season(k)}
                                     for k, v in SEASONS.items()],
                            lesson_titles={l["id"]: (f'{l["num"]}. ' if l.get("num") else "") + l["title"] for l in ALL_LESSONS},
                            total_lessons=len(LESSONS))

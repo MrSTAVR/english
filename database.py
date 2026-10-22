@@ -23,7 +23,13 @@ CREATE TABLE IF NOT EXISTS students (
     display_name TEXT NOT NULL,                        -- имя на странице урока
     password_hash TEXT NOT NULL,                       -- PBKDF2-хеш пароля
     emoji        TEXT DEFAULT '🎒',                    -- аватарка для ребёнка
-    created_at   TEXT NOT NULL
+    created_at   TEXT NOT NULL,
+    birthday     TEXT                                  -- 'ГГГГ-ММ-ДД' — личный праздник
+);
+CREATE TABLE IF NOT EXISTS birthday_gifts (           -- подарок на день рождения: раз в год
+    student_id INTEGER NOT NULL,
+    year       INTEGER NOT NULL,
+    PRIMARY KEY (student_id, year)
 );
 CREATE TABLE IF NOT EXISTS attempts (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -304,6 +310,9 @@ def init_db():
         conn.execute("DROP TABLE achievements")
         conn.executescript(SCHEMA)
     # индекс уникальности для новой таблицы ачивок уже задан PRIMARY KEY
+    st_cols = {r[1] for r in conn.execute("PRAGMA table_info(students)")}
+    if "birthday" not in st_cols:
+        conn.execute("ALTER TABLE students ADD COLUMN birthday TEXT")
     sp_cols = {r[1] for r in conn.execute("PRAGMA table_info(sp_sessions)")}
     if sp_cols and "cancelled_by" not in sp_cols:
         conn.execute("ALTER TABLE sp_sessions ADD COLUMN cancelled_by TEXT")   # logoped / family

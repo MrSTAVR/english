@@ -26,7 +26,7 @@
       {% set on = worn.get(slot.key) == it.key or (slot.key == 'color' and not worn.get('color') and it.key == 'color-yellow') %}
       <div class="wd-item card{{ ' is-on' if on }}">
         <div class="wd-thumb" data-key="{{ it.key }}" data-slot="{{ slot.key }}"></div>
-        <div class="wd-name">{{ it.name }}{% if it.source == 'halloween' %} 🎃{% elif it.source == 'newyear' %} 🎄{% elif it.source == 'boss' %} 🏆{% endif %}</div>
+        <div class="wd-name">{{ it.name }}{% if it.source == 'halloween' %} 🎃{% elif it.source == 'newyear' %} 🎄{% elif it.source == 'march8' %} 💐{% elif it.source == 'easter' %} 🐣{% elif it.source == 'boss' %} 🏆{% endif %}</div>
         {% if on %}
           <div class="wd-state">✔ Надето</div>
           {% if slot.key != 'color' %}

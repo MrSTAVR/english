@@ -127,4 +127,6 @@ def test_delete_student_cleans_advent(parent, make_student, monkeypatch):
 
 def test_sw_knows_newyear_pages(anon):
     body = anon.get("/sw.js").get_data(as_text=True)
-    assert "newyear|advent" in body
+    import re
+    pages = re.search(r"student\\/\((.*?)\)", body).group(1).split("|")
+    assert {"newyear", "advent", "march8", "easter", "birthday"} <= set(pages)
