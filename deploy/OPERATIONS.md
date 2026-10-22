@@ -70,6 +70,7 @@ bash /opt/english/app/deploy/update.sh
 | Логи Caddy / сертификата | `journalctl -u caddy -n 100 --no-pager` |
 | Перезапуск | `systemctl restart english` |
 | Сменить пароль родителя | `nano /etc/english.env` (строка `ENGLISH_PARENT_PASSWORD`), затем `systemctl restart english` |
+| Копии в Telegram | Кабинет администратора → вкладка «🤖 Telegram»: подключить бота, «Отправить копию сейчас». Ночная копия (03:17) уходит туда сама |
 | Копия прямо сейчас | `sudo -u english env ENGLISH_APP_DB=/opt/english/data/english_app.db ENGLISH_BACKUP_DIR=/opt/english/backups /opt/english/venv/bin/python /opt/english/app/backup_db.py` |
 
 ## Автоматические обновления безопасности Debian (один раз)

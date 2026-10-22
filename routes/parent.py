@@ -3,8 +3,13 @@
 
 import json
 import logging
+import sqlite3
+
+import backup_db
+import database
 import goals
 import speech
+import tg
 import updates
 from achievements import ACHIEVEMENTS, update_achievements
 from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID
@@ -513,6 +518,53 @@ def parent_updates_page():
     if err:
         return err
     return _admin("updates.html", tab="updates", upd=updates.view(app_version()["commit"]))
+
+
+@bp.route("/parent/telegram", methods=["GET", "POST"])
+def parent_telegram():
+    """Telegram-бот администратора: токен, привязка чата, отправка копий базы."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    if request.method == "GET":
+        return _admin("telegram.html", tab="telegram", tg=tg.settings(db))
+    s = tg.settings(db)
+    action = request.form.get("action")
+    try:
+        if action == "token":
+            token = (request.form.get("token") or "").strip()
+            name = tg.check_token(token)
+            tg.forget(db)
+            tg.save(db, tg_token=token, tg_chat_name=name)
+            flash(f"Бот {name} подключён ✅ Теперь откройте его в Telegram, нажмите «Запустить» и вернитесь сюда.", "ok")
+        elif action == "link":
+            chat, name = tg.find_chat(s["tg_token"])
+            tg.send_message(s["tg_token"], chat, "✅ Готово! Сюда будут приходить резервные копии English Fun.")
+            tg.save(db, tg_chat=chat, tg_chat_name=name)
+            flash(f"Чат привязан: {name}. Бот отправил туда сообщение 👋", "ok")
+        elif action == "test":
+            tg.send_message(s["tg_token"], s["tg_chat"], "👋 Проверка связи из кабинета администратора English Fun.")
+            flash("Сообщение отправлено — проверьте Telegram 📨", "ok")
+        elif action == "backup":
+            path = backup_db.make_backup(database.DB_PATH, backup_db.default_dir(), backup_db.default_keep())
+            tg.send_backup(db, path, force=True)
+            flash("Копия базы отправлена в Telegram 💾", "ok")
+        elif action in ("backups_on", "backups_off"):
+            tg.save(db, tg_backups="1" if action == "backups_on" else "0")
+            flash("Ежедневная отправка копий включена ✅" if action == "backups_on" else
+                  "Ежедневная отправка копий выключена", "ok")
+        elif action == "forget":
+            tg.forget(db)
+            flash("Бот отключён. Удалите его в @BotFather (/deletebot), если он больше не нужен.", "ok")
+        else:
+            abort(400)
+    except tg.TgError as e:
+        flash(f"Не получилось: {e}", "error")
+    except (OSError, sqlite3.Error, RuntimeError) as e:
+        log.exception("копия базы для Telegram")
+        flash(f"Копия базы не сделалась: {e}", "error")
+    return redirect(url_for("parent.parent_telegram"))
 
 
 @bp.route("/api/mistakes")

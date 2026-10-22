@@ -11,7 +11,8 @@
       ('mistakes', url_for('parent.parent_mistakes'), '❌ Ошибки'),
       ('holidays', url_for('parent.parent_holidays'), '🎉 Праздники'),
       ('logopeds', url_for('parent.parent_logopeds_page'), '👩‍⚕️ Логопеды'),
-      ('updates', url_for('parent.parent_updates_page'), '🔄 Обновления')] %}
+      ('updates', url_for('parent.parent_updates_page'), '🔄 Обновления'),
+      ('telegram', url_for('parent.parent_telegram'), '🤖 Telegram')] %}
     <a href="{{ url }}" class="{{ 'on' if tab == key }}"{% if tab == key %} aria-current="page"{% endif %}>{{ label }}</a>
     {% endfor %}
   </nav>
