@@ -84,3 +84,60 @@ def week_report(db, student_id, weeks_back=0, today=None):
         "top_mistakes": [{"q": q, "correct": c, "n": n} for (q, c), n in mistakes.most_common(5)],
         "hard_words": [dict(r) for r in hard],
     }
+
+
+# ---------------------------------------------------------------- прогресс за несколько недель
+
+def activity_heatmap(db, student_id, weeks=12, today=None):
+    """Календарь «сколько занималась» по дням: недели (колонки) × дни (строки), уровень 0–4."""
+    today = today or datetime.now().date()
+    first = week_start(today) - timedelta(weeks=weeks - 1)
+    a, b = first.isoformat(), today.isoformat()
+    score = Counter()
+    for r in db.execute("SELECT day, COUNT(*) n FROM activity WHERE student_id=? AND day>=? AND day<=? GROUP BY day",
+                        (student_id, a, b)):
+        score[r["day"]] += r["n"]
+    for r in db.execute("SELECT day, words FROM daily_goal WHERE student_id=? AND day>=? AND day<=?", (student_id, a, b)):
+        score[r["day"]] += (r["words"] or 0) // 5                  # каждые 5 слов повторения — как одно занятие
+    for r in db.execute("SELECT substr(finished_at, 1, 10) d, COUNT(*) n FROM attempts WHERE student_id=? "
+                        "AND finished_at IS NOT NULL AND COALESCE(manual, 0)=0 AND substr(finished_at, 1, 10)>=? "
+                        "GROUP BY d", (student_id, a)):
+        score[r["d"]] += r["n"]
+    cols = []
+    for w in range(weeks):
+        col = []
+        for i in range(7):
+            d = first + timedelta(weeks=w, days=i)
+            n = score.get(d.isoformat(), 0)
+            col.append({"date": d, "n": n, "future": d > today,
+                        "level": 0 if n == 0 else 1 if n == 1 else 2 if n <= 3 else 3 if n <= 6 else 4})
+        cols.append(col)
+    return {"weeks": cols, "active_days": sum(1 for c in cols for d in c if d["n"]),
+            "first": first, "labels": WEEKDAYS}
+
+
+def score_trend(db, student_id, weeks=12, today=None):
+    """Средний балл тестов по неделям (только настоящие попытки): [{"label", "avg" или None, "n"}]."""
+    today = today or datetime.now().date()
+    first = week_start(today) - timedelta(weeks=weeks - 1)
+    rows = db.execute("SELECT substr(finished_at, 1, 10) d, score_percent s FROM attempts WHERE student_id=? "
+                      "AND finished_at IS NOT NULL AND COALESCE(manual, 0)=0 AND substr(finished_at, 1, 10)>=?",
+                      (student_id, first.isoformat())).fetchall()
+    buckets = [[] for _ in range(weeks)]
+    for r in rows:
+        idx = (datetime.fromisoformat(r["d"]).date() - first).days // 7
+        if 0 <= idx < weeks:
+            buckets[idx].append(r["s"] or 0)
+    return [{"label": (first + timedelta(weeks=i)).strftime("%d.%m"), "n": len(v),
+             "avg": round(sum(v) / len(v)) if v else None} for i, v in enumerate(buckets)]
+
+
+def hard_words(db, student_id, limit=10):
+    """Слова, в которых больше всего ошибок и которые ещё не выучены."""
+    from review import MASTERED_BOX, all_words
+    by_key = {w["key"]: w for w in all_words()}
+    rows = db.execute("SELECT key, n_bad, n_ok, box FROM word_review WHERE student_id=? AND n_bad>0 AND box<? "
+                      "ORDER BY n_bad DESC, box ASC, key LIMIT ?", (student_id, MASTERED_BOX, limit)).fetchall()
+    return [{"key": r["key"], "en": by_key.get(r["key"], {}).get("en", r["key"]),
+             "ru": by_key.get(r["key"], {}).get("ru", ""), "bad": r["n_bad"], "ok": r["n_ok"], "box": r["box"]}
+            for r in rows]

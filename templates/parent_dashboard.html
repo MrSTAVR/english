@@ -226,6 +226,46 @@
   </details>
 </section>
 
+<!-- Прогресс за 12 недель -->
+<section class="card" id="progress">
+  <h2>📈 Прогресс за 12 недель</h2>
+  {% for card in student_cards %}
+  <details class="week-box" {% if student_cards|length == 1 %}open{% endif %}>
+    <summary>{{ card.student.emoji }} <b>{{ card.student.display_name }}</b> — дней с занятиями: {{ card.heatmap.active_days }}</summary>
+    <h4>Календарь занятий</h4>
+    <div class="heat">
+      <div class="heat-labels">{% for l in card.heatmap.labels %}<span>{{ l }}</span>{% endfor %}</div>
+      {% for col in card.heatmap.weeks %}
+      <div class="heat-col">
+        {% for d in col %}<span class="heat-cell heat-{{ d.level }}{{ ' heat-future' if d.future }}" title="{{ d.date.strftime('%d.%m') }}: {{ d.n }}"></span>{% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <p class="hint heat-legend">меньше <span class="heat-cell heat-0"></span><span class="heat-cell heat-1"></span><span class="heat-cell heat-2"></span><span class="heat-cell heat-3"></span><span class="heat-cell heat-4"></span> больше</p>
+    <h4>Средний балл тестов по неделям</h4>
+    {% if card.trend|selectattr('avg')|list %}
+    <div class="trend">
+      {% for t in card.trend %}
+      <div class="trend-col" title="неделя с {{ t.label }}: {% if t.avg is not none %}{{ t.avg }}%, тестов {{ t.n }}{% else %}тестов не было{% endif %}">
+        <span class="trend-val">{{ t.avg if t.avg is not none else '' }}</span>
+        <div class="trend-bar{{ ' trend-low' if t.avg is not none and t.avg < 70 }}" style="height: {{ ((t.avg or 0) * 0.75)|round|int }}%"></div>
+        <span class="trend-lbl">{{ t.label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}<p class="hint">Тестов за 12 недель не было.</p>{% endif %}
+    <h4>Трудные слова</h4>
+    {% if card.hard %}
+    <p>{% for h in card.hard %}<span class="pill pill-soft" title="ошибок {{ h.bad }}, верно {{ h.ok }}">{{ h.en }} — {{ h.ru }} · ✗{{ h.bad }}</span> {% endfor %}</p>
+    <form method="post" action="{{ url_for('parent.parent_review_hard', sid=card.student.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-small" type="submit">🔁 Отправить в повторение на сегодня</button>
+    </form>
+    {% else %}<p class="hint">Трудных слов нет 🎉</p>{% endif %}
+  </details>
+  {% endfor %}
+</section>
+
 <!-- Праздничные события -->
 <section class="card" id="seasons">
   <h2>🎉 Праздничные события</h2>
