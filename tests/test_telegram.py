@@ -39,7 +39,6 @@ class FakeTelegram:
 
 @pytest.fixture
 def fake(monkeypatch, tmp_path):
-    monkeypatch.setenv("ENGLISH_BACKUP_DIR", str(tmp_path / "backups"))   # кнопка «копия сейчас» — не в папку проекта
     return FakeTelegram(monkeypatch)
 
 
@@ -140,3 +139,25 @@ def test_big_file_refused(tmp_path, monkeypatch):
 
 def test_update_script_skips_telegram():
     assert "backup_db.py\" --no-telegram" in open("deploy/update.sh", encoding="utf-8").read()
+
+
+def test_backup_button_on_overview(parent, fake):
+    html = parent.get("/parent").get_data(as_text=True)
+    assert "Подключить Telegram" in html and "Бэкап в Telegram" not in html
+    _link(parent, fake)
+    assert "Бэкап в Telegram" in parent.get("/parent").get_data(as_text=True)
+    r = parent.post("/parent/telegram", data={"action": "backup", "back": "overview"})
+    assert r.status_code == 302 and r.headers["Location"].endswith("/parent")
+    assert fake.methods()[-1] == "sendDocument"
+    assert "Копия базы отправлена" in parent.get("/parent").get_data(as_text=True)
+
+
+def test_manual_backup_works_without_backup_dir_access(parent, fake, tmp_path, monkeypatch):
+    """На сервере сайт не может писать в /opt/english/backups — ручная копия делается во временной папке."""
+    locked = tmp_path / "backups"
+    locked.write_text("это файл, а не папка")                      # писать сюда нельзя
+    monkeypatch.setenv("ENGLISH_BACKUP_DIR", str(locked))
+    _link(parent, fake)
+    html = parent.post("/parent/telegram", data={"action": "backup"}, follow_redirects=True).get_data(as_text=True)
+    assert "Копия базы отправлена" in html and fake.methods()[-1] == "sendDocument"
+    assert locked.read_text() == "это файл, а не папка"
