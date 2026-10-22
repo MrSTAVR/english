@@ -4,7 +4,9 @@
 Время — местное (config.TIMEZONE), хранится строкой 'YYYY-MM-DD HH:MM'.
 Повторяющиеся занятия (sp_series) разворачиваются в обычные строки sp_sessions на HORIZON_WEEKS
 вперёд; generated_until не даёт «воскресить» удалённое или перенесённое занятие."""
+import logging
 from datetime import date, datetime, timedelta
+from functools import lru_cache
 
 import config
 
@@ -26,8 +28,14 @@ def now():
     try:
         from zoneinfo import ZoneInfo
         return datetime.now(ZoneInfo(config.TIMEZONE)).replace(tzinfo=None, second=0, microsecond=0)
-    except Exception:            # нет базы часовых поясов (например, Windows без tzdata)
+    except (ImportError, KeyError, ValueError):   # нет базы часовых поясов (Windows без tzdata) или неверный пояс
+        _warn_tz()
         return datetime.now().replace(second=0, microsecond=0)
+
+
+@lru_cache(maxsize=1)
+def _warn_tz():
+    logging.getLogger(__name__).warning("часовой пояс %s недоступен — время расписания берётся с сервера", config.TIMEZONE)
 
 
 def today():

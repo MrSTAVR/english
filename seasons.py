@@ -3,6 +3,8 @@
 Родитель может включить сезон принудительно или выключить его, задать свои даты (можно «каждый год»).
 К Новому году относится адвент-календарь: окошки с 1 по 31 декабря.
 День рождения — личный праздник ученика (students.birthday), не глобальный сезон: см. birthday_*()."""
+import logging
+import sqlite3
 from datetime import date, datetime, timedelta
 
 
@@ -46,7 +48,10 @@ def _setting(name):
         from database import get_db
         row = get_db().execute("SELECT value FROM app_settings WHERE key=?", (name,)).fetchone()
         return row["value"] if row else None
-    except Exception:
+    except RuntimeError:         # вне запроса (скрипты, тесты дат) — настроек нет, работаем по календарю
+        return None
+    except sqlite3.Error:
+        logging.getLogger(__name__).exception("не удалось прочитать настройку %s", name)
         return None
 
 

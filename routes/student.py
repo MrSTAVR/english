@@ -3,12 +3,11 @@
 
 import json
 from badges import TIERS
-from achievements import (ACHIEVEMENTS, BY_KEY, CATEGORIES, public, tier_counts,
+from achievements import (ACHIEVEMENTS, CATEGORIES, public, tier_counts,
                           update_achievements, views as achievement_views)
 import config
 import goals
 from routes.games import dialogs_for
-from config import PASS_MARK
 from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID, pass_mark, unlocked_lesson_ids
 from data.extra_lessons import EXTRA_LESSONS
 from database import get_db

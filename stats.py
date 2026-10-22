@@ -2,8 +2,11 @@
 """Статистика успеваемости по попыткам."""
 
 import json
+import logging
 
 from curriculum import LESSONS_BY_ID
+
+log = logging.getLogger(__name__)
 
 
 def _game_stats(db, student_id):
@@ -99,7 +102,8 @@ def compute_stats(db, student_id=None):
         total_seconds += r["seconds_spent"] or 0
         try:
             details = json.loads(r["details_json"] or "{}")
-        except Exception:
+        except (ValueError, TypeError):
+            log.warning("попытка %s: не читается details_json", r["id"])
             details = {}
         results = details.get("results", [])
         streak = cur = 0
@@ -143,8 +147,8 @@ def compute_stats(db, student_id=None):
 
         try:
             total_mistakes += len(json.loads(r["mistakes_json"] or "[]"))
-        except Exception:
-            pass
+        except (ValueError, TypeError):
+            log.warning("попытка %s: не читается mistakes_json", r["id"])
 
     for lid, r in credited.items():
         best_by_lesson.setdefault(lid, r)           # настоящая попытка важнее зачёта

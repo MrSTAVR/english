@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 """Настройки анимированного помощника для base.html."""
 
+import logging
+import sqlite3
+
 from flask import request, session
+
+log = logging.getLogger(__name__)
 
 
 MASCOT_NAME = "Чик-чик"        # имя помощника (можно поменять)
@@ -25,7 +30,8 @@ def build_mascot_ctx():
             from database import get_db
             from wardrobe import outfit
             mascot["outfit"] = outfit(get_db(), sid)
-        except Exception:        # наряд — украшение, страница не должна падать из-за него
+        except sqlite3.Error:    # наряд — украшение, страница не должна падать из-за него
+            log.exception("не удалось прочитать наряд ученика %s", sid)
             mascot["outfit"] = {}
     if endpoint == "auth.index":
         mascot["page"] = "index"

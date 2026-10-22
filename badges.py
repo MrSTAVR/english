@@ -39,7 +39,7 @@ def badge_svg(emoji, tier="bronze", locked=False):
                   if tier != "legend" or locked else
                   '<stop offset="0" stop-color="#ff7ab6"/><stop offset=".35" stop-color="#ffd54f"/>'
                   '<stop offset=".65" stop-color="#6fe3b0"/><stop offset="1" stop-color="#7c5cff"/>')
-    out = [f'<svg class="medal-svg" viewBox="0 0 100 112" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">',
+    out = ['<svg class="medal-svg" viewBox="0 0 100 112" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">',
            f'<defs><linearGradient id="{g_ring}" x1="0" y1="0" x2="1" y2="1">{ring_stops}</linearGradient>'
            f'<linearGradient id="{g_face}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{face[0]}"/>'
            f'<stop offset="1" stop-color="{face[1]}"/></linearGradient>'
@@ -58,7 +58,7 @@ def badge_svg(emoji, tier="bronze", locked=False):
         out.append(f'<circle cx="50" cy="50" r="42" fill="url(#{g_ring})"/>')
     dash = ' stroke-dasharray="4 4"' if locked else ""
     out.append(f'<circle cx="50" cy="50" r="35" fill="url(#{g_face})" stroke="rgba(0,0,0,.12)" stroke-width="2"{dash}/>')
-    out.append(f'<circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>')
+    out.append('<circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>')
     if locked:
         out.append('<text class="m-emoji" x="50" y="63" text-anchor="middle" font-size="34" font-weight="900" '
                    'fill="#b3adcc" font-family="Nunito,sans-serif">?</text>')

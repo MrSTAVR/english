@@ -4,7 +4,6 @@
 from garden_scene import tree_mini_svg
 import json
 import random
-from markupsafe import Markup
 
 from grading import match_columns
 
@@ -90,7 +89,7 @@ def match_expected_json(q):
 def mistakes_count(mistakes_json):
     try:
         return len(json.loads(mistakes_json or "[]"))
-    except Exception:
+    except (ValueError, TypeError):
         return 0
 
 

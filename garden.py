@@ -218,7 +218,7 @@ def award_coins(db, student_id, percent, passed):
     if percent >= 100:
         earned += COIN_PERFECT
     if earned:
-        g = get_garden(db, student_id)
+        get_garden(db, student_id)                  # создаёт строку сада, если её ещё нет
         db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?",
                    (earned, student_id))
         db.commit()
@@ -232,7 +232,6 @@ def touch_streak(db, student_id):
     last = g["last_study_day"]
     if last == today:
         return g
-    from datetime import timedelta
     if last:
         missed = missed_days(datetime.strptime(last, "%Y-%m-%d").date(),
                              datetime.now().date(), vacation_days(db, student_id))

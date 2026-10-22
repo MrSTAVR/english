@@ -2,6 +2,7 @@
 """Кабинет администратора (роль "parent"): аккаунты учеников, статистика, API ошибок."""
 
 import json
+import logging
 import goals
 import speech
 import updates
@@ -21,6 +22,7 @@ from version import info as app_version
 from routes.common import require_role
 
 bp = Blueprint("parent", __name__)
+log = logging.getLogger(__name__)
 
 
 STUDENT_EMOJIS = ["🦄", "🐱", "🐰", "🦊", "🐼", "🐥", "🦋", "🌈", "🚀", "🎀", "🐢", "🦁"]
@@ -529,7 +531,8 @@ def api_mistakes():
         lesson = LESSONS_BY_ID.get(r["lesson_id"], {})
         try:
             details = json.loads(r["details_json"] or "{}")
-        except Exception:
+        except (ValueError, TypeError):
+            log.warning("попытка %s: не читается details_json", r["id"])
             details = {}
         for res in details.get("results", []):
             if not res["correct"]:

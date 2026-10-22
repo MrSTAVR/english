@@ -10,7 +10,7 @@ import re
 import zlib
 from datetime import date, datetime, timedelta
 
-from curriculum import ALL_LESSONS, LESSONS_BY_ID
+from curriculum import ALL_LESSONS
 from practice import pool_from as _pool_from
 
 INTERVALS = [0, 1, 2, 4, 8, 16]      # через сколько дней слово вернётся из коробки N
