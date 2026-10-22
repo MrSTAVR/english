@@ -220,6 +220,39 @@ CREATE TABLE IF NOT EXISTS sp_sound_log (           -- история стади
     stage      INTEGER NOT NULL,
     day        TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS sp_series (             -- повторяющееся занятие: «каждый вт в 17:00»
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    logoped_id      INTEGER NOT NULL,
+    client_id       INTEGER NOT NULL,
+    weekday         INTEGER NOT NULL,               -- 0 = понедельник
+    time            TEXT NOT NULL,                  -- HH:MM
+    minutes         INTEGER NOT NULL,
+    start_day       TEXT NOT NULL,
+    end_day         TEXT,                           -- NULL — без конца
+    generated_until TEXT NOT NULL,                  -- до какой даты уже созданы занятия
+    created_at      TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS sp_sessions (            -- очные занятия
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    logoped_id INTEGER NOT NULL,
+    client_id  INTEGER NOT NULL,
+    start      TEXT NOT NULL,                       -- 'YYYY-MM-DD HH:MM' (местное время, config.TIMEZONE)
+    minutes    INTEGER NOT NULL,
+    status     TEXT NOT NULL DEFAULT 'planned',     -- planned / done / cancelled / noshow
+    series_id  INTEGER,
+    source     TEXT NOT NULL DEFAULT 'logoped',     -- кто назначил: logoped / family
+    note       TEXT DEFAULT '',
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sp_sessions_logoped_start ON sp_sessions (logoped_id, start);
+CREATE INDEX IF NOT EXISTS idx_sp_sessions_client ON sp_sessions (client_id, start);
+CREATE TABLE IF NOT EXISTS sp_days_off (            -- выходные и отпуск логопеда
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    logoped_id INTEGER NOT NULL,
+    start_day  TEXT NOT NULL,
+    end_day    TEXT NOT NULL,
+    note       TEXT DEFAULT ''
+);
 CREATE TABLE IF NOT EXISTS login_failures (
     id    INTEGER PRIMARY KEY AUTOINCREMENT,
     scope TEXT NOT NULL,                       -- ip / student / parent

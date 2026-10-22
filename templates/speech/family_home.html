@@ -3,6 +3,21 @@
 {% block content %}
 <h1>🏠 Кабинет родителя</h1>
 <p class="subtitle">{{ c.child_name }}{% if logoped %} · логопед: {{ logoped.name }}{% endif %}</p>
+<section class="card">
+  <h2>📅 Занятия</h2>
+  {% for s in upcoming %}
+  <div class="sp-fam-sess{{ ' sp-st-' ~ s.status }}"><b>{{ s.day }}</b>, {{ s.time }}–{{ s.end }}
+    {% if s.status == 'cancelled' %}<span class="sp-sess-st">отменено</span>{% endif %}</div>
+  {% else %}
+  <p class="hint">Ближайших занятий пока нет.</p>
+  {% endfor %}
+  {% if past %}
+  <details><summary>Прошедшие</summary>
+    {% for s in past %}<div class="sp-fam-sess sp-st-{{ s.status }}">{{ s.day }}, {{ s.time }} — {{ s.status_text }}</div>{% endfor %}
+  </details>
+  {% endif %}
+</section>
+
 {% if sounds %}
 <section class="card">
   <h2>🔤 Наши звуки</h2>
@@ -19,6 +34,6 @@
 {% endif %}
 <section class="card sp-soon">
   <h2>🗓️ Скоро здесь</h2>
-  <p class="hint">Расписание занятий и запись на свободное время, домашние задания.</p>
+  <p class="hint">Запись на свободное время и домашние задания.</p>
 </section>
 {% endblock %}

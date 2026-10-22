@@ -740,3 +740,6 @@ html[data-theme="dark"] .upd-log pre { background: #221e33; color: #d8d2ee; }
 html[data-theme="dark"] .sp-form input, html[data-theme="dark"] .sp-form select, html[data-theme="dark"] .sp-form textarea {
   background: #15122e; color: var(--ink); border-color: var(--line-deep); box-shadow: none; }
 html[data-theme="dark"] .sp-sound-done { background: #1f3d27; border-color: #2f6b3d; } html[data-theme="dark"] .sp-bar { background: #2b2640; }
+html[data-theme="dark"] .sp-sess, html[data-theme="dark"] .sp-fam-sess { background: #241f3d; }
+html[data-theme="dark"] .sp-st-done { background: #1f3d27; } html[data-theme="dark"] .sp-st-noshow { background: #3d1f24; }
+html[data-theme="dark"] .sp-st-cancelled { background: #26232f; } html[data-theme="dark"] .sp-day-off { background: #1d3049; }

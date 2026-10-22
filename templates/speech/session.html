@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Занятие — кабинет логопеда{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('speech.logoped_schedule') }}">⬅ Расписание</a>
+  <h1>🗓️ {{ s.child_name }}</h1>
+</div>
+<p class="subtitle">{{ day }}, {{ s.time }}–{{ s.end }} · <span class="sp-sess-st sp-st-{{ s.status }}">{{ s.status_text }}</span>
+  {% if s.series_id %} · 🔁 каждую неделю{% endif %}{% if s.source == 'family' %} · 🙋 записались сами{% endif %}</p>
+<p><a href="{{ url_for('speech.logoped_client', cid=s.client_id) }}">Карточка ученика →</a></p>
+
+<section class="card">
+  <h2>Отметить</h2>
+  <form method="post" class="sp-status-btns">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% for key, text in statuses.items() if key != s.status %}
+    <button class="btn {{ 'btn-primary' if key == 'done' else 'btn-small' }}" type="submit" name="action" value="{{ key }}">
+      {{ {'planned': '↩️', 'done': '✅', 'cancelled': '✖️', 'noshow': '🚫'}[key] }} {{ text }}</button>
+    {% endfor %}
+  </form>
+  <form method="post" class="sp-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="sp-wide">Заметка к занятию (видно только вам)
+      <textarea name="note" rows="3" maxlength="500" placeholder="что делали, на что обратить внимание">{{ s.note }}</textarea></label>
+    <button class="btn btn-small" type="submit" name="action" value="note">Сохранить заметку</button>
+  </form>
+</section>
+
+<details class="card">
+  <summary><b>↔️ Перенести</b></summary>
+  <form method="post" class="sp-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Дата <input type="date" name="day" required value="{{ s.start[:10] }}"></label>
+    <label>Время <input type="time" name="time" required step="300" value="{{ s.time }}"></label>
+    <label>Минут <input type="number" name="minutes" min="15" max="180" step="5" value="{{ s.minutes }}"></label>
+    <button class="btn btn-primary sp-wide" type="submit" name="action" value="move">Перенести</button>
+  </form>
+</details>
+
+<form method="post" onsubmit="return confirm('Удалить занятие совсем? Обычно лучше отметить «отменено».');">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="btn btn-small" type="submit" name="action" value="delete">🗑 Удалить (создано по ошибке)</button>
+</form>
+{% endblock %}

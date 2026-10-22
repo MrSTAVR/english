@@ -39,6 +39,7 @@ WEAK_PASSWORDS = {DEFAULT_PARENT_PASSWORD, "12345678", "123456789", "1234567890"
 MIN_PARENT_PASSWORD_LEN = 8
 
 # --- Сессии и cookie -------------------------------------------------------
+TIMEZONE = os.environ.get("ENGLISH_TZ", "Europe/Moscow")   # часовой пояс расписания логопеда
 SESSION_DAYS = int(os.environ.get("ENGLISH_SESSION_DAYS", "30"))   # ученик не вводит пароль каждый раз
 PARENT_SESSION_HOURS = int(os.environ.get("ENGLISH_PARENT_SESSION_HOURS", "12"))
 # Secure-cookie уходят только по HTTPS. В боевом режиме включены автоматически.
