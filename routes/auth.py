@@ -12,9 +12,9 @@ from security import check_parent_password, verify_password
 bp = Blueprint("auth", __name__)
 
 
-def _too_many(seconds):
+def _too_many(seconds, back="auth.index"):
     flash(f"Слишком много неудачных попыток. Подожди {ratelimit.wait_text(seconds)} и попробуй снова 🕐", "error")
-    return redirect(url_for("auth.index"))
+    return redirect(url_for(back))
 
 
 @bp.route("/")
@@ -49,6 +49,14 @@ def login_student():
     return redirect(url_for("student.student_home"))
 
 
+@bp.route("/admin")
+def admin_login():
+    """Вход в кабинет администратора (ссылка — неприметная кнопка ⚙ в углу главной)."""
+    if session.get("role") == "parent":
+        return redirect(url_for("parent.parent_dashboard"))
+    return render_template("admin_login.html")
+
+
 @bp.route("/login/parent", methods=["POST"])
 def login_parent():
     pwd = request.form.get("password") or ""
@@ -56,11 +64,11 @@ def login_parent():
     keys = [("ip", request.remote_addr), ("parent", "*")]
     wait = ratelimit.blocked_for(db, keys)
     if wait:
-        return _too_many(wait)
+        return _too_many(wait, "auth.admin_login")
     if not check_parent_password(pwd):
         ratelimit.record_failure(db, keys)
-        flash("Неверный пароль. Подсказка: спроси у родителей 😉", "error")
-        return redirect(url_for("auth.index"))
+        flash("Неверный пароль администратора.", "error")
+        return redirect(url_for("auth.admin_login"))
     ratelimit.clear(db, [("parent", "*")])
     session.clear()
     session.permanent = True

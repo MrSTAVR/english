@@ -858,4 +858,12 @@ button, input, select, textarea { font-family: inherit; }
 .adv-locked{cursor:default;opacity:.5;border-style:solid;border-color:#e6e0f2;background:#f6f4fb;color:#8a83a3}
 .adv-pop{animation:adv-pop .45s ease}
 @keyframes adv-pop{0%{transform:scale(.8) rotateY(90deg)}100%{transform:none}}
-.app-version{display:block;margin-top:4px;font-size:.75rem;opacity:.55;font-weight:600;letter-spacing:.02em}
+.footer{flex-wrap:wrap}
+.app-version{display:block;flex-basis:100%;text-align:center;margin-top:4px;font-size:.75rem;opacity:.55;font-weight:600;letter-spacing:.02em}
+/* Вход администратора: неприметная кнопка в углу и отдельная страница */
+.admin-corner{position:fixed;left:12px;bottom:12px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;font-size:16px;line-height:1;text-decoration:none;color:var(--muted,#8a83a3);background:var(--surface);
+  border:1px solid var(--border);opacity:.45;z-index:20;transition:opacity .2s}
+.admin-corner:hover,.admin-corner:focus-visible{opacity:1}
+.admin-login{max-width:420px;margin:40px auto;text-align:center}
+.admin-login form{display:flex;flex-direction:column;gap:10px;margin:14px 0}

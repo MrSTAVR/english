@@ -33,7 +33,7 @@ def parent(flask_app):
     c = flask_app.test_client()
     r = c.post("/login/parent", data={"password": config.PARENT_PASSWORD},
                follow_redirects=True)
-    assert "Кабинет родителя" in r.get_data(as_text=True)
+    assert "Кабинет администратора" in r.get_data(as_text=True)
     return c
 
 
