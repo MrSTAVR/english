@@ -6,6 +6,7 @@
   <h1>{{ season.emoji }} {{ season.title }}</h1>
 </div>
 <p class="subtitle">{{ intro }}</p>
+{% if gift %}<section class="card season-gift">🎁 Подарок от Чик-чика: <b>+{{ gift }} монеток</b> в твоём саду! С днём рождения! 🎉</section>{% endif %}
 {% if advent %}<a class="season-banner season-advent" href="{{ url_for('season.advent_page') }}">🗓️ Адвент-календарь: каждый день декабря — новое окошко →</a>{% endif %}
 <section class="card hw-phrase"><b>{{ data.PHRASE.en }}</b> — {{ data.PHRASE.ru }} <button class="btn btn-small hw-say" type="button" data-say="{{ data.PHRASE.en }}">🔊</button></section>
 <div class="hw-grid">

@@ -102,7 +102,26 @@ def api_boss():
     return jsonify(ok=True, coins=coins, items=[ITEMS_BY_KEY[k]["name"] for k in new], newAchievements=ach)
 
 
-_KEYS = ",".join(SEASONS)
+_KEYS = ",".join(list(SEASONS) + ["birthday"])
+
+
+def _open(key, student):
+    """Открыт ли праздник key для ученика: общий сезон или его день рождения."""
+    if key == "birthday":
+        return seasons.birthday_active(student["birthday"])
+    return active_season() == key
+
+
+def _birthday_gift(db, student):
+    """Подарок на день рождения: BIRTHDAY_GIFT монет, раз в год. Возвращает число монет (0 — уже дарили)."""
+    year = seasons.today().year
+    if db.execute("SELECT 1 FROM birthday_gifts WHERE student_id=? AND year=?", (student["id"], year)).fetchone():
+        return 0
+    db.execute("INSERT INTO birthday_gifts (student_id, year) VALUES (?, ?)", (student["id"], year))
+    get_garden(db, student["id"])
+    db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?", (seasons.BIRTHDAY_GIFT, student["id"]))
+    db.commit()
+    return seasons.BIRTHDAY_GIFT
 
 
 @bp.route(f"/student/<any({_KEYS}):key>")
@@ -111,17 +130,19 @@ def season_page(key):
     if err:
         return err
     db, student = ctx
-    if active_season() != key:
+    if not _open(key, student):
         return redirect(url_for("student.student_home"))
     data = content(key)
+    gift = _birthday_gift(db, student) if key == "birthday" else 0
     today = datetime.now().date().isoformat()
     row = db.execute("SELECT correct FROM season_log WHERE student_id=? AND season=? AND day=?",
                      (student["id"], key, today)).fetchone()
     mascot = build_mascot_ctx()
     mascot["page"] = key
-    return render_template("season.html", mascot=mascot, key=key, season=SEASONS[key], data=data,
+    season = SEASONS.get(key) or {"title": f"С днём рождения, {student['display_name']}!", "emoji": "🎂"}
+    return render_template("season.html", mascot=mascot, key=key, season=season, data=data, gift=gift,
                            intro=data.INTRO.format(pass_mark=data.PASS_MARK, quiz_len=data.QUIZ_LEN,
-                                                   coins=data.DAILY_COINS),
+                                                   coins=data.DAILY_COINS, gift=seasons.BIRTHDAY_GIFT),
                            done_today=bool(row and row["correct"] >= data.PASS_MARK),
                            advent=key == "newyear" and advent_open())
 
@@ -130,7 +151,9 @@ def season_page(key):
 def api_season(key):
     if session.get("role") != "student":
         abort(403)
-    if active_season() != key:
+    db = get_db()
+    student = get_student_or_none(db)
+    if not student or not _open(key, student):
         abort(403)
     data = content(key)
     try:
@@ -139,10 +162,6 @@ def api_season(key):
         abort(400)
     if not 0 <= correct <= data.QUIZ_LEN:
         abort(400)
-    db = get_db()
-    student = get_student_or_none(db)
-    if not student:
-        abort(403)
     sid, today = student["id"], datetime.now().date().isoformat()
     prev = db.execute("SELECT correct FROM season_log WHERE student_id=? AND season=? AND day=?",
                       (sid, key, today)).fetchone()

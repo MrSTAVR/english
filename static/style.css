@@ -972,3 +972,7 @@ button, input, select, textarea { font-family: inherit; }
 .trend-val{font-size:.65rem;font-weight:800}
 .trend-lbl{font-size:.6rem;opacity:.6;margin-top:2px;white-space:nowrap}
 @media (max-width:600px){.trend-col:nth-child(even) .trend-lbl{visibility:hidden}}
+.season-march8{background:linear-gradient(90deg,#ff8fb8,#ffb347)}
+.season-easter{background:linear-gradient(90deg,#8ee59b,#ffd54f);color:#3b2a6b}
+.season-birthday{background:linear-gradient(90deg,#ff5d8f,#7c5cff,#2fd08c)}
+.season-gift{font-size:1.1rem;border:2px solid #ffd54f;background:#fff8dc}

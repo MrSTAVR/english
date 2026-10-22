@@ -1,14 +1,32 @@
 # -*- coding: utf-8 -*-
-"""Сезонные события: Хэллоуин (15 октября — 3 ноября) и Новый год (15 декабря — 14 января).
-Родитель может включить сезон принудительно или выключить его (настройка в кабинете родителя).
-К Новому году относится адвент-календарь: окошки с 1 по 31 декабря."""
-from datetime import datetime
+"""Сезонные события: Хэллоуин, Новый год, 8 Марта, Пасха (православная, дата считается сама).
+Родитель может включить сезон принудительно или выключить его, задать свои даты (можно «каждый год»).
+К Новому году относится адвент-календарь: окошки с 1 по 31 декабря.
+День рождения — личный праздник ученика (students.birthday), не глобальный сезон: см. birthday_*()."""
+from datetime import date, datetime, timedelta
+
+
+def orthodox_easter(year):
+    """Дата православной Пасхи (григорианский календарь, 1900–2099)."""
+    a, b, c = year % 4, year % 7, year % 19
+    d = (19 * c + 15) % 30
+    e = (2 * a + 4 * b - d + 34) % 7
+    month, day = divmod(d + e + 114, 31)
+    return date(year, month, day + 1) + timedelta(days=13)
+
+
+def _easter_window(year):
+    e = orthodox_easter(year)
+    return e - timedelta(days=6), e + timedelta(days=7)
+
 
 SEASONS = {
     "halloween": {"title": "Хэллоуин", "emoji": "🎃", "dates": "с 15 октября по 3 ноября",
                   "start": (10, 15), "end": (11, 3)},
     "newyear": {"title": "Новый год", "emoji": "🎄", "dates": "с 15 декабря по 14 января",
                 "start": (12, 15), "end": (1, 14)},
+    "march8": {"title": "8 Марта", "emoji": "💐", "dates": "с 1 по 10 марта", "start": (3, 1), "end": (3, 10)},
+    "easter": {"title": "Пасха", "emoji": "🐣", "dates": "неделя до и после православной Пасхи", "window": _easter_window},
 }
 MODES = ("auto", "on", "off")
 
@@ -62,13 +80,69 @@ def _in_window(d, start, end):
     return start <= md <= end if start <= end else (md >= start or md <= end)
 
 
+def is_yearly(key):
+    return _setting(f"season_{key}_yearly") == "1"
+
+
+def set_yearly(db, key, yearly):
+    db.execute("INSERT INTO app_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+               (f"season_{key}_yearly", "1" if yearly else "0"))
+    db.commit()
+
+
 def in_season(key, day=None):
-    """Идёт ли сезон по календарю (свои даты родителя заменяют стандартные)."""
+    """Идёт ли сезон по календарю. Свои даты родителя заменяют стандартные; «каждый год» — те же числа ежегодно."""
     d = day or today()
     custom = get_dates(key)
     if custom:
+        if is_yearly(key):
+            return _in_window(d, (custom[0].month, custom[0].day), (custom[1].month, custom[1].day))
         return custom[0] <= d <= custom[1]
-    return _in_window(d, SEASONS[key]["start"], SEASONS[key]["end"])
+    s = SEASONS[key]
+    if "window" in s:                                # дата меняется каждый год (Пасха)
+        return any(a <= d <= b for a, b in (s["window"](d.year - 1), s["window"](d.year)))
+    return _in_window(d, s["start"], s["end"])
+
+
+def dates_text(key, year=None):
+    """Стандартные даты сезона текстом (для Пасхи — на этот год)."""
+    s = SEASONS[key]
+    if "window" in s:
+        a, b = s["window"](year or today().year)
+        return f"{a:%d.%m} — {b:%d.%m.%Y} (Пасха {orthodox_easter(year or today().year):%d.%m})"
+    return s["dates"]
+
+
+# ---------------------------------------------------------------- день рождения ученика
+
+BIRTHDAY_BEFORE, BIRTHDAY_AFTER = 1, 6     # праздник: за день до и неделю после
+BIRTHDAY_GIFT = 25                         # монеток в подарок (раз в год)
+
+
+def birthday_this_year(birthday, day=None):
+    """Дата дня рождения в текущем году (29 февраля → 28-е) или None."""
+    if not birthday:
+        return None
+    d = day or today()
+    try:
+        b = datetime.strptime(birthday, "%Y-%m-%d").date() if len(birthday) > 5 else \
+            datetime.strptime(f"2000-{birthday}", "%Y-%m-%d").date()
+    except ValueError:
+        return None
+    try:
+        return b.replace(year=d.year)
+    except ValueError:
+        return date(d.year, 2, 28)
+
+
+def birthday_active(birthday, day=None):
+    """Идёт ли праздник дня рождения (учитываем переход через Новый год)."""
+    d = day or today()
+    for y in (d.year - 1, d.year, d.year + 1):
+        b = birthday_this_year(birthday, date(y, 1, 1))
+        if b and b - timedelta(days=BIRTHDAY_BEFORE) <= d <= b + timedelta(days=BIRTHDAY_AFTER):
+            return True
+    return False
 
 
 def auto_season(day=None):

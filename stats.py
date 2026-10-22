@@ -19,9 +19,11 @@ def _game_stats(db, student_id):
     and_ = " AND" if where else " WHERE"
     hw = db.execute(f"SELECT COUNT(*) FROM season_log {where}{and_} season='halloween' AND correct>=6", args).fetchone()[0]
     ny = db.execute(f"SELECT COUNT(*) FROM season_log {where}{and_} season='newyear' AND correct>=6", args).fetchone()[0]
+    more = {f"{k}_done": db.execute(f"SELECT COUNT(*) FROM season_log {where}{and_} season=? AND correct>=6",
+                                    args + (k,)).fetchone()[0] for k in ("march8", "easter", "birthday")}
     adv = db.execute(f"SELECT COUNT(*) FROM advent {where}", args).fetchone()[0]
     hb = db.execute(f"SELECT COUNT(*) FROM house_items {where}", args).fetchone()[0]
-    return {"house_bought": hb, "weeks_done": wk, "boss_wins": bw, "halloween_done": hw, "newyear_done": ny, "advent_opened": adv, "games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d, "wardrobe_bought": w,
+    return {"house_bought": hb, "weeks_done": wk, "boss_wins": bw, "halloween_done": hw, "newyear_done": ny, **more, "advent_opened": adv, "games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d, "wardrobe_bought": w,
             "stories_done": st["a"], "stories_listened": st["b"],
             "writing_played": g["wp"], "writing_perfect": g["wperf"]}
 
