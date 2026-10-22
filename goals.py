@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Цель дня: 1 урок + 10 слов повторения. За выполненную цель — монетки в сад."""
+"""Цель дня: по умолчанию 1 урок + 10 слов повторения (родитель может изменить).
+За выполненную цель — монетки в сад."""
 
 from datetime import date
 
@@ -8,12 +9,36 @@ from curriculum import MAIN_COUNT
 GOAL_LESSONS = 1
 GOAL_WORDS = 10
 GOAL_COINS = 3
+MAX_LESSONS = 3      # пределы настройки родителя
+MAX_WORDS = 50
 
 
-def needs(stats, pool_size):
+def target(db, student_id):
+    """Цель ученика (уроков, слов): своя от родителя или стандартная."""
+    r = db.execute("SELECT lessons, words FROM goal_settings WHERE student_id=?", (student_id,)).fetchone()
+    return (r["lessons"], r["words"]) if r else (GOAL_LESSONS, GOAL_WORDS)
+
+
+def set_target(db, student_id, lessons, words):
+    """Сохраняет цель родителя. Нулевая цель запрещена (иначе нечего выполнять). Возвращает успех."""
+    if not (0 <= lessons <= MAX_LESSONS and 0 <= words <= MAX_WORDS) or not (lessons or words):
+        return False
+    if (lessons, words) == (GOAL_LESSONS, GOAL_WORDS):
+        db.execute("DELETE FROM goal_settings WHERE student_id=?", (student_id,))
+    else:
+        db.execute("INSERT INTO goal_settings (student_id, lessons, words) VALUES (?, ?, ?) "
+                   "ON CONFLICT(student_id) DO UPDATE SET lessons=excluded.lessons, words=excluded.words",
+                   (student_id, lessons, words))
+    db.commit()
+    return True
+
+
+def needs(stats, pool_size, goal=None):
     """Что требуется сегодня: (уроков, слов). Нет уроков/слов для повторения — часть цели отпадает."""
-    nl = GOAL_LESSONS if stats["lessons_completed"] < MAIN_COUNT else 0
-    nw = GOAL_WORDS if pool_size >= 4 else 0
+    gl, gw = goal or (GOAL_LESSONS, GOAL_WORDS)
+    left = MAIN_COUNT - stats["lessons_completed"]
+    nl = min(gl, left) if left > 0 else 0
+    nw = gw if pool_size >= 4 else 0
     return nl, nw
 
 
@@ -30,7 +55,7 @@ def add(db, student_id, stats, pool_size, lessons=0, words=0, today=None):
     row = today_row(db, student_id, today)
     row["lessons"] += lessons
     row["words"] += words
-    nl, nw = needs(stats, pool_size)
+    nl, nw = needs(stats, pool_size, target(db, student_id))
     done = (nl or nw) and row["lessons"] >= nl and row["words"] >= nw
     just = bool(done) and not row["done"]
     db.execute("INSERT INTO daily_goal (student_id, day, lessons, words, done) VALUES (?, ?, ?, ?, ?) "
@@ -55,7 +80,7 @@ def goal_days(db, student_id=None):
 
 def view(db, student_id, stats, pool_size):
     """Данные для карточки на главной."""
-    nl, nw = needs(stats, pool_size)
+    nl, nw = needs(stats, pool_size, target(db, student_id))
     row = today_row(db, student_id)
     if not (nl or nw):
         return None
