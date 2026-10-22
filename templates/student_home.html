@@ -31,6 +31,7 @@
 {% if season %}<a class="season-banner season-{{ season }}" href="{{ url_for('season.season_page', key=season) }}">{{ season_banner }}</a>{% endif %}
 {% if advent %}<a class="season-banner season-advent" href="{{ url_for('season.advent_page') }}">🗓️ Адвент-календарь: {{ 'окошко на сегодня ждёт тебя! 🎁' if not advent_today_open else 'сегодняшнее окошко открыто ✅' }} →</a>{% endif %}
 
+<div class="home-hero">
 <!-- 2. Кнопка «Следующий урок» -->
 {% if next_lesson %}
   <a class="next-cta" href="{{ url_for('student.lesson_page', lesson_id=next_lesson.id) }}">
@@ -93,6 +94,7 @@
   </div>
   {% endif %}
 </section>
+</div>
 
 {% set locked = rv_pool < 4 %}
 <!-- Занимайся и играй -->

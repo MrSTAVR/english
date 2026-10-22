@@ -370,3 +370,25 @@ html[data-theme="dark"] body.area-speech .sp-next .hint, html[data-theme="dark"]
 .sp-sound-done .sp-bar > div { background: var(--green); }
 html[data-theme="dark"] .theme-toggle { background: var(--surface); border-color: var(--line); box-shadow: none; }
 .theme-toggle { background: var(--surface); border-color: var(--line); }
+
+/* ============================================================
+   Главная ученицы на большом экране: слева большая карточка урока, справа колонка «сегодня»
+   ============================================================ */
+@media (min-width: 900px) {
+  .home-hero { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 20px; align-items: start; margin: 14px 0 6px; }
+  .home-hero > .next-cta { margin: 0; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 10px;
+    min-height: 300px; padding: 30px; position: relative; text-align: left; }
+  .home-hero > .next-cta .next-cta-emoji { position: absolute; top: 26px; right: 26px; width: 120px; height: 120px; font-size: 4rem; }
+  .home-hero > .next-cta .next-cta-text { max-width: 70%; }
+  .home-hero > .next-cta .next-cta-title { font-size: 2rem; line-height: 1.15; }
+  .home-hero > .next-cta .next-cta-sub { font-size: 1rem; }
+  .home-hero > .next-cta .next-cta-btn { margin: 10px 0 0; padding: 16px 30px; font-size: 1.2rem; border-radius: 18px; }
+  .home-hero > .today-row { display: contents; }
+  .home-hero { grid-template-areas: "hero goal" "hero week" "wod week"; }
+  .home-hero > .next-cta { grid-area: hero; }
+  .home-hero .tcard-wod { grid-area: wod; }
+  .home-hero .today-row > .tcard:first-child:not(.tcard-wod):not(.tcard-link) { grid-area: goal; }
+  .home-hero .today-row > a.tcard-link { grid-area: week; }
+  .home-hero > .today-row > .tcard { margin: 0; }
+  .home-hero > :only-child { grid-column: 1 / -1; }
+}
