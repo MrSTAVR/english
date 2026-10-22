@@ -957,3 +957,18 @@ button, input, select, textarea { font-family: inherit; }
 .map-stars{font-size:.85rem;letter-spacing:1px}
 .map-here{color:#c77800;font-weight:900;font-size:.85rem}
 @media (max-width:600px){.map-row{margin-left:calc(14% + var(--x) * 6%)}}
+/* Кабинет администратора: прогресс */
+.heat{display:flex;gap:3px;overflow-x:auto;padding-bottom:4px}
+.heat-labels,.heat-col{display:grid;grid-template-rows:repeat(7,14px);gap:3px}
+.heat-labels span{font-size:.65rem;line-height:14px;opacity:.6;padding-right:4px}
+.heat-cell{display:inline-block;width:14px;height:14px;border-radius:3px;background:#ece8f6;vertical-align:middle}
+.heat-1{background:#c6efce}.heat-2{background:#8ee59b}.heat-3{background:#46c26a}.heat-4{background:#23863f}
+.heat-future{opacity:.3}
+.heat-legend{display:flex;align-items:center;gap:3px;font-size:.8rem}
+.trend{display:flex;align-items:flex-end;gap:4px;height:130px;padding-top:16px}
+.trend-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.trend-bar{width:100%;max-width:28px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#a58bff,#7c5cff)}
+.trend-low{background:linear-gradient(180deg,#ffc27a,#ff8a1f)}
+.trend-val{font-size:.65rem;font-weight:800}
+.trend-lbl{font-size:.6rem;opacity:.6;margin-top:2px;white-space:nowrap}
+@media (max-width:600px){.trend-col:nth-child(even) .trend-lbl{visibility:hidden}}

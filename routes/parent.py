@@ -11,7 +11,7 @@ from database import get_db
 from datetime import datetime
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
 from garden import cap_streak, get_garden, tree_count_for, tree_stage
-from report import MAX_WEEKS_BACK, week_report
+from report import MAX_WEEKS_BACK, activity_heatmap, hard_words, score_trend, week_report
 from progress import credit_lessons, lesson_ids_upto, uncredit_lessons
 from seasons import SEASONS, get_dates, get_mode, in_season, set_dates, set_mode
 from security import hash_password
@@ -245,6 +245,23 @@ def parent_goal(sid):
     return redirect(url_for("parent.parent_dashboard") + "#students")
 
 
+@bp.route("/parent/students/<int:sid>/review_hard", methods=["POST"])
+def parent_review_hard(sid):
+    """Трудные слова — в повторение сегодня (коробка 0)."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    if not db.execute("SELECT 1 FROM students WHERE id=?", (sid,)).fetchone():
+        abort(404)
+    keys = [w["key"] for w in hard_words(db, sid)]
+    db.executemany("UPDATE word_review SET box=0, due=? WHERE student_id=? AND key=?",
+                   [(datetime.now().date().isoformat(), sid, k) for k in keys])
+    db.commit()
+    flash(f"Слов отправлено в повторение на сегодня: {len(keys)} 🔁" if keys else "Трудных слов нет 🎉", "ok")
+    return redirect(url_for("parent.parent_dashboard") + "#progress")
+
+
 @bp.route("/parent/logopeds", methods=["POST"])
 def parent_logopeds():
     """Аккаунты логопедов: action=add (логин, имя, пароль) / password (новый пароль)."""
@@ -353,6 +370,8 @@ def parent_dashboard():
         student_cards.append({"student": st, "stats": sstats, "vacation": vac,
                               "goal": goals.target(db, st["id"]),
                               "week": week_report(db, st["id"], weeks_back),
+                              "heatmap": activity_heatmap(db, st["id"]), "trend": score_trend(db, st["id"]),
+                              "hard": hard_words(db, st["id"]),
                               "earned_count": len(earned),
                               "garden": sgarden,
                               "tree_stage": tree_stage(sgarden["streak_days"]),
