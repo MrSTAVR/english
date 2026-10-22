@@ -6,7 +6,8 @@
   <h1>🗓️ {{ s.child_name }}</h1>
 </div>
 <p class="subtitle">{{ day }}, {{ s.time }}–{{ s.end }} · <span class="sp-sess-st sp-st-{{ s.status }}">{{ s.status_text }}</span>
-  {% if s.series_id %} · 🔁 каждую неделю{% endif %}{% if s.source == 'family' %} · 🙋 записались сами{% endif %}</p>
+  {% if s.series_id %} · 🔁 каждую неделю{% endif %}{% if s.source == 'family' %} · 🙋 записались сами{% endif %}
+  {% if s.status == 'cancelled' and s.cancelled_by == 'family' %} · отменили родители{% endif %}</p>
 <p><a href="{{ url_for('speech.logoped_client', cid=s.client_id) }}">Карточка ученика →</a></p>
 
 <section class="card">

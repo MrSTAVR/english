@@ -162,6 +162,8 @@ def get_session(db, logoped_id, session_id):
 def set_status(db, session_id, status, note=None):
     if status not in STATUSES:
         return False
+    if status == "cancelled":
+        db.execute("UPDATE sp_sessions SET cancelled_by='logoped' WHERE id=? AND status!='cancelled'", (session_id,))
     if note is None:
         db.execute("UPDATE sp_sessions SET status=? WHERE id=?", (status, session_id))
     else:
@@ -195,11 +197,14 @@ def week(db, logoped_id, monday):
                       "WHERE s.logoped_id=? AND s.start>=? AND s.start<? ORDER BY s.start",
                       (logoped_id, monday.strftime(FMT), (monday + timedelta(days=7)).strftime(FMT))).fetchall()
     off, t = _days_off(db, logoped_id), today()
+    slots = free_slots(db, logoped_id, max(datetime.combine(monday, datetime.min.time()), now()),
+                       datetime.combine(monday + timedelta(days=7), datetime.min.time()))
     days = []
     for i in range(7):
         d = monday + timedelta(days=i)
         days.append({"date": d, "title": f"{WEEKDAYS_SHORT[i]}, {d.day} {MONTHS[d.month - 1]}", "today": d == t,
-                     "off": d in off, "sessions": [decorate(r) for r in rows if r["start"][:10] == d.isoformat()]})
+                     "off": d in off, "sessions": [decorate(r) for r in rows if r["start"][:10] == d.isoformat()],
+                     "slots": [x for x in slots if x["start"][:10] == d.isoformat()]})
     return days
 
 
@@ -242,3 +247,116 @@ def add_days_off(db, logoped_id, d1, d2, note=""):
                    (logoped_id, d1.strftime(FMT), (d2 + timedelta(days=1)).strftime(FMT))).fetchone()[0]
     return True, ("Выходные сохранены." + (f" ⚠️ В эти дни уже запланировано занятий: {n} — отмените или перенесите их."
                                             if n else ""))
+
+
+# ---------------------------------------------------------------- свободные окна и самозапись
+
+BOOK_BEFORE = timedelta(hours=24)       # записаться и отменить можно не позже чем за сутки
+BOOK_AHEAD_WEEKS = 4                    # насколько вперёд родители видят окна
+
+
+def _overlaps(a_start, a_min, b_start, b_min):
+    return a_start < b_start + timedelta(minutes=b_min) and b_start < a_start + timedelta(minutes=a_min)
+
+
+def add_slots(db, logoped_id, day, times, minutes=DEFAULT_MINUTES, weeks=1):
+    """Окна на день (и столько же недель вперёд). Возвращает (создано, пропущено)."""
+    if not 15 <= minutes <= 180:
+        return 0, 0
+    off, created, skipped = _days_off(db, logoped_id), 0, 0
+    for w in range(max(1, min(12, weeks))):
+        d = day + timedelta(weeks=w)
+        for t in times:
+            start = datetime.combine(d, t)
+            busy = d in off or start < now() or conflicts(db, logoped_id, start, minutes) or any(
+                _overlaps(start, minutes, datetime.strptime(r["start"], FMT), r["minutes"])
+                for r in db.execute("SELECT start, minutes FROM sp_slots WHERE logoped_id=? AND start LIKE ?",
+                                    (logoped_id, d.isoformat() + "%")))
+            if busy:
+                skipped += 1
+                continue
+            db.execute("INSERT INTO sp_slots (logoped_id, start, minutes, created_at) VALUES (?, ?, ?, ?)",
+                       (logoped_id, start.strftime(FMT), minutes, now().isoformat(timespec="seconds")))
+            created += 1
+    db.commit()
+    return created, skipped
+
+
+def parse_times(raw):
+    """«15:00, 15:45 16:30» → [time, …] (неверные пропускаются)."""
+    out = []
+    for part in (raw or "").replace(";", ",").replace(" ", ",").split(","):
+        try:
+            out.append(datetime.strptime(part.strip(), "%H:%M").time())
+        except ValueError:
+            continue
+    return sorted(set(out))
+
+
+def free_slots(db, logoped_id, start_from, until):
+    """Окна без занятий поверх них, не в выходные, в промежутке [start_from, until)."""
+    off = _days_off(db, logoped_id)
+    busy = [(datetime.strptime(r["start"], FMT), r["minutes"]) for r in db.execute(
+        "SELECT start, minutes FROM sp_sessions WHERE logoped_id=? AND status IN ('planned','done') AND start>=? AND start<?",
+        (logoped_id, (start_from - timedelta(hours=6)).strftime(FMT), until.strftime(FMT)))]
+    out = []
+    for r in db.execute("SELECT * FROM sp_slots WHERE logoped_id=? AND start>=? AND start<? ORDER BY start",
+                        (logoped_id, start_from.strftime(FMT), until.strftime(FMT))):
+        st = datetime.strptime(r["start"], FMT)
+        if st.date() in off or any(_overlaps(st, r["minutes"], b, m) for b, m in busy):
+            continue
+        out.append({**dict(r), "dt": st, "time": r["start"][11:],
+                    "end": (st + timedelta(minutes=r["minutes"])).strftime("%H:%M"), "day": day_text(st.date())})
+    return out
+
+
+def bookable(db, logoped_id):
+    """Окна, на которые семья может записаться сейчас."""
+    t = now()
+    return free_slots(db, logoped_id, t + BOOK_BEFORE, t + timedelta(weeks=BOOK_AHEAD_WEEKS))
+
+
+def log_event(db, logoped_id, client_id, kind, start):
+    db.execute("INSERT INTO sp_events (logoped_id, client_id, kind, start, created_at) VALUES (?, ?, ?, ?, ?)",
+               (logoped_id, client_id, kind, start, now().isoformat(timespec="seconds")))
+
+
+def book_slot(db, client, slot_id):
+    """Семья записывается на окно. (id занятия, ошибка)."""
+    slot = next((s for s in bookable(db, client["logoped_id"]) if s["id"] == slot_id), None)
+    if not slot:
+        return None, "Это время уже занято или до него меньше суток — выберите другое."
+    sid, error = add_session(db, client["logoped_id"], client["id"], slot["dt"], slot["minutes"], source="family")
+    if error:
+        return None, "Это время уже занято — выберите другое."
+    log_event(db, client["logoped_id"], client["id"], "booked", slot["start"])
+    db.commit()
+    return sid, None
+
+
+def can_family_cancel(session):
+    return session["status"] == "planned" and datetime.strptime(session["start"], FMT) - now() >= BOOK_BEFORE
+
+
+def family_cancel(db, client, session_id):
+    """Отмена семьёй не позже чем за сутки. Возвращает текст ошибки или None."""
+    s = db.execute("SELECT * FROM sp_sessions WHERE id=? AND client_id=?", (session_id, client["id"])).fetchone()
+    if not s or s["status"] != "planned":
+        return "Занятие не найдено."
+    if not can_family_cancel(s):
+        return "До занятия меньше суток — отменить можно только через логопеда."
+    db.execute("UPDATE sp_sessions SET status='cancelled', cancelled_by='family' WHERE id=?", (session_id,))
+    log_event(db, client["logoped_id"], client["id"], "cancelled", s["start"])
+    db.commit()
+    return None
+
+
+def unseen_events(db, logoped_id):
+    rows = db.execute("SELECT e.*, c.child_name FROM sp_events e JOIN sp_clients c ON c.id=e.client_id "
+                      "WHERE e.logoped_id=? AND e.seen=0 ORDER BY e.id DESC", (logoped_id,)).fetchall()
+    return [{**dict(r), "when": f"{day_text(datetime.strptime(r['start'], FMT).date())}, {r['start'][11:]}"} for r in rows]
+
+
+def mark_seen(db, logoped_id):
+    db.execute("UPDATE sp_events SET seen=1 WHERE logoped_id=?", (logoped_id,))
+    db.commit()

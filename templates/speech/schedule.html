@@ -13,7 +13,15 @@
   {% for d in days %}
   <section class="sp-day{{ ' sp-day-today' if d.today }}{{ ' sp-day-off' if d.off }}">
     <h3>{{ d.title }}{% if d.today %} · сегодня{% endif %}{% if d.off %} · 🏖 выходной{% endif %}</h3>
-    {% for s in d.sessions %}{% include "speech/_session_row.html" %}{% else %}<p class="hint">—</p>{% endfor %}
+    {% for s in d.sessions %}{% include "speech/_session_row.html" %}{% endfor %}
+    {% for x in d.slots %}
+    <form method="post" action="{{ url_for('speech.logoped_slots') }}" class="sp-slot">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ x.id }}">
+      <span class="sp-sess-time">{{ x.time }}–{{ x.end }}</span> <span>свободно</span>
+      <button type="submit" name="action" value="delete" title="Убрать окно" aria-label="Убрать окно {{ x.time }}">✕</button>
+    </form>
+    {% endfor %}
+    {% if not d.sessions and not d.slots %}<p class="hint">—</p>{% endif %}
   </section>
   {% endfor %}
 </div>
@@ -22,6 +30,20 @@
   <summary><b>➕ Назначить занятие</b></summary>
   {% if clients %}{% set client = none %}{% include "speech/_session_form.html" %}
   {% else %}<p class="hint">Сначала добавьте учеников.</p>{% endif %}
+</details>
+
+<details class="card" id="slots">
+  <summary><b>🕐 Свободные окна для записи</b></summary>
+  <p class="hint">Родители видят свободные окна в своём кабинете и могут записаться сами — не позже чем за сутки.
+    Окно, на которое кто-то записан, превращается в занятие; если родители отменят — окно снова свободно.</p>
+  <form method="post" action="{{ url_for('speech.logoped_slots') }}" class="sp-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Дата <input type="date" name="day" required value="{{ today }}"></label>
+    <label>Время (через запятую) <input type="text" name="times" required placeholder="15:00, 15:45, 16:30" inputmode="numeric"></label>
+    <label>Минут <input type="number" name="minutes" min="15" max="180" step="5" value="{{ default_minutes }}"></label>
+    <label>Повторить на недель <input type="number" name="weeks" min="1" max="12" value="1"></label>
+    <button class="btn btn-primary sp-wide" type="submit" name="action" value="add">Добавить окна</button>
+  </form>
 </details>
 
 <details class="card" id="days-off">
