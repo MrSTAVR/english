@@ -19,6 +19,7 @@ from database import init_db
 from hardening import init_hardening
 from badges import medal
 from mascot import build_mascot_ctx
+from version import info as app_version
 from routes import register_blueprints
 from security import load_secret_key
 from template_filters import human_time, is_russian_answer, match_answer_json, match_cols, match_expected_json, mistakes_count, \
@@ -80,7 +81,7 @@ app.jinja_env.filters["medal"] = medal
 def inject_mascot():
     """Добавляет переменную `mascot` во все шаблоны: кто на какой странице,
     чтобы JS-помощник знал, что говорить и когда."""
-    return {"mascot": build_mascot_ctx()}
+    return {"mascot": build_mascot_ctx(), "app_version": app_version()}
 
 
 @app.context_processor
