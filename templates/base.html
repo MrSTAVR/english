@@ -19,9 +19,9 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=32">
 <link rel="stylesheet" href="{{ url_for('static', filename='achievements.css') }}?v=2">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=3">
-<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}?v=5">
 </head>
-<body{% if speech_area %} class="area-speech"{% endif %}>
+<body{% if speech_area %} class="area-speech"{% elif session.get('role') == 'student' and request.endpoint not in ('student.lesson_page', 'student.submit_test') %} class="has-tabbar"{% endif %}>
 {% if snow %}<div class="snow" aria-hidden="true">{% for i in range(14) %}<span style="left:{{ (i * 7.1 + 1) | round(1) }}%;font-size:{{ 10 + (i * 7 % 4) * 4 }}px;animation-duration:{{ 9 + i * 5 % 7 }}s;animation-delay:-{{ (i * 1.3) | round(1) }}s">❄</span>{% endfor %}</div>{% endif %}
 {# SVG-спрайт: надёжные иконки (emoji 🪙 на Windows не отображается) #}
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
@@ -95,8 +95,18 @@
   {% endif %}
   <nav>
     {% if session.get('role') == 'student' %}
-      <a href="{{ url_for('student.student_home') }}" class="{{ 'on' if ep in ('student.student_home', 'student.lesson_page', 'student.submit_test') }}"><svg class="icon"><use href="#i-book"/></svg><span>Мои уроки</span></a>
-      <a href="{{ url_for('garden.garden_page') }}" class="{{ 'on' if ep.startswith('garden.') }}"><svg class="icon"><use href="#i-sprout"/></svg><span>Мой сад</span></a>
+      {% set tabs = [
+        ('student.student_home', 'Главная', 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z', ep in ('student.student_home', 'student.lesson_page', 'student.submit_test')),
+        ('student.course_map', 'Карта', 'M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14', ep == 'student.course_map'),
+        ('garden.garden_page', 'Сад', 'M12 21v-9M12 12c0-4-3-6-7-6 0 4 3 6 7 6zM12 14c0-4 3-6 7-6 0 4-3 6-7 6z', ep.startswith('garden.')),
+        ('house.house_page', 'Домик', 'M4 11l8-6 8 6M6 10v10h12V10M10 20v-5h4v5', ep.startswith('house.')),
+        ('student.achievements_page', 'Награды', 'M8 3l4 6 4-6M12 21a6 6 0 1 0 0-12 6 6 0 0 0 0 12z', ep == 'student.achievements_page')] %}
+      <div class="tabbar">
+      {% for endpoint, label, icon, on in tabs %}
+        <a href="{{ url_for(endpoint) }}" class="tab{{ ' on' if on }}"{% if on %} aria-current="page"{% endif %}><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ icon }}"/></svg><span>{{ label }}</span></a>
+      {% endfor %}
+        <span class="tab-mascot" aria-hidden="true"></span>
+      </div>
       <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
     {% elif session.get('role') == 'parent' %}
       <a href="{{ url_for('parent.parent_dashboard') }}" class="{{ 'on' if ep.startswith('parent.') }}"><svg class="icon"><use href="#i-shield"/></svg><span>Администратор</span></a>

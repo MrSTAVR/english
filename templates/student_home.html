@@ -10,8 +10,8 @@
 {% endif %}
 
 {% macro tile(href, emoji, title, sub, locked=false, badge='') %}
-{% if locked %}<div class="tile tile-locked" title="Откроется после первых уроков"><span class="tile-emoji">{{ emoji }}</span><b>{{ title }}</b><small>🔒 после первых уроков</small></div>
-{% else %}<a class="tile" href="{{ href }}"><span class="tile-emoji">{{ emoji }}</span><b>{{ title }}</b><small>{{ sub }}</small>{% if badge %}<span class="tile-badge">{{ badge }}</span>{% endif %}</a>{% endif %}
+{% if locked %}<div class="tile tile-locked" title="Откроется после первых уроков"><span class="tile-emoji">{{ emoji }}</span><span class="tile-text"><b>{{ title }}</b><small>🔒 после первых уроков</small></span></div>
+{% else %}<a class="tile" href="{{ href }}"><span class="tile-emoji">{{ emoji }}</span><span class="tile-text"><b>{{ title }}</b><small>{{ sub }}</small></span>{% if badge %}<span class="tile-badge">{{ badge }}</span>{% endif %}</a>{% endif %}
 {% endmacro %}
 <div class="welcome-row">
   <div class="welcome-avatar">{{ emoji or '🎒' }}</div>
