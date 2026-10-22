@@ -161,3 +161,36 @@ def test_manual_backup_works_without_backup_dir_access(parent, fake, tmp_path, m
     html = parent.post("/parent/telegram", data={"action": "backup"}, follow_redirects=True).get_data(as_text=True)
     assert "Копия базы отправлена" in html and fake.methods()[-1] == "sendDocument"
     assert locked.read_text() == "это файл, а не папка"
+
+
+def _caption(body):
+    return body.split(b'name="caption"\r\n\r\n', 1)[1].split(b"\r\n--", 1)[0].decode()
+
+
+def test_backup_caption_has_restore_instructions(parent, fake, tmp_path, monkeypatch):
+    _link(parent, fake)
+    for c in list(parent._cookies.values()):                     # тот же вход, но на «боевом» адресе
+        parent.set_cookie(c.key, c.value, domain="stavr.example.org")
+    assert parent.get("/parent/telegram", base_url="http://stavr.example.org:8443").status_code == 200
+    assert tg.settings(_db())["tg_server"] == "stavr.example.org"
+    parent.post("/parent/telegram", data={"action": "backup"})                  # ручная: копии на сервере нет
+    body = fake.calls[-1][1]
+    text = _caption(body)
+    assert b'name="parse_mode"\r\n\r\nHTML' in body and len(text) <= 1024
+    name = text.split("restore.sh /root/", 1)[1].split("<", 1)[0]
+    assert name.startswith("english_app-") and name.endswith(".db.gz")
+    assert "root@stavr.example.org:/root/" in text and "ssh root@stavr.example.org" in text
+    assert "/opt/english/backups/" not in text
+
+    monkeypatch.setattr(backup_db.config, "DB_PATH", database.DB_PATH)
+    assert backup_db.main(["--dir", str(tmp_path)]) == 0                       # ночная: ещё и путь на сервере
+    text = _caption(fake.calls[-1][1])
+    assert "restore.sh /opt/english/backups/english_app-" in text and len(text) <= 1024
+
+
+def test_restore_help_escapes_and_fits(tmp_path):
+    f = tmp_path / "english_app-20261022-031700.db.gz"
+    f.write_bytes(b"x" * 3000)
+    text = tg.restore_help(str(f), "a<b>" + "x" * 60 + ".example.org")
+    assert "a&lt;b&gt;" in text and len(text) <= 1024
+    assert "адрес-сервера" in tg.restore_help(str(f))
