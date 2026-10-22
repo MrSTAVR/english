@@ -126,6 +126,7 @@
   <div class="section-head">
     <h2 class="section-title">📚 Мои уроки</h2>
     <span class="pill pill-soft">{{ stats.lessons_completed }}/{{ total_lessons }} пройдено</span>
+    <a class="btn btn-small" href="{{ url_for('student.course_map') }}">🗺️ Карта курса</a>
   </div>
   <div class="lesson-grid" id="lessonGrid">
     {% for info in lessons %}

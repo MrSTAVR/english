@@ -292,6 +292,49 @@ def submit_test(lesson_id):
                                              if a["key"] in [n["key"] for n in new_achievements]])
 
 
+MAP_PARTS = ["Первые шаги 🌱", "Слова вокруг нас 🏡", "Говорим о себе 💬", "Большой мир 🌍", "Грамматика-гора 🧠",
+             "Финишная прямая 🏆", "Новые горизонты 🚀", "Дальние страны 🗺️"]
+MAP_PART_SIZE = 9
+
+
+def _stars(score):
+    return 3 if score >= 90 else 2 if score >= 80 else 1
+
+
+@bp.route("/student/map")
+def course_map():
+    """Карта курса: тропинка по всем основным урокам в порядке прохождения."""
+    err = require_role("student")
+    if err:
+        return err
+    db = get_db()
+    student = get_student_or_none(db)
+    if not student:
+        session.clear()
+        return redirect(url_for("auth.index"))
+    stats = compute_stats(db, student["id"])
+    unlocked = unlocked_lesson_ids(stats)
+    nodes, current = [], None
+    for pos, l in enumerate(LESSONS, 1):
+        best = stats["best_by_lesson"].get(l["id"])
+        done = l["id"] in stats["completed_ids"]
+        credited = l["id"] in stats["credited_ids"]
+        node = {"pos": pos, "lesson": l, "done": done, "locked": l["id"] not in unlocked,
+                "stars": _stars(best["score_percent"]) if done and best and not credited else 0, "credited": credited}
+        if current is None and not done and not node["locked"]:
+            current = node
+            node["current"] = True
+        nodes.append(node)
+    parts = [{"title": MAP_PARTS[i // MAP_PART_SIZE] if i // MAP_PART_SIZE < len(MAP_PARTS) else f"Часть {i // MAP_PART_SIZE + 1}",
+              "nodes": nodes[i:i + MAP_PART_SIZE]} for i in range(0, len(nodes), MAP_PART_SIZE)]
+    for part in parts:
+        part["done"] = all(n["done"] for n in part["nodes"])
+    mascot = build_mascot_ctx()
+    mascot["page"] = "map"
+    return render_template("course_map.html", parts=parts, mascot=mascot, done=stats["lessons_completed"],
+                           total=len(LESSONS), current=current)
+
+
 @bp.route("/student/achievements")
 def achievements_page():
     """Коллекция наград: медали по категориям, шкалы прогресса, счётчики по уровням."""
