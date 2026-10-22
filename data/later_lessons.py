@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Темы после 51-го урока (id 52–56): прошедшее время, сравнения, «как часто», путешествия.
+"""Темы после 51-го урока (id 52–60): прошедшее время, сравнения, «как часто», путешествия, будущее, в гостях.
 Место в курсе задаётся в data/course.py (перед «Большим финалом»). Формат тот же, что в new_lessons.py."""
 
 from data.new_lessons import _ch, _match, _order, _ti
@@ -219,6 +219,181 @@ LATER_LESSONS = [
             _ch("Что значит «holiday»?", "отпуск, каникулы", ["праздничный торт", "гостиница"], 0, "Holiday — отпуск, каникулы."),
             _ti("Напиши по-английски «аэропорт»:", "airport", "Airport — аэропорт."),
             _ch("Как будет «пляж»?", "beach", ["sea", "bench"], 0, "Beach — пляж (sea — море)."),
+        ],
+    },
+    # ===================================================== 57. БУДУЩЕЕ: WILL
+    {
+        "id": 57,
+        "title": "Завтра будет: will 🔮",
+        "emoji": "🔮",
+        "description": "Говорим о будущем: I will help, it will be sunny, I won't forget.",
+        "theory": {
+            "intro": "Чтобы сказать, что что-то <b>будет</b>, ставим перед глаголом маленькое слово <b>will</b> [уил]. Форма одна для всех: I will, she will, they will.",
+            "blocks": [
+                {"title": "Will + глагол 🔮", "text": "<b>I will help you.</b> — Я помогу тебе. <b>It will be sunny tomorrow.</b> — Завтра будет солнечно. Коротко: <b>I'll</b> [айл], <b>she'll</b>, <b>we'll</b>."},
+                {"title": "Не будет: won't 🚫", "text": "<b>will not = won't</b> [уоунт]: <i>I won't forget.</i> — Я не забуду. <i>It won't rain.</i> — Дождя не будет."},
+                {"title": "Вопрос ❓", "text": "<b>Will</b> ставим вперёд: <i>Will you come?</i> — Ты придёшь? Ответ: <i>Yes, I will.</i> / <i>No, I won't.</i>"},
+                {"title": "Когда? ⏩", "text": "<b>tomorrow</b> [тэмороу] — завтра, <b>next week</b> [нэкст уи:к] — на следующей неделе, <b>soon</b> [су:н] — скоро, <b>later</b> [лэйтэ] — позже. Will часто используют для обещаний: <i>I promise I'll do it!</i> — Обещаю, сделаю!"},
+            ],
+            "tip": "Пообещай что-нибудь по-английски: I will clean my room! 😉",
+        },
+        "material": _mat([
+            ("Will", "буду, будет (будущее)", "уил"), ("Won't", "не буду, не будет", "уоунт"), ("Tomorrow", "завтра", "тэмороу"),
+            ("Next week", "на следующей неделе", "нэкст уи:к"), ("Soon", "скоро", "су:н"), ("Later", "позже", "лэйтэ"),
+            ("I will help you.", "Я помогу тебе.", "ай уил хэлп ю"), ("It will be sunny.", "Будет солнечно.", "ит уил би: сани"),
+            ("Will you come?", "Ты придёшь?", "уил ю кам"), ("I promise.", "Я обещаю.", "ай промис"), ("Forget", "забывать", "фэгет"),
+            ("Future", "будущее", "фью:чэ"),
+        ]),
+        "exercises": [
+            _ch("Выбери: Tomorrow I ___ help my mum.", "will", ["was", "did"], 0, "Будущее — will + глагол."),
+            _ch("Что значит «won't»?", "не буду, не будет", ["был", "хочу"], 0, "Won't = will not."),
+            _ti("Напиши по-английски «завтра»:", "tomorrow", "Tomorrow — завтра."),
+            _match("Соедини 🤝", ["Soon", "Later", "Next week", "Forget"], ["скоро", "позже", "на следующей неделе", "забывать"],
+                   "Soon — скоро; Later — позже; Next week — на следующей неделе; Forget — забывать."),
+            _order("Составь: «Завтра будет солнечно.»", "It will be sunny tomorrow", ["sunny", "It", "tomorrow", "will", "be"],
+                   "It will be sunny tomorrow."),
+        ],
+        "test": [
+            _ch("Выбери: She ___ come next week.", "will", ["wills", "is will"], 0, "Will одинаковый для всех: she will."),
+            _ch("Как сказать «Я не забуду»?", "I won't forget.", ["I don't will forget.", "I will not to forget."], 0, "Won't + глагол."),
+            _ti("Напиши «скоро»:", "soon", "Soon — скоро."),
+            _ch("Как спросить «Ты придёшь?»", "Will you come?", ["You will come?", "Do you will come?"], 0, "Will — в начало вопроса."),
+            _ch("Ответь «да» на «Will it rain?»", "Yes, it will.", ["Yes, it is.", "Yes, it does."], 0, "Will → Yes, it will."),
+            _ti("Напиши коротко «I will»:", "i'll", "I will = I'll.", accept=["i will", "ill"]),
+            _ch("Что значит «I promise»?", "Я обещаю.", ["Я помню.", "Я прошу."], 0, "Promise — обещать."),
+            _ch("Что значит «later»?", "позже", ["раньше", "вчера"], 0, "Later — позже."),
+        ],
+    },
+    # ===================================================== 58. ПЛАНЫ: GOING TO
+    {
+        "id": 58,
+        "title": "Мои планы: going to 🗓️",
+        "emoji": "🗓️",
+        "description": "Я собираюсь… — рассказываем о планах на выходные и каникулы.",
+        "theory": {
+            "intro": "Когда ты уже <b>решила</b>, что будешь делать, англичане говорят <b>going to</b> [гоуинг ту] — «собираюсь». <i>I'm going to visit Granny.</i> — Я собираюсь навестить бабушку.",
+            "blocks": [
+                {"title": "am / is / are + going to 🧩", "text": "<b>I am going to</b> (I'm going to) read. <b>She is going to</b> swim. <b>They are going to</b> play. После going to — обычный глагол."},
+                {"title": "Не собираюсь 🚫", "text": "Добавляем <b>not</b>: <i>I'm not going to watch TV.</i> — Я не собираюсь смотреть телевизор."},
+                {"title": "Вопрос ❓", "text": "<i>Are you going to swim?</i> — Ты собираешься плавать? <b>What are you going to do?</b> — Что ты собираешься делать?"},
+                {"title": "will или going to? 🤔", "text": "<b>Going to</b> — когда план уже есть. <b>Will</b> — когда решаешь прямо сейчас или обещаешь: <i>The phone is ringing — I'll answer!</i>"},
+            ],
+            "tip": "Расскажи план на выходные: On Saturday I'm going to… 🎈",
+        },
+        "material": _mat([
+            ("Going to", "собираюсь (план)", "гоуинг ту"), ("I'm going to read.", "Я собираюсь читать.", "айм гоуинг ту ри:д"),
+            ("Plan", "план", "плэн"), ("Weekend", "выходные", "уи:кэнд"), ("Holidays", "каникулы", "холидэйз"),
+            ("What are you going to do?", "Что ты собираешься делать?", "уот а: ю гоуинг ту ду:"), ("Visit", "навещать, посещать", "визит"),
+            ("Learn", "учить, узнавать", "лё:н"), ("Build", "строить", "билд"), ("Ride a bike", "кататься на велосипеде", "райд э байк"),
+            ("Tonight", "сегодня вечером", "тэнайт"), ("This summer", "этим летом", "зис самэ"),
+        ]),
+        "exercises": [
+            _ch("Выбери: I ___ going to read.", "am", ["is", "are"], 0, "I am going to."),
+            _ch("Выбери: They ___ going to play.", "are", ["is", "am"], 0, "They are going to."),
+            _ti("Напиши по-английски «выходные»:", "weekend", "Weekend — выходные."),
+            _match("Соедини 🤝", ["Plan", "Learn", "Build", "Tonight"], ["план", "учить", "строить", "сегодня вечером"],
+                   "Plan — план; Learn — учить; Build — строить; Tonight — сегодня вечером."),
+            _order("Составь: «Она собирается плавать.»", "She is going to swim", ["swim", "She", "going", "is", "to"],
+                   "She is going to swim."),
+        ],
+        "test": [
+            _ch("Что значит «I'm going to learn English»?", "Я собираюсь учить английский.", ["Я учила английский.", "Я иду в школу."], 0,
+                "Going to — собираюсь."),
+            _ch("Выбери: He ___ going to visit Granny.", "is", ["are", "am"], 0, "He is going to."),
+            _ti("Напиши «план»:", "plan", "Plan — план."),
+            _ch("Как спросить «Что ты собираешься делать?»", "What are you going to do?", ["What you going to do?", "What do you going to do?"], 0,
+                "What are you going to do?"),
+            _ch("Выбери: I'm not going ___ watch TV.", "to", ["for", "at"], 0, "Going to + глагол."),
+            _ti("Напиши «строить»:", "build", "Build — строить."),
+            _ch("Что значит «this summer»?", "этим летом", ["прошлым летом", "каждое лето"], 0, "This summer — этим летом."),
+        ],
+    },
+    # ===================================================== 59. НЕПРАВИЛЬНЫЕ ГЛАГОЛЫ
+    {
+        "id": 59,
+        "title": "Что ты делала? Неправильные глаголы 🧩",
+        "emoji": "🧩",
+        "description": "came, gave, took, made, bought, wrote — и вопрос What did you do?",
+        "theory": {
+            "intro": "Ты уже знаешь went, saw и ate. Вот ещё несколько глаголов-хитрецов, которые в прошлом меняются целиком. Их просто запоминаем — как стихи!",
+            "blocks": [
+                {"title": "Пары глаголов 🧩", "text": "<b>come → came</b> [кейм] — пришёл, <b>give → gave</b> [гейв] — дал, <b>take → took</b> [тук] — взял, <b>make → made</b> [мэйд] — сделал, <b>buy → bought</b> [бо:т] — купил, <b>write → wrote</b> [роут] — написал, <b>read → read</b> [рэд] — прочитал (пишется так же!)."},
+                {"title": "Что ты делала? ❓", "text": "<b>What did you do yesterday?</b> — Что ты делала вчера? <b>Where did you go?</b> — Куда ты ходила? <b>What did you buy?</b> — Что ты купила? После did глагол — в обычной форме!"},
+                {"title": "Отвечаем 💬", "text": "<i>I went to the zoo.</i> — Я ходила в зоопарк. <i>I bought a book.</i> — Я купила книгу. <i>Mum made a cake.</i> — Мама испекла торт."},
+                {"title": "Не делала 🚫", "text": "Снова <b>didn't</b> + обычный глагол: <i>I didn't buy it.</i> — Я это не покупала. Не «didn't bought»!"},
+            ],
+            "tip": "Спроси кого-нибудь дома: What did you do yesterday? 😊",
+        },
+        "material": _mat([
+            ("Came", "пришёл, пришла", "кейм"), ("Gave", "дал(а)", "гейв"), ("Took", "взял(а)", "тук"), ("Made", "сделал(а)", "мэйд"),
+            ("Bought", "купил(а)", "бо:т"), ("Wrote", "написал(а)", "роут"), ("Read (прошедшее)", "прочитал(а)", "рэд"),
+            ("What did you do?", "Что ты делала?", "уот дид ю ду:"), ("Where did you go?", "Куда ты ходила?", "уэа дид ю гоу"),
+            ("I bought a book.", "Я купила книгу.", "ай бо:т э бук"), ("Letter", "письмо", "лэтэ"), ("Zoo", "зоопарк", "зу:"),
+        ]),
+        "exercises": [
+            _ch("Прошедшее от buy:", "bought", ["buyed", "bring"], 0, "Buy — bought."),
+            _ch("Прошедшее от come:", "came", ["comed", "come"], 0, "Come — came."),
+            _ti("Напиши прошедшее от write:", "wrote", "Write — wrote."),
+            _match("Соедини глагол и прошедшее 🤝", ["give", "take", "make", "buy"], ["gave", "took", "made", "bought"],
+                   "give — gave, take — took, make — made, buy — bought."),
+            _order("Составь: «Что ты делала вчера?»", "What did you do yesterday", ["do", "What", "yesterday", "did", "you"],
+                   "What did you do yesterday?"),
+        ],
+        "test": [
+            _ch("Прошедшее от take:", "took", ["taked", "tooked"], 0, "Take — took."),
+            _ch("Что значит «She gave me a present»?", "Она подарила мне подарок.", ["Она дарит мне подарок.", "Она возьмёт подарок."], 0,
+                "Gave — прошедшее от give."),
+            _ti("Напиши прошедшее от make:", "made", "Make — made."),
+            _ch("Как спросить «Куда ты ходила?»", "Where did you go?", ["Where did you went?", "Where you went?"], 0,
+                "После did — go, без изменения."),
+            _ch("Выбери: I didn't ___ it.", "buy", ["bought", "buys"], 0, "После didn't — обычная форма."),
+            _ti("Напиши прошедшее от buy:", "bought", "Buy — bought."),
+            _ch("Что значит «Dad came home»?", "Папа пришёл домой.", ["Папа придёт домой.", "Папа дома."], 0, "Came — пришёл."),
+            _ch("Прошедшее от read:", "read", ["readed", "red"], 0, "Read — read (пишется так же, читается [рэд])."),
+        ],
+    },
+    # ===================================================== 60. В ГОСТЯХ
+    {
+        "id": 60,
+        "title": "В гостях 🏡",
+        "emoji": "🏡",
+        "description": "Приглашаем, встречаем гостей, угощаем и благодарим.",
+        "theory": {
+            "intro": "Идёшь в гости или ждёшь друзей у себя? Вот фразы, с которыми ты будешь самой вежливой хозяйкой и гостьей!",
+            "blocks": [
+                {"title": "Приглашаем 💌", "text": "<b>Would you like to come to my party?</b> [вуд ю лайк] — Хочешь прийти ко мне на праздник? Ответ: <i>Yes, I'd love to!</i> — С удовольствием! или <i>Sorry, I can't.</i> — Извини, не могу."},
+                {"title": "Встречаем гостей 🚪", "text": "<b>Come in!</b> [кам ин] — Заходи! <b>Nice to see you!</b> — Рада тебя видеть! <b>Sit down, please.</b> — Садись, пожалуйста."},
+                {"title": "Угощаем 🍰", "text": "<b>Help yourself!</b> [хэлп йоселф] — Угощайся! <b>Would you like some tea?</b> — Хочешь чаю? <i>Yes, please.</i> / <i>No, thank you.</i>"},
+                {"title": "Прощаемся 👋", "text": "<b>Thank you for inviting me!</b> [инвайтинг] — Спасибо, что пригласила! <b>I had a great time!</b> — Было здорово! <b>See you soon!</b> — До скорой встречи!"},
+            ],
+            "tip": "Поиграй с игрушками в гости и скажи им: Come in! Help yourself! 🧸",
+        },
+        "material": _mat([
+            ("Guest", "гость", "гэст"), ("Invite", "приглашать", "инвайт"), ("Come in!", "Заходи!", "кам ин"),
+            ("Nice to see you!", "Рада тебя видеть!", "найс ту си: ю"), ("Sit down, please.", "Садись, пожалуйста.", "сит даун пли:з"),
+            ("Help yourself!", "Угощайся!", "хэлп йоселф"), ("Would you like some tea?", "Хочешь чаю?", "вуд ю лайк сам ти:"),
+            ("I'd love to!", "С удовольствием!", "айд лав ту"), ("Thank you for inviting me!", "Спасибо за приглашение!", "сэнк ю фо: инвайтинг ми:"),
+            ("I had a great time!", "Было здорово!", "ай хэд э грейт тайм"), ("See you soon!", "До скорой встречи!", "си: ю су:н"),
+            ("Doorbell", "дверной звонок", "до:бэл"),
+        ]),
+        "exercises": [
+            _ch("Гость пришёл. Что скажешь?", "Come in!", ["Go out!", "Good night!"], 0, "Come in! — Заходи!"),
+            _ch("Что значит «Help yourself!»?", "Угощайся!", ["Помоги мне!", "Помогите!"], 0, "Help yourself — угощайся, бери сам."),
+            _ti("Напиши по-английски «гость»:", "guest", "Guest — гость."),
+            _match("Соедини 🤝", ["Invite", "Doorbell", "See you soon!", "I'd love to!"], ["приглашать", "дверной звонок", "до скорой встречи", "с удовольствием"],
+                   "Invite — приглашать; Doorbell — дверной звонок; See you soon — до скорой встречи; I'd love to — с удовольствием."),
+            _order("Составь: «Хочешь прийти ко мне на праздник?»", "Would you like to come to my party",
+                   ["come", "Would you like", "to my party", "to"], "Would you like to come to my party?"),
+        ],
+        "test": [
+            _ch("Как сказать «Садись, пожалуйста»?", "Sit down, please.", ["Stand up, please.", "Sit up, please."], 0, "Sit down — садись."),
+            _ch("Тебя пригласили. Как сказать «С удовольствием!»?", "I'd love to!", ["I'm sorry!", "You're welcome!"], 0, "I'd love to — с удовольствием."),
+            _ti("Напиши по-английски «приглашать»:", "invite", "Invite — приглашать."),
+            _ch("Что значит «I had a great time!»?", "Было здорово!", ["У меня много времени!", "Который час?"], 0, "Had a great time — отлично провела время."),
+            _ch("Как предложить чай?", "Would you like some tea?", ["Do you tea?", "Are you tea?"], 0, "Would you like…? — Хочешь…?"),
+            _ti("Напиши «Заходи!» (два слова):", "come in", "Come in! — Заходи!"),
+            _ch("Что сказать в конце, уходя из гостей?", "Thank you for inviting me!", ["Help yourself!", "Come in!"], 0,
+                "Thank you for inviting me! — Спасибо за приглашение!"),
         ],
     },
 ]
