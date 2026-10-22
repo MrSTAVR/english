@@ -25,11 +25,11 @@
     if (ok) okCount++;
     box.classList.add('answered', ok ? 'right' : 'wrong');
     var fb = el('div', 'rv-fb ' + (ok ? 'ok' : 'bad'),
-      (ok ? '✅ Верно!' : '❌ Правильно: <b>' + esc(correctText) + '</b>') +
-      '<div class="rv-explain">💡 ' + esc(item.explain || '') + '</div>');
+      (ok ? 'Верно!' : 'Правильно: <b>' + esc(correctText) + '</b>') +
+      '<div class="rv-explain">' + esc(item.explain || '') + '</div>');
     box.appendChild(fb);
     // после ответа всегда можно услышать английское слово (и оно озвучивается само)
-    var hearEn = el('div', 'rv-sayline', '<span class="rv-pic">' + esc(item.pic || '') + '</span><button type="button" class="btn btn-small">🔊 ' + esc(item.en) + '</button><span class="rv-hint">[' + esc(item.hint || '') + ']</span>');
+    var hearEn = el('div', 'rv-sayline', '<span class="rv-pic">' + esc(item.pic || '') + '</span><button type="button" class="btn btn-small"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> ' + esc(item.en) + '</button><span class="rv-hint">[' + esc(item.hint || '') + ']</span>');
     hearEn.querySelector('button').onclick = function () { say(item.en); };
     box.appendChild(hearEn);
     setTimeout(function () { say(item.en); }, 350);
@@ -44,7 +44,7 @@
         }, 1200);
       }
     });
-    var next = el('button', 'btn btn-primary', idx + 1 < items.length ? 'Дальше ▶' : 'Результат 🏅');
+    var next = el('button', 'btn btn-primary', idx + 1 < items.length ? 'Дальше ▶' : 'Результат');
     next.type = 'button';
     next.onclick = function () { idx++; show(); };
     box.appendChild(next);
@@ -61,12 +61,12 @@
     box.appendChild(el('p', 'q', '<b>' + esc(it.q) + '</b>'));
     if (it.pic && it.q.indexOf('Что значит') === 0) box.appendChild(el('div', 'rv-pic-big', esc(it.pic)));
     if (!it.audio && it.type === 'choice' && it.q.indexOf('Что значит') === 0) {   // английское слово в вопросе — можно послушать
-      var hear = el('p', null, '<button type="button" class="btn btn-small say-btn">🔊 Послушать слово</button>');
+      var hear = el('p', null, '<button type="button" class="btn btn-small say-btn"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Послушать слово</button>');
       hear.querySelector('button').onclick = function () { say(it.en); };
       box.appendChild(hear);
     }
     if (it.audio) {
-      var play = el('p', null, '<button type="button" class="btn btn-small say-btn">🔊 Слушать</button> <button type="button" class="btn btn-small say-btn slow">🐢 Медленно</button>');
+      var play = el('p', null, '<button type="button" class="btn btn-small say-btn"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Слушать</button> <button type="button" class="btn btn-small say-btn slow">Медленно</button>');
       play.querySelector('.say-btn').onclick = function () { say(it.audio); };
       play.querySelector('.slow').onclick = function () { say(it.audio, true); };
       box.appendChild(play);
@@ -87,7 +87,7 @@
       box.appendChild(opts);
     } else if (it.type === 'type_in') {
       var inp = el('input', 'typein'); inp.type = 'text'; inp.autocomplete = 'off'; inp.lang = 'en'; inp.placeholder = 'Напиши по-английски';
-      var go = el('button', 'btn btn-small', 'Проверить ✔️'); go.type = 'button';
+      var go = el('button', 'btn btn-small', 'Проверить'); go.type = 'button';
       var done = function () {
         if (box.classList.contains('answered') || !inp.value.trim()) return;
         inp.disabled = true; go.disabled = true;
@@ -104,7 +104,7 @@
         b.onclick = function () { if (!box.classList.contains('answered')) (b.parentNode === bank ? line : bank).appendChild(b); };
         bank.appendChild(b);
       });
-      var chk = el('button', 'btn btn-small', 'Проверить ✔️'); chk.type = 'button';
+      var chk = el('button', 'btn btn-small', 'Проверить'); chk.type = 'button';
       chk.onclick = function () {
         if (box.classList.contains('answered')) return;
         var got = [].map.call(line.children, function (c) { return c.textContent; }).join('');
@@ -122,8 +122,8 @@
     s.classList.remove('hidden');
     document.getElementById('rv-ok').textContent = okCount;
     document.getElementById('rv-total').textContent = items.length;
-    document.getElementById('rv-emoji').textContent = okCount === items.length ? '🏆' : okCount >= items.length * 0.7 ? '🏅' : '💪';
-    if (learned) document.getElementById('rv-learned').textContent = 'Ещё ' + learned + ' слов(а) выучено надолго! 🧠';
+    document.getElementById('rv-emoji').textContent = okCount === items.length ? '' : okCount >= items.length * 0.7 ? '' : '';
+    if (learned) document.getElementById('rv-learned').textContent = 'Ещё ' + learned + ' слов(а) выучено надолго!';
     document.dispatchEvent(new CustomEvent('review:done', { detail: { ok: okCount, total: items.length } }));
   }
 

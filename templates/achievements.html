@@ -2,8 +2,8 @@
 {% block title %}Мои награды — English Fun{% endblock %}
 {% block content %}
 <div class="dict-head">
-  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">⬅ Мои уроки</a>
-  <h1>🏅 Мои награды</h1>
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">← Мои уроки</a>
+  <h1>Мои награды</h1>
 </div>
 
 <section class="card ach-hero">
@@ -22,15 +22,15 @@
 
 {% for g in groups %}
 <section class="ach-group">
-  <h2 class="ach-cat">{{ g.emoji }} {{ g.name }}
+  <h2 class="ach-cat">{{ g.name|noemoji }}
     <span class="pill pill-soft">{{ g['items']|selectattr('earned')|list|length }}/{{ g['items']|length }}</span></h2>
   <div class="ach-cards">
     {% for a in g['items'] %}
       <article class="ach-card tier-{{ a.tier }} {{ 'is-earned' if a.earned else 'is-locked' }}">
         {{ a|medal(84) }}
         <div class="ach-card-body">
-          <div class="ach-card-title">{{ a.title }}</div>
-          <div class="ach-card-desc">{{ a.desc }}</div>
+          <div class="ach-card-title">{{ a.title|noemoji }}</div>
+          <div class="ach-card-desc">{{ a.desc|noemoji }}</div>
           {% if a.earned %}
             <div class="ach-card-date">{{ a.tier_name }} · получено {{ a.earned_at[:10] }}</div>
           {% elif a.progress %}

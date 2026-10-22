@@ -2,7 +2,7 @@
 {% block admin_title %}Telegram{% endblock %}
 {% block admin %}
 <section class="card">
-  <h2>🤖 Telegram-бот администратора</h2>
+  <h2>Telegram-бот администратора</h2>
   <p class="hint">Бот присылает вам в Telegram резервную копию базы каждую ночь (около 03:17).
     Бот личный: он пишет только в один привязанный чат.</p>
 
@@ -20,7 +20,7 @@
   </form>
 
   {% elif not tg.tg_chat %}
-  <p>Бот <b>{{ tg.tg_chat_name }}</b> подключён ✅ (токен {{ tg.token_hint }})</p>
+  <p>Бот <b>{{ tg.tg_chat_name }}</b> подключён (токен {{ tg.token_hint }})</p>
   <h3>Шаг 2. Привяжите свой чат</h3>
   <ol class="tg-steps">
     <li>Найдите бота <b>{{ tg.tg_chat_name }}</b> в Telegram и нажмите «Запустить» (или отправьте <code>/start</code>).</li>
@@ -28,7 +28,7 @@
   </ol>
   <form method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="btn btn-primary" type="submit" name="action" value="link">🔗 Привязать чат</button>
+    <button class="btn btn-primary" type="submit" name="action" value="link">Привязать чат</button>
     <button class="btn btn-small" type="submit" name="action" value="forget">Другой бот</button>
   </form>
 
@@ -39,10 +39,10 @@
     {% else %}<span class="pill pill-warn">Ежедневная копия: выключена</span>{% endif %}
   </p>
   <p>Последняя отправка: {% if tg.tg_last %}<b>{{ tg.tg_last }}</b>{% else %}<span class="hint">ещё не было</span>{% endif %}</p>
-  <form method="post" class="upd-actions" onsubmit="if (event.submitter && event.submitter.value === 'backup') event.submitter.textContent = '⏳ Делаю копию и отправляю…'">
+  <form method="post" class="upd-actions" onsubmit="if (event.submitter && event.submitter.value === 'backup') event.submitter.textContent = 'Делаю копию и отправляю…'">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="btn btn-primary" type="submit" name="action" value="backup">💾 Отправить копию сейчас</button>
-    <button class="btn" type="submit" name="action" value="test">📨 Проверить связь</button>
+    <button class="btn btn-primary" type="submit" name="action" value="backup">Отправить копию сейчас</button>
+    <button class="btn" type="submit" name="action" value="test">Проверить связь</button>
     {% if tg.backups_on %}
     <button class="btn btn-small" type="submit" name="action" value="backups_off">Выключить ежедневную копию</button>
     {% else %}
@@ -60,7 +60,7 @@
   {% endif %}
 </section>
 <section class="card">
-  <h2>🔒 Важно</h2>
+  <h2>Важно</h2>
   <p class="hint">В копии базы есть все данные учеников (имена, прогресс, записи логопеда).
     Не пересылайте эти файлы и не добавляйте бота в группы. Копия из Telegram восстанавливается так же,
     как с сервера: <code>deploy/restore.sh</code> (см. OPERATIONS.md).</p>

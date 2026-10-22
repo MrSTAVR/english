@@ -3,6 +3,7 @@
 from curriculum import LESSONS_BY_ID
 from tests.helpers import db_scalar, submit_lesson
 from tests.helpers import N
+from template_filters import noemoji
 
 
 def words_html(client):
@@ -22,7 +23,7 @@ def test_dictionary_shows_only_passed_lessons(make_student):
     html = words_html(student)
     w1 = LESSONS_BY_ID[1]["material"]
     assert all(f'data-tts="{w["en"]}"' in html for w in w1)
-    assert LESSONS_BY_ID[1]["title"] in html
+    assert noemoji(LESSONS_BY_ID[1]["title"]) in html
     assert LESSONS_BY_ID[2]["title"] not in html            # урок 2 ещё не пройден
     assert f"Все слова из пройденных уроков: <b>{len(w1)}</b>" in html
 
@@ -32,7 +33,7 @@ def test_credited_lessons_appear_in_dictionary(parent, make_student):
     sid = db_scalar("SELECT id FROM students WHERE username='masha'")
     parent.post(f"/parent/students/{sid}/credit", data={"upto": "2", "action": "add"})
     html = words_html(student)
-    assert LESSONS_BY_ID[N(1)]["title"] in html and LESSONS_BY_ID[N(2)]["title"] in html
+    assert noemoji(LESSONS_BY_ID[N(1)]["title"]) in html and noemoji(LESSONS_BY_ID[N(2)]["title"]) in html
     assert LESSONS_BY_ID[N(3)]["title"] not in html
 
 

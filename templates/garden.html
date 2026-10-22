@@ -2,9 +2,9 @@
 {% block title %}Мой сад — English Fun{% endblock %}
 {% block content %}
 
-<h1>🌳 Мой сад</h1>
-<p><a class="btn btn-secondary btn-small" href="{{ url_for('wardrobe.wardrobe_page') }}">🎩 Гардероб Чик-чика</a> <a class="btn btn-secondary btn-small" href="{{ url_for('house.house_page') }}">🏠 Домик Чик-чика</a></p>
-<p class="welcome-sub">Каждый день занятий приносит в сад что-то новое, а монетками можно украсить ВЕСЬ сад! ✨ (серия — до {{ streak_cap }} дней)</p>
+<h1>Мой сад</h1>
+<p><a class="btn btn-secondary btn-small" href="{{ url_for('wardrobe.wardrobe_page') }}">Гардероб Чик-чика</a> <a class="btn btn-secondary btn-small" href="{{ url_for('house.house_page') }}">Домик Чик-чика</a></p>
+<p class="welcome-sub">Каждый день занятий приносит в сад что-то новое, а монетками можно украсить ВЕСЬ сад! (серия — до {{ streak_cap }} дней)</p>
 
 {% if flash_msg %}<div class="flash flash-success garden-flash">{{ flash_msg }}</div>{% endif %}
 
@@ -12,29 +12,29 @@
   <!-- Сад -->
   <section class="card glass tree-panel">
     {% if garden.broken %}
-      <div class="tree-wilt">🍂</div>
-      <p class="tree-broken-note">Ой… серия дней прервана, и сад опустел 🥺<br>
+      <div class="tree-wilt"></div>
+      <p class="tree-broken-note">Ой… серия дней прервана, и сад опустел<br>
         Начни заниматься снова — и всё вырастет заново!</p>
     {% endif %}
 
     <div class="garden-stage {{ 'is-broken' if garden.broken }}">{{ scene }}</div>
 
     <div class="tree-info">
-      <h2>{{ stage.name }}</h2>
+      <h2>{{ stage.name|noemoji }}</h2>
       <p class="stage-msg">{{ stage.msg }}</p>
       <div class="streak-bar-wrap">
         <div class="streak-bar" style="width: {{ (scene_day / streak_cap * 100) | round(1) }}%;"></div>
         <span class="streak-bar-label">{{ scene_day }} / {{ streak_cap }} дн.</span>
       </div>
       {% if next_stage %}
-        <p class="next-stage">🎁 Завтра в саду появится что-то новое — приходи на урок!</p>
+        <p class="next-stage">Завтра в саду появится что-то новое — приходи на урок!</p>
       {% else %}
-        <p class="next-stage">👑 Максимальная серия набрана! Ты — легенда!</p>
+        <p class="next-stage">Максимальная серия набрана! Ты — легенда!</p>
       {% endif %}
       {% if to_next_tree > 0 %}
-        <p class="next-stage">🌱 Ещё <b>{{ to_next_tree }}</b> дн. — и в саду вырастет новое дерево!</p>
+        <p class="next-stage">Ещё <b>{{ to_next_tree }}</b> дн. — и в саду вырастет новое дерево!</p>
       {% elif tree_count >= 6 %}
-        <p class="next-stage">🌳 В твоём саду уже {{ tree_count }} деревьев — целый лес!</p>
+        <p class="next-stage">В твоём саду уже {{ tree_count }} деревьев — целый лес!</p>
       {% endif %}
     </div>
   </section>
@@ -42,11 +42,11 @@
   <!-- Показатели -->
   <aside class="garden-side">
     <div class="card glass mini-card">
-      <div class="mini-num">🔥 {{ garden.streak_days }}</div>
+      <div class="mini-num">{{ garden.streak_days }}</div>
       <div class="mini-label">дней подряд сейчас (максимум {{ streak_cap }})</div>
     </div>
     <div class="card glass mini-card">
-      <div class="mini-num">🏆 {{ garden.best_streak }}</div>
+      <div class="mini-num">{{ garden.best_streak }}</div>
       <div class="mini-label">лучшая серия</div>
     </div>
     <div class="card glass mini-card">
@@ -54,7 +54,7 @@
       <div class="mini-label">монеток (+{{ coin_pass }} за сданный тест, +{{ coin_perfect }} бонус за 100%)</div>
     </div>
     <div class="card glass mini-card">
-      <div class="mini-num">🌳 {{ tree_count }}</div>
+      <div class="mini-num">{{ tree_count }}</div>
       <div class="mini-label">деревьев в саду</div>
     </div>
     <a class="btn btn-secondary" href="{{ url_for('student.student_home') }}">← К урокам</a>
@@ -64,17 +64,17 @@
 <!-- Альбом находок -->
 <section class="card glass album">
   <div class="section-head">
-    <h2>🧸 Альбом находок</h2>
+    <h2>Альбом находок</h2>
     <span class="pill pill-soft">открыто {{ album_done }} из {{ album|length }}</span>
   </div>
   {% if find_today %}
-    <p class="find-today">✨ Сегодняшняя находка: <b>{{ find_today.title }}</b></p>
+    <p class="find-today">Сегодняшняя находка: <b>{{ find_today.title|noemoji }}</b></p>
   {% endif %}
   <div class="album-grid">
     {% for a in album %}
-      <div class="album-cell album-{{ a.state }}" {% if a.state != 'locked' %}title="День {{ a.day }}: {{ a.title }}"{% else %}title="День {{ a.day }}: сюрприз!"{% endif %}>
+      <div class="album-cell album-{{ a.state }}" {% if a.state != 'locked' %}title="День {{ a.day }}: {{ a.title|noemoji }}"{% else %}title="День {{ a.day }}: сюрприз!"{% endif %}>
         <span class="album-day">{{ a.day }}</span>
-        <span class="album-mark">{% if a.state == 'locked' %}?{% else %}✓{% endif %}</span>
+        <span class="album-mark">{% if a.state == 'locked' %}?{% else %}{% endif %}</span>
       </div>
     {% endfor %}
   </div>
@@ -84,27 +84,27 @@
 <!-- Магазин украшений -->
 <section class="card glass shop">
   <div class="section-head">
-    <h2>🛍️ Магазин украшений для сада</h2>
+    <h2>Магазин украшений для сада</h2>
     <span class="pill pill-soft">в саду: {{ active|length }}/{{ max_slots }}</span>
   </div>
-  <p class="shop-hint">Каждое украшение действует на <b>весь сад</b>: гирлянда протянется над деревьями, снежинки полетят над всей поляной, а фон полностью изменит небо 🌌</p>
+  <p class="shop-hint">Каждое украшение действует на <b>весь сад</b>: гирлянда протянется над деревьями, снежинки полетят над всей поляной, а фон полностью изменит небо</p>
   <div class="shop-grid">
     {% for d in decorations %}
       <div class="shop-item card">
         <div class="shop-thumb">{{ thumbs[d.key] }}</div>
-        <div class="shop-name">{{ d.name }}</div>
+        <div class="shop-name">{{ d.name|noemoji }}</div>
         <div class="shop-cat">{{ cat_names[d.category] }}</div>
         <div class="shop-price"><svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ d.cost }}</div>
         {% if garden.coins >= d.cost and not garden.broken and garden.streak_days > 0 and active|length < max_slots %}
           <form method="post" action="{{ url_for('garden.garden_buy') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="deco_key" value="{{ d.key }}">
-            <button class="btn btn-primary btn-small" type="submit">Купить 🎁</button>
+            <button class="btn btn-primary btn-small" type="submit">Купить</button>
           </form>
         {% elif garden.broken or garden.streak_days <= 0 %}
-          <button class="btn btn-locked" disabled>Сначала позанимайся 🍂</button>
+          <button class="btn btn-locked" disabled>Сначала позанимайся</button>
         {% elif active|length >= max_slots %}
-          <button class="btn btn-locked" disabled>Сад уже убран ✨</button>
+          <button class="btn btn-locked" disabled>Сад уже убран</button>
         {% else %}
           <button class="btn btn-locked" disabled>Не хватает <svg class="icon icon-coin"><use href="#i-coin"/></svg></button>
         {% endif %}
@@ -116,13 +116,13 @@
 <!-- Активные украшения сада -->
 {% if active %}
 <section class="card glass worn">
-  <h2>🎊 Украшения сада</h2>
+  <h2>Украшения сада</h2>
   <div class="worn-row">
     {% for slot, key in active.items() %}
       {% set d = deco_by_key[key] %}
       <div class="worn-item">
         <span class="worn-emoji">{{ d.emoji }}</span>
-        <span class="worn-name">{{ d.name }}</span>
+        <span class="worn-name">{{ d.name|noemoji }}</span>
         <span class="worn-cat">{{ cat_names[d.category] }}</span>
         <form method="post" action="{{ url_for('garden.garden_remove', slot=slot) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

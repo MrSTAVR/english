@@ -1,10 +1,10 @@
 /* ============================================================
-   🎤 Тренировка произношения.
+   Тренировка произношения.
    Браузер слушает микрофон (Web Speech API), превращает речь в
    текст, а мы сравниваем текст с нужным словом. Это проверка
    «тебя поняли?», а не фонетический разбор: если распознано
    именно то слово — произношение достаточно чёткое.
-   Звук на наш сервер НЕ отправляется — только оценка (0–3 ⭐).
+   Звук на наш сервер НЕ отправляется — только оценка (0–3 ★).
    ============================================================ */
 (function (root) {
   'use strict';
@@ -100,13 +100,13 @@
   function stars(sim) { return sim >= 0.99 ? 3 : sim >= 0.8 ? 2 : sim >= 0.5 ? 1 : 0; }
 
   var ERRORS = {
-    'not-allowed': 'Микрофон не разрешён 🔒 Нажми на замочек рядом с адресом сайта и разреши микрофон.',
-    'service-not-allowed': 'Микрофон не разрешён 🔒 Разреши его в настройках браузера.',
-    'no-speech': 'Я ничего не услышал 🙈 Нажми 🎤 и скажи погромче.',
-    'audio-capture': 'Не нашёл микрофон 🎙️ Проверь, что он подключён.',
-    'network': 'Нет связи с распознаванием речи 📡 Проверь интернет.',
+    'not-allowed': 'Микрофон не разрешён Нажми на замочек рядом с адресом сайта и разреши микрофон.',
+    'service-not-allowed': 'Микрофон не разрешён Разреши его в настройках браузера.',
+    'no-speech': 'Я ничего не услышал Нажми и скажи погромче.',
+    'audio-capture': 'Не нашёл микрофон Проверь, что он подключён.',
+    'network': 'Нет связи с распознаванием речи Проверь интернет.',
     'aborted': '',
-    'unsupported': 'Этот браузер не умеет слушать 🙁 Открой сайт в Chrome, Edge или Safari.'
+    'unsupported': 'Этот браузер не умеет слушать Открой сайт в Chrome, Edge или Safari.'
   };
 
   var current = null;
@@ -162,7 +162,7 @@
     return e;
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function starsHtml(n) { return '⭐'.repeat(n) + '<span class="sp-off">' + '☆'.repeat(3 - n) + '</span>'; }
+  function starsHtml(n) { return '★'.repeat(n) + '<span class="sp-off">' + '☆'.repeat(3 - n) + '</span>'; }
 
   /* Рисует список слов с кнопками 🔊 🐢 🎤 */
   function renderBlock(block, opts) {
@@ -172,15 +172,15 @@
     var lessonDefault = parseInt(block.dataset.lesson || '0', 10) || 0;
     var results = {}, total = items.length;
     block.innerHTML = '';
-    if (!SR) block.appendChild(el('p', 'sp-note', ERRORS.unsupported + ' Слова можно послушать кнопкой 🔊.'));
-    else block.appendChild(el('p', 'sp-note', 'Нажми 🔊 — послушай, потом 🎤 и скажи слово вслух. Говори сразу, когда кнопка стала красной ⏺, — чётко и не слишком тихо.'));
+    if (!SR) block.appendChild(el('p', 'sp-note', ERRORS.unsupported + ' Слова можно послушать кнопкой <svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg>.'));
+    else block.appendChild(el('p', 'sp-note', 'Нажми <svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> — послушай, потом и скажи слово вслух. Говори сразу, когда кнопка стала красной, — чётко и не слишком тихо.'));
 
     items.forEach(function (it, idx) {
       var row = el('div', 'sp-row');
       row.innerHTML = '<div class="sp-word"><b>' + esc(it.en) + '</b><span>' + esc(it.ru) + '</span></div>' +
-        '<div class="sp-btns"><button type="button" class="btn btn-small sp-say" title="Послушать">🔊</button>' +
-        '<button type="button" class="btn btn-small sp-slow" title="Медленно">🐢</button>' +
-        (SR ? '<button type="button" class="btn btn-small btn-primary sp-mic" title="Сказать вслух">🎤</button>' : '') +
+        '<div class="sp-btns"><button type="button" class="btn btn-small sp-say" title="Послушать"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></button>' +
+        '<button type="button" class="btn btn-small sp-slow" title="Медленно">Медленно</button>' +
+        (SR ? '<button type="button" class="btn btn-small btn-primary sp-mic" title="Сказать вслух"><svg class="ico" aria-hidden="true"><use href="#o-mic"/></svg></button>' : '') +
         '</div><div class="sp-res" aria-live="polite"></div>';
       var res = row.querySelector('.sp-res'), mic = row.querySelector('.sp-mic');
       row.querySelector('.sp-say').onclick = function () { if (root.ttsSpeak) root.ttsSpeak(it.en); };
@@ -190,11 +190,11 @@
         block.querySelectorAll('.sp-mic.listening').forEach(function (b) { b.classList.remove('listening'); });
         res.className = 'sp-res'; res.textContent = '';
         listen(function (err, heard) {
-          mic.classList.remove('listening'); mic.textContent = '🎤';
+          mic.classList.remove('listening'); mic.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#o-mic"/></svg>';
           if (err) {
             if (err !== 'aborted') {
               res.className = 'sp-res sp-err';
-              res.textContent = ERRORS[err] !== undefined ? ERRORS[err] : 'Не получилось 😕 Попробуй ещё раз.';
+              res.textContent = ERRORS[err] !== undefined ? ERRORS[err] : 'Не получилось Попробуй ещё раз.';
               if (err === 'no-speech') document.dispatchEvent(new CustomEvent('speak:result', { detail: { stars: 0 } }));
             }
             return;
@@ -214,7 +214,7 @@
             }
           });
           if (opts.onProgress) opts.onProgress(results, total);
-        }, function () { mic.classList.add('listening'); mic.textContent = '⏺'; });
+        }, function () { mic.classList.add('listening'); mic.textContent = 'Слушаю…'; });
       };
       block.appendChild(row);
     });

@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}{{ lesson.title }} — English Fun{% endblock %}
+{% block title %}{{ lesson.title|noemoji }} — English Fun{% endblock %}
 {% block content %}
 
-<h1>{{ lesson.emoji }} {% if lesson.num %}Урок {{ lesson.num }}: {% endif %}{{ lesson.title }}</h1>
+<h1>{% if lesson.num %}Урок {{ lesson.num }}: {% endif %}{{ lesson.title|noemoji }}</h1>
 <p class="subtitle">{{ lesson.description }}</p>
 
 <ol class="stepper" id="stepper" aria-label="Шаги урока">
@@ -14,28 +14,28 @@
 
 <!-- Шаг 1: теория -->
 <section class="card step" id="step-theory">
-  <h2>Шаг 1 — Теория 📖</h2>
+  <h2>Шаг 1 — Теория</h2>
   {% if lesson.theory %}
-    <p class="theory-intro">{{ lesson.theory.intro | safe }}</p>
+    <p class="theory-intro">{{ lesson.theory.intro|noemoji | safe }}</p>
     {% for b in lesson.theory.blocks %}
       <div class="theory-block card-inner">
-        <h3>{{ b.title }}</h3>
+        <h3>{{ b.title|noemoji }}</h3>
         <p>{{ b.text | safe }}</p>
       </div>
     {% endfor %}
     {% if lesson.theory.tip %}
-      <div class="theory-tip">💡 <b>Совет:</b> {{ lesson.theory.tip }}</div>
+      <div class="theory-tip"><b>Совет:</b> {{ lesson.theory.tip }}</div>
     {% endif %}
   {% else %}
     <p>Теории в этом уроке пока нет — переходи сразу к словам!</p>
   {% endif %}
-  <button class="btn btn-primary" onclick="goStep('step-material')">Прочитал(а)! Изучаем слова ➡️</button>
+  <button class="btn btn-primary" onclick="goStep('step-material')">Прочитал(а)! Изучаем слова →</button>
 </section>
 
 <!-- Шаг 2: материал (карточки) -->
 <section class="card step hidden" id="step-material">
-  <h2>Шаг 2 — Изучи слова 🧠</h2>
-  <p>Читай слово вслух (подсказка произношения в скобках). Нажимай на карточку, чтобы перевернуть её и увидеть перевод. Кнопка <b>🔊</b> рядом со словом — послушаешь правильное произношение!</p>
+  <h2>Шаг 2 — Изучи слова</h2>
+  <p>Читай слово вслух (подсказка произношения в скобках). Нажимай на карточку, чтобы перевернуть её и увидеть перевод. Кнопка <b><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></b> рядом со словом — послушаешь правильное произношение!</p>
   <div class="flashcards{% if lesson.material|selectattr('pic')|list %} has-pics{% endif %}">
     {% for w in lesson.material %}
       <div class="flashcard{% if w.pic %} has-pic{% endif %}" onclick="this.classList.toggle('flipped')">
@@ -43,18 +43,18 @@
           {% if w.pic %}<div class="fc-pic" aria-hidden="true">{{ w.pic }}</div>{% endif %}
           <div class="fc-en">{{ w.en }}</div>
           <div class="fc-hint">[{{ w.hint }}]</div>
-          <div class="fc-tap">нажми 👆</div>
+          <div class="fc-tap">нажми</div>
         </div>
         <div class="fc-back">{{ w.ru }}</div>
       </div>
     {% endfor %}
   </div>
-  <button class="btn btn-primary" onclick="goStep('step-exercises')">Я выучил(а)! Переходим к упражнениям ➡️</button>
+  <button class="btn btn-primary" onclick="goStep('step-exercises')">Я выучил(а)! Переходим к упражнениям →</button>
 </section>
 
 <!-- Шаг 3: упражнения -->
 <section class="card step hidden" id="step-exercises">
-  <h2>Шаг 3 — Потренируйся 💪</h2>
+  <h2>Шаг 3 — Потренируйся</h2>
   <p>Это тренировка — ошибки здесь не считаются. Проверяй себя кнопкой!</p>
   {% for ex in lesson.exercises %}
     {% set outer_loop = loop %}
@@ -78,12 +78,12 @@
             </div>
             <div class="match-col match-right">
               {% for ri, text in ex | shuffle_match %}
-                <div class="match-slot" data-right="{{ ri }}"><span class="slot-hint">⬅ сюда пару</span><span class="slot-text">{{ text }}</span></div>
+                <div class="match-slot" data-right="{{ ri }}"><span class="slot-hint">← сюда пару</span><span class="slot-text">{{ text }}</span></div>
               {% endfor %}
             </div>
           </div>
-          <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить 🧽</button>
-          <button type="button" class="btn btn-small" onclick="checkDndExercise(this)">Проверить ✔️</button>
+          <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
+          <button type="button" class="btn btn-small" onclick="checkDndExercise(this)">Проверить</button>
           <span class="ex-result"></span>
         </div>
       {% elif ex.type == 'sort' %}
@@ -102,8 +102,8 @@
               </div>
             {% endfor %}
           </div>
-          <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить 🧽</button>
-          <button type="button" class="btn btn-small" onclick="checkDndExercise(this)">Проверить ✔️</button>
+          <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
+          <button type="button" class="btn btn-small" onclick="checkDndExercise(this)">Проверить</button>
           <span class="ex-result"></span>
         </div>
       {% else %}
@@ -111,36 +111,36 @@
         <input type="text" class="typein" placeholder="Напиши перевод по-русски" lang="ru">
         {% else %}
         <input type="text" class="typein" placeholder="Напиши ответ по-английски" lang="en">
-        <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ">🔊 Послушать</button>
+        <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Послушать</button>
         {% endif %}
       {% endif %}
       {% if ex.type not in ('match', 'sort') %}
-        <button class="btn btn-small" onclick="checkExercise(this)">Проверить ✔️</button>
+        <button class="btn btn-small" onclick="checkExercise(this)">Проверить</button>
         <span class="ex-result"></span>
       {% endif %}
-      <div class="explain hidden">💡 {{ ex.explain }}</div>
+      <div class="explain hidden">{{ ex.explain }}</div>
     </div>
   {% endfor %}
   {% if lesson.practice %}
-  <h3 class="pr-title">🎯 Ещё потренируемся</h3>
+  <h3 class="pr-title">Ещё потренируемся</h3>
   <div id="practice" data-items='{{ lesson.practice | tojson }}'></div>
   {% endif %}
-  <h3 class="pr-title">🎮 Поиграй со словами урока</h3>
-  <p><a class="btn btn-secondary" href="{{ url_for('games.games_hub', lesson=lesson.id) }}">Открыть игры 🎮</a></p>
+  <h3 class="pr-title">Поиграй со словами урока</h3>
+  <p><a class="btn btn-secondary" href="{{ url_for('games.games_hub', lesson=lesson.id) }}">Открыть игры</a></p>
   {% if lesson_dialogs %}
-  <h3 class="pr-title">💬 Диалог</h3>
+  <h3 class="pr-title">Диалог</h3>
   <div class="lesson-dialogs" data-dialogs='{{ lesson_dialogs | tojson }}' data-me-emoji="{{ me_emoji }}" data-me-name="{{ me_name }}"></div>
   {% endif %}
   {% if speaking and lesson.speak %}
-  <h3 class="pr-title">🎤 Скажи вслух</h3>
+  <h3 class="pr-title">Скажи вслух</h3>
   <div id="speak-block" class="speak-block" data-items='{{ lesson.speak | tojson }}' data-lesson="{{ lesson.id }}"></div>
   {% endif %}
-  <button class="btn btn-primary" onclick="goStep('step-test')">Всё понятно! Открываю тест 📝</button>
+  <button class="btn btn-primary" onclick="goStep('step-test')">Всё понятно! Открываю тест</button>
 </section>
 
 <!-- Шаг 4: тест -->
 <section class="card step hidden" id="step-test">
-  <h2>Шаг 4 — Итоговый тест 📝</h2>
+  <h2>Шаг 4 — Итоговый тест</h2>
   <p>Ответь на {{ lesson.test|length }} вопросов. Чтобы урок считался пройденным, нужно набрать минимум {{ need }}%. Не торопись!</p>
   <div class="test-progress" id="test-progress" aria-live="polite">
     <span class="tp-label">Отвечено</span>
@@ -156,7 +156,7 @@
       {% set outer_loop = loop %}
       <div class="question card-inner" data-qindex="{{ loop.index0 }}">
         <p class="q"><b>Вопрос {{ loop.index }}.</b> {{ q.q }}</p>
-        {% if q.audio %}<p><button type="button" class="btn btn-small say-btn" data-say="{{ q.audio }}">🔊 Слушать</button> <button type="button" class="btn btn-small say-btn" data-say="{{ q.audio }}" data-slow="1">🐢 Медленно</button></p>{% endif %}
+        {% if q.audio %}<p><button type="button" class="btn btn-small say-btn" data-say="{{ q.audio }}"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Слушать</button> <button type="button" class="btn btn-small say-btn" data-say="{{ q.audio }}" data-slow="1">Медленно</button></p>{% endif %}
         {% if q.type == 'choice' %}
           <div class="options">
             {% for opt in q.options %}
@@ -173,8 +173,8 @@
             </div>
             <div class="answer-line" id="line-{{ outer_loop.index0 }}"></div>
             <input type="hidden" name="q{{ outer_loop.index0 }}_order" id="order-{{ outer_loop.index0 }}">
-            <button type="button" class="btn btn-small" onclick="clearLine({{ outer_loop.index0 }})">Очистить 🧽</button>
-            <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakLine({{ outer_loop.index0 }})" title="Послушать, как звучит твоя фраза">🔊 Послушать</button>
+            <button type="button" class="btn btn-small" onclick="clearLine({{ outer_loop.index0 }})">Очистить</button>
+            <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakLine({{ outer_loop.index0 }})" title="Послушать, как звучит твоя фраза"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Послушать</button>
           </div>
         {% elif q.type == 'match' %}
           {# Итоговый тест: drag&drop пары; скрытое поле заполняет скрипт #}
@@ -189,11 +189,11 @@
               </div>
               <div class="match-col match-right">
                 {% for ri, text in q | shuffle_match %}
-                  <div class="match-slot" data-right="{{ ri }}"><span class="slot-hint">⬅ сюда пару</span><span class="slot-text">{{ text }}</span></div>
+                  <div class="match-slot" data-right="{{ ri }}"><span class="slot-hint">← сюда пару</span><span class="slot-text">{{ text }}</span></div>
                 {% endfor %}
               </div>
             </div>
-            <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить 🧽</button>
+            <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
             <input type="hidden" name="q{{ outer_loop.index0 }}_match" id="match-{{ outer_loop.index0 }}">
           </div>
         {% elif q.type == 'sort' %}
@@ -213,7 +213,7 @@
                 </div>
               {% endfor %}
             </div>
-            <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить 🧽</button>
+            <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
             <input type="hidden" name="q{{ outer_loop.index0 }}_sort" id="sort-{{ outer_loop.index0 }}">
           </div>
         {% else %}
@@ -221,22 +221,22 @@
           <input type="text" class="typein" name="q{{ outer_loop.index0 }}" placeholder="Напиши перевод по-русски" autocomplete="off" lang="ru">
           {% else %}
           <input type="text" class="typein" name="q{{ outer_loop.index0 }}" placeholder="{{ 'Напиши то, что услышал(а), по-английски' if q.audio else 'Напиши ответ по-английски' }}" autocomplete="off" lang="en">
-          <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ">🔊 Послушать</button>
+          <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Послушать</button>
           {% endif %}
         {% endif %}
       </div>
     {% endfor %}
 
-    <button type="submit" class="btn btn-big">Закончить тест и проверить 🎯</button>
+    <button type="submit" class="btn btn-big">Закончить тест и проверить</button>
   </form>
 </section>
 
-<a href="{{ url_for('student.student_home') }}" class="back-link">⬅️ Вернуться к урокам</a>
+<a href="{{ url_for('student.student_home') }}" class="back-link">← Вернуться к урокам</a>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='practice.js') }}?v=1"></script>
-{% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=2"></script>{% endif %}
+<script src="{{ url_for('static', filename='practice.js') }}?v=2"></script>
+{% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=3"></script>{% endif %}
 {% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=4"></script>{% endif %}
 <script>
 const START_TS = {{ started_ts }};
@@ -268,7 +268,7 @@ function checkExercise(btn) {
   }
   const res = box.querySelector('.ex-result');
   const ok = (type === 'choice') ? (given === 'OK') : (given === answer);
-  res.textContent = ok ? ' ✅ Правильно!' : ' ❌ Пока нет, попробуй ещё!';
+  res.textContent = ok ? ' Правильно!' : ' Пока нет, попробуй ещё!';
   res.className = 'ex-result ' + (ok ? 'ok' : 'bad');
   if (ok) box.querySelector('.explain').classList.remove('hidden');
 }
@@ -576,19 +576,19 @@ function checkDndExercise(btn) {
   if (root.classList.contains('dnd-match')) {
     const tiles = root.querySelectorAll('.match-tile').length;
     const st = dndState(root);
-    if (Object.keys(st).length < tiles) { res.textContent = ' 🧩 Соедини все пары!'; res.className = 'ex-result bad'; return; }
+    if (Object.keys(st).length < tiles) { res.textContent = ' Соедини все пары!'; res.className = 'ex-result bad'; return; }
     let wrong = 0;
     for (const [l, r] of Object.entries(st)) {
       if (String(expected[l]) !== String(r)) wrong++;
     }
     const ok = wrong === 0;
-    res.textContent = ok ? ' ✅ Все пары правильные!' : ` ❌ Неправильных пар: ${wrong}. Попробуй ещё!`;
+    res.textContent = ok ? ' Все пары правильные!' : ` Неправильных пар: ${wrong}. Попробуй ещё!`;
     res.className = 'ex-result ' + (ok ? 'ok' : 'bad');
     if (ok) box.querySelector('.explain').classList.remove('hidden');
   } else {
     const total = root.querySelectorAll('.sort-word').length;
     const placed = root.querySelectorAll('.bin-body .sort-word').length;
-    if (placed < total) { res.textContent = ' 🧺 Разложи все слова по корзинам!'; res.className = 'ex-result bad'; return; }
+    if (placed < total) { res.textContent = ' Разложи все слова по корзинам!'; res.className = 'ex-result bad'; return; }
     // expected: список "слово|категория"
     const want = expected.map(s => s.toLowerCase());
     const got = [];
@@ -597,7 +597,7 @@ function checkDndExercise(btn) {
     });
     const wrong = got.filter(p => !want.includes(p)).length;
     const ok = wrong === 0 && got.length === want.length;
-    res.textContent = ok ? ' ✅ Всё разложено верно!' : ` ❌ Ошибок: ${wrong}. Посмотри внимательно!`;
+    res.textContent = ok ? ' Всё разложено верно!' : ` Ошибок: ${wrong}. Посмотри внимательно!`;
     res.className = 'ex-result ' + (ok ? 'ok' : 'bad');
     if (ok) box.querySelector('.explain').classList.remove('hidden');
   }
@@ -652,7 +652,7 @@ document.getElementById('test-form').addEventListener('submit', function (e) {
   const unanswered = unansweredQuestions();
   if (unanswered.length > 0) {
     e.preventDefault();
-    alert('Остались вопросы без ответа: ' + unanswered.join(', ') + ' 🙂\nОтветь на все — тогда проверим!');
+    alert('Остались вопросы без ответа: ' + unanswered.join(', ') + ' \nОтветь на все — тогда проверим!');
     const first = document.querySelector(`.question[data-qindex="${unanswered[0] - 1}"]`);
     if (first) first.scrollIntoView({behavior: 'smooth', block: 'center'});
   }

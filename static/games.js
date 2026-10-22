@@ -20,9 +20,9 @@
     root.parentNode.classList.add('hidden');
     var box = document.getElementById('game-end');
     box.classList.remove('hidden');
-    document.getElementById('game-end-emoji').textContent = stars >= 3 ? '🏆' : stars === 2 ? '🏅' : stars === 1 ? '👍' : '💪';
+    document.getElementById('game-end-emoji').textContent = stars >= 3 ? '' : stars === 2 ? '' : stars === 1 ? '' : '';
     document.getElementById('game-end-text').textContent = text;
-    document.getElementById('game-end-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+    document.getElementById('game-end-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
     document.dispatchEvent(new CustomEvent('game:end', { detail: { stars: stars } }));
     fetch('/api/game', {
       method: 'POST', credentials: 'same-origin',
@@ -38,7 +38,7 @@
   /* ---------- ⚡ Найди пару ---------- */
   function pairs() {
     var set = shuffle(words).slice(0, 6), t0 = Date.now(), left = set.length, picked = null, mistakes = 0;
-    var bar = el('div', 'g-bar', '<span>⏱ <b id="g-time">0</b> с</span><span>Ошибок: <b id="g-err">0</b></span>');
+    var bar = el('div', 'g-bar', '<span><b id="g-time">0</b> с</span><span>Ошибок: <b id="g-err">0</b></span>');
     var cols = el('div', 'g-pairs');
     var colA = el('div', 'g-col'), colB = el('div', 'g-col');
     cols.appendChild(colA); cols.appendChild(colB);
@@ -115,7 +115,7 @@
   /* ---------- ⏱️ Блиц 60 секунд ---------- */
   function blitz() {
     var left = 60, score = 0, streak = 0, best = 0, cur = null, order = shuffle(words), pos = 0;
-    var bar = el('div', 'g-bar', '<span>⏱ <b id="g-left">60</b> с</span><span>Верно: <b id="g-score">0</b></span><span id="g-streak"></span>');
+    var bar = el('div', 'g-bar', '<span><b id="g-left">60</b> с</span><span>Верно: <b id="g-score">0</b></span><span id="g-streak"></span>');
     var qbox = el('div', 'g-q'), opts = el('div', 'rv-opts');
     root.appendChild(bar); root.appendChild(qbox); root.appendChild(opts);
     var timer = setInterval(function () {
@@ -147,7 +147,7 @@
           b.classList.add(ok ? 'is-right' : 'is-wrong');
           if (ok) { score++; streak++; best = Math.max(best, streak); } else { streak = 0; }
           document.getElementById('g-score').textContent = score;
-          document.getElementById('g-streak').textContent = streak >= 3 ? '🔥 ' + streak : '';
+          document.getElementById('g-streak').textContent = streak >= 3 ? '' + streak : '';
           setTimeout(ask, ok ? 250 : 700);
         };
         opts.appendChild(b);
@@ -161,7 +161,7 @@
     var rounds = shuffle(words).slice(0, 8), pos = 0, score = 0, cur = null;
     var pics = words.concat(distract).filter(function (w) { return w.pic; });
     var bar = el('div', 'g-bar'), box = el('div', 'ls-box'), opts = el('div', 'ls-opts');
-    var play = el('button', 'ls-play', '🔊'); play.type = 'button'; play.title = 'Послушать ещё раз';
+    var play = el('button', 'ls-play', '<svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg>'); play.type = 'button'; play.title = 'Послушать ещё раз';
     play.onclick = function () { if (cur) say(cur.en); };
     box.appendChild(play); box.appendChild(el('p', 'ls-hint', 'Что ты услышал?'));
     root.appendChild(bar); root.appendChild(box); root.appendChild(opts);
@@ -188,7 +188,7 @@
           [].forEach.call(opts.children, function (x) { x.classList.add('lock'); });
           b.classList.add(ok ? 'is-right' : 'is-wrong');
           if (ok) score++;
-          box.querySelector('.ls-hint').innerHTML = (ok ? '✅ ' : '❌ ') + '<b>' + esc(cur.en) + '</b> — ' + esc(cur.ru);
+          box.querySelector('.ls-hint').innerHTML = (ok ? '' : '') + '<b>' + esc(cur.en) + '</b> — ' + esc(cur.ru);
           if (!ok) { var right = [].filter.call(opts.children, function (x) { return x.textContent === cur[field]; })[0]; if (right) right.classList.add('is-right'); }
           setTimeout(function () { box.querySelector('.ls-hint').textContent = 'Что ты услышал?'; ask(); }, ok ? 900 : 1600);
         };

@@ -15,7 +15,7 @@
 
   function verdict(box, ok, item) {
     var r = box.querySelector('.ex-result');
-    r.textContent = ok ? ' ✅ Правильно!' : ' ❌ Пока нет, попробуй ещё!';
+    r.textContent = ok ? ' Правильно!' : ' Пока нет, попробуй ещё!';
     r.className = 'ex-result ' + (ok ? 'ok' : 'bad');
     if (ok) {
       box.classList.add('done');
@@ -29,8 +29,8 @@
     var box = el('div', 'exercise card-inner pr-item');
     box.appendChild(el('p', 'q', '<b>Задание ' + (idx + 1) + '.</b> ' + esc(item.q)));
     if (item.audio) {
-      box.appendChild(el('p', null, '<button type="button" class="btn btn-small say-btn" data-say="' + esc(item.audio) + '">🔊 Слушать</button> ' +
-        '<button type="button" class="btn btn-small say-btn" data-say="' + esc(item.audio) + '" data-slow="1">🐢 Медленно</button>'));
+      box.appendChild(el('p', null, '<button type="button" class="btn btn-small say-btn" data-say="' + esc(item.audio) + '"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Слушать</button> ' +
+        '<button type="button" class="btn btn-small say-btn" data-say="' + esc(item.audio) + '" data-slow="1">Медленно</button>'));
     }
     var check;
     if (item.type === 'choice') {
@@ -58,16 +58,16 @@
         };
         bank.appendChild(b);
       });
-      var reset = el('button', 'btn btn-small', 'Сбросить 🧽'); reset.type = 'button';
+      var reset = el('button', 'btn btn-small', 'Сбросить'); reset.type = 'button';
       reset.onclick = function () { [].slice.call(line.children).forEach(function (c) { bank.appendChild(c); }); };
       box.appendChild(bank); box.appendChild(line); box.appendChild(reset);
       check = function () { return [].map.call(line.children, function (c) { return c.textContent; }).join('') === item.answer; };
     }
-    var btn = el('button', 'btn btn-small', 'Проверить ✔️'); btn.type = 'button';
+    var btn = el('button', 'btn btn-small', 'Проверить'); btn.type = 'button';
     btn.onclick = function () { verdict(box, check(), item); };
     box.appendChild(btn);
     box.appendChild(el('span', 'ex-result'));
-    box.appendChild(el('div', 'explain hidden', '💡 ' + esc(item.explain || '')));
+    box.appendChild(el('div', 'explain hidden', '' + esc(item.explain || '')));
     return box;
   }
 

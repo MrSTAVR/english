@@ -2,18 +2,18 @@
 {% block title %}{{ c.child_name }} — кабинет логопеда{% endblock %}
 {% block content %}
 <div class="dict-head">
-  <a class="btn btn-small" href="{{ url_for('speech.logoped_home') }}">⬅ Ученики</a>
-  <h1>🧒 {{ c.child_name }}{% if c.archived %} <span class="pill pill-warn">в архиве</span>{% endif %}</h1>
+  <a class="btn btn-small" href="{{ url_for('speech.logoped_home') }}">← Ученики</a>
+  <h1>{{ c.child_name }}{% if c.archived %} <span class="pill pill-warn">в архиве</span>{% endif %}</h1>
 </div>
 <p class="subtitle">{% if c.birth_date %}{{ age(c.birth_date) }} · {% endif %}{{ c.parent_name or 'родитель не указан' }}{% if c.phone %} · <a href="tel:{{ c.phone }}">{{ c.phone }}</a>{% endif %}</p>
 
 <section class="card" id="schedule">
-  <h2>📅 Занятия</h2>
+  <h2>Занятия</h2>
   {% for x in series %}
   <form method="post" action="{{ url_for('speech.logoped_series_stop', series_id=x.id) }}" class="inline-form sp-admin-row"
         onsubmit="return confirm('Остановить повторение? Будущие занятия из него удалятся.');">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <span>🔁 {{ x.text }} ({{ x.minutes }} мин)</span>
+    <span>{{ x.text }} ({{ x.minutes }} мин)</span>
     <button class="btn btn-small" type="submit">Остановить</button>
   </form>
   {% endfor %}
@@ -27,14 +27,14 @@
   </details>
   {% endif %}
   {% if not c.archived %}
-  <details><summary><b>➕ Назначить занятие</b></summary>
+  <details><summary><b>Назначить занятие</b></summary>
     {% set client = c %}{% include "speech/_session_form.html" %}
   </details>
   {% endif %}
 </section>
 
 <section class="card" id="sounds">
-  <h2>🔤 Звуковая карта <span class="pill pill-soft">родители видят упрощённо</span></h2>
+  <h2>Звуковая карта <span class="pill pill-soft">родители видят упрощённо</span></h2>
   {% if sounds %}
   <div class="sp-sounds">
     {% for s in sounds %}
@@ -48,7 +48,7 @@
       <div class="sp-bar"><div style="width: {{ s.percent }}%"></div></div>
       <input type="text" name="note" value="{{ s.note }}" maxlength="200" placeholder="заметка (только для вас)">
       <span class="sp-sound-btns">
-        <button class="btn btn-small" type="submit" name="action" value="set">💾</button>
+        <button class="btn btn-small" type="submit" name="action" value="set"></button>
         <button class="btn btn-small" type="submit" name="action" value="remove" title="Убрать из работы"
                 onclick="return confirm('Убрать звук {{ s.sound }} из карты?');">✕</button>
       </span>
@@ -65,17 +65,17 @@
       {% for g, group in free_groups if group %}<optgroup label="{{ g }}">{% for x in group %}<option>{{ x }}</option>{% endfor %}</optgroup>{% endfor %}
     </select>
     <select name="stage" aria-label="Стадия">{% for st in stages %}<option value="{{ loop.index0 }}">{{ st[0] }}</option>{% endfor %}</select>
-    <button class="btn btn-small" type="submit" name="action" value="set">➕ Добавить звук</button>
+    <button class="btn btn-small" type="submit" name="action" value="set">Добавить звук</button>
   </form>
   {% if history %}
-  <details class="sp-history"><summary>📈 История ({{ history|length }})</summary>
+  <details class="sp-history"><summary>История ({{ history|length }})</summary>
     <ul>{% for h in history %}<li>{{ h.day }} — <b>{{ h.sound }}</b>: {{ h.label }}</li>{% endfor %}</ul>
   </details>
   {% endif %}
 </section>
 
 <section class="card" id="card">
-  <h2>🩺 Диагноз и программа <span class="pill pill-warn">видно только вам</span></h2>
+  <h2>Диагноз и программа <span class="pill pill-warn">видно только вам</span></h2>
   <form method="post" action="{{ url_for('speech.logoped_client_card', cid=c.id) }}" class="sp-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label class="sp-wide">Заключение / диагноз
@@ -88,7 +88,7 @@
 </section>
 
 <section class="card">
-  <h2>📇 Данные</h2>
+  <h2>Данные</h2>
   <form method="post" action="{{ url_for('speech.logoped_client_edit', cid=c.id) }}" class="sp-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Имя ребёнка <input type="text" name="child_name" maxlength="60" required value="{{ c.child_name }}"></label>
@@ -100,7 +100,7 @@
 </section>
 
 <section class="card">
-  <h2>🔑 Вход для родителей</h2>
+  <h2>Вход для родителей</h2>
   <p>Логин: <code>{{ c.username }}</code> · страница входа: <b>{{ request.host_url }}family</b></p>
   <form method="post" action="{{ url_for('speech.logoped_client_edit', cid=c.id) }}" class="inline-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -110,17 +110,17 @@
 </section>
 
 <section class="card sp-soon">
-  <h2>📝 Скоро здесь</h2>
+  <h2>Скоро здесь</h2>
   <p class="hint">Домашние задания и оплата.</p>
 </section>
 
 <form method="post" action="{{ url_for('speech.logoped_client_edit', cid=c.id) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   {% if c.archived %}
-  <button class="btn btn-small" type="submit" name="action" value="restore">↩️ Вернуть из архива</button>
+  <button class="btn btn-small" type="submit" name="action" value="restore">↩Вернуть из архива</button>
   {% else %}
   <button class="btn btn-small" type="submit" name="action" value="archive"
-          onclick="return confirm('Перенести {{ c.child_name }} в архив? Вход для родителей закроется, данные сохранятся.');">🗄️ В архив (занятия закончены)</button>
+          onclick="return confirm('Перенести {{ c.child_name }} в архив? Вход для родителей закроется, данные сохранятся.');">В архив (занятия закончены)</button>
   {% endif %}
 </form>
 {% endblock %}

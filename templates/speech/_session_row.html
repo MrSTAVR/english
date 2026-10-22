@@ -2,8 +2,8 @@
 <a class="sp-sess sp-st-{{ s.status }}" href="{{ url_for('speech.logoped_session', sid=s.id) }}">
   <span class="sp-sess-time">{{ s.time }}–{{ s.end }}</span>
   <b>{{ s.child_name }}</b>
-  {% if s.series_id %}<span title="повторяется каждую неделю">🔁</span>{% endif %}
-  {% if s.source == 'family' %}<span title="записались сами">🙋</span>{% endif %}
+  {% if s.series_id %}<span title="повторяется каждую неделю"></span>{% endif %}
+  {% if s.source == 'family' %}<span title="записались сами"></span>{% endif %}
   {% if s.status != 'planned' %}<span class="sp-sess-st">{{ s.status_text }}</span>
   {% elif s.past %}<span class="sp-sess-st sp-sess-mark">отметить ›</span>{% endif %}
 </a>

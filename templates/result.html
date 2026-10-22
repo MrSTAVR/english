@@ -3,7 +3,7 @@
 {% block content %}
 
 <section class="card result-card {{ 'result-pass' if passed else 'result-fail' }}">
-  <div class="big-emoji">{{ '🎉' if percent == 100 else ('🌟' if passed else '💪') }}</div>
+  <div class="big-emoji">{{ '' if percent == 100 else ('' if passed else '') }}</div>
   <h1>
     {% if percent == 100 %}Идеально! 100%!
     {% elif passed %}Урок пройден!
@@ -13,7 +13,7 @@
   <div class="score-ring">{{ percent }}%</div>
   <p>Правильных ответов: <b>{{ correct }}</b> из <b>{{ total }}</b> · Время: <b>{{ seconds|human_time }}</b></p>
   {% if not passed %}
-    <p class="hint-text">Нужно минимум {{ need }}%, чтобы урок считался пройденным. Попробуй ещё разок — у тебя получится! 💖</p>
+    <p class="hint-text">Нужно минимум {{ need }}%, чтобы урок считался пройденным. Попробуй ещё разок — у тебя получится!</p>
   {% endif %}
 </section>
 
@@ -21,19 +21,19 @@
 <section class="card coins-card">
   <h2><svg class="icon icon-coin"><use href="#i-coin"/></svg> Монетки!</h2>
   <p>Получено <b>+{{ coins_earned }}</b> монеток · теперь у тебя <b>{{ coins_total }}</b> <svg class="icon icon-coin"><use href="#i-coin"/></svg><br>
-     Загляни в <a href="{{ url_for('garden.garden_page') }}">🌳 свой сад</a> — серия уже {{ streak_days }} дн.!</p>
+     Загляни в <a href="{{ url_for('garden.garden_page') }}">свой сад</a> — серия уже {{ streak_days }} дн.!</p>
 </section>
 {% endif %}
 
 {% if new_achievements %}
 <section class="card new-ach">
-  <h2>🏅 Новые награды!</h2>
+  <h2>Новые награды!</h2>
   <div class="ach-cards">
   {% for a in new_achievements %}
     <article class="ach-card tier-{{ a.tier }} is-earned">
       {{ a|medal(72) }}
-      <div class="ach-card-body"><div class="ach-card-title">{{ a.title }}</div>
-        <div class="ach-card-desc">{{ a.desc }}</div><div class="ach-card-date">{{ tier_names[a.tier] }} награда</div></div>
+      <div class="ach-card-body"><div class="ach-card-title">{{ a.title|noemoji }}</div>
+        <div class="ach-card-desc">{{ a.desc|noemoji }}</div><div class="ach-card-date">{{ tier_names[a.tier] }} награда</div></div>
     </article>
   {% endfor %}
   </div>
@@ -42,23 +42,23 @@
 {% endif %}
 
 <section class="card">
-  <h2>Разбор теста 🧐</h2>
-  {% if to_review %}<p class="hint">🔁 Слова из ошибок отправлены в повторение — потренируем их ещё: <b>{{ to_review|join(', ') }}</b></p>{% endif %}
+  <h2>Разбор теста</h2>
+  {% if to_review %}<p class="hint">Слова из ошибок отправлены в повторение — потренируем их ещё: <b>{{ to_review|join(', ') }}</b></p>{% endif %}
   {% for r in results %}
     <div class="review-item {{ 'rev-ok' if r.correct else 'rev-bad' }}">
-      <div>{{ '✅' if r.correct else '❌' }} <b>{{ r.q }}</b></div>
+      <div>{{ '' if r.correct else '' }} <b>{{ r.q }}</b></div>
       {% if not r.correct %}
         <div class="rev-detail">Твой ответ: <i>{{ r.given or '(пусто)' }}</i> → Правильно: <b>{{ r.correct_answer }}</b></div>
       {% endif %}
-      {% if r.explain %}<div class="rev-explain">💡 {{ r.explain }}</div>{% endif %}
+      {% if r.explain %}<div class="rev-explain">{{ r.explain }}</div>{% endif %}
     </div>
   {% endfor %}
 </section>
 
 <div class="result-actions">
   {% if not passed %}
-    <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id) }}">Попробовать ещё раз 🔁</a>
+    <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id) }}">Попробовать ещё раз</a>
   {% endif %}
-  <a class="btn btn-secondary" href="{{ url_for('student.student_home') }}">К списку уроков 🏠</a>
+  <a class="btn btn-secondary" href="{{ url_for('student.student_home') }}">К списку уроков</a>
 </div>
 {% endblock %}

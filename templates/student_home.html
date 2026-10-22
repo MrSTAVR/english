@@ -4,52 +4,52 @@
 
 {% if new_badge %}
   <div class="new-medals card">
-    <b>🎉 Новые награды!</b>
-    {% for a in new_badge %}<a class="new-medal" href="{{ url_for('student.achievements_page') }}">{{ a|medal(44) }}<span>{{ a.title }}</span></a>{% endfor %}
+    <b>Новые награды!</b>
+    {% for a in new_badge %}<a class="new-medal" href="{{ url_for('student.achievements_page') }}">{{ a|medal(44) }}<span>{{ a.title|noemoji }}</span></a>{% endfor %}
   </div>
 {% endif %}
 
 {% macro tile(href, emoji, title, sub, locked=false, badge='') %}
-{% if locked %}<div class="tile tile-locked" title="Откроется после первых уроков"><span class="tile-emoji">{{ emoji }}</span><span class="tile-text"><b>{{ title }}</b><small>🔒 после первых уроков</small></span></div>
-{% else %}<a class="tile" href="{{ href }}"><span class="tile-emoji">{{ emoji }}</span><span class="tile-text"><b>{{ title }}</b><small>{{ sub }}</small></span>{% if badge %}<span class="tile-badge">{{ badge }}</span>{% endif %}</a>{% endif %}
+{% if locked %}<div class="tile tile-locked" title="Откроется после первых уроков"><span class="tile-emoji"><svg class="ico" aria-hidden="true"><use href="#o-lock"/></svg></span><span class="tile-text"><b>{{ title }}</b><small>после первых уроков</small></span></div>
+{% else %}<a class="tile" href="{{ href }}"><span class="tile-emoji"><svg class="ico" aria-hidden="true"><use href="#o-{{ emoji }}"/></svg></span><span class="tile-text"><b>{{ title }}</b><small>{{ sub }}</small></span>{% if badge %}<span class="tile-badge">{{ badge }}</span>{% endif %}</a>{% endif %}
 {% endmacro %}
 <div class="welcome-row">
-  <div class="welcome-avatar">{{ emoji or '🎒' }}</div>
+  <div class="welcome-avatar"><svg class="logo-mark" aria-hidden="true"><use href="#i-chick"/></svg></div>
   <div class="welcome-main">
-    <h1>Привет, {{ name }}! 👋</h1>
-    <p class="welcome-sub">Учим английский весело — шаг за шагом 🐣</p>
+    <h1>Привет, {{ name }}!</h1>
+    <p class="welcome-sub">Учим английский весело — шаг за шагом</p>
   </div>
   <div class="status-chips">
-    <a class="chip" href="{{ url_for('garden.garden_page') }}" title="Серия дней подряд"><svg class="icon"><use href="#i-flame"/></svg> {{ garden.streak_days }} дн.</a>
+    <a class="chip" href="{{ url_for('garden.garden_page') }}" title="Серия дней подряд"><svg class="ico ico-green" aria-hidden="true"><use href="#o-sprout"/></svg> {{ garden.streak_days }} дн.</a>
     <a class="chip" href="{{ url_for('garden.garden_page') }}" title="Монетки"><svg class="icon icon-coin"><use href="#i-coin"/></svg> {{ garden.coins }}</a>
-    <a class="chip" href="{{ url_for('student.achievements_page') }}" title="Награды">🏅 {{ earned_count }}</a>
+    <a class="chip" href="{{ url_for('student.achievements_page') }}" title="Награды"><svg class="ico ico-blue" aria-hidden="true"><use href="#o-medal"/></svg> {{ earned_count }}</a>
   </div>
 </div>
 
-{% if on_vacation %}<p class="hint vacation-note">🏖 У тебя каникулы — серия дней не сгорит. Можно отдыхать или заниматься, как хочется!</p>{% endif %}
-{% if birthday_banner %}<a class="season-banner season-birthday" href="{{ url_for('season.season_page', key='birthday') }}">{{ birthday_banner }}</a>{% endif %}
-{% if season %}<a class="season-banner season-{{ season }}" href="{{ url_for('season.season_page', key=season) }}">{{ season_banner }}</a>{% endif %}
-{% if advent %}<a class="season-banner season-advent" href="{{ url_for('season.advent_page') }}">🗓️ Адвент-календарь: {{ 'окошко на сегодня ждёт тебя! 🎁' if not advent_today_open else 'сегодняшнее окошко открыто ✅' }} →</a>{% endif %}
+{% if on_vacation %}<p class="hint vacation-note">У тебя каникулы — серия дней не сгорит. Можно отдыхать или заниматься, как хочется!</p>{% endif %}
+{% if birthday_banner %}<a class="season-banner season-birthday" href="{{ url_for('season.season_page', key='birthday') }}">{{ birthday_banner|noemoji }}</a>{% endif %}
+{% if season %}<a class="season-banner season-{{ season }}" href="{{ url_for('season.season_page', key=season) }}">{{ season_banner|noemoji }}</a>{% endif %}
+{% if advent %}<a class="season-banner season-advent" href="{{ url_for('season.advent_page') }}">Адвент-календарь: {{ 'окошко на сегодня ждёт тебя!' if not advent_today_open else 'сегодняшнее окошко открыто' }} →</a>{% endif %}
 
 <div class="home-hero">
 <!-- 2. Кнопка «Следующий урок» -->
 {% if next_lesson %}
   <a class="next-cta" href="{{ url_for('student.lesson_page', lesson_id=next_lesson.id) }}">
-    <span class="next-cta-emoji">{{ next_lesson.emoji }}</span>
+    <span class="next-cta-emoji"><svg aria-hidden="true"><use href="#i-chick"/></svg></span>
     <span class="next-cta-text">
       <span class="next-cta-kicker">Твой следующий урок</span>
-      <span class="next-cta-title">Урок {{ next_lesson.num }} — {{ next_lesson.title }}</span>
+      <span class="next-cta-title">Урок {{ next_lesson.num }} — {{ next_lesson.title|noemoji }}</span>
       <span class="next-cta-sub">~15 минут · тест из {{ next_lesson.test|length }} вопросов</span>
     </span>
-    <span class="next-cta-btn">Продолжить ▶️</span>
+    <span class="next-cta-btn">Продолжить</span>
   </a>
 {% elif stats.lessons_completed and stats.lessons_completed >= total_lessons %}
   <div class="next-cta next-cta-done">
-    <span class="next-cta-emoji">🏆</span>
+    <span class="next-cta-emoji"><svg aria-hidden="true"><use href="#i-chick"/></svg></span>
     <span class="next-cta-text">
       <span class="next-cta-kicker">Финиш!</span>
       <span class="next-cta-title">Все уроки пройдены!</span>
-      <span class="next-cta-sub">Можно повторять любимые уроки и улучшать результат 🔁</span>
+      <span class="next-cta-sub">Можно повторять любимые уроки и улучшать результат</span>
     </span>
   </div>
 {% endif %}
@@ -57,39 +57,38 @@
 <!-- Сегодня: цель, челлендж, слово дня -->
 {% macro trow(emoji, text, have, need) %}
 <div class="trow{{ ' ok' if have >= need }}">
-  <span class="trow-ico">{{ emoji }}</span>
   <span class="trow-text">{{ text }}</span>
-  <span class="trow-num">{{ have }}/{{ need }}{% if have >= need %} ✅{% endif %}</span>
+  <span class="trow-num">{{ have }}/{{ need }}{% if have >= need %} {% endif %}</span>
   <span class="trow-bar"><i style="width: {{ [100 * have // need, 100]|min }}%"></i></span>
 </div>
 {% endmacro %}
 <section class="today-row">
   {% if goal %}
   <div class="tcard{{ ' tcard-done' if goal.done }}">
-    <div class="tcard-head"><span class="tcard-title">🎯 Цель на сегодня</span>
-      <span class="tcard-tag">{% if goal.done %}выполнена! +{{ goal.coins }} 🪙{% else %}награда {{ goal.coins }} 🪙{% endif %}</span></div>
-    {% if goal.need_lessons %}{{ trow('📚', 'Пройти урок' if goal.need_lessons == 1 else 'Пройти уроки', goal.lessons, goal.need_lessons) }}{% endif %}
-    {% if goal.need_words %}{{ trow('🔁', 'Повторить слова', goal.words, goal.need_words) }}{% endif %}
+    <div class="tcard-head"><span class="tcard-title">Цель на сегодня</span>
+      <span class="tcard-tag">{% if goal.done %}выполнена! +{{ goal.coins }} {% else %}награда {{ goal.coins }} {% endif %}</span></div>
+    {% if goal.need_lessons %}{{ trow('', 'Пройти урок' if goal.need_lessons == 1 else 'Пройти уроки', goal.lessons, goal.need_lessons) }}{% endif %}
+    {% if goal.need_words %}{{ trow('', 'Повторить слова', goal.words, goal.need_words) }}{% endif %}
   </div>
   {% endif %}
   {% if weekly %}
   <a class="tcard tcard-link{{ ' tcard-done' if weekly.complete }}" href="{{ url_for('season.weekly_page') }}">
-    <div class="tcard-head"><span class="tcard-title">🗓️ Недельный челлендж</span>
-      <span class="tcard-tag">{% if weekly.boss_won %}🏆 босс побеждён{% elif weekly.complete %}⚔️ босс ждёт!{% else %}ещё {{ weekly.days_left + 1 }} дн.{% endif %}</span></div>
+    <div class="tcard-head"><span class="tcard-title">Недельный челлендж</span>
+      <span class="tcard-tag">{% if weekly.boss_won %}босс побеждён{% elif weekly.complete %}босс ждёт!{% else %}ещё {{ weekly.days_left + 1 }} дн.{% endif %}</span></div>
     {% for t in weekly.tasks %}{{ trow(t.emoji, t.text, t.have, t.need) }}{% endfor %}
-    {% if weekly_got %}<div class="week-got">🎉 Выполнено: +{{ weekly_got }} монеток!</div>{% endif %}
+    {% if weekly_got %}<div class="week-got">Выполнено: +{{ weekly_got }} монеток!</div>{% endif %}
   </a>
   {% endif %}
   {% if rv_pool >= 4 and wod %}
   <div class="tcard tcard-wod">
-    <div class="tcard-head"><span class="tcard-title">🌟 Слово дня</span></div>
+    <div class="tcard-head"><span class="tcard-title">Слово дня</span></div>
     <div class="wod-body">
       {% if wod.pic %}<span class="wod-pic">{{ wod.pic }}</span>{% endif %}
       <div class="wod-main">
         <span class="wod-en">{{ wod.en }}</span>
         <span class="wod-tr">[{{ wod.hint }}] — {{ wod.ru }}</span>
       </div>
-      <button type="button" class="wod-say say-btn" data-say="{{ wod.en }}" title="Послушать" aria-label="Послушать">🔊</button>
+      <button type="button" class="wod-say say-btn" data-say="{{ wod.en }}" title="Послушать" aria-label="Послушать"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></button>
     </div>
   </div>
   {% endif %}
@@ -99,63 +98,63 @@
 {% set locked = rv_pool < 4 %}
 <!-- Занимайся и играй -->
 <section>
-  <div class="section-head"><h2 class="section-title">🎯 Занимайся и играй</h2></div>
+  <div class="section-head"><h2 class="section-title">Занимайся и играй</h2></div>
   <div class="tile-grid tile-grid-4">
-    {{ tile(url_for('review.review_page'), '🔁', 'Повторение', ('ждут: ' ~ (rv_ready if rv_ready < 10 else '10+')) if rv_ready else 'всё повторено 🎉', locked, (rv_ready if rv_ready < 10 else '10+') if rv_ready else '') }}
-    {{ tile(url_for('games.games_hub'), '🎮', 'Игры', 'пары, мемори, блиц', locked) }}
-    {{ tile(url_for('games.dialogs_page'), '💬', 'Диалоги', 'Том и Анна', locked) }}
-    {{ tile(url_for('writing.writing_hub'), '✍️', 'Письмо', 'предложения и диктант', locked) }}
-    {{ tile(url_for('stories.stories_page'), '📖', 'Истории', 'читай и слушай', locked) }}
-    {% if speaking %}{{ tile(url_for('speak.speak_page'), '🎤', 'Говорим', 'скажи слово вслух') }}{% endif %}
-    {{ tile(url_for('student.theory_page'), '📘', 'Теория', 'правила и подсказки') }}
-    {{ tile(url_for('student.words_page'), '🔤', 'Словарь', 'все мои слова') }}
+    {{ tile(url_for('review.review_page'), 'repeat', 'Повторение', ('ждут: ' ~ (rv_ready if rv_ready < 10 else '10+')) if rv_ready else 'всё повторено', locked, (rv_ready if rv_ready < 10 else '10+') if rv_ready else '') }}
+    {{ tile(url_for('games.games_hub'), 'game', 'Игры', 'пары, мемори, блиц', locked) }}
+    {{ tile(url_for('games.dialogs_page'), 'chat', 'Диалоги', 'Том и Анна', locked) }}
+    {{ tile(url_for('writing.writing_hub'), 'pen', 'Письмо', 'предложения и диктант', locked) }}
+    {{ tile(url_for('stories.stories_page'), 'book', 'Истории', 'читай и слушай', locked) }}
+    {% if speaking %}{{ tile(url_for('speak.speak_page'), 'mic', 'Говорим', 'скажи слово вслух') }}{% endif %}
+    {{ tile(url_for('student.theory_page'), 'bulb', 'Теория', 'правила и подсказки') }}
+    {{ tile(url_for('student.words_page'), 'abc', 'Словарь', 'все мои слова') }}
   </div>
 </section>
 
 <!-- Мой мир -->
 <section>
-  <div class="section-head"><h2 class="section-title">🌈 Мой мир</h2></div>
+  <div class="section-head"><h2 class="section-title">Мой мир</h2></div>
   <div class="tile-grid">
-    {{ tile(url_for('garden.garden_page'), garden.streak_days | tree_mini, 'Мой сад', tree_stage.name ~ ' · ' ~ tree_count ~ ' дер.') }}
-    {{ tile(url_for('wardrobe.wardrobe_page'), '🎩', 'Гардероб', 'наряды для Чик-чика') }}
-    {{ tile(url_for('house.house_page'), '🏠', 'Домик', 'мебель и декор') }}
-    {{ tile(url_for('house.stickers_page'), '🏷️', 'Наклейки', 'за каждую тему') }}
-    {{ tile(url_for('student.achievements_page'), '🏅', 'Награды', earned_count ~ ' из ' ~ achievements|length) }}
+    {{ tile(url_for('garden.garden_page'), 'sprout', 'Мой сад', tree_stage.name|noemoji ~ ' · ' ~ tree_count ~ ' дер.') }}
+    {{ tile(url_for('wardrobe.wardrobe_page'), 'hanger', 'Гардероб', 'наряды для Чик-чика') }}
+    {{ tile(url_for('house.house_page'), 'house', 'Домик', 'мебель и декор') }}
+    {{ tile(url_for('house.stickers_page'), 'tag', 'Наклейки', 'за каждую тему') }}
+    {{ tile(url_for('student.achievements_page'), 'medal', 'Награды', earned_count ~ ' из ' ~ achievements|length) }}
   </div>
 </section>
 
 <!-- 3. Мои уроки (компактный вид: последний пройденный, следующий и первый закрытый) -->
 <section>
   <div class="section-head">
-    <h2 class="section-title">📚 Мои уроки</h2>
+    <h2 class="section-title">Мои уроки</h2>
     <span class="pill pill-soft">{{ stats.lessons_completed }}/{{ total_lessons }} пройдено</span>
-    <a class="btn btn-small" href="{{ url_for('student.course_map') }}">🗺️ Карта курса</a>
+    <a class="btn btn-small" href="{{ url_for('student.course_map') }}">Карта курса</a>
   </div>
   <div class="lesson-grid" id="lessonGrid">
     {% for info in lessons %}
       {% set l = info.lesson %}
       <div class="lesson-card card {{ 'lesson-done' if info.done }} {{ 'lesson-locked' if info.locked }} {{ 'lesson-extra-hidden' if not info.highlight }}">
         <div class="lesson-top">
-          <div class="lesson-emoji">{{ l.emoji if info.locked is false or info.done else '🔒' }}</div>
+          
           <div class="lesson-num">Урок {{ l.num or "" }}</div>
-          {% if info.done %}<div class="ribbon">✅ Пройден</div>{% endif %}
+          {% if info.done %}<div class="ribbon">Пройден</div>{% endif %}
           {% if l.id == (next_lesson.id if next_lesson else None) %}<div class="ribbon ribbon-now">▶ Сейчас</div>{% endif %}
         </div>
-        <h3>{{ l.title }}</h3>
+        <h3>{{ l.title|noemoji }}</h3>
         <p>{{ l.description }}</p>
         <div class="lesson-meta">
-          <span>⏱️ ~15 мин</span><span>🧠 {{ l.material|length }} слов</span><span>✅ тест {{ l.test|length }}</span>
+          <span>~15 мин</span><span>{{ l.material|length }} слов</span><span>тест {{ l.test|length }}</span>
         </div>
         {% if info.done %}
-          {% if info.credited %}<div class="done-score">Зачтено родителем 👨‍👩‍👧</div>
-          {% else %}<div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '🌟' if info.best_score >= 90 }}</div>{% endif %}
+          {% if info.credited %}<div class="done-score">Зачтено родителем</div>
+          {% else %}<div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '' if info.best_score >= 90 }}</div>{% endif %}
         {% endif %}
         {% if info.locked %}
-          <button class="btn btn-locked" disabled>🔒 Закрой предыдущий урок</button>
+          <button class="btn btn-locked" disabled>Закрой предыдущий урок</button>
         {% elif info.done %}
-          <a class="btn btn-secondary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Повторить ещё раз 🔁</a>
+          <a class="btn btn-secondary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Повторить ещё раз</a>
         {% else %}
-          <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Начать урок ▶️</a>
+          <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Начать урок ▶</a>
         {% endif %}
       </div>
     {% endfor %}
@@ -163,9 +162,9 @@
   {% if hidden_lessons_count %}
     <div class="show-all-wrap">
       <button type="button" class="btn btn-secondary show-all-btn" id="showAllLessonsBtn"
-              data-more="Показать все уроки ({{ hidden_lessons_count }} скрыто) ⬇️"
-              data-less="Свернуть уроки ⬆️">
-        Показать все уроки ({{ hidden_lessons_count }} скрыто) ⬇️
+              data-more="Показать все уроки ({{ hidden_lessons_count }} скрыто)"
+              data-less="Свернуть уроки">
+        Показать все уроки ({{ hidden_lessons_count }} скрыто)
       </button>
     </div>
   {% endif %}
@@ -173,29 +172,29 @@
 
 <!-- 3б. Дополнительные уроки — всегда открыты -->
 <details class="extras-box">
-  <summary class="section-head"><h2 class="section-title">🎁 Дополнительные уроки</h2>
-    <span class="pill pill-soft">{{ extras_done }} из {{ total_extras }} пройдено · открыты всегда 🔓</span></summary>
+  <summary class="section-head"><h2 class="section-title">Дополнительные уроки</h2>
+    <span class="pill pill-soft">{{ extras_done }} из {{ total_extras }} пройдено · открыты всегда</span></summary>
   <p class="section-sub">Иди в любом порядке и в любое время — они не блокируются основным курсом и помогают учить полезные слова.</p>
   <div class="lesson-grid">
     {% for info in extra_lessons %}
       {% set l = info.lesson %}
       <div class="lesson-card card {{ 'lesson-done' if info.done }}">
         <div class="lesson-top">
-          <div class="lesson-emoji">{{ l.emoji }}</div>
+          
           <div class="lesson-num">Бонус-урок</div>
-          {% if info.done %}<div class="ribbon">✅ Пройден</div>{% endif %}
+          {% if info.done %}<div class="ribbon">Пройден</div>{% endif %}
         </div>
-        <h3>{{ l.title }}</h3>
+        <h3>{{ l.title|noemoji }}</h3>
         <p>{{ l.description }}</p>
         <div class="lesson-meta">
-          <span>⏱️ ~10 мин</span><span>🧠 {{ l.material|length }} слов</span><span>✅ тест {{ l.test|length }}</span>
+          <span>~10 мин</span><span>{{ l.material|length }} слов</span><span>тест {{ l.test|length }}</span>
         </div>
         {% if info.done %}
-          {% if info.credited %}<div class="done-score">Зачтено родителем 👨‍👩‍👧</div>
-          {% else %}<div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '🌟' if info.best_score >= 90 }}</div>{% endif %}
-          <a class="btn btn-secondary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Повторить ещё раз 🔁</a>
+          {% if info.credited %}<div class="done-score">Зачтено родителем</div>
+          {% else %}<div class="done-score">Лучший результат: <b>{{ "%.0f"|format(info.best_score) }}%</b> {{ '' if info.best_score >= 90 }}</div>{% endif %}
+          <a class="btn btn-secondary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Повторить ещё раз</a>
         {% else %}
-          <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Начать урок ▶️</a>
+          <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=l.id) }}">Начать урок ▶</a>
         {% endif %}
       </div>
     {% endfor %}
@@ -205,14 +204,14 @@
 <!-- 1. Трекер успеваемости -->
 <section class="card tracker glass" id="tracker">
   <div class="section-head">
-    <h2>📈 Мой трекер успеваемости</h2>
-    <a class="pill pill-soft pill-link" href="{{ url_for('student.achievements_page') }}">{{ earned_count }}/{{ achievements|length }} 🏅 наград</a>
+    <h2>Мой трекер успеваемости</h2>
+    <a class="pill pill-soft pill-link" href="{{ url_for('student.achievements_page') }}">{{ earned_count }}/{{ achievements|length }} наград</a>
   </div>
   <div class="stats-grid">
-    <a class="stat stat-c1 stat-link" href="{{ url_for('student.theory_page') }}" title="Открыть теорию"><span class="stat-icon"><svg class="icon"><use href="#i-book"/></svg></span><span class="stat-num">{{ stats.lessons_completed }}/{{ total_lessons }}</span><span class="stat-label">уроков пройдено</span><span class="stat-more">📖 Открыть теорию ›</span></a>
+    <a class="stat stat-c1 stat-link" href="{{ url_for('student.theory_page') }}" title="Открыть теорию"><span class="stat-icon"><svg class="icon"><use href="#i-book"/></svg></span><span class="stat-num">{{ stats.lessons_completed }}/{{ total_lessons }}</span><span class="stat-label">уроков пройдено</span><span class="stat-more">Открыть теорию ›</span></a>
     <div class="stat stat-c2"><span class="stat-icon"><svg class="icon"><use href="#i-star"/></svg></span><span class="stat-num">{% if stats.avg_score %}{{ "%.0f"|format(stats.avg_score) }}%{% else %}—{% endif %}</span><span class="stat-label">средний балл тестов</span></div>
-    <a class="stat stat-c3 stat-link" href="{{ url_for('student.words_page') }}" title="Открыть словарь"><span class="stat-icon"><svg class="icon"><use href="#i-words"/></svg></span><span class="stat-num">{{ stats.words_learned }}</span><span class="stat-label">слов выучено</span><span class="stat-more">📖 Открыть словарь ›</span></a>
-    {% if speaking %}<a class="stat stat-c2 stat-link" href="{{ url_for('speak.speak_page') }}" title="Тренировка произношения"><span class="stat-icon"><svg class="icon"><use href="#i-sound"/></svg></span><span class="stat-num">{{ stats.speak_words }}</span><span class="stat-label">слов произнесено</span><span class="stat-more">🎤 Говорим ›</span></a>{% endif %}
+    <a class="stat stat-c3 stat-link" href="{{ url_for('student.words_page') }}" title="Открыть словарь"><span class="stat-icon"><svg class="icon"><use href="#i-words"/></svg></span><span class="stat-num">{{ stats.words_learned }}</span><span class="stat-label">слов выучено</span><span class="stat-more">Открыть словарь ›</span></a>
+    {% if speaking %}<a class="stat stat-c2 stat-link" href="{{ url_for('speak.speak_page') }}" title="Тренировка произношения"><span class="stat-icon"><svg class="icon"><use href="#i-sound"/></svg></span><span class="stat-num">{{ stats.speak_words }}</span><span class="stat-label">слов произнесено</span><span class="stat-more">Говорим ›</span></a>{% endif %}
     <div class="stat stat-c4"><span class="stat-icon"><svg class="icon"><use href="#i-clock"/></svg></span><span class="stat-num">{{ stats.total_seconds|human_time }}</span><span class="stat-label">время занятий</span></div>
   </div>
   <div class="progress-wrap">
@@ -224,17 +223,17 @@
 <!-- 4. Награды: последние + ближайшие -->
 <section class="card glass ach-panel">
   <div class="section-head">
-    <h2>🏅 Мои награды</h2>
+    <h2>Мои награды</h2>
     <a class="pill pill-soft pill-link" href="{{ url_for('student.achievements_page') }}">{{ earned_count }} из {{ achievements|length }} · вся коллекция ›</a>
   </div>
   {% if ach_recent %}
   <div class="medal-row">
     {% for a in ach_recent %}
-      <a class="medal-tile" href="{{ url_for('student.achievements_page') }}" title="{{ a.title }} — {{ a.desc }}">{{ a|medal(72) }}<span>{{ a.title }}</span></a>
+      <a class="medal-tile" href="{{ url_for('student.achievements_page') }}" title="{{ a.title|noemoji }} — {{ a.desc|noemoji }}">{{ a|medal(72) }}<span>{{ a.title|noemoji }}</span></a>
     {% endfor %}
   </div>
   {% else %}
-    <p class="hint">Пока медалей нет — пройди первый урок, и Чик-чик вручит тебе подарок! 🎁</p>
+    <p class="hint">Пока медалей нет — пройди первый урок, и Чик-чик вручит тебе подарок!</p>
   {% endif %}
   {% if ach_next %}
   <h3 class="ach-next-title">Скоро получишь</h3>
@@ -243,8 +242,8 @@
       <article class="ach-card tier-{{ a.tier }} is-locked">
         {{ a|medal(64) }}
         <div class="ach-card-body">
-          <div class="ach-card-title">{{ a.title }}</div>
-          <div class="ach-card-desc">{{ a.desc }}</div>
+          <div class="ach-card-title">{{ a.title|noemoji }}</div>
+          <div class="ach-card-desc">{{ a.desc|noemoji }}</div>
           <div class="ach-prog"><div class="ach-prog-fill" style="width: {{ a.progress[2] }}%"></div></div>
           <div class="ach-card-date">{{ a.progress[0] }} из {{ a.progress[1] }}</div>
         </div>

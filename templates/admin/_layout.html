@@ -2,17 +2,17 @@
 {% block title %}{% block admin_title %}Кабинет администратора{% endblock %} — English Fun{% endblock %}
 {% block content %}
 <div class="admin-head">
-  <h1>🛠️ Кабинет администратора</h1>
+  <h1>Кабинет администратора</h1>
   <nav class="admin-tabs" aria-label="Разделы кабинета">
     {% for key, url, label in [
-      ('overview', url_for('parent.parent_dashboard'), '🏠 Обзор'),
-      ('students', url_for('parent.parent_students'), '👶 Ученики'),
-      ('progress', url_for('parent.parent_progress'), '📈 Прогресс'),
-      ('mistakes', url_for('parent.parent_mistakes'), '❌ Ошибки'),
-      ('holidays', url_for('parent.parent_holidays'), '🎉 Праздники'),
-      ('logopeds', url_for('parent.parent_logopeds_page'), '👩‍⚕️ Логопеды'),
-      ('updates', url_for('parent.parent_updates_page'), '🔄 Обновления'),
-      ('telegram', url_for('parent.parent_telegram'), '🤖 Telegram')] %}
+      ('overview', url_for('parent.parent_dashboard'), 'Обзор'),
+      ('students', url_for('parent.parent_students'), 'Ученики'),
+      ('progress', url_for('parent.parent_progress'), 'Прогресс'),
+      ('mistakes', url_for('parent.parent_mistakes'), 'Ошибки'),
+      ('holidays', url_for('parent.parent_holidays'), 'Праздники'),
+      ('logopeds', url_for('parent.parent_logopeds_page'), 'Логопеды'),
+      ('updates', url_for('parent.parent_updates_page'), 'Обновления'),
+      ('telegram', url_for('parent.parent_telegram'), 'Telegram')] %}
     <a href="{{ url }}" class="{{ 'on' if tab == key }}"{% if tab == key %} aria-current="page"{% endif %}>{{ label }}</a>
     {% endfor %}
   </nav>

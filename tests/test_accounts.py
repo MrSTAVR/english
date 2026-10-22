@@ -62,7 +62,7 @@ def test_parent_sees_all_students(parent, make_student):
     submit_lesson(petya, N(1))
 
     body = parent.get("/parent").get_data(as_text=True)
-    assert "Маша" in body and "Петя" in body and "🦄" in body
+    assert "Маша" in body and "Петя" in body
     assert db_scalar("SELECT COUNT(*) FROM attempts WHERE passed=1") == 2
     assert body.count(f"<b>1</b>/{MAIN_COUNT} уроков") == 2      # у каждого — свой прогресс
 
