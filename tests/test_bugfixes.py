@@ -117,3 +117,19 @@ def test_every_post_form_in_templates_has_token():
         text = path.read_text(encoding="utf-8")
         forms = re.findall(r"<form\b[^>]*\bmethod\s*=\s*[\"']post[\"']", text, re.I)
         assert text.count("csrf_token()") >= len(forms), path.name
+
+
+# ---------------------------------------------------------------- вход администратора
+
+def test_index_has_only_student_form_and_admin_corner(anon):
+    html = anon.get("/").get_data(as_text=True)
+    assert "Пароль администратора" not in html and 'class="admin-corner"' in html and 'href="/admin"' in html
+
+
+def test_admin_login_page_and_redirects(anon, parent):
+    html = anon.get("/admin").get_data(as_text=True)
+    assert "Пароль администратора" in html and "/login/parent" in html
+    r = anon.post("/login/parent", data={"password": "0000"})
+    assert r.headers["Location"].endswith("/admin")
+    assert parent.get("/admin").headers["Location"].endswith("/parent")
+    assert "Кабинет администратора" in parent.get("/parent").get_data(as_text=True)

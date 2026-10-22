@@ -3,13 +3,13 @@
 <section class="hero">
   <svg class="hero-chick" aria-hidden="true"><use href="#i-chick"/></svg>
   <h1>Английский — это <span class="hl">весело!</span></h1>
-  <p class="subtitle">Выбери, кто пришёл заниматься:</p>
+  <p class="subtitle">Войди и начинай заниматься:</p>
 
   <div class="login-cards">
     <div class="card login-card">
       <svg class="login-art"><use href="#i-backpack"/></svg>
       <h2>Я ученик(ца)!</h2>
-      <p>Войди в свой аккаунт — его создали родители в кабинете.</p>
+      <p>Войди в свой аккаунт — логин и пароль дадут родители.</p>
       <form method="post" action="{{ url_for('auth.login_student') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="text" name="username" placeholder="Логин (например masha)" maxlength="20" required autocapitalize="off" autocomplete="username">
@@ -18,16 +18,7 @@
       </form>
     </div>
 
-    <div class="card login-card">
-      <svg class="login-art"><use href="#i-shield"/></svg>
-      <h2>Я родитель</h2>
-      <p>Аккаунты детей, прогресс, время и все ошибки.</p>
-      <form method="post" action="{{ url_for('auth.login_parent') }}">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="password" name="password" placeholder="Пароль родителя" required>
-        <button type="submit" class="btn btn-secondary">Войти в кабинет</button>
-      </form>
-    </div>
   </div>
 </section>
+<a class="admin-corner" href="{{ url_for('auth.admin_login') }}" title="Вход для администратора" aria-label="Вход для администратора">⚙</a>
 {% endblock %}

@@ -130,7 +130,7 @@ def test_parent_password_guessing_is_locked(anon, monkeypatch):
         assert "Неверный пароль" in r.get_data(as_text=True)
     r = anon.post("/login/parent", data={"password": config.PARENT_PASSWORD}, follow_redirects=True)
     body = r.get_data(as_text=True)
-    assert "Слишком много неудачных попыток" in body and "Кабинет родителя" not in body
+    assert "Слишком много неудачных попыток" in body and 'id="students"' not in body
 
 
 def test_successful_login_resets_account_counter(flask_app, anon, make_student):
@@ -169,7 +169,7 @@ def test_parent_login_expires(parent):
     r = parent.get("/parent")
     assert r.status_code == 302
     body = parent.get(r.headers["Location"]).get_data(as_text=True)
-    assert "Вход родителя закончился" in body
+    assert "Вход администратора закончился" in body
     assert parent.get("/parent").status_code == 302    # и снова доступа нет
 
 

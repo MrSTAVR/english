@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="English Fun">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="{{ url_for('static', filename='fonts.css') }}?v=1">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=24">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=25">
 <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=22">
 <link rel="stylesheet" href="{{ url_for('static', filename='achievements.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=1">
@@ -94,7 +94,7 @@
       <a href="{{ url_for('garden.garden_page') }}" class="{{ 'on' if ep.startswith('garden.') }}"><svg class="icon"><use href="#i-sprout"/></svg><span>Мой сад</span></a>
       <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
     {% elif session.get('role') == 'parent' %}
-      <a href="{{ url_for('parent.parent_dashboard') }}" class="{{ 'on' if ep.startswith('parent.') }}"><svg class="icon"><use href="#i-shield"/></svg><span>Кабинет родителя</span></a>
+      <a href="{{ url_for('parent.parent_dashboard') }}" class="{{ 'on' if ep.startswith('parent.') }}"><svg class="icon"><use href="#i-shield"/></svg><span>Администратор</span></a>
       <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
     {% endif %}
     <button type="button" class="theme-toggle" id="theme-toggle" title="Тёмная / светлая тема" aria-label="Переключить тёмную и светлую тему">
