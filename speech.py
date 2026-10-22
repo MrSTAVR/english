@@ -97,3 +97,80 @@ def client_of(db, logoped_id, client_id):
 def clients(db, logoped_id, archived=False):
     return db.execute("SELECT * FROM sp_clients WHERE logoped_id=? AND archived=? ORDER BY child_name COLLATE NOCASE",
                       (logoped_id, int(archived))).fetchall()
+
+
+# ---------------------------------------------------------------- карточка и звуковая карта
+
+SOUND_GROUPS = [
+    ("Свистящие", ["С", "Сь", "З", "Зь", "Ц"]),
+    ("Шипящие", ["Ш", "Ж", "Ч", "Щ"]),
+    ("Сонорные", ["Л", "Ль", "Р", "Рь"]),
+    ("Заднеязычные", ["К", "Кь", "Г", "Гь", "Х", "Хь"]),
+    ("Другие", ["Й", "Т", "Д", "Н", "В", "Ф", "Б", "П", "М"]),
+]
+ALL_SOUNDS = [snd for _g, group in SOUND_GROUPS for snd in group]
+# (для логопеда, для родителей)
+STAGES = [
+    ("нарушен", "пока не получается"),
+    ("постановка", "учимся правильно произносить"),
+    ("автоматизация: слоги", "тренируем в слогах"),
+    ("автоматизация: слова", "тренируем в словах"),
+    ("автоматизация: фразы", "тренируем во фразах"),
+    ("автоматизация: связная речь", "тренируем в рассказе"),
+    ("дифференциация", "учимся не путать с похожими звуками"),
+    ("введён в речь", "говорим правильно! 🎉"),
+]
+DONE_STAGE = len(STAGES) - 1
+
+
+def get_card(db, client_id):
+    r = db.execute("SELECT * FROM sp_card WHERE client_id=?", (client_id,)).fetchone()
+    return {"diagnosis": r["diagnosis"], "program": r["program"], "updated_at": r["updated_at"]} if r else \
+        {"diagnosis": "", "program": "", "updated_at": None}
+
+
+def save_card(db, client_id, diagnosis, program):
+    db.execute("INSERT INTO sp_card (client_id, diagnosis, program, updated_at) VALUES (?, ?, ?, ?) "
+               "ON CONFLICT(client_id) DO UPDATE SET diagnosis=excluded.diagnosis, program=excluded.program, "
+               "updated_at=excluded.updated_at",
+               (client_id, (diagnosis or "").strip()[:5000], (program or "").strip()[:10000], _now()))
+    db.commit()
+
+
+def sound_map(db, client_id):
+    """Звуки в работе в порядке ALL_SOUNDS: стадия, подписи, процент пути."""
+    rows = {r["sound"]: r for r in db.execute("SELECT * FROM sp_sounds WHERE client_id=?", (client_id,))}
+    out = []
+    for snd in ALL_SOUNDS:
+        r = rows.get(snd)
+        if r:
+            st = max(0, min(DONE_STAGE, r["stage"]))
+            out.append({"sound": snd, "stage": st, "label": STAGES[st][0], "family": STAGES[st][1],
+                        "percent": round(100 * st / DONE_STAGE), "note": r["note"], "done": st == DONE_STAGE})
+    return out
+
+
+def set_sound(db, client_id, sound, stage, note=""):
+    """Добавляет звук в работу или меняет стадию. Смена стадии пишется в историю."""
+    if sound not in ALL_SOUNDS or not 0 <= stage <= DONE_STAGE:
+        return False
+    prev = db.execute("SELECT stage FROM sp_sounds WHERE client_id=? AND sound=?", (client_id, sound)).fetchone()
+    db.execute("INSERT INTO sp_sounds (client_id, sound, stage, note, updated_at) VALUES (?, ?, ?, ?, ?) "
+               "ON CONFLICT(client_id, sound) DO UPDATE SET stage=excluded.stage, note=excluded.note, "
+               "updated_at=excluded.updated_at", (client_id, sound, stage, (note or "").strip()[:200], _now()))
+    if not prev or prev["stage"] != stage:
+        db.execute("INSERT INTO sp_sound_log (client_id, sound, stage, day) VALUES (?, ?, ?, ?)",
+                   (client_id, sound, stage, date.today().isoformat()))
+    db.commit()
+    return True
+
+
+def remove_sound(db, client_id, sound):
+    db.execute("DELETE FROM sp_sounds WHERE client_id=? AND sound=?", (client_id, sound))
+    db.commit()
+
+
+def sound_history(db, client_id, limit=30):
+    rows = db.execute("SELECT * FROM sp_sound_log WHERE client_id=? ORDER BY id DESC LIMIT ?", (client_id, limit))
+    return [{"sound": r["sound"], "label": STAGES[max(0, min(DONE_STAGE, r["stage"]))][0],
+             "day": datetime.strptime(r["day"], "%Y-%m-%d").strftime("%d.%m.%Y")} for r in rows]

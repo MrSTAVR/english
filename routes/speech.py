@@ -93,8 +93,39 @@ def logoped_client(cid):
         return err
     db, me = ctx
     client = speech.client_of(db, me["id"], cid) or abort(404)
+    sounds = speech.sound_map(db, cid)
+    in_work = {s["sound"] for s in sounds}
     return render_template("speech/logoped_client.html", me=me, c=client, age=speech.age_text,
-                           min_password=speech.MIN_PASSWORD)
+                           min_password=speech.MIN_PASSWORD, card=speech.get_card(db, cid), sounds=sounds,
+                           free_groups=[(g, [x for x in group if x not in in_work]) for g, group in speech.SOUND_GROUPS],
+                           stages=speech.STAGES, history=speech.sound_history(db, cid))
+
+
+@bp.route("/logoped/clients/<int:cid>/card", methods=["POST"])
+def logoped_client_card(cid):
+    ctx, err = _current("logoped")
+    if err:
+        return err
+    db, me = ctx
+    speech.client_of(db, me["id"], cid) or abort(404)
+    speech.save_card(db, cid, request.form.get("diagnosis"), request.form.get("program"))
+    flash("Диагноз и программа сохранены.", "ok")
+    return redirect(url_for("speech.logoped_client", cid=cid) + "#card")
+
+
+@bp.route("/logoped/clients/<int:cid>/sound", methods=["POST"])
+def logoped_client_sound(cid):
+    ctx, err = _current("logoped")
+    if err:
+        return err
+    db, me = ctx
+    speech.client_of(db, me["id"], cid) or abort(404)
+    sound = request.form.get("sound", "")
+    if request.form.get("action") == "remove":
+        speech.remove_sound(db, cid, sound)
+    elif not speech.set_sound(db, cid, sound, request.form.get("stage", -1, type=int), request.form.get("note", "")):
+        abort(400)
+    return redirect(url_for("speech.logoped_client", cid=cid) + "#sounds")
 
 
 @bp.route("/logoped/clients/<int:cid>/edit", methods=["POST"])
@@ -149,4 +180,5 @@ def family_home():
         return err
     db, client = ctx
     logoped = db.execute("SELECT name FROM sp_logopeds WHERE id=?", (client["logoped_id"],)).fetchone()
-    return render_template("speech/family_home.html", c=client, logoped=logoped)
+    return render_template("speech/family_home.html", c=client, logoped=logoped,
+                           sounds=speech.sound_map(db, client["id"]))

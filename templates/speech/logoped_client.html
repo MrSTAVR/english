@@ -7,6 +7,60 @@
 </div>
 <p class="subtitle">{% if c.birth_date %}{{ age(c.birth_date) }} · {% endif %}{{ c.parent_name or 'родитель не указан' }}{% if c.phone %} · <a href="tel:{{ c.phone }}">{{ c.phone }}</a>{% endif %}</p>
 
+<section class="card" id="sounds">
+  <h2>🔤 Звуковая карта <span class="pill pill-soft">родители видят упрощённо</span></h2>
+  {% if sounds %}
+  <div class="sp-sounds">
+    {% for s in sounds %}
+    <form method="post" action="{{ url_for('speech.logoped_client_sound', cid=c.id) }}" class="sp-sound{{ ' sp-sound-done' if s.done }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="sound" value="{{ s.sound }}">
+      <b class="sp-sound-name">{{ s.sound }}</b>
+      <select name="stage" onchange="this.form.submit()" aria-label="Стадия звука {{ s.sound }}">
+        {% for st in stages %}<option value="{{ loop.index0 }}" {{ 'selected' if loop.index0 == s.stage }}>{{ st[0] }}</option>{% endfor %}
+      </select>
+      <div class="sp-bar"><div style="width: {{ s.percent }}%"></div></div>
+      <input type="text" name="note" value="{{ s.note }}" maxlength="200" placeholder="заметка (только для вас)">
+      <span class="sp-sound-btns">
+        <button class="btn btn-small" type="submit" name="action" value="set">💾</button>
+        <button class="btn btn-small" type="submit" name="action" value="remove" title="Убрать из работы"
+                onclick="return confirm('Убрать звук {{ s.sound }} из карты?');">✕</button>
+      </span>
+    </form>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="hint">Звуков в работе пока нет — добавьте ниже.</p>
+  {% endif %}
+  <form method="post" action="{{ url_for('speech.logoped_client_sound', cid=c.id) }}" class="inline-form sp-add-sound">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <select name="sound" required aria-label="Звук">
+      <option value="">— звук —</option>
+      {% for g, group in free_groups if group %}<optgroup label="{{ g }}">{% for x in group %}<option>{{ x }}</option>{% endfor %}</optgroup>{% endfor %}
+    </select>
+    <select name="stage" aria-label="Стадия">{% for st in stages %}<option value="{{ loop.index0 }}">{{ st[0] }}</option>{% endfor %}</select>
+    <button class="btn btn-small" type="submit" name="action" value="set">➕ Добавить звук</button>
+  </form>
+  {% if history %}
+  <details class="sp-history"><summary>📈 История ({{ history|length }})</summary>
+    <ul>{% for h in history %}<li>{{ h.day }} — <b>{{ h.sound }}</b>: {{ h.label }}</li>{% endfor %}</ul>
+  </details>
+  {% endif %}
+</section>
+
+<section class="card" id="card">
+  <h2>🩺 Диагноз и программа <span class="pill pill-warn">видно только вам</span></h2>
+  <form method="post" action="{{ url_for('speech.logoped_client_card', cid=c.id) }}" class="sp-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="sp-wide">Заключение / диагноз
+      <textarea name="diagnosis" rows="3" maxlength="5000" placeholder="Например: ФФНР, дислалия…">{{ card.diagnosis }}</textarea></label>
+    <label class="sp-wide">Программа занятий, цели
+      <textarea name="program" rows="6" maxlength="10000" placeholder="Что делаем и в каком порядке">{{ card.program }}</textarea></label>
+    <button class="btn btn-primary sp-wide" type="submit">Сохранить</button>
+    {% if card.updated_at %}<p class="hint sp-wide">Обновлено: {{ card.updated_at[:16].replace('T', ' ') }}</p>{% endif %}
+  </form>
+</section>
+
 <section class="card">
   <h2>📇 Данные</h2>
   <form method="post" action="{{ url_for('speech.logoped_client_edit', cid=c.id) }}" class="sp-form">
@@ -31,7 +85,7 @@
 
 <section class="card sp-soon">
   <h2>🗓️ Скоро здесь</h2>
-  <p class="hint">Диагноз и программа занятий, звуковая карта, расписание, домашние задания и оплата.</p>
+  <p class="hint">Расписание, домашние задания и оплата.</p>
 </section>
 
 <form method="post" action="{{ url_for('speech.logoped_client_edit', cid=c.id) }}">

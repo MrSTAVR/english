@@ -199,6 +199,27 @@ CREATE TABLE IF NOT EXISTS sp_clients (
     created_at    TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_sp_clients_logoped ON sp_clients (logoped_id);
+CREATE TABLE IF NOT EXISTS sp_card (                -- заметки логопеда: видит только логопед
+    client_id  INTEGER PRIMARY KEY,
+    diagnosis  TEXT DEFAULT '',
+    program    TEXT DEFAULT '',
+    updated_at TEXT
+);
+CREATE TABLE IF NOT EXISTS sp_sounds (              -- звуковая карта: звуки в работе и их стадия
+    client_id  INTEGER NOT NULL,
+    sound      TEXT NOT NULL,
+    stage      INTEGER NOT NULL,                    -- индекс в speech.STAGES
+    note       TEXT DEFAULT '',
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (client_id, sound)
+);
+CREATE TABLE IF NOT EXISTS sp_sound_log (           -- история стадий (для «как мы продвигались»)
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id  INTEGER NOT NULL,
+    sound      TEXT NOT NULL,
+    stage      INTEGER NOT NULL,
+    day        TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS login_failures (
     id    INTEGER PRIMARY KEY AUTOINCREMENT,
     scope TEXT NOT NULL,                       -- ip / student / parent

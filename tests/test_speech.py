@@ -7,6 +7,7 @@ import pytest
 import config
 import speech
 from tests.helpers import db_all, db_scalar
+from tests.test_vacation import conn
 
 
 @pytest.fixture
@@ -131,3 +132,55 @@ def test_speech_pages_look_separate_and_logout(logoped):
     html = logoped.get("/logoped/home").get_data(as_text=True)
     assert "🗣️" in html and "Логопед" in html and "MASCOT_SETTINGS" not in html and "English Fun" not in html
     assert logoped.get("/logout").headers["Location"].endswith("/logoped")
+
+
+# ---------------------------------------------------------------- шаг 2: карточка и звуковая карта
+
+def _family(flask_app):
+    fam = flask_app.test_client()
+    fam.post("/family", data={"username": "petya", "password": "pass123"})
+    return fam
+
+
+def test_diagnosis_is_private(logoped, flask_app):
+    add_child(logoped)
+    cid = db_scalar("SELECT id FROM sp_clients")
+    logoped.post(f"/logoped/clients/{cid}/card", data={"diagnosis": "ФФНР секретно", "program": "1. Р постановка"})
+    html = logoped.get(f"/logoped/clients/{cid}").get_data(as_text=True)
+    assert "ФФНР секретно" in html and "1. Р постановка" in html
+    fam_html = _family(flask_app).get("/family/home").get_data(as_text=True)
+    assert "ФФНР" not in fam_html and "постановка" not in fam_html
+
+
+def test_sound_map_stages_history_and_family_view(logoped, flask_app):
+    add_child(logoped)
+    cid = db_scalar("SELECT id FROM sp_clients")
+    logoped.post(f"/logoped/clients/{cid}/sound", data={"sound": "Р", "stage": "1", "action": "set"})
+    logoped.post(f"/logoped/clients/{cid}/sound", data={"sound": "Ш", "stage": str(speech.DONE_STAGE), "action": "set"})
+    logoped.post(f"/logoped/clients/{cid}/sound", data={"sound": "Р", "stage": "3", "note": "лучше в начале слова",
+                                                        "action": "set"})
+    logoped.post(f"/logoped/clients/{cid}/sound", data={"sound": "Р", "stage": "3", "note": "ещё заметка",
+                                                        "action": "set"})       # стадия та же — в историю не пишем
+    assert db_all("SELECT sound, stage FROM sp_sound_log ORDER BY id") == [("Р", 1), ("Ш", speech.DONE_STAGE), ("Р", 3)]
+    m = {s["sound"]: s for s in speech.sound_map(conn(), cid)}
+    assert list(m) == ["Ш", "Р"] and m["Ш"]["percent"] == 100 and m["Р"]["note"] == "ещё заметка"
+    html = logoped.get(f"/logoped/clients/{cid}").get_data(as_text=True)
+    assert "автоматизация: слова" in html and "История (3)" in html
+    fam = _family(flask_app).get("/family/home").get_data(as_text=True)
+    assert "Наши звуки" in fam and "тренируем в словах" in fam and "говорим правильно" in fam
+    assert "ещё заметка" not in fam                                   # заметки логопеда семье не видны
+    logoped.post(f"/logoped/clients/{cid}/sound", data={"sound": "Ш", "action": "remove"})
+    assert db_all("SELECT sound FROM sp_sounds") == [("Р",)]
+    assert logoped.post(f"/logoped/clients/{cid}/sound", data={"sound": "Q", "stage": "1", "action": "set"}).status_code == 400
+    assert logoped.post(f"/logoped/clients/{cid}/sound", data={"sound": "Р", "stage": "99", "action": "set"}).status_code == 400
+
+
+def test_card_and_sounds_only_for_own_clients(logoped, parent, flask_app):
+    add_child(logoped)
+    cid = db_scalar("SELECT id FROM sp_clients")
+    parent.post("/parent/logopeds", data={"action": "add", "name": "Другой", "username": "other", "password": "secret12"})
+    other = flask_app.test_client()
+    other.post("/logoped", data={"username": "other", "password": "secret12"})
+    assert other.post(f"/logoped/clients/{cid}/card", data={"diagnosis": "x"}).status_code == 404
+    assert other.post(f"/logoped/clients/{cid}/sound", data={"sound": "Р", "stage": "1"}).status_code == 404
+    assert db_scalar("SELECT COUNT(*) FROM sp_card") == 0 and db_scalar("SELECT COUNT(*) FROM sp_sounds") == 0
