@@ -147,3 +147,25 @@ def test_delete_student_cleans_friends(make_student, parent):
     for t, col in (("feed", "student_id"), ("game_records", "student_id"), ("duels", "to_id"), ("likes", "owner_id")):
         assert db_scalar(f"SELECT COUNT(*) FROM {t} WHERE {col}=?", (aid,)) == 0
     assert r.status_code == 302
+
+
+def test_visit_friend_castle_rooms_and_feed(make_student, parent):
+    import castle
+    import sqlite3
+    import database
+    masha, anya = _two(make_student, parent)
+    aid = _sid("anya")
+    anya.get("/student/castle")
+    page = masha.get(f"/student/friends/{aid}/house").get_data(as_text=True)
+    assert f'href="/student/friends/{aid}/castle/bedroom"' in page
+    room = masha.get(f"/student/friends/{aid}/castle/bedroom").get_data(as_text=True)
+    assert "Замок: Аня" in room and 'class="cs-pin' in room and 'data-find-url=""' in room
+    assert masha.get(f"/student/friends/{aid}/castle/kitchen").status_code == 302     # не построена
+    assert masha.get(f"/student/friends/{aid}/castle/nope").status_code == 404
+    # постройка и 3-й уровень попадают в ленту друзей
+    cn = sqlite3.connect(database.DB_PATH); cn.row_factory = sqlite3.Row
+    cn.execute("UPDATE garden SET coins=500 WHERE student_id=?", (aid,)); cn.commit()
+    castle.earn(cn, aid, "test", 1, 100)
+    anya.post("/student/castle/bedroom/build"); anya.post("/student/castle/bedroom/build")
+    feed = masha.get("/student/friends").get_data(as_text=True)
+    assert "Комната замка на 3 уровне: «Спальня»" in feed

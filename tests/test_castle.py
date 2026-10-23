@@ -264,3 +264,16 @@ def test_drawn_things_appear_with_their_words():
             for word, svg in parts:
                 if word:
                     assert (svg in art) == (word in have), (key, lv, word)
+
+
+def test_castle_awards(make_student):
+    from achievements import ACHIEVEMENTS
+    keys = {a["key"] for a in ACHIEVEMENTS if a["cat"] == "castle"}
+    assert {"house_1", "castle_all", "castle_max", "castle_tasks_10", "castle_find_10"} <= keys
+    c = make_student(); sid = sid_of(); c.get("/student/castle"); cn = conn()
+    for i in range(10):
+        castle.on_find_done(cn, sid, "bedroom", __import__("datetime").date(2026, 1, 1 + i))
+    c.post("/api/castle/bedroom/find")
+    assert db_scalar("SELECT COUNT(*) FROM achievements WHERE key='castle_find_10'") == 1
+    body = c.get("/student/achievements").get_data(as_text=True)
+    assert "Замок" in body and "Зоркий глаз" in body

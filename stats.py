@@ -27,7 +27,12 @@ def _game_stats(db, student_id):
     adv = db.execute(f"SELECT COUNT(*) FROM advent {where}", args).fetchone()[0]
     # постройки и улучшения в замке (раньше — вещи домика; заработанные тогда награды остаются)
     hb = db.execute(f"SELECT COUNT(*) FROM castle_bricks {where}{and_} reason='build'", args).fetchone()[0]
-    return {"house_bought": hb, "weeks_done": wk, "boss_wins": bw, "halloween_done": hw, "newyear_done": ny, **more, "advent_opened": adv, "games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d, "wardrobe_bought": w,
+    cr = db.execute(f"SELECT COUNT(*) n, COALESCE(SUM(level),0) s FROM castle_rooms {where}", args).fetchone()
+    ct = db.execute(f"SELECT COUNT(*) FROM castle_coins {where}{and_} kind='task'", args).fetchone()[0]
+    ci = db.execute(f"SELECT COUNT(*) FROM castle_coins {where}{and_} kind='income'", args).fetchone()[0]
+    cf = db.execute(f"SELECT COUNT(*) FROM castle_bricks {where}{and_} reason='find'", args).fetchone()[0]
+    castle_m = {"castle_rooms": cr["n"], "castle_stars": cr["s"], "castle_tasks": ct, "castle_income_days": ci, "castle_finds": cf}
+    return {"house_bought": hb, **castle_m, "weeks_done": wk, "boss_wins": bw, "halloween_done": hw, "newyear_done": ny, **more, "advent_opened": adv, "games_played": g["p"], "games_perfect": g["s"], "dialogs_done": d, "wardrobe_bought": w,
             "stories_done": st["a"], "stories_listened": st["b"],
             "writing_played": g["wp"], "writing_perfect": g["wperf"]}
 

@@ -10,7 +10,13 @@
     {% for r in floor %}
       {% set data %}data-room="{{ r.key }}" data-state="{{ r.state }}" data-name="{{ r.name }}" data-level="{{ r.level }}" data-who="{{ r.who_ru or '' }}" data-words="{{ r.words }}" data-lock="{{ r.lock or '' }}" data-lesson="{{ url_for('student.lesson_page', lesson_id=r.lesson) if r.lesson else '' }}" data-cost-b="{{ r.next_cost[0] if r.next_cost else '' }}" data-cost-c="{{ r.next_cost[1] if r.next_cost else '' }}"{% endset %}
       {% set tag = 'button type="button"' if selectable else 'div' %}
-      {% if r.state == 'built' %}
+      {% if r.state == 'built' and visit_fid %}
+      <a class="cs-room is-built" href="{{ url_for('friends.visit_room', fid=visit_fid, room=r.key) }}" aria-label="{{ r.name }}, уровень {{ r.level }}">
+        <span class="cs-art">{{ room_svg(r.key, r.level) }}</span>
+        {% if r.key == 'bedroom' %}<span class="cs-who cs-chick" data-outfit='{{ (outfit or {}) | tojson }}'></span>{% elif r.who %}<span class="cs-who">{{ animal(r.who, 40) }}</span>{% endif %}
+        <span class="cs-label">{{ r.name }} {{ stars(r.level) }}</span>
+      </a>
+      {% elif r.state == 'built' %}
       <{{ tag|safe }} class="cs-room is-built{{ ' is-sel' if r.key == selected }}" {{ data }} aria-label="{{ r.name }}, уровень {{ r.level }}">
         <span class="cs-art">{{ room_svg(r.key, r.level) }}</span>
         {% if r.key == 'bedroom' %}<span class="cs-who cs-chick" data-outfit='{{ (outfit or {}) | tojson }}'></span>{% elif r.who %}<span class="cs-who">{{ animal(r.who, 40) }}</span>{% endif %}
@@ -46,4 +52,31 @@
     <button class="btn cs-go cs-go-build cs-task-btn" type="submit">+{{ t.coins }} {{ coin(16) }}</button></form>
   {% else %}<a class="btn cs-go cs-go-lesson cs-task-btn" href="{{ t.url }}">Сделать</a>{% endif %}
 </div>
+{% endmacro %}
+
+{# Комната: рисунок с метками слов, подсказка, «Find the…!», подписи и список слов. find_url пустой — игра без награды. #}
+{% macro room_main(key, room, art, pins, words, who_x, outfit, find_url='') %}
+    <div class="cs-big" id="cs-scene" data-room="{{ key }}" data-find-url="{{ find_url }}">
+      <span class="cs-art">{{ art }}</span>
+      {% if key == 'bedroom' %}<span class="cs-who cs-chick" style="left: {{ who_x }}%" data-outfit='{{ (outfit or {}) | tojson }}'></span>{% elif room.who %}<span class="cs-who" style="left: {{ who_x }}%">{{ animal(room.who, 92) }}</span>{% endif %}
+      {% for p in pins %}<button type="button" class="cs-pin{{ ' is-new' if p.new }}" style="left: {{ p.x }}%; top: {{ p.y }}%" data-en="{{ p.en }}" data-ru="{{ p.ru }}" aria-label="{{ p.en }}"><span class="cs-pin-label" lang="en">{{ p.en }}</span></button>{% endfor %}
+    </div>
+    <div class="cs-tip" id="cs-tip" hidden>
+      <button type="button" class="cs-tip-say" id="cs-tip-say" aria-label="Послушать"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></button>
+      <span><b lang="en" id="cs-tip-en"></b><span id="cs-tip-ru"></span></span>
+    </div>
+    <div class="cs-find" id="cs-find">
+      <svg class="icon cs-find-chick" aria-hidden="true"><use href="#i-chick"/></svg>
+      <span class="cs-find-text"><b id="cs-find-title">Find the…!</b><span id="cs-find-info">Чик-чик скажет слово по-английски — найди предмет на картинке</span></span>
+      <button type="button" class="cs-tip-say" id="cs-find-say" aria-label="Послушать ещё раз" hidden><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></button>
+      <button type="button" class="btn cs-go" id="cs-find-go">Играть</button>
+    </div>
+    <label class="cs-labels"><input type="checkbox" id="cs-labels"> Показать подписи на картинке</label>
+    <div class="cs-words">
+      <h2>Слова этой комнаты <span class="pill pill-soft">{{ words|length }}</span></h2>
+      <p class="hint">Нажми на слово — услышишь, как оно звучит.</p>
+      <div class="cs-word-list">
+        {% for w in words %}<button type="button" class="cs-word say-btn" data-say="{{ w.en }}">{% if w.pic %}<span class="cs-word-pic" aria-hidden="true">{{ w.pic }}</span>{% endif %}<b lang="en">{{ w.en }}</b><small>{{ w.ru }}</small></button>{% endfor %}
+      </div>
+    </div>
 {% endmacro %}
