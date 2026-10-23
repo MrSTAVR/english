@@ -107,7 +107,7 @@ div.cs-room { cursor: default; }
   .cs-room.is-locked b, .cs-room.is-build b { font-size: .85rem; }
   .cs-why { font-size: .7rem; }
   .cs-big .cs-who { width: 56px; height: 74px; }
-  .cs-pin-label { font-size: .75rem; padding: 1px 6px; bottom: 26px; }
+  .cs-pin-label { font-size: .75rem; padding: 1px 6px; bottom: 30px; }
   .cs-find-chick { width: 38px; height: 38px; }
   .cs-find .cs-go { padding: 0 14px; }
   .cs-big .cs-who svg { width: 56px; height: 74px; }
@@ -115,14 +115,18 @@ div.cs-room { cursor: default; }
 }
 
 /* метки слов на рисунке комнаты и «Find the…!» */
-.cs-pin { position: absolute; width: 38px; height: 38px; margin: -19px 0 0 -19px; padding: 0; border: 0; background: none; cursor: pointer; z-index: 2;
+.cs-pin { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; padding: 0; border: 0; background: none; cursor: pointer; z-index: 2;
   -webkit-tap-highlight-color: transparent; }
 .cs-pin::before { content: ""; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
   background: var(--primary); border: 3px solid #FFFFFF; box-shadow: 0 2px 0 rgba(30, 42, 69, .3); box-sizing: content-box; }
-.cs-pin-label { position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%); white-space: nowrap; padding: 2px 8px; border-radius: 999px;
+.cs-pin-label { position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); white-space: nowrap; padding: 2px 8px; border-radius: 999px;
   background: #FFFFFF; color: #1E2A45; font-weight: 900; font-size: .85rem; box-shadow: 0 2px 0 rgba(30, 42, 69, .2); display: none; pointer-events: none; }
 .cs-big.show-labels .cs-pin-label, .cs-pin.is-tip .cs-pin-label, .cs-pin.is-ok .cs-pin-label { display: block; }
 .cs-pin.is-tip { z-index: 3; }
+/* точки на предметах не видны: предмет находят по рисунку; точка — только у выбранного, найденного,
+   ошибочного, нового и когда включены подписи */
+.cs-pin::before { opacity: 0; transition: opacity .15s; }
+.cs-big.show-labels .cs-pin::before, .cs-pin.is-tip::before, .cs-pin.is-ok::before, .cs-pin.is-no::before { opacity: 1; }
 .cs-pin.is-tip::before { background: var(--yellow); }
 .cs-big.is-finding .cs-pin-label { display: none; }
 .cs-big.is-finding .cs-pin.is-ok .cs-pin-label { display: block; }

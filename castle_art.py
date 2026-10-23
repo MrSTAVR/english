@@ -128,9 +128,18 @@ ART = {
         ("clock", '<circle cx="264" cy="40" r="16" fill="#FFFFFF" stroke="#1E2A45" stroke-width="3"></circle><path d="M264 30v10l7 5" stroke="#1E2A45" stroke-width="3" fill="none"></path>'),
         ("desk", ''.join(f'<rect x="{x}" y="112" width="70" height="8" rx="2" fill="#C9A27A"></rect><rect x="{x + 6}" y="120" width="6" height="16" fill="#8A6B4A"></rect><rect x="{x + 58}" y="120" width="6" height="16" fill="#8A6B4A"></rect>'
                          for x in (24, 206))),
-        ("book", '<rect x="44" y="100" width="22" height="12" rx="2" fill="#2563C9"></rect>'),
-        ("notebook", '<rect x="226" y="100" width="22" height="12" rx="2" fill="#2563C9"></rect>'),
-        ("computer", '<rect x="120" y="96" width="60" height="30" rx="4" fill="#1E2A45"></rect><rect x="124" y="100" width="52" height="22" rx="2" fill="#7FC4F5"></rect><rect x="140" y="126" width="20" height="8" fill="#5E6478"></rect>')],
+        ("book", '<rect x="46" y="90" width="17" height="22" rx="2" fill="#E8618C"></rect><rect x="46" y="90" width="4" height="22" rx="1" fill="#C94A72"></rect>'
+                 '<rect x="52" y="95" width="8" height="3" rx="1" fill="#FFC83D"></rect><rect x="61" y="91" width="2" height="20" fill="#FFFFFF"></rect>'),
+        ("notebook", '<rect x="228" y="89" width="19" height="23" rx="2" fill="#FFFFFF" stroke="#9AA6BD" stroke-width="1.5"></rect>'
+                     + ''.join(f'<circle cx="229" cy="{y}" r="1.6" fill="#5E6478"></circle>' for y in range(92, 112, 4))
+                     + ''.join(f'<path d="M233 {y}h11" stroke="#7FC4F5" stroke-width="1.5"></path>' for y in (96, 100, 104, 108))),
+        ("computer", '<rect x="112" y="118" width="76" height="5" rx="2" fill="#C9A27A"></rect><rect x="118" y="123" width="5" height="12" fill="#8A6B4A"></rect><rect x="177" y="123" width="5" height="12" fill="#8A6B4A"></rect>'
+                     '<rect x="124" y="82" width="52" height="32" rx="3" fill="#1E2A45"></rect><rect x="128" y="86" width="44" height="24" rx="1.5" fill="#7FC4F5"></rect>'
+                     '<rect x="132" y="90" width="18" height="12" rx="1" fill="#FFFFFF"></rect><path d="M132 93h18" stroke="#2563C9" stroke-width="2.5"></path>'
+                     '<rect x="154" y="92" width="14" height="4" rx="1" fill="#FFC83D"></rect><rect x="154" y="99" width="10" height="4" rx="1" fill="#1E9E5A"></rect>'
+                     '<path d="M160 101l0 7 2-2 2 3 1.5-1-2-3h3z" fill="#1E2A45" stroke="#FFFFFF" stroke-width=".8"></path>'
+                     '<rect x="147" y="114" width="6" height="4" fill="#5E6478"></rect>'
+                     '<rect x="128" y="114.5" width="38" height="3.5" rx="1" fill="#9AA6BD"></rect><ellipse cx="173" cy="116.5" rx="3.5" ry="2" fill="#9AA6BD"></ellipse>')],
     "living": lambda: [
         ("tv", '<rect x="110" y="26" width="64" height="44" rx="4" fill="#1E2A45"></rect><rect x="114" y="30" width="56" height="36" rx="2" fill="#2563C9"></rect><rect x="138" y="70" width="8" height="10" fill="#5E6478"></rect>'),
         ("sofa", '<rect x="20" y="88" width="120" height="46" rx="12" fill="#E8618C"></rect><rect x="12" y="98" width="20" height="36" rx="8" fill="#C94A72"></rect><rect x="128" y="98" width="20" height="36" rx="8" fill="#C94A72"></rect>'
@@ -176,7 +185,7 @@ POS = {
     "library": {"book": (50, 70, 0), "shelf": (250, 100, 0), "map": (150, 40, 24), "letter": (190, 40, 18, "✉️"), "pencil": (110, 60, 14),
                 "lamp": (110, 24, 16), "armchair": (180, 120, 26), "plant": (30, 160, 22),
                 "globe": (150, 92, 0), "clock": (194, 76, 18), "candle": (50, 12, 14), "magazine": (250, 162, 18), "ladder": (230, 146, 26)},
-    "classroom": {"clock": (264, 40, 0), "desk": (59, 124, 0), "book": (55, 104, 0), "notebook": (237, 104, 0), "computer": (150, 110, 0),
+    "classroom": {"clock": (264, 40, 0), "desk": (59, 124, 0), "book": (55, 101, 0), "notebook": (237, 100, 0), "computer": (150, 98, 0),
                   "map": (36, 46, 22), "pencil": (200, 96, 16), "ruler": (264, 76, 18), "rubber": (100, 96, 14),
                   "bag": (106, 152, 20), "globe": (244, 154, 18), "chair": (40, 156, 22), "glue": (142, 158, 16)},
     "living": {"tv": (142, 48, 0), "sofa": (80, 106, 0), "vase": (248, 118, 0), "plant": (248, 72, 0), "rug": (150, 164, 0),

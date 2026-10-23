@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_castle.html" import stars, task_row, room_main with context %}
 {% block title %}{{ room.name }} — Замок Чик-чика{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=5">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=6">{% endblock %}
 {% block content %}
 <div class="cs-head">
   <a class="cs-back" href="{{ url_for('castle.castle_page') }}" aria-label="Назад в замок">←</a>
