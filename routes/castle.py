@@ -117,12 +117,18 @@ def room_page(room):
     r = castle.ROOMS[room]
     nxt = castle.COST.get(level + 1)
     art, pins = castle.scene(room, level)
+    up = request.args.get("up") == "1"
+    if up:   # только что построили или улучшили: новые предметы мигают
+        old = {w["en"] for w in castle.room_words(room, level - 1)} if level > 1 else set()
+        for p in pins:
+            p["new"] = p["en"] not in old
     mascot = build_mascot_ctx()
     mascot["page"] = "castle"
     return render_template("castle_room.html", mascot=mascot, key=room, room=r, level=level, words=castle.room_words(room, level),
                            next_words=[w for w in castle.room_words(room, level + 1) if w not in castle.room_words(room, level)] if nxt else [],
                            next_cost=nxt, bricks=castle.bricks(db, student["id"]), coins=g["coins"], who_ru=castle.RESIDENT_RU.get(r["who"]),
                            outfit=outfit(db, student["id"]), art=Markup(art), pins=pins,
+                           up=up, new_words=[p["en"] for p in pins if p.get("new")],
                            task=next((t for t in _tasks(db, student["id"]) if t["room"] == room), None),
                            income_per_day=castle.INCOME[level] if r["who"] else 0,
                            who_x=round(castle_art.RESIDENT_X.get(room, 200) / 3, 2), **art_helpers())
@@ -157,5 +163,5 @@ def build(room):
         new = update_achievements(db, compute_stats(db, student["id"]), student["id"])
         if new:
             session["new_achievements"] = (session.get("new_achievements") or []) + [a["key"] for a in new]
-        return redirect(url_for("castle.room_page", room=room))
+        return redirect(url_for("castle.room_page", room=room, up=1))
     return redirect(url_for("castle.castle_page"))

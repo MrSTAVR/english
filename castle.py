@@ -60,6 +60,14 @@ def earn(db, student_id, reason, ref, amount):
     return cur.rowcount > 0
 
 
+def set_bricks(db, student_id, n):
+    """Администратор задаёт число кирпичиков: в журнал пишется поправка на разницу."""
+    diff = n - bricks(db, student_id)
+    if diff:
+        earn(db, student_id, "admin", datetime.now().isoformat(timespec="microseconds"), diff)
+    return diff
+
+
 def lesson_bricks(lesson):
     return BRICKS_CASTLE_LESSON if lesson.get("castle") else BRICKS_LESSON
 
@@ -161,11 +169,11 @@ def room_words(key, level):
 
 def scene(key, level):
     """Рисунок комнаты с предметами текущего уровня и метки слов (x, y — проценты от рисунка)."""
-    from castle_art import POS, items_svg, room_svg
+    from castle_art import POS, items_svg, level_deco, level_floor, room_svg
     words = room_words(key, max(level, 1))
     pins = [{"en": w["en"], "ru": w["ru"], "x": round(POS[key][w["en"].lower()][0] / 3, 2),
              "y": round(POS[key][w["en"].lower()][1] / 1.8, 2)} for w in words if w["en"].lower() in POS[key]]
-    return room_svg(key, extra=items_svg(key, words)), pins
+    return room_svg(key, extra=level_deco(level) + items_svg(key, words), under=level_floor(key, level)), pins
 
 
 BRICKS_FIND = 1   # «Find the…!» в комнате — раз в день за каждую комнату
