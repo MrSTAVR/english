@@ -45,7 +45,7 @@ def test_student_tabbar(make_student):
     c = make_student()
     body = c.get("/student").get_data(as_text=True)
     assert 'class="has-tabbar"' in body and 'class="tabbar"' in body
-    for label in ("Главная", "Карта", "Сад", "Домик", "Награды"):
+    for label in ("Главная", "Карта", "Сад", "Замок", "Награды"):
         assert f"<span>{label}</span>" in body
     assert 'class="tab on" aria-current="page"' in body
     garden = c.get("/student/garden").get_data(as_text=True)
@@ -61,9 +61,9 @@ def test_lesson_test_has_progress_bar(make_student):
     assert html.count("unansweredQuestions()") >= 3          # и полоска, и проверка перед отправкой
 
 
-def test_house_has_tabs(make_student):
-    html = make_student().get("/student/house").get_data(as_text=True)
-    assert 'id="hs-tabs"' in html and 'data-slot="wall"' in html and 'data-slot="floor"' in html
+def test_castle_tab_active(make_student):
+    html = make_student().get("/student/castle").get_data(as_text=True)
+    assert 'href="/student/castle" class="tab on"' in html and "cs-castle" in html
 
 
 

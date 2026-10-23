@@ -17,8 +17,9 @@ from routes.season import bp as season_bp
 from routes.house import bp as house_bp
 from routes.speech import bp as speech_bp
 from routes.friends import bp as friends_bp
+from routes.castle import bp as castle_bp
 
 
 def register_blueprints(app):
-    for bp in (auth_bp, student_bp, garden_bp, parent_bp, system_bp, pwa_bp, speak_bp, review_bp, games_bp, wardrobe_bp, stories_bp, writing_bp, season_bp, house_bp, speech_bp, friends_bp):
+    for bp in (auth_bp, student_bp, garden_bp, parent_bp, system_bp, pwa_bp, speak_bp, review_bp, games_bp, wardrobe_bp, stories_bp, writing_bp, season_bp, house_bp, speech_bp, friends_bp, castle_bp):
         app.register_blueprint(bp)

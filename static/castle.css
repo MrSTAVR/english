@@ -1,0 +1,130 @@
+/* ============================================================
+   Замок Чик-чика (макет «Замок Чик-чика» в дизайн-ориентире): разрез замка, комнаты, карточка выбранной комнаты.
+   ============================================================ */
+.cs-head { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; }
+.cs-head h1 { margin: 0; flex: 1; font-size: 1.9rem; }
+.cs-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 999px; background: var(--surface); border: 2px solid var(--line); font-weight: 900; }
+.cs-back { width: 44px; height: 44px; border-radius: 14px; background: var(--surface); border: 2px solid var(--line); display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; font-weight: 900; text-decoration: none; color: var(--ink); box-sizing: border-box; flex: none; }
+.cs-room-title { flex: 1; min-width: 0; }
+.cs-room-title h1 { margin: 0; font-size: 1.6rem; line-height: 1.1; }
+.cs-room-title > span { display: flex; align-items: center; gap: 4px; font-weight: 800; color: var(--muted); }
+.cs-stars { display: inline-flex; gap: 1px; vertical-align: middle; }
+.cs-stars svg { width: 13px; height: 13px; }
+.cs-moved { display: flex; gap: 10px; align-items: center; margin: 0 0 14px; padding: 12px 14px; border-radius: 18px; background: var(--ok-bg); color: var(--ok-ink); font-weight: 700; }
+.cs-moved .ico { width: 28px; height: 28px; flex: none; }
+.cs-moved b { display: block; }
+
+.cs-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.cs-side { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 96px; }
+
+/* замок в разрезе */
+.cs-castle { position: relative; margin-top: 34px; padding: 8px 8px 0; border-radius: 18px 18px 6px 6px; background: #E3CFA4; box-shadow: 0 5px 0 #C9A27A;
+  display: flex; flex-direction: column; gap: 8px; }
+.cs-tower { position: absolute; top: -36px; width: 50px; height: 44px; }
+.cs-tower svg { width: 100%; height: 100%; }
+.cs-tower-l { left: 8px; } .cs-tower-r { right: 8px; }
+.cs-floor { display: flex; gap: 8px; }
+.cs-room { position: relative; flex: 1; min-width: 0; height: 118px; border-radius: 12px; overflow: hidden; border: 0; padding: 0; font: inherit; color: var(--ink);
+  text-align: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+div.cs-room { cursor: default; }
+.cs-room.is-sel { outline: 3px solid var(--primary); outline-offset: 2px; }
+.cs-art, .cs-art svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.cs-who { position: absolute; right: 16%; bottom: 4px; width: 40px; height: 52px; }
+.cs-who svg { position: absolute; left: 0; bottom: 0; }
+.cs-chick { width: 48px; height: 48px; right: 24%; }
+.cs-chick svg { width: 100%; height: 100%; }
+.cs-label { position: absolute; left: 6px; top: 6px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px;
+  background: rgba(255, 255, 255, .92); box-shadow: 0 2px 0 rgba(30, 42, 69, .15); font-weight: 900; font-size: .85rem; color: #1E2A45; }
+.cs-room.is-build { background: var(--sky); border: 3px dashed var(--primary); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+.cs-plus { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #FFFFFF; display: flex; align-items: center; justify-content: center; }
+.cs-plus .ico { color: #FFFFFF; width: 20px; height: 20px; }
+.cs-price { display: inline-flex; align-items: center; gap: 3px; font-weight: 900; font-size: .85rem; }
+.cs-room.is-locked { background: #EDE3CF; border: 2px solid var(--line-deep); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; padding: 4px 6px; color: #6E6553; }
+.cs-room.is-locked .ico { width: 22px; height: 22px; color: #8A7A5C; }
+.cs-room.is-locked b { color: var(--muted); }
+.cs-why { font-size: .78rem; font-weight: 800; line-height: 1.2; }
+.cs-gate { display: flex; justify-content: center; margin-top: -2px; }
+.cs-gate svg { display: block; }
+
+/* карточка выбранной комнаты */
+.cs-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border: 2px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); }
+.cs-card-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cs-card-text b { font-size: 1.1rem; }
+.cs-card-text span { color: var(--muted); font-weight: 700; font-size: .92rem; }
+.cs-card [hidden], .cs-build-form[hidden] { display: none; }
+.cs-build-form { margin: 0; }
+.cs-go { min-height: 46px; padding: 0 18px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; flex: none; border: 0;
+  background: var(--primary); color: #FFFFFF; box-shadow: 0 4px 0 var(--primary-deep); text-decoration: none; }
+.cs-go:hover { color: #FFFFFF; }
+.cs-go-build { background: var(--yellow); color: var(--ink); box-shadow: 0 4px 0 var(--yellow-deep); }
+.cs-go-build:hover { background: #FFD25E; color: var(--ink); }
+.cs-go-lesson { background: var(--sky); color: var(--primary-dark); box-shadow: none; }
+.cs-go-lesson:hover { color: var(--primary-dark); }
+
+.cs-earn { padding: 12px 16px 6px; background: var(--surface); border: 2px solid var(--line); border-radius: 22px; }
+.cs-earn h2 { margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 6px; }
+.cs-earn .hint { margin: 2px 0 6px; }
+.cs-earn-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 2px solid var(--line); font-weight: 800; }
+.cs-earn-row > span:nth-child(2) { flex: 1; }
+.cs-earn-row b { display: inline-flex; align-items: center; gap: 3px; }
+.cs-earn-ico { width: 34px; height: 34px; border-radius: 11px; background: var(--sky); color: var(--primary-dark); display: flex; align-items: center; justify-content: center; flex: none; }
+
+/* комната */
+.cs-big { position: relative; height: 300px; border-radius: 24px; overflow: hidden; border: 2px solid var(--line); box-shadow: var(--shadow); }
+.cs-big .cs-who { width: 80px; height: 104px; right: 22%; bottom: 8px; }
+.cs-big .cs-chick { width: 100px; height: 100px; }
+.cs-words { margin-top: 16px; }
+.cs-words h2 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.25rem; }
+.cs-word-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.cs-word { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 16px; background: var(--surface); border: 2px solid var(--line);
+  box-shadow: 0 3px 0 var(--shade); font: inherit; color: var(--ink); cursor: pointer; text-align: left; }
+.cs-word-pic { width: 34px; height: 34px; border-radius: 10px; background: var(--sand); display: flex; align-items: center; justify-content: center; font-size: 20px; line-height: 1; }
+.cs-word b { font-size: 1.05rem; }
+.cs-word small { color: var(--muted); font-weight: 700; }
+.cs-resident { align-items: center; }
+.cs-resident > span:last-child { display: flex; flex-direction: column; }
+.cs-upgrade { padding: 14px 16px; border-radius: 22px; background: var(--sky); display: flex; flex-direction: column; gap: 8px; }
+.cs-upgrade p { margin: 0; color: var(--primary-dark); font-weight: 700; }
+.cs-up-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cs-up-head span { display: inline-flex; align-items: center; gap: 4px; font-weight: 900; }
+.cs-upgrade .cs-go-build { width: 100%; }
+
+@media (max-width: 1023px) {
+  .cs-layout { grid-template-columns: minmax(0, 1fr); }
+  .cs-side { position: static; }
+}
+@media (max-width: 700px) {
+  .cs-head h1 { font-size: 1.45rem; }
+  .cs-chip { padding: 4px 9px; }
+  .cs-room { height: 88px; }
+  .cs-who { width: 30px; height: 40px; }
+  .cs-who svg { width: 30px; height: 40px; }
+  .cs-chick { width: 38px; height: 38px; }
+  .cs-label { font-size: .74rem; padding: 1px 6px; }
+  .cs-stars svg { width: 11px; height: 11px; }
+  .cs-room.is-locked b, .cs-room.is-build b { font-size: .85rem; }
+  .cs-why { font-size: .7rem; }
+  .cs-big { height: 230px; }
+  .cs-big .cs-who { width: 64px; height: 84px; }
+  .cs-big .cs-who svg { width: 64px; height: 84px; }
+  .cs-big .cs-chick { width: 78px; height: 78px; }
+}
+
+/* тёмная тема: рисунки остаются светлыми, рамки и карточки — из темы */
+html[data-theme="dark"] .cs-castle { background: #3A3150; box-shadow: 0 5px 0 #241F3D; }
+html[data-theme="dark"] .cs-room.is-locked { background: #2A2445; border-color: var(--line); color: var(--muted); }
+html[data-theme="dark"] .cs-room.is-build { background: #1E2A4D; border-color: #8FB4FF; }
+html[data-theme="dark"] .cs-upgrade { background: #1E2A4D; }
+html[data-theme="dark"] .cs-upgrade p { color: #8FB4FF; }
+html[data-theme="dark"] .cs-go-lesson, html[data-theme="dark"] .cs-earn-ico { background: #1E2A4D; color: #8FB4FF; }
+html[data-theme="dark"] .cs-card, html[data-theme="dark"] .cs-big, html[data-theme="dark"] .cs-word { box-shadow: 0 4px 0 #0E0B1F; }
+@media (max-width: 480px) {
+  .cs-head { flex-wrap: wrap; }
+  .cs-head > h1 { flex-basis: 100%; }
+  .cs-room-title { flex: 1 1 calc(100% - 140px); }
+  .cs-room-title > span { white-space: nowrap; }
+  .cs-back + .cs-room-title { flex-basis: calc(100% - 60px); }
+  .cs-back ~ .cs-chip:first-of-type { margin-left: 54px; }
+}

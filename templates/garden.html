@@ -3,7 +3,7 @@
 {% block content %}
 
 <h1>Мой сад</h1>
-<p><a class="btn btn-secondary btn-small" href="{{ url_for('wardrobe.wardrobe_page') }}">Гардероб Чик-чика</a> <a class="btn btn-secondary btn-small" href="{{ url_for('house.house_page') }}">Домик Чик-чика</a></p>
+<p><a class="btn btn-secondary btn-small" href="{{ url_for('wardrobe.wardrobe_page') }}">Гардероб Чик-чика</a> <a class="btn btn-secondary btn-small" href="{{ url_for('castle.castle_page') }}">Замок Чик-чика</a></p>
 <p class="welcome-sub">Каждый день занятий приносит в сад что-то новое, а монетками можно украсить ВЕСЬ сад! (серия — до {{ streak_cap }} дней)</p>
 
 {% if flash_msg %}<div class="flash flash-success garden-flash">{{ flash_msg }}</div>{% endif %}

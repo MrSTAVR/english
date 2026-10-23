@@ -25,6 +25,13 @@
 </section>
 {% endif %}
 
+{% if bricks_earned %}
+<section class="card coins-card">
+  <h2><svg class="ico" aria-hidden="true"><use href="#o-castle"/></svg> Кирпичики для замка!</h2>
+  <p>Получено <b>+{{ bricks_earned }}</b> кирпичиков. <a href="{{ url_for('castle.castle_page') }}">Построй новую комнату</a> в замке Чик-чика!</p>
+</section>
+{% endif %}
+
 {% if new_achievements %}
 <section class="card new-ach">
   <h2>Новые награды!</h2>

@@ -7,6 +7,7 @@ import sqlite3
 import tempfile
 
 import backup_db
+import castle
 import database
 import friends
 import goals
@@ -93,6 +94,7 @@ def delete_student(sid):
     for table in ("wardrobe_items", "wardrobe_wear", "story_done", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal", "goal_settings", "vacations", "activity", "weekly_done", "boss_wins", "season_log", "advent", "birthday_gifts", "house_items", "house_place", "lesson_progress"):
         db.execute(f"DELETE FROM {table} WHERE student_id=?", (sid,))
     friends.forget_student(db, sid)
+    castle.forget_student(db, sid)
     db.execute("DELETE FROM students WHERE id=?", (sid,))
     db.commit()
     flash(f"Аккаунт {student['display_name']} удалён вместе с его прогрессом.", "success")
