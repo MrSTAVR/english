@@ -5,6 +5,7 @@ import speech
 import speech_schedule as sched
 from datetime import timedelta
 from database import get_db
+from csrf import new_seed
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
 from security import hash_password, verify_password
 
@@ -33,6 +34,7 @@ def _login(role):
         return redirect(url_for(page))
     ratelimit.clear(db, [(role, username)])
     session.clear()
+    new_seed()
     session.permanent = True
     session["role"] = role
     session[key] = row["id"]

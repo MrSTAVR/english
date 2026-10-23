@@ -6,6 +6,7 @@ import time
 import config
 import ratelimit
 from database import get_db
+from csrf import new_seed
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from security import check_parent_password, verify_password
 
@@ -42,6 +43,7 @@ def login_student():
         return redirect(url_for("auth.index"))
     ratelimit.clear(db, [("student", username.lower())])
     session.clear()                      # новая сессия при входе
+    new_seed()
     session.permanent = True             # ребёнок не вводит пароль при каждом запуске
     session["role"] = "student"
     session["student_id"] = student["id"]
@@ -71,6 +73,7 @@ def login_parent():
         return redirect(url_for("auth.admin_login"))
     ratelimit.clear(db, [("parent", "*")])
     session.clear()
+    new_seed()
     session.permanent = True
     session["role"] = "parent"
     session["parent_until"] = time.time() + config.PARENT_SESSION_HOURS * 3600
@@ -81,5 +84,6 @@ def login_parent():
 def logout():
     role = session.get("role")
     session.clear()
+    new_seed()
     back = {"logoped": "speech.logoped_login", "family": "speech.family_login"}.get(role, "auth.index")
     return redirect(url_for(back))
