@@ -140,11 +140,27 @@
       }).catch(function () { /* офлайн — сохраним в следующий раз */ });
     }
     /* ответы в тренировке и тесте: выбранные варианты (по name) и введённые слова (по порядку) */
+    /* ответы на шаге: выбранные варианты (по name), введённые слова, проверенные задания,
+       перетаскивания («Соедини пары», «Разложи по корзинам»), собранные слова и предложения */
+    function chipsText(el) { return el ? [].map.call(el.querySelectorAll('.word-chip'), function (c) { return c.textContent; }) : []; }
     function answers(stepId) {
-      var box = $(stepId), out = { radio: {}, text: [] };
+      var box = $(stepId), out = { radio: {}, text: [], checked: [], match: [], sort: [], lines: {} };
       if (!box) return out;
       box.querySelectorAll('input[type=radio]:checked').forEach(function (r) { if (r.name) out.radio[r.name] = r.value; });
       box.querySelectorAll('input.typein').forEach(function (t) { out.text.push(t.value); });
+      box.querySelectorAll('.exercise').forEach(function (ex, k) {
+        var res = ex.querySelector('.ex-result'), exp = ex.querySelector('.explain');
+        if (res && /\b(ok|bad)\b/.test(res.className)) {
+          out.checked.push({ k: k, t: res.textContent, ok: /\bok\b/.test(res.className), exp: !!exp && !exp.classList.contains('hidden') });
+        }
+      });
+      box.querySelectorAll('.dnd-match').forEach(function (root) { out.match.push(root._pairs || {}); });
+      box.querySelectorAll('.dnd-sort').forEach(function (root) {
+        var m = {};
+        root.querySelectorAll('.bin').forEach(function (bin) { bin.querySelectorAll('.sort-word').forEach(function (w) { m[w.dataset.word] = bin.dataset.cat; }); });
+        out.sort.push(m);
+      });
+      box.querySelectorAll('.answer-line').forEach(function (line, k) { var t = chipsText(line); if (t.length) out.lines[k] = t; });
       return out;
     }
     function putAnswers(stepId, a) {
@@ -156,11 +172,52 @@
       });
       var inputs = box.querySelectorAll('input.typein');
       (a.text || []).forEach(function (v, k) { if (inputs[k] && typeof v === 'string') inputs[k].value = v; });
+      var roots = box.querySelectorAll('.dnd-match');
+      (a.match || []).forEach(function (pairs, k) {
+        var root = roots[k];
+        if (!root || !window.placePair) return;
+        Object.keys(pairs || {}).forEach(function (l) {
+          var tile = root.querySelector('.match-tile[data-left="' + CSS.escape(l) + '"]');
+          var slot = root.querySelector('.match-slot[data-right="' + CSS.escape(String(pairs[l])) + '"]');
+          if (tile && slot) window.placePair(root, slot, tile);
+        });
+      });
+      var sorts = box.querySelectorAll('.dnd-sort');
+      (a.sort || []).forEach(function (m, k) {
+        var root = sorts[k];
+        if (!root) return;
+        Object.keys(m || {}).forEach(function (word) {
+          var w = root.querySelector('.sort-tray .sort-word[data-word="' + CSS.escape(word) + '"]');
+          var bin = root.querySelector('.bin[data-cat="' + CSS.escape(String(m[word])) + '"] .bin-body');
+          if (w && bin) bin.appendChild(w);
+        });
+        if (window.fillHidden) window.fillHidden(root);
+      });
+      var lines = box.querySelectorAll('.answer-line');
+      Object.keys(a.lines || {}).forEach(function (k) {
+        var line = lines[k];
+        if (!line) return;
+        var bank = line.parentNode.querySelector('.word-bank');
+        (a.lines[k] || []).forEach(function (t) {
+          var chip = bank && [].filter.call(bank.querySelectorAll('.word-chip'), function (c) { return c.textContent === t && c.style.display !== 'none'; })[0];
+          if (chip) chip.click();                       // тест: pickWord; тренировка: буква переезжает в строку
+        });
+      });
+      var exs = box.querySelectorAll('.exercise');
+      (a.checked || []).forEach(function (c) {
+        var ex = exs[c.k];
+        if (!ex) return;
+        var res = ex.querySelector('.ex-result'), exp = ex.querySelector('.explain');
+        if (res) { res.textContent = c.t; res.className = 'ex-result ' + (c.ok ? 'ok' : 'bad'); }
+        if (exp && c.exp) exp.classList.remove('hidden');
+        if (c.ok) ex.classList.add('done');
+      });
     }
     function state() {
       var start = typeof window.START_TS === 'number' ? window.START_TS : null;
       return {
         step: curStep,
+        scroll: Math.round(window.scrollY || 0),
         words: deck ? deck.get() : null,
         ex: answers('step-exercises'),
         test: answers('step-test'),
@@ -172,8 +229,10 @@
 
     ['step-exercises', 'step-test'].forEach(function (id) {
       var box = $(id);
-      if (box) { box.addEventListener('change', save); box.addEventListener('input', save); }
+      if (box) ['change', 'input', 'click', 'pointerup'].forEach(function (ev) { box.addEventListener(ev, save); });
     });
+    var scrollT = null;                                  // место на странице — тоже часть «где остановились»
+    window.addEventListener('scroll', function () { clearTimeout(scrollT); scrollT = setTimeout(save, 400); }, { passive: true });
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') { clearTimeout(timer); saveNow(); } });
     var form = $('test-form');
     if (form) form.addEventListener('submit', function () { ready = false; clearTimeout(timer); });   // после теста — сервер сам сотрёт
@@ -186,12 +245,14 @@
 
     /* восстанавливаем, когда скрипт страницы (goStep, START_TS) уже загружен */
     document.addEventListener('DOMContentLoaded', function () {
-      var useful = saved && (saved.step !== 'step-theory' || (saved.words && (saved.words.seen || []).length));
+      var useful = saved && (saved.step !== 'step-theory' || (saved.scroll | 0) > 200 || (saved.words && (saved.words.seen || []).length));
       if (useful) {
         if (deck && saved.words) deck.set(saved.words);
         putAnswers('step-exercises', saved.ex);
         putAnswers('step-test', saved.test);
         if (saved.step && saved.step !== 'step-theory' && window.goStep) window.goStep(saved.step);
+        var y = saved.scroll | 0;
+        if (y > 0) setTimeout(function () { window.scrollTo({ top: y, behavior: 'auto' }); }, 80);   // goStep сначала поднимает наверх
         var form2 = $('test-form');
         if (form2) form2.dispatchEvent(new Event('change', { bubbles: true }));   // полоска «Отвечено»
         var note = $('ls-resume');
