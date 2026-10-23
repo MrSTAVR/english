@@ -122,7 +122,7 @@ def test_achievement_first_room(make_student):
 def test_delete_student_clears_castle(parent, make_student):
     c = make_student(); sid = sid_of(); c.get("/student/castle"); give(sid, 0, 5)
     parent.post(f"/parent/students/{sid}/delete")
-    for t in ("castle", "castle_rooms", "castle_bricks"):
+    for t in ("castle", "castle_rooms", "castle_bricks", "castle_coins"):
         assert db_scalar(f"SELECT COUNT(*) FROM {t}") == 0, t
 
 
@@ -151,3 +151,77 @@ def test_room_page_pins_and_find(make_student):
     assert r["ok"] and r["bricks"] == castle.BRICKS_FIND
     assert c.post("/api/castle/bedroom/find").get_json()["bricks"] == 0     # раз в день
     assert c.post("/api/castle/kitchen/find").status_code == 404            # комната не построена
+
+
+def _with_kitchen(c, sid, level=1):
+    c.get("/student/castle")
+    cn = conn()
+    cn.execute("INSERT OR REPLACE INTO castle_rooms (student_id, room, level, at) VALUES (?, 'kitchen', ?, '')", (sid, level)); cn.commit()
+    return cn
+
+
+def test_income_needs_study_and_once_a_day(make_student):
+    c = make_student(); sid = sid_of(); cn = _with_kitchen(c, sid, 2)
+    inc = castle.income(cn, sid)
+    assert inc["amount"] == castle.INCOME[2] and not inc["studied"]
+    assert "позанимайся" in c.get("/student/castle").get_data(as_text=True).lower()
+    coins0 = db_scalar("SELECT coins FROM garden WHERE student_id=?", (sid,))
+    c.post("/student/castle/income")
+    assert db_scalar("SELECT coins FROM garden WHERE student_id=?", (sid,)) == coins0      # не занимался — нет дохода
+    import activity
+    activity.log(cn, sid, "game")
+    c.post("/student/castle/income"); c.post("/student/castle/income")
+    assert db_scalar("SELECT coins FROM garden WHERE student_id=?", (sid,)) == coins0 + castle.INCOME[2]
+    assert "уже собрано" in c.get("/student/castle").get_data(as_text=True)
+
+
+def test_no_residents_no_income(make_student):
+    c = make_student(); sid = sid_of(); c.get("/student/castle")
+    assert castle.income(conn(), sid)["amount"] == 0 and castle.tasks(conn(), sid) == []
+    assert not castle.collect_income(conn(), sid)[0]
+
+
+def test_tasks_rotate_and_claim(make_student):
+    from datetime import date, timedelta
+    c = make_student(); sid = sid_of(); cn = _with_kitchen(c, sid)
+    kinds = {castle.tasks(cn, sid, date(2026, 10, 1) + timedelta(days=i))[0]["kind"] for i in range(14)}
+    assert len(kinds) >= 4 and kinds <= set(castle.TASKS)
+    t = castle.tasks(cn, sid)[0]
+    assert t["room"] == "kitchen" and not t["done"]
+    ok, msg = castle.claim_task(cn, sid, "kitchen")
+    assert not ok and "не выполнено" in msg
+    # выполняем поручение того вида, что выпал сегодня
+    if t["kind"] == "find":
+        castle.on_find_done(cn, sid, "kitchen")
+    elif t["kind"] == "words":
+        cn.execute("INSERT INTO daily_goal (student_id, day, words) VALUES (?, ?, 5)", (sid, date.today().isoformat())); cn.commit()
+    else:
+        import activity
+        activity.log(cn, sid, t["kind"])
+    assert castle.tasks(cn, sid)[0]["done"]
+    coins0 = db_scalar("SELECT coins FROM garden WHERE student_id=?", (sid,))
+    c.post("/student/castle/task/kitchen", data={"back": "room"})
+    c.post("/student/castle/task/kitchen")
+    assert db_scalar("SELECT coins FROM garden WHERE student_id=?", (sid,)) == coins0 + castle.TASK_COINS
+    assert castle.tasks(cn, sid)[0]["taken"]
+    assert not castle.claim_task(cn, sid, "gym")[0]                      # у соседа нет поручения
+
+
+def test_find_task_flag(make_student, monkeypatch):
+    c = make_student(); sid = sid_of(); _with_kitchen(c, sid)
+    monkeypatch.setattr(castle, "TASK_ORDER", ["find"])
+    r = c.post("/api/castle/kitchen/find").get_json()
+    assert r["task"]
+    body = c.get("/student/castle/kitchen").get_data(as_text=True)
+    assert 'id="cs-task"' in body and "/student/castle/task/kitchen" in body
+
+
+def test_at_most_three_tasks(make_student):
+    c = make_student(); sid = sid_of(); c.get("/student/castle"); cn = conn()
+    for k in ("kitchen", "living", "gym", "classroom", "library"):
+        cn.execute("INSERT INTO castle_rooms (student_id, room, level, at) VALUES (?, ?, 1, '')", (sid, k))
+    cn.commit()
+    ts = castle.tasks(cn, sid)
+    assert len(ts) == castle.TASKS_PER_DAY and len({t["room"] for t in ts}) == castle.TASKS_PER_DAY
+    assert len({t["kind"] for t in ts}) == castle.TASKS_PER_DAY
+    assert castle.income(cn, sid)["amount"] == 5 * castle.INCOME[1]

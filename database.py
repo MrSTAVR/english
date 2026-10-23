@@ -98,6 +98,15 @@ CREATE TABLE IF NOT EXISTS castle_bricks (             -- кирпичики: н
     at         TEXT NOT NULL,
     UNIQUE (student_id, reason, ref)
 );
+CREATE TABLE IF NOT EXISTS castle_coins (              -- монетки замка: доход за день и поручения соседей, каждое один раз
+    student_id INTEGER NOT NULL,
+    day        TEXT NOT NULL,
+    kind       TEXT NOT NULL,                          -- income / task
+    ref        TEXT NOT NULL DEFAULT '',               -- для task — комната соседа
+    amount     INTEGER NOT NULL,
+    at         TEXT NOT NULL,
+    UNIQUE (student_id, day, kind, ref)
+);
 CREATE TABLE IF NOT EXISTS birthday_gifts (           -- подарок на день рождения: раз в год
     student_id INTEGER NOT NULL,
     year       INTEGER NOT NULL,

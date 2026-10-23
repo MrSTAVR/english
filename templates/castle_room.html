@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% from "_castle.html" import stars %}
+{% from "_castle.html" import stars, task_row with context %}
 {% block title %}{{ room.name }} — Замок Чик-чика{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=2">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=3">{% endblock %}
 {% block content %}
 <div class="cs-head">
   <a class="cs-back" href="{{ url_for('castle.castle_page') }}" aria-label="Назад в замок">←</a>
@@ -38,7 +38,10 @@
   </section>
   <aside class="cs-side">
     {% if room.who %}
-    <div class="cs-card cs-resident">{{ animal_ava(room.who, 48) }}<span><b>Здесь живёт {{ who_ru }}</b><span class="hint">Скоро у соседа будут поручения для тебя.</span></span></div>
+    <div class="cs-earn cs-resident">
+      <div class="cs-resident-head">{{ animal_ava(room.who, 48) }}<span><b>Здесь живёт {{ who_ru }}</b><span>Работает в комнате: +{{ income_per_day }} {{ coin(14) }} в день, если ты занимаешься</span></span></div>
+      {% if task %}{{ task_row(task, 'room') }}{% else %}<p class="hint">Сегодня {{ room.who }} отдыхает — поручений нет.</p>{% endif %}
+    </div>
     {% endif %}
     <div class="cs-upgrade">
       {% if next_cost %}
@@ -55,4 +58,4 @@
   </aside>
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='castle.js') }}?v=2"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='castle.js') }}?v=3"></script>{% endblock %}

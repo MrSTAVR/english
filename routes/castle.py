@@ -5,7 +5,7 @@ import castle
 import castle_art
 from achievements import update_achievements
 from database import get_db
-from flask import Blueprint, abort, flash, jsonify, redirect, render_template, session, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
 from garden import get_garden
 from markupsafe import Markup
 from mascot import build_mascot_ctx
@@ -61,7 +61,40 @@ def castle_page():
     built = [r for fl in view["floors"] for r in fl if r["state"] == "built" and r["key"] != "bedroom"]
     selected = (built[0] if built else view["rooms"]["bedroom"])["key"]
     return render_template("castle.html", mascot=mascot, view=view, moved=moved, selected=selected,
+                           income=castle.income(db, student["id"]), tasks=_tasks(db, student["id"]),
                            outfit=outfit(db, student["id"]), cost=castle.COST, earn_rules=EARN_RULES, **art_helpers())
+
+
+def _tasks(db, sid):
+    out = castle.tasks(db, sid)
+    for t in out:
+        t["url"] = url_for(t["endpoint"]) if t["endpoint"] else url_for("castle.room_page", room=t["room"])
+    return out
+
+
+@bp.route("/student/castle/income", methods=["POST"])
+def collect():
+    ctx, err = _student()
+    if err:
+        return err
+    db, student = ctx
+    _state(db, student)
+    ok, msg = castle.collect_income(db, student["id"])
+    flash(msg, "ok" if ok else "error")
+    return redirect(url_for("castle.castle_page") + "#cs-neighbours")
+
+
+@bp.route("/student/castle/task/<room>", methods=["POST"])
+def claim(room):
+    ctx, err = _student()
+    if err:
+        return err
+    db, student = ctx
+    _state(db, student)
+    ok, msg = castle.claim_task(db, student["id"], room)
+    flash(msg, "ok" if ok else "error")
+    back = request.form.get("back")
+    return redirect(url_for("castle.room_page", room=room) if back == "room" else url_for("castle.castle_page") + "#cs-neighbours")
 
 
 EARN_RULES = [("book", "Пройти урок (первый раз)", castle.BRICKS_LESSON),
@@ -90,6 +123,8 @@ def room_page(room):
                            next_words=[w for w in castle.room_words(room, level + 1) if w not in castle.room_words(room, level)] if nxt else [],
                            next_cost=nxt, bricks=castle.bricks(db, student["id"]), coins=g["coins"], who_ru=castle.RESIDENT_RU.get(r["who"]),
                            outfit=outfit(db, student["id"]), art=Markup(art), pins=pins,
+                           task=next((t for t in _tasks(db, student["id"]) if t["room"] == room), None),
+                           income_per_day=castle.INCOME[level] if r["who"] else 0,
                            who_x=round(castle_art.RESIDENT_X.get(room, 200) / 3, 2), **art_helpers())
 
 
@@ -105,7 +140,8 @@ def find_done(room):
     if not castle.levels(db, student["id"]).get(room):
         abort(404)
     n = castle.on_find_done(db, student["id"], room)
-    return jsonify({"ok": True, "bricks": n, "total": castle.bricks(db, student["id"])})
+    task = any(t["room"] == room and t["kind"] == "find" and not t["taken"] for t in castle.tasks(db, student["id"]))
+    return jsonify({"ok": True, "bricks": n, "total": castle.bricks(db, student["id"]), "task": task})
 
 
 @bp.route("/student/castle/<room>/build", methods=["POST"])

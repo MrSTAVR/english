@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% from "_castle.html" import castle_view with context %}
+{% from "_castle.html" import castle_view, task_row with context %}
 {% block title %}Замок Чик-чика — English Fun{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=2">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=3">{% endblock %}
 {% block content %}
 <div class="cs-head">
   <h1>Замок Чик-чика</h1>
@@ -25,6 +25,23 @@
         <button class="btn cs-go cs-go-build" type="submit">Построить</button>
       </form>
     </div>
+    <div class="cs-earn cs-neighbours" id="cs-neighbours">
+      <h2><svg class="ico" aria-hidden="true"><use href="#o-friends"/></svg> Соседи</h2>
+      {% if income.amount %}
+      <div class="cs-income">
+        <span class="cs-task-text"><b>Доход замка: +{{ income.amount }} {{ coin(16) }} в день</b>
+          <span>{% if income.taken %}Сегодня уже собрано. Завтра — снова!{% elif income.studied %}Соседи поработали — можно собирать!{% else %}Позанимайся сегодня — и соседи принесут монетки{% endif %}</span></span>
+        {% if income.studied and not income.taken %}
+        <form method="post" action="{{ url_for('castle.collect') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn cs-go cs-go-build cs-task-btn" type="submit">Собрать</button></form>
+        {% elif income.taken %}<span class="cs-task-ok"><svg class="ico" aria-hidden="true"><use href="#o-check"/></svg></span>{% endif %}
+      </div>
+      <p class="hint">Поручения на сегодня:</p>
+      {% for t in tasks %}{{ task_row(t) }}{% endfor %}
+      {% else %}
+      <p class="hint">Построй кухню, гостиную или спортзал — туда переедет сосед. Соседи дают поручения и приносят монетки.</p>
+      {% endif %}
+    </div>
     <div class="cs-earn">
       <h2>{{ brick(22) }} Как получить кирпичики</h2>
       <p class="hint">Только за учёбу — купить их нельзя.</p>
@@ -36,5 +53,5 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="{{ url_for('static', filename='castle.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='castle.js') }}?v=3"></script>
 {% endblock %}

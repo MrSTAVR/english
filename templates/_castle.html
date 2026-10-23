@@ -34,3 +34,16 @@
   <div class="cs-gate">{{ gate(46) }}</div>
 </div>
 {% endmacro %}
+
+{# Поручение соседа: фраза, что сделать, кнопка «Забрать» / «Сделать». back='room' — вернуться на страницу комнаты. #}
+{% macro task_row(t, back='') %}
+<div class="cs-task{{ ' is-done' if t.taken }}"{% if back %} id="cs-task"{% endif %}>
+  {% if not back %}{{ animal_ava(t.who, 44) }}{% endif %}
+  <span class="cs-task-text"><b lang="en">{{ t.en }}</b><span>{{ t.ru }}{% if not back %} · {{ t.who_ru }}{% endif %}</span></span>
+  {% if t.taken %}<span class="cs-task-ok"><svg class="ico" aria-hidden="true"><use href="#o-check"/></svg></span>
+  {% elif t.done %}
+  <form method="post" action="{{ url_for('castle.claim', room=t.room) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% if back %}<input type="hidden" name="back" value="{{ back }}">{% endif %}
+    <button class="btn cs-go cs-go-build cs-task-btn" type="submit">+{{ t.coins }} {{ coin(16) }}</button></form>
+  {% else %}<a class="btn cs-go cs-go-lesson cs-task-btn" href="{{ t.url }}">Сделать</a>{% endif %}
+</div>
+{% endmacro %}
