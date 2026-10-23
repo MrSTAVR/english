@@ -1,5 +1,22 @@
 {% extends "base.html" %}
 {% block title %}Мои награды — English Fun{% endblock %}
+{% macro card(a) %}
+<article class="ach-card tier-{{ a.tier }} {{ 'is-earned' if a.earned else 'is-locked' }}">
+  {{ a|medal(76) }}
+  <div class="ach-card-body">
+    <div class="ach-card-title">{{ a.title|noemoji }}</div>
+    <div class="ach-card-desc">{{ a.desc|noemoji }}</div>
+    {% if a.earned %}
+      <div class="ach-card-date"><span class="ach-tier tier-{{ a.tier }}">{{ a.tier_name }}</span> получено {{ a.earned_at[8:10] }}.{{ a.earned_at[5:7] }}.{{ a.earned_at[:4] }}</div>
+    {% elif a.progress %}
+      <div class="ach-prog"><div class="ach-prog-fill" style="width: {{ a.progress[2] }}%"></div></div>
+      <div class="ach-card-date">{{ a.progress[0] }} из {{ a.progress[1] }} · {{ a.tier_name|lower }}</div>
+    {% else %}
+      <div class="ach-card-date">{{ a.tier_name }} награда · секрет</div>
+    {% endif %}
+  </div>
+</article>
+{% endmacro %}
 {% block content %}
 <div class="dict-head">
   <a class="btn btn-small" href="{{ url_for('student.student_home') }}">← Мои уроки</a>
@@ -8,41 +25,30 @@
 
 <section class="card ach-hero">
   <div class="ach-hero-main">
-    <div class="ach-hero-num"><b>{{ earned }}</b><span>из {{ total }}</span></div>
+    <div class="ach-hero-num"><b>{{ earned }}</b><span>из {{ total }} медалей</span></div>
     <div class="ach-hero-bar"><div class="ach-hero-fill" style="width: {{ (100 * earned / total)|round(0) }}%"></div></div>
-    <p class="subtitle">Собирай медали: за уроки, тесты, слова, время и дни подряд в саду.</p>
+    <p class="ach-hero-sub">Медали дают за уроки, тесты, слова, игры, время занятий и дни подряд в саду.</p>
   </div>
   <div class="tier-row">
     {% set names = {'bronze': 'Бронза', 'silver': 'Серебро', 'gold': 'Золото', 'legend': 'Легенды'} %}
     {% for t in ['bronze', 'silver', 'gold', 'legend'] %}
-      <div class="tier-chip tier-{{ t }}"><i></i><b>{{ tiers[t][0] }}/{{ tiers[t][1] }}</b><span>{{ names[t] }}</span></div>
+      <div class="tier-chip">{{ {'tier': t, 'cat': None, 'earned': True}|medal(34) }}<b>{{ tiers[t][0] }}<small>/{{ tiers[t][1] }}</small></b><span>{{ names[t] }}</span></div>
     {% endfor %}
   </div>
 </section>
 
+{% if soon %}
+<section class="ach-group">
+  <h2 class="ach-cat"><svg class="ico" aria-hidden="true"><use href="#o-target"/></svg> Скоро получишь</h2>
+  <div class="ach-cards">{% for a in soon %}{{ card(a) }}{% endfor %}</div>
+</section>
+{% endif %}
+
 {% for g in groups %}
 <section class="ach-group">
-  <h2 class="ach-cat">{{ g.name|noemoji }}
+  <h2 class="ach-cat"><svg class="ico" aria-hidden="true"><use href="#o-{{ g.icon }}"/></svg> {{ g.name|noemoji }}
     <span class="pill pill-soft">{{ g['items']|selectattr('earned')|list|length }}/{{ g['items']|length }}</span></h2>
-  <div class="ach-cards">
-    {% for a in g['items'] %}
-      <article class="ach-card tier-{{ a.tier }} {{ 'is-earned' if a.earned else 'is-locked' }}">
-        {{ a|medal(84) }}
-        <div class="ach-card-body">
-          <div class="ach-card-title">{{ a.title|noemoji }}</div>
-          <div class="ach-card-desc">{{ a.desc|noemoji }}</div>
-          {% if a.earned %}
-            <div class="ach-card-date">{{ a.tier_name }} · получено {{ a.earned_at[:10] }}</div>
-          {% elif a.progress %}
-            <div class="ach-prog"><div class="ach-prog-fill" style="width: {{ a.progress[2] }}%"></div></div>
-            <div class="ach-card-date">{{ a.progress[0] }} из {{ a.progress[1] }} · {{ a.tier_name }}</div>
-          {% else %}
-            <div class="ach-card-date">{{ a.tier_name }} награда</div>
-          {% endif %}
-        </div>
-      </article>
-    {% endfor %}
-  </div>
+  <div class="ach-cards">{% for a in g['items'] %}{{ card(a) }}{% endfor %}</div>
 </section>
 {% endfor %}
 {% endblock %}

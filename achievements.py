@@ -3,7 +3,7 @@
 
 from datetime import datetime
 
-from badges import TIERS, TIER_ORDER, badge_svg
+from badges import TIERS, TIER_ORDER, badge_svg, icon_for
 from curriculum import MAIN_COUNT
 from data.dialogs import DIALOGS
 from data.stories import STORIES
@@ -201,4 +201,4 @@ def public(a):
     """Данные об ачивке для JS-церемонии (с готовой SVG-медалью)."""
     return {"key": a["key"], "emoji": a["emoji"], "title": a["title"], "desc": a["desc"],
             "tier": a["tier"], "tierName": TIERS[a["tier"]]["name"],
-            "svg": badge_svg(a["emoji"], a["tier"])}
+            "svg": badge_svg(icon_for(a), a["tier"])}

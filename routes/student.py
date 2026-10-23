@@ -2,7 +2,7 @@
 """Режим ученика: список уроков, урок, сдача теста."""
 
 import json
-from badges import TIERS
+from badges import CAT_ICONS, TIERS
 from achievements import (ACHIEVEMENTS, CATEGORIES, public, tier_counts,
                           update_achievements, views as achievement_views)
 import config
@@ -358,11 +358,13 @@ def achievements_page():
         session.clear()
         return redirect(url_for("auth.index"))
     items = achievement_views(db, compute_stats(db, student["id"]), student["id"])
-    groups = [{"key": k, "name": n, "emoji": e, "items": [i for i in items if i["cat"] == k]}
-              for k, n, e in CATEGORIES]
+    groups = [{"key": k, "name": n, "icon": CAT_ICONS.get(k, "medal"), "items": [i for i in items if i["cat"] == k]}
+              for k, n, _e in CATEGORIES]
+    soon = sorted((i for i in items if not i["earned"] and i["progress"] and i["progress"][2] > 0),
+                  key=lambda i: -i["progress"][2])[:3]
     mascot = build_mascot_ctx()
     mascot["earned"] = sum(1 for i in items if i["earned"])
     mascot["total"] = len(items)
     return render_template("achievements.html", mascot=mascot, groups=groups,
                            earned=mascot["earned"], total=len(items),
-                           tiers=tier_counts(items))
+                           tiers=tier_counts(items), soon=soon)

@@ -29,13 +29,21 @@ def test_old_keys_kept_for_existing_databases():
         assert k in BY_KEY
 
 
-def test_badge_svg_has_unique_gradients_and_locked_variant():
-    a, b = badge_svg("🚀", "gold"), badge_svg("🚀", "gold")
+def test_badge_svg_outline_icon_palette_and_locked_variant():
+    a, b = badge_svg("book", "gold"), badge_svg("book", "gold")
     ids = re.findall(r'id="([^"]+)"', a) + re.findall(r'id="([^"]+)"', b)
-    assert len(ids) == len(set(ids))                       # градиенты не пересекаются между медалями
-    assert "🚀" in a and "🚀" not in badge_svg("🚀", "gold", locked=True)
-    html = str(medal({"emoji": "🏆", "tier": "legend", "earned": False}, 80))
-    assert "is-locked" in html and "--s:80px" in html
+    assert len(ids) == len(set(ids))                       # clipPath не пересекаются между медалями
+    assert 'href="#o-book"' in a and "Gradient" not in a   # контурный значок, плоские цвета
+    locked = badge_svg("book", "gold", locked=True)
+    assert 'href="#o-lock"' in locked and "#o-book" not in locked
+    html = str(medal({"emoji": "🏆", "cat": "lessons", "tier": "legend", "earned": False}, 80))
+    assert "is-locked" in html and "--s:80px" in html and "🏆" not in html
+    assert 'href="#o-book"' in str(medal({"cat": "lessons", "tier": "bronze", "earned": True}))
+    from badges import CAT_ICONS
+    from achievements import CATEGORIES
+    sprite = open("templates/base.html", encoding="utf-8").read()
+    for k, _n, _e in CATEGORIES:                           # у каждой категории есть значок в спрайте
+        assert f'id="o-{CAT_ICONS[k]}"' in sprite
 
 
 def test_progress_values():
