@@ -170,7 +170,7 @@
     var items = [];
     try { items = JSON.parse(block.dataset.items || '[]'); } catch (e) { /* noop */ }
     var lessonDefault = parseInt(block.dataset.lesson || '0', 10) || 0;
-    var results = {}, total = items.length;
+    var results = {}, shown = {}, total = items.length, resBoxes = [];
     block.innerHTML = '';
     if (!SR) block.appendChild(el('p', 'sp-note', ERRORS.unsupported + ' Слова можно послушать кнопкой <svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg>.'));
     else block.appendChild(el('p', 'sp-note', 'Нажми <svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> — послушай, потом и скажи слово вслух. Говори сразу, когда кнопка стала красной, — чётко и не слишком тихо.'));
@@ -183,6 +183,7 @@
         (SR ? '<button type="button" class="btn btn-small btn-primary sp-mic" title="Сказать вслух"><svg class="ico" aria-hidden="true"><use href="#o-mic"/></svg></button>' : '') +
         '</div><div class="sp-res" aria-live="polite"></div>';
       var res = row.querySelector('.sp-res'), mic = row.querySelector('.sp-mic');
+      resBoxes[idx] = res;
       row.querySelector('.sp-say').onclick = function () { if (root.ttsSpeak) root.ttsSpeak(it.en); };
       row.querySelector('.sp-slow').onclick = function () { if (root.ttsSpeak) root.ttsSpeak(it.en, 0.5); };
       if (mic) mic.onclick = function () {
@@ -200,11 +201,12 @@
             return;
           }
           var sim = similarity(heard, it.accept || [it.en]), st = stars(sim);
-          res.className = 'sp-res st' + st;
-          res.innerHTML = '<span class="sp-stars">' + starsHtml(st) + '</span> <span class="sp-heard">я услышал: «' +
-            esc(heard[0].text) + '»' + (st < 3 && heard.length > 1 ? ' (ещё: ' + esc(heard.slice(1, 4).map(function (h) { return h.text; }).join(', ')) + ')' : '') + '</span>';
+          var heardText = heard[0].text + (st < 3 && heard.length > 1 ? '» (ещё: ' + heard.slice(1, 4).map(function (h) { return h.text; }).join(', ') + ')' : '»');
+          showRes(res, st, heardText);
           var prev = results[idx];
           results[idx] = Math.max(prev == null ? -1 : prev, st);
+          shown[idx] = { st: st, heard: heardText };
+          document.dispatchEvent(new CustomEvent('lesson:changed'));
           document.dispatchEvent(new CustomEvent('speak:result', { detail: { stars: st, target: it.en } }));
           save(it.en, st, it.lesson || lessonDefault).then(function (j) {
             if (j && j.newAchievements && j.newAchievements.length) {
@@ -218,7 +220,24 @@
       };
       block.appendChild(row);
     });
-    return { results: results };
+    var api = {
+      results: results,
+      get: function () { return shown; },
+      set: function (s) {                                 // показать уже сказанные слова (на сервер их заново не шлём)
+        Object.keys(s || {}).forEach(function (k) {
+          var v = s[k], box = resBoxes[k];
+          if (!box || !v || typeof v.st !== 'number') return;
+          showRes(box, Math.max(0, Math.min(3, v.st | 0)), String(v.heard || ''));
+          results[k] = v.st | 0; shown[k] = v;
+        });
+      }
+    };
+    block._speak = api;
+    return api;
+  }
+  function showRes(box, st, heardText) {
+    box.className = 'sp-res st' + st;
+    box.innerHTML = '<span class="sp-stars">' + starsHtml(st) + '</span> <span class="sp-heard">я услышал: «' + esc(heardText) + '</span>';
   }
 
   root.Speak = { supported: !!SR, norm: norm, similarity: similarity, stars: stars, listen: listen, save: save, renderBlock: renderBlock };
