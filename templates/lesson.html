@@ -19,6 +19,8 @@
   <li data-s="step-test"><i>4</i><span>Тест</span></li>
 </ol>
 </div>
+<div class="ls-resume" id="ls-resume" hidden><svg class="ico" aria-hidden="true"><use href="#o-repeat"/></svg><span>Продолжаем с того же места</span><button type="button" class="btn btn-small btn-aux" id="ls-restart">Начать заново</button></div>
+<script type="application/json" id="ls-state" data-lesson="{{ lesson.id }}">{{ saved_state | tojson }}</script>
 <div class="ls-now"><span>{% if lesson.num %}Урок {{ lesson.num }} · {% endif %}{{ ltitle }}</span><b id="ls-now">Теория · 1/4</b></div>
 
 <!-- Шаг 1: теория -->
@@ -275,15 +277,15 @@
 </section>
 
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=3">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=4">{% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='practice.js') }}?v=3"></script>
-<script src="{{ url_for('static', filename='lesson.js') }}?v=1"></script>
+<script src="{{ url_for('static', filename='lesson.js') }}?v=2"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=3"></script>{% endif %}
 {% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=5"></script>{% endif %}
 <script>
-const START_TS = {{ started_ts }};
+var START_TS = {{ started_ts }};   // var — виден lesson.js (сохранение времени урока)
 
 function goStep(id) {
   document.querySelectorAll('.step').forEach(s => s.classList.add('hidden'));
