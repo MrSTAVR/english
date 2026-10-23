@@ -26,6 +26,12 @@ ruble 🪙|rubles 🪙|price 🏷️|shop 🛍️|money 💰|expensive 💎|chea
 bus 🚌|train 🚆|plane ✈️|boat ⛵|taxi 🚕|map 🗺️|street 🛣️
 menu 📋|waiter 🧑‍🍳|table 🪑|bill 🧾|pizza 🍕|soup 🍲|salad 🥗|burger 🍔|delicious 😋
 please 🙏|thank you 🙏|thanks 🙏|sorry 🙇|good morning 🌅|good night 🌙
+bed 🛏️|chair 🪑|desk 🖥️|wardrobe 🚪|shelf 📚|lamp 💡|window 🪟|mirror 🪞|carpet 🟥|picture 🖼️|pillow 🛌|blanket 🛌|toy 🧸
+fridge 🧊|cooker 🔥|oven ♨️|kettle 🫖|sink 🚰|plate 🍽️|bowl 🥣|glass 🥛|spoon 🥄|knife 🔪|pan 🍳
+piano 🎹|guitar 🎸|drum 🥁|violin 🎻|trumpet 🎺|song 🎶|sing 🎤|dance 💃|concert 🎪|loud 🔊|quiet 🤫
+ball ⚽|basketball 🏀|tennis 🎾|racket 🏸|skates ⛸️|skateboard 🛹|kite 🪁|doll 🪆|puzzle 🧩|robot 🤖|throw 🤾|catch 🧤
+sofa 🛋️|armchair 💺|tv 📺|curtains 🪟|fireplace 🔥|vase 🏺|plant 🪴|rug 🟫|computer 💻
+flower 🌸|grass 🌿|sun ☀️|bee 🐝|butterfly 🦋|bird 🐦|bench 🪑|paper 📄|scissors ✂️|glue 🧴|paint 🎨|brush 🖌️|box 📦
 """
 
 EMOJI = {}
