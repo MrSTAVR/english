@@ -5,7 +5,7 @@ import castle
 import castle_art
 from achievements import update_achievements
 from database import get_db
-from flask import Blueprint, abort, flash, redirect, render_template, session, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, session, url_for
 from garden import get_garden
 from markupsafe import Markup
 from mascot import build_mascot_ctx
@@ -20,7 +20,7 @@ bp = Blueprint("castle", __name__)
 def art_helpers():
     """Рисунки для шаблонов (SVG из castle_art)."""
     return {
-        "room_svg": lambda key: Markup(castle_art.room_svg(key)),
+        "room_svg": lambda key, level=1: Markup(castle.scene(key, level)[0]),
         "animal": lambda name, h=44: Markup(castle_art.person(name, 0, 0, h)),
         "animal_ava": lambda name, size=44: Markup(castle_art.avatar(name, size)),
         "brick": lambda s=18: Markup(castle_art.brick(s)),
@@ -83,12 +83,29 @@ def room_page(room):
         return redirect(url_for("castle.castle_page"))
     r = castle.ROOMS[room]
     nxt = castle.COST.get(level + 1)
+    art, pins = castle.scene(room, level)
     mascot = build_mascot_ctx()
     mascot["page"] = "castle"
     return render_template("castle_room.html", mascot=mascot, key=room, room=r, level=level, words=castle.room_words(room, level),
                            next_words=[w for w in castle.room_words(room, level + 1) if w not in castle.room_words(room, level)] if nxt else [],
                            next_cost=nxt, bricks=castle.bricks(db, student["id"]), coins=g["coins"], who_ru=castle.RESIDENT_RU.get(r["who"]),
-                           outfit=outfit(db, student["id"]), **art_helpers())
+                           outfit=outfit(db, student["id"]), art=Markup(art), pins=pins,
+                           who_x=round(castle_art.RESIDENT_X.get(room, 200) / 3, 2), **art_helpers())
+
+
+@bp.route("/api/castle/<room>/find", methods=["POST"])
+def find_done(room):
+    """Игра «Find the…!» пройдена: кирпичик раз в день за комнату."""
+    if room not in castle.ROOMS:
+        abort(404)
+    ctx, err = _student()
+    if err:
+        return jsonify({"ok": False}), 403
+    db, student = ctx
+    if not castle.levels(db, student["id"]).get(room):
+        abort(404)
+    n = castle.on_find_done(db, student["id"], room)
+    return jsonify({"ok": True, "bricks": n, "total": castle.bricks(db, student["id"])})
 
 
 @bp.route("/student/castle/<room>/build", methods=["POST"])

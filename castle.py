@@ -151,12 +151,28 @@ def room_words(key, level):
     r = ROOMS[key]
     if r.get("words"):
         by_en = {w["en"].lower(): w for w in all_words()}
-        words = [by_en[w] for w in r["words"] if w in by_en]
+        words = [dict(by_en[w], en=w) for w in r["words"] if w in by_en]
     else:
         words = [w for w in LESSONS_BY_ID[r["lesson"]]["material"]
                  if " " not in w["en"].strip() and w["en"].lower() not in NOT_THINGS]   # предметы, без фраз и грамматики
     limit = {0: 0, 1: 6, 2: 10}.get(level)
     return words if limit is None else words[:limit]
+
+
+def scene(key, level):
+    """Рисунок комнаты с предметами текущего уровня и метки слов (x, y — проценты от рисунка)."""
+    from castle_art import POS, items_svg, room_svg
+    words = room_words(key, max(level, 1))
+    pins = [{"en": w["en"], "ru": w["ru"], "x": round(POS[key][w["en"].lower()][0] / 3, 2),
+             "y": round(POS[key][w["en"].lower()][1] / 1.8, 2)} for w in words if w["en"].lower() in POS[key]]
+    return room_svg(key, extra=items_svg(key, words)), pins
+
+
+BRICKS_FIND = 1   # «Find the…!» в комнате — раз в день за каждую комнату
+
+
+def on_find_done(db, student_id, key, day=None):
+    return BRICKS_FIND if earn(db, student_id, "find", f"{key}:{(day or date.today()).isoformat()}", BRICKS_FIND) else 0
 
 
 def cost(level_to):

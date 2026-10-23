@@ -156,6 +156,44 @@ ART = {
 }
 
 
+# Где стоит каждое слово-предмет на рисунке комнаты (единицы viewBox 300×180):
+# (x, y, 0) — предмет уже нарисован; (x, y, размер[, картинка]) — рисуем картинку слова (эмодзи) в этом месте.
+POS = {
+    "bedroom": {"bed": (50, 118, 0), "wardrobe": (249, 64, 0), "lamp": (172, 90, 0), "window": (156, 45, 0), "carpet": (150, 162, 0),
+                "pillow": (36, 86, 0), "blanket": (95, 96, 0), "chair": (140, 122, 20), "desk": (28, 160, 20), "shelf": (36, 40, 20),
+                "picture": (70, 40, 20), "mirror": (104, 44, 20), "toy": (268, 160, 20)},
+    "kitchen": {"fridge": (40, 84, 0), "kettle": (111, 76, 0), "cooker": (80, 94, 0), "oven": (106, 116, 0), "plate": (222, 100, 0),
+                "bowl": (217, 34, 0), "sink": (160, 100, 20), "glass": (286, 96, 16), "spoon": (196, 72, 16), "knife": (228, 72, 16),
+                "pan": (262, 70, 18)},
+    "library": {"book": (50, 70, 0), "shelf": (250, 100, 0), "map": (150, 40, 24), "letter": (190, 40, 18, "✉️"), "pencil": (110, 60, 14),
+                "lamp": (110, 24, 16), "armchair": (180, 120, 26), "plant": (30, 160, 22)},
+    "classroom": {"clock": (264, 40, 0), "desk": (59, 124, 0), "book": (55, 104, 0), "notebook": (237, 104, 0), "computer": (150, 110, 0),
+                  "map": (36, 46, 22), "pencil": (200, 96, 16), "ruler": (264, 76, 18), "rubber": (100, 96, 14)},
+    "living": {"tv": (142, 48, 0), "sofa": (80, 106, 0), "vase": (248, 118, 0), "plant": (248, 72, 0), "rug": (150, 164, 0),
+               "armchair": (282, 122, 22), "curtains": (40, 44, 24), "fireplace": (60, 162, 20), "computer": (240, 164, 18)},
+    "music": {"piano": (70, 100, 0), "guitar": (190, 96, 0), "drum": (262, 112, 0), "violin": (130, 40, 22), "trumpet": (60, 40, 22)},
+    "gym": {"basketball": (70, 118, 0), "ball": (24, 124, 18), "tennis": (104, 116, 14), "racket": (150, 110, 18), "skates": (110, 162, 20),
+            "skateboard": (270, 162, 22), "kite": (120, 40, 24), "doll": (165, 44, 20), "puzzle": (205, 44, 20), "robot": (40, 162, 22)},
+    "workshop": {"paper": (100, 88, 0), "paint": (190, 86, 0), "scissors": (140, 86, 14), "glue": (246, 84, 18), "brush": (150, 48, 22),
+                 "box": (60, 160, 24)},
+    "roof": {"sun": (262, 34, 0), "flower": (66, 104, 0), "bench": (155, 112, 0), "grass": (150, 160, 0), "bee": (110, 60, 18),
+             "butterfly": (190, 50, 20), "bird": (60, 30, 20)},
+}
+RESIDENT_X = {"library": 112, "roof": 112, "classroom": 192}   # центр жителя на большом рисунке (по умолчанию 200)
+
+
+def items_svg(key, words):
+    """Картинки слов, которых нет на основном рисунке (появляются с уровнем комнаты)."""
+    out = []
+    for w in words:
+        p = POS[key].get(w["en"].lower())
+        if p and p[2]:
+            pic = p[3] if len(p) > 3 else w.get("pic")
+            if pic:
+                out.append(f'<text x="{p[0]}" y="{p[1]}" font-size="{p[2] * 1.35:g}" text-anchor="middle" dominant-baseline="central">{pic}</text>')
+    return "".join(out)
+
+
 def room_svg(key, w=None, h=None, extra=""):
     size = f' width="{w}" height="{h}"' if w else ' width="100%" height="100%"'
     return (f'<svg viewBox="0 0 300 180"{size} preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="display: block">'

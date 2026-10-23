@@ -12,7 +12,7 @@
       {% set tag = 'button type="button"' if selectable else 'div' %}
       {% if r.state == 'built' %}
       <{{ tag|safe }} class="cs-room is-built{{ ' is-sel' if r.key == selected }}" {{ data }} aria-label="{{ r.name }}, уровень {{ r.level }}">
-        <span class="cs-art">{{ room_svg(r.key) }}</span>
+        <span class="cs-art">{{ room_svg(r.key, r.level) }}</span>
         {% if r.key == 'bedroom' %}<span class="cs-who cs-chick" data-outfit='{{ (outfit or {}) | tojson }}'></span>{% elif r.who %}<span class="cs-who">{{ animal(r.who, 40) }}</span>{% endif %}
         <span class="cs-label">{{ r.name }} {{ stars(r.level) }}</span>
       </{{ 'button' if selectable else 'div' }}>

@@ -124,3 +124,30 @@ def test_delete_student_clears_castle(parent, make_student):
     parent.post(f"/parent/students/{sid}/delete")
     for t in ("castle", "castle_rooms", "castle_bricks"):
         assert db_scalar(f"SELECT COUNT(*) FROM {t}") == 0, t
+
+
+def test_every_room_word_has_place():
+    from castle_art import POS
+    for key in castle.ROOMS:
+        for w in castle.room_words(key, 3):
+            p = POS[key].get(w["en"].lower())
+            assert p, (key, w["en"])
+            assert p[2] == 0 or len(p) > 3 or w.get("pic"), (key, w["en"])        # есть что нарисовать
+            assert 0 < p[0] < 300 and 0 < p[1] < 180
+
+
+def test_scene_grows_with_level():
+    art1, pins1 = castle.scene("kitchen", 1)
+    art3, pins3 = castle.scene("kitchen", 3)
+    assert len(pins1) == 6 and len(pins3) == len(castle.room_words("kitchen", 3))
+    assert "🍳" not in art1 and "🍳" in art3                                   # сковородка появляется на 3 уровне
+
+
+def test_room_page_pins_and_find(make_student):
+    c = make_student(); sid = sid_of(); c.get("/student/castle")
+    body = c.get("/student/castle/bedroom").get_data(as_text=True)
+    assert body.count('class="cs-pin"') == 6 and 'id="cs-find-go"' in body
+    r = c.post("/api/castle/bedroom/find").get_json()
+    assert r["ok"] and r["bricks"] == castle.BRICKS_FIND
+    assert c.post("/api/castle/bedroom/find").get_json()["bricks"] == 0     # раз в день
+    assert c.post("/api/castle/kitchen/find").status_code == 404            # комната не построена
