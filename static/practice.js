@@ -58,12 +58,12 @@
         };
         bank.appendChild(b);
       });
-      var reset = el('button', 'btn btn-small', 'Сбросить'); reset.type = 'button';
+      var reset = el('button', 'btn btn-small btn-aux', 'Сбросить'); reset.type = 'button';
       reset.onclick = function () { [].slice.call(line.children).forEach(function (c) { bank.appendChild(c); }); };
       box.appendChild(bank); box.appendChild(line); box.appendChild(reset);
       check = function () { return [].map.call(line.children, function (c) { return c.textContent; }).join('') === item.answer; };
     }
-    var btn = el('button', 'btn btn-small', 'Проверить'); btn.type = 'button';
+    var btn = el('button', 'btn btn-small btn-check', '<svg class="ico" aria-hidden="true"><use href="#o-check"/></svg> Проверить'); btn.type = 'button';
     btn.onclick = function () { verdict(box, check(), item); };
     box.appendChild(btn);
     box.appendChild(el('span', 'ex-result'));
