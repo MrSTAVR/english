@@ -14,7 +14,7 @@
 {% else %}<a class="tile" href="{{ href }}"><span class="tile-emoji"><svg class="ico" aria-hidden="true"><use href="#o-{{ emoji }}"/></svg></span><span class="tile-text"><b>{{ title }}</b><small>{{ sub }}</small></span>{% if badge %}<span class="tile-badge">{{ badge }}</span>{% endif %}</a>{% endif %}
 {% endmacro %}
 <div class="welcome-row">
-  <div class="welcome-avatar"><svg class="logo-mark" aria-hidden="true"><use href="#i-chick"/></svg></div>
+  <div class="welcome-avatar" title="Твоя аватарка"><span class="welcome-emoji" aria-hidden="true">{{ emoji or '🎒' }}</span></div>
   <div class="welcome-main">
     <h1>Привет, {{ name }}!</h1>
     <p class="welcome-sub">Учим английский весело — шаг за шагом</p>

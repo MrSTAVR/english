@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=32">
 <link rel="stylesheet" href="{{ url_for('static', filename='achievements.css') }}?v=2">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=3">
-<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}?v=24">
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}?v=25">
 </head>
 <body{% if speech_area %} class="area-speech{{ ' has-tabbar sp-logoped' if session.get('role') == 'logoped' }}"{% elif session.get('role') == 'student' and request.endpoint not in ('student.lesson_page', 'student.submit_test') %} class="has-tabbar"{% endif %}>
 {% if snow %}<div class="snow" aria-hidden="true">{% for i in range(14) %}<span style="left:{{ (i * 7.1 + 1) | round(1) }}%;font-size:{{ 10 + (i * 7 % 4) * 4 }}px;animation-duration:{{ 9 + i * 5 % 7 }}s;animation-delay:-{{ (i * 1.3) | round(1) }}s"></span>{% endfor %}</div>{% endif %}
@@ -78,7 +78,7 @@
   {% if speech_area %}
   <a href="{{ url_for('speech.logoped_home' if session.get('role') == 'logoped' else 'speech.family_home') }}" class="logo"><span class="logo-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M19 9h1a2 2 0 0 1 2 2v9l-3-2h-5"/></svg></span><span>Логопед</span></a>
   {% else %}
-  <a href="/" class="logo"><svg class="logo-mark"><use href="#i-chick"/></svg><span>English Fun</span></a>
+  <a href="/" class="logo"><span>English Fun</span></a>
   {% endif %}
   <nav>
     {% if session.get('role') == 'student' %}

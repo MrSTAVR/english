@@ -30,6 +30,16 @@
   </section>
 
   <section class="card">
+    <h3>Аватарка</h3>
+    <p class="hint">Картинка рядом с именем на главной странице ученика.</p>
+    <form method="post" action="{{ url_for('parent.parent_avatar', sid=st.id) }}" class="sp-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Аватарка <select name="emoji">{% for e in student_emojis %}<option value="{{ e }}"{{ ' selected' if e == st.emoji }}>{{ e }}</option>{% endfor %}</select></label>
+      <button class="btn btn-small sp-wide" type="submit">Сохранить</button>
+    </form>
+  </section>
+
+  <section class="card">
     <h3>День рождения</h3>
     <p class="hint">Неделю после даты у ученика праздник: поздравление, слова, викторина и подарок.</p>
     <form method="post" action="{{ url_for('parent.parent_birthday', sid=st.id) }}" class="sp-form">
