@@ -149,6 +149,23 @@ div.cs-room { cursor: default; }
 .cs-labels { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; font-weight: 800; color: var(--muted); cursor: pointer; }
 .cs-labels input { width: 20px; height: 20px; accent-color: var(--primary); }
 
+/* соседи: доход и поручения */
+.cs-task, .cs-income { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 2px solid var(--line); }
+.cs-task-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cs-task-text b { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.cs-task-text > span { color: var(--muted); font-weight: 700; font-size: .9rem; }
+.cs-task form, .cs-income form { margin: 0; flex: none; }
+.cs-task-btn { min-height: 40px; padding: 0 14px; gap: 4px; }
+.cs-task-ok { width: 36px; height: 36px; border-radius: 50%; background: var(--ok-bg); color: var(--ok-ink); display: flex; align-items: center; justify-content: center; flex: none; }
+.cs-task-ok .ico { width: 20px; height: 20px; color: var(--ok-ink); }
+.cs-task.is-done .cs-task-text { opacity: .7; }
+.cs-neighbours .hint { margin: 8px 0 0; }
+.cs-resident { padding-bottom: 4px; }
+.cs-resident-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; }
+.cs-resident-head > span { display: flex; flex-direction: column; }
+.cs-resident-head > span > span { display: inline-flex; align-items: center; gap: 3px; flex-wrap: wrap; color: var(--muted); font-weight: 700; font-size: .9rem; }
+.cs-resident .hint { margin: 0 0 10px; }
+
 /* тёмная тема: рисунки остаются светлыми, рамки и карточки — из темы */
 html[data-theme="dark"] .cs-castle { background: #3A3150; box-shadow: 0 5px 0 #241F3D; }
 html[data-theme="dark"] .cs-room.is-locked { background: #2A2445; border-color: var(--line); color: var(--muted); }

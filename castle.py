@@ -234,6 +234,122 @@ def view(db, student_id, stats, garden_row):
             "coins": garden_row["coins"] if garden_row else 0}
 
 
+# ---------- доход комнат и поручения соседей ----------
+
+INCOME = {1: 1, 2: 2, 3: 3}    # монеток в день от комнаты с соседом (по уровню), если ученик занимался
+TASK_COINS = 3
+TASKS_PER_DAY = 3              # сколько соседей дают поручение в день
+# вид поручения: (фраза соседа, что сделать, страница)
+TASKS = {
+    "find": ("Find things in my room!", "Сыграй в «Find the…!» в этой комнате", None),
+    "lesson": ("Let's learn something new!", "Сдай любой урок", "student.course_map"),
+    "game": ("Let's play a game!", "Сыграй в любую игру", "games.games_hub"),
+    "story": ("Read me a story, please!", "Прочитай или послушай историю", "stories.stories_page"),
+    "words": ("Help me remember words!", "Повтори 5 слов", "review.review_page"),
+    "dialog": ("Let's talk!", "Поговори с героем в диалоге", "games.dialogs_page"),
+}
+TASK_ORDER = ["find", "lesson", "game", "words", "find", "story", "dialog"]
+WORDS_TASK = 5
+
+
+def _day(day=None):
+    return (day or date.today()).isoformat()
+
+
+def studied(db, student_id, day=None):
+    """Занимался ли ученик в этот день (урок, игра, история, письмо, диалог, повторение слов)."""
+    d = _day(day)
+    if db.execute("SELECT 1 FROM activity WHERE student_id=? AND day=?", (student_id, d)).fetchone():
+        return True
+    row = db.execute("SELECT lessons, words FROM daily_goal WHERE student_id=? AND day=?", (student_id, d)).fetchone()
+    return bool(row and (row["lessons"] or row["words"]))
+
+
+def _coins_taken(db, student_id, day, kind, ref=""):
+    return db.execute("SELECT 1 FROM castle_coins WHERE student_id=? AND day=? AND kind=? AND ref=?",
+                      (student_id, day, kind, ref)).fetchone() is not None
+
+
+def _give(db, student_id, day, kind, ref, amount):
+    """Записать и начислить монетки один раз. True — если начислили."""
+    cur = db.execute("INSERT OR IGNORE INTO castle_coins (student_id, day, kind, ref, amount, at) VALUES (?, ?, ?, ?, ?, ?)",
+                     (student_id, day, kind, ref, amount, _now()))
+    if cur.rowcount:
+        from garden import get_garden
+        get_garden(db, student_id)
+        db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?", (amount, student_id))
+    db.commit()
+    return cur.rowcount > 0
+
+
+def income(db, student_id, day=None):
+    """Доход замка за день: {"amount", "rooms": [(комната, монетки)], "studied", "taken"}."""
+    lv = levels(db, student_id)
+    rooms = [(k, INCOME[lv[k]]) for k in ROOMS if lv.get(k) and ROOMS[k]["who"]]
+    d = _day(day)
+    return {"amount": sum(n for _k, n in rooms), "rooms": rooms, "studied": studied(db, student_id, day),
+            "taken": _coins_taken(db, student_id, d, "income")}
+
+
+def collect_income(db, student_id, day=None):
+    """Собрать доход за сегодня. Возвращает (ok, сообщение)."""
+    inc = income(db, student_id, day)
+    if not inc["amount"]:
+        return False, "Пока в замке нет соседей — построй комнату, и сосед переедет."
+    if not inc["studied"]:
+        return False, "Сначала позанимайся сегодня — тогда соседи принесут монетки."
+    if not _give(db, student_id, _day(day), "income", "", inc["amount"]):
+        return False, "Сегодня доход уже собран. Приходи завтра!"
+    return True, f"Соседи принесли {inc['amount']} монеток!"
+
+
+def _task_done(db, student_id, room, kind, d):
+    if kind == "find":
+        return db.execute("SELECT 1 FROM castle_bricks WHERE student_id=? AND reason='find' AND ref=?", (student_id, f"{room}:{d}")).fetchone() is not None
+    if kind == "words":
+        row = db.execute("SELECT words FROM daily_goal WHERE student_id=? AND day=?", (student_id, d)).fetchone()
+        return bool(row and row["words"] >= WORDS_TASK)
+    return db.execute("SELECT 1 FROM activity WHERE student_id=? AND day=? AND kind=?", (student_id, d, kind)).fetchone() is not None
+
+
+def tasks(db, student_id, day=None):
+    """Поручения соседей на день: до TASKS_PER_DAY соседей по очереди, вид меняется день ото дня."""
+    d = date.fromisoformat(_day(day))
+    lv = levels(db, student_id)
+    who_rooms = [k for k in ROOMS if lv.get(k) and ROOMS[k]["who"]]
+    if not who_rooms:
+        return []
+    n = d.toordinal()
+    start = n % len(who_rooms)
+    picked = (who_rooms[start:] + who_rooms[:start])[:TASKS_PER_DAY]
+    out, used = [], set()
+    for i, room in enumerate(picked):
+        j = n + i * 3 + list(ROOMS).index(room)
+        while TASK_ORDER[j % len(TASK_ORDER)] in used:     # у соседей в один день — разные поручения
+            j += 1
+        kind = TASK_ORDER[j % len(TASK_ORDER)]
+        used.add(kind)
+        en, ru, endpoint = TASKS[kind]
+        who = ROOMS[room]["who"]
+        out.append({"room": room, "room_name": ROOMS[room]["name"], "who": who, "who_ru": RESIDENT_RU[who], "kind": kind,
+                    "en": en, "ru": ru, "endpoint": endpoint, "coins": TASK_COINS,
+                    "done": _task_done(db, student_id, room, kind, d.isoformat()),
+                    "taken": _coins_taken(db, student_id, d.isoformat(), "task", room)})
+    return out
+
+
+def claim_task(db, student_id, room, day=None):
+    """Забрать награду за поручение соседа. (ok, сообщение)."""
+    t = next((t for t in tasks(db, student_id, day) if t["room"] == room), None)
+    if not t:
+        return False, "У этого соседа сегодня нет поручения."
+    if not t["done"]:
+        return False, "Поручение ещё не выполнено: " + t["ru"][0].lower() + t["ru"][1:] + "."
+    if not _give(db, student_id, _day(day), "task", room, TASK_COINS):
+        return False, "Награда за это поручение уже получена."
+    return True, f"{t['who_ru'][0].upper() + t['who_ru'][1:]} говорит: «Thank you!» +{TASK_COINS} монетки."
+
+
 def forget_student(db, student_id):
-    for t in ("castle", "castle_rooms", "castle_bricks"):
+    for t in ("castle", "castle_rooms", "castle_bricks", "castle_coins"):
         db.execute(f"DELETE FROM {t} WHERE student_id=?", (student_id,))

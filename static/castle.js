@@ -85,7 +85,13 @@
       var meta = document.querySelector('meta[name="csrf-token"]');
       fetch(scene.dataset.findUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': meta ? meta.content : '' }, body: '{}' })
         .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (d) { if (d && d.bricks) info.textContent += ' +' + d.bricks + ' кирпичик для замка.'; })
+        .then(function (d) {
+          if (d && d.bricks) info.textContent += ' +' + d.bricks + ' кирпичик для замка.';
+          if (d && d.task) {   /* поручение соседа выполнено — показать кнопку награды */
+            info.textContent += ' Сосед ждёт тебя — забери награду!';
+            setTimeout(function () { location.hash = 'cs-task'; location.reload(); }, 2200);
+          }
+        })
         .catch(function () { /* офлайн — без кирпичика */ });
       game = null;
     }
