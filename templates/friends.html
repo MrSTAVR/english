@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Друзья — English Fun{% endblock %}
+{% macro who(p) %}<span class="fr-ava" aria-hidden="true">{{ p.emoji }}</span>{% endmacro %}
+{% block content %}
+<div class="dict-head">
+  <a class="btn btn-small" href="{{ url_for('student.student_home') }}">← Мои уроки</a>
+  <h1>Друзья</h1>
+</div>
+<p class="subtitle">Соревнуйся по-дружески: вызывай на дуэль, ставь рекорды в играх и радуйся успехам друг друга.</p>
+
+{% if not friends %}
+<section class="card fr-empty">
+  <svg class="ico ico-big" aria-hidden="true"><use href="#o-friends"/></svg>
+  <h2>Пока здесь только ты</h2>
+  <p>Когда в English Fun появятся друзья, тут можно будет устраивать дуэли и сравнивать рекорды. А пока ставь свои рекорды в играх!</p>
+</section>
+{% else %}
+
+<section class="card" id="duels">
+  <div class="section-head"><h2><svg class="ico" aria-hidden="true"><use href="#o-swords"/></svg> Дуэли</h2></div>
+  <p class="hint">Одинаковые слова у обоих и одна попытка у каждого. Сыграть в ответ можно {{ days }} дней.</p>
+  {% for d in duels.incoming %}
+  <div class="fr-duel fr-duel-call">
+    {{ who(d.other) }}<span class="fr-duel-text"><b>{{ d.other.name }}</b> вызывает тебя: «{{ d.title }}»</span>
+    <a class="btn btn-primary btn-small" href="{{ url_for('games.game_play', game=d.game, duel=d.id) }}">Играть</a>
+  </div>
+  {% endfor %}
+  {% for d in duels.mine_unplayed %}
+  <div class="fr-duel">
+    {{ who(d.other) }}<span class="fr-duel-text">«{{ d.title }}» · соперник: <b>{{ d.other.name }}</b>. Твой ход первый!</span>
+    <a class="btn btn-primary btn-small" href="{{ url_for('games.game_play', game=d.game, duel=d.id) }}">Играть</a>
+  </div>
+  {% endfor %}
+  {% for d in duels.waiting %}
+  <div class="fr-duel">
+    {{ who(d.other) }}<span class="fr-duel-text">«{{ d.title }}»: ждём, когда сыграет <b>{{ d.other.name }}</b></span>
+  </div>
+  {% endfor %}
+  {% for d in duels.finished %}
+  <div class="fr-duel fr-duel-{{ d.result }}">
+    {{ who(d.other) }}<span class="fr-duel-text">«{{ d.title }}» · соперник: <b>{{ d.other.name }}</b>. У тебя {{ d.my }}, у соперника {{ d.their }}</span>
+    <span class="pill {{ 'pill-soft' if d.result != 'lose' else 'pill-muted' }}">{{ {'win': 'Победа!', 'draw': 'Ничья', 'lose': 'В другой раз!'}[d.result] }}</span>
+  </div>
+  {% endfor %}
+  {% if not (duels.incoming or duels.mine_unplayed or duels.waiting or duels.finished) %}<p class="hint">Дуэлей пока не было — вызови кого-нибудь ниже!</p>{% endif %}
+</section>
+
+<section class="card" id="list">
+  <div class="section-head"><h2><svg class="ico" aria-hidden="true"><use href="#o-friends"/></svg> Мои друзья</h2></div>
+  <div class="fr-list">
+  {% for f in friends %}
+    <div class="fr-item">
+      <div class="fr-head">{{ who(f) }}<b>{{ f.name }}</b></div>
+      <form method="post" action="{{ url_for('friends.duel_new') }}" class="fr-duel-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="friend" value="{{ f.id }}">
+        <select name="game" aria-label="Игра для дуэли">{% for key, title in duel_games.items() %}<option value="{{ key }}">{{ title }}</option>{% endfor %}</select>
+        <button class="btn btn-primary btn-small" type="submit">Вызвать на дуэль</button>
+      </form>
+      <div class="fr-visit">
+        <a class="btn btn-small" href="{{ url_for('friends.visit', fid=f.id, what='garden') }}"><svg class="ico" aria-hidden="true"><use href="#o-sprout"/></svg> Сад</a>
+        <a class="btn btn-small" href="{{ url_for('friends.visit', fid=f.id, what='house') }}"><svg class="ico" aria-hidden="true"><use href="#o-house"/></svg> Домик</a>
+      </div>
+    </div>
+  {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="card" id="records">
+  <div class="section-head"><h2><svg class="ico" aria-hidden="true"><use href="#o-trophy"/></svg> Рекорды в играх</h2></div>
+  <div class="fr-records">
+  {% for t in records %}
+    <div class="fr-rec">
+      <h3>{{ t.title }}</h3>
+      {% if t.rows %}
+      <ol>{% for r in t.rows %}<li class="{{ 'is-me' if r.me }}">{{ who(r.who) }}<span>{{ r.who.name }}</span><b>{{ r.text }}</b></li>{% endfor %}</ol>
+      {% else %}<p class="hint">Рекорда ещё нет — сыграй и поставь его!</p>{% endif %}
+    </div>
+  {% endfor %}
+  </div>
+</section>
+
+{% if friends %}
+<section class="card" id="feed">
+  <div class="section-head"><h2><svg class="ico" aria-hidden="true"><use href="#o-star"/></svg> Что нового</h2></div>
+  {% for n in feed %}
+  <div class="fr-news">
+    {{ who(n.who) }}
+    <div class="fr-news-body">
+      <div><b>{{ 'Ты' if n.me else n.who.name }}</b> · <span class="hint">{{ n.at[8:10] }}.{{ n.at[5:7] }} {{ n.at[11:16] }}</span></div>
+      <div>{{ n.text }}</div>
+      {% if n.reactions %}<div class="fr-reacts">{% for r in n.reactions %}<span class="pill pill-soft" title="{{ r.names|join(', ') }}">{{ r.label }} {{ r.names|join(', ') }}</span>{% endfor %}</div>{% endif %}
+      {% if not n.me %}
+      <form method="post" action="{{ url_for('friends.react') }}" class="fr-react-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="feed" value="{{ n.id }}">
+        {% for key, label in reactions.items() %}<button class="btn btn-small{{ ' is-on' if n.mine == key }}" type="submit" name="kind" value="{{ key }}">{{ label }}</button>{% endfor %}
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <p class="hint">Пока тихо. Пройди урок или поставь рекорд — друзья увидят!</p>
+  {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

@@ -24,7 +24,51 @@ CREATE TABLE IF NOT EXISTS students (
     password_hash TEXT NOT NULL,                       -- PBKDF2-хеш пароля
     emoji        TEXT DEFAULT '🎒',                    -- аватарка для ребёнка
     created_at   TEXT NOT NULL,
-    birthday     TEXT                                  -- 'ГГГГ-ММ-ДД' — личный праздник
+    birthday     TEXT,                                 -- 'ГГГГ-ММ-ДД' — личный праздник
+    competitions INTEGER DEFAULT 1                     -- участвует в «Друзьях» (рекорды, дуэли, лента)
+);
+CREATE TABLE IF NOT EXISTS game_records (             -- рекорды в играх (friends.RECORDS: что и как считаем)
+    student_id INTEGER NOT NULL,
+    game       TEXT NOT NULL,
+    score      INTEGER NOT NULL,
+    at         TEXT NOT NULL,
+    PRIMARY KEY (student_id, game)
+);
+CREATE TABLE IF NOT EXISTS duels (                     -- дуэль: одинаковые слова, у каждого одна попытка
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    from_id     INTEGER NOT NULL,                      -- кто вызвал (играет первым)
+    to_id       INTEGER NOT NULL,
+    game        TEXT NOT NULL,
+    words       TEXT NOT NULL,                         -- JSON: ключи слов
+    created_at  TEXT NOT NULL,
+    from_score  INTEGER,
+    to_score    INTEGER,
+    finished_at TEXT
+);
+CREATE TABLE IF NOT EXISTS feed (                      -- «Что нового у друзей»
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    kind       TEXT NOT NULL,                          -- lesson / achievement / record / duel
+    text       TEXT NOT NULL,
+    at         TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS feed_reactions (            -- готовые реакции друзей (без свободного текста)
+    feed_id    INTEGER NOT NULL,
+    student_id INTEGER NOT NULL,
+    kind       TEXT NOT NULL,
+    at         TEXT NOT NULL,
+    PRIMARY KEY (feed_id, student_id)
+);
+CREATE TABLE IF NOT EXISTS likes (                     -- «нравится» саду / домику друга
+    owner_id   INTEGER NOT NULL,
+    from_id    INTEGER NOT NULL,
+    what       TEXT NOT NULL,                          -- garden / house
+    at         TEXT NOT NULL,
+    PRIMARY KEY (owner_id, from_id, what)
+);
+CREATE TABLE IF NOT EXISTS friend_seen (               -- когда ученик последний раз открывал «Друзей»
+    student_id INTEGER PRIMARY KEY,
+    seen_at    TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS birthday_gifts (           -- подарок на день рождения: раз в год
     student_id INTEGER NOT NULL,
@@ -313,6 +357,8 @@ def init_db():
     st_cols = {r[1] for r in conn.execute("PRAGMA table_info(students)")}
     if "birthday" not in st_cols:
         conn.execute("ALTER TABLE students ADD COLUMN birthday TEXT")
+    if "competitions" not in st_cols:
+        conn.execute("ALTER TABLE students ADD COLUMN competitions INTEGER DEFAULT 1")
     sp_cols = {r[1] for r in conn.execute("PRAGMA table_info(sp_sessions)")}
     if sp_cols and "cancelled_by" not in sp_cols:
         conn.execute("ALTER TABLE sp_sessions ADD COLUMN cancelled_by TEXT")   # logoped / family

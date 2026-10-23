@@ -30,6 +30,18 @@
   </section>
 
   <section class="card">
+    <h3>Соревнования</h3>
+    <p class="hint">Раздел «Друзья»: дуэли, рекорды в играх, лента новостей с реакциями, «в гостях» у сада и домика. Другим ученикам видны только имя и аватарка.</p>
+    <form method="post" action="{{ url_for('parent.parent_competitions', sid=st.id) }}" class="sp-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if st.competitions %}<span class="pill pill-soft">Участвует</span>
+      <button class="btn btn-small sp-wide" type="submit" name="on" value="0">Выключить</button>
+      {% else %}<span class="pill pill-warn">Не участвует</span>
+      <button class="btn btn-small sp-wide" type="submit" name="on" value="1">Включить</button>{% endif %}
+    </form>
+  </section>
+
+  <section class="card">
     <h3>Аватарка</h3>
     <p class="hint">Картинка рядом с именем на главной странице ученика.</p>
     <form method="post" action="{{ url_for('parent.parent_avatar', sid=st.id) }}" class="sp-form">

@@ -547,3 +547,48 @@ html[data-theme="dark"] .tts-btn { background: var(--surface); color: #8FB4FF; b
 html[data-theme="dark"] .dlg-say { color: #8FB4FF; }
 .btn-small.btn-primary { background: var(--primary); color: #FFFFFF; border-color: transparent; box-shadow: 0 3px 0 var(--primary-deep); }
 html[data-theme="dark"] .btn-small.btn-primary { background: var(--primary); color: #FFFFFF; }
+
+/* --- Друзья: дуэли, рекорды, лента, гости --- */
+.fr-ava { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; border-radius: 50%; background: var(--tint); border: 2px solid var(--line); font-size: 1.3rem; line-height: 1; }
+.dict-head h1 .fr-ava { width: 44px; height: 44px; vertical-align: middle; }
+.ico-big { width: 48px; height: 48px; color: var(--primary); }
+.fr-empty { text-align: center; }
+.section-head h2 .ico { color: var(--primary); }
+html[data-theme="dark"] .section-head h2 .ico, html[data-theme="dark"] .ico-big { color: #8FB4FF; }
+.duel-call { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; padding: 12px 16px; border-radius: var(--radius); background: var(--surface); border: 2px solid var(--primary); box-shadow: var(--shadow); color: var(--ink); text-decoration: none; }
+.duel-call > .ico { width: 28px; height: 28px; color: var(--primary); }
+.duel-call span:not(.fr-ava) { flex: 1; min-width: 0; }
+.duel-call .duel-call-go { flex: none; font-weight: 900; color: var(--primary); }
+html[data-theme="dark"] .duel-call > .ico, html[data-theme="dark"] .duel-call .duel-call-go { color: #8FB4FF; }
+.fr-duel { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 2px solid var(--line); }
+.fr-duel:first-of-type { border-top: 0; }
+.fr-duel-text { flex: 1; min-width: 0; }
+.fr-duel-call .fr-duel-text b { color: var(--primary); }
+html[data-theme="dark"] .fr-duel-call .fr-duel-text b { color: #8FB4FF; }
+.pill-muted { background: var(--tint); color: var(--muted); border: 2px solid var(--line); }
+.fr-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.fr-item { border: 2px solid var(--line); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.fr-head { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; }
+.fr-duel-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fr-duel-form select { flex: 1 1 100%; min-width: 0; padding: 8px 10px; border: 2px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; }
+.fr-visit { display: flex; gap: 8px; flex-wrap: wrap; }
+.fr-records { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.fr-rec h3 { margin: 0 0 6px; font-size: 1rem; }
+.fr-rec ol { list-style: none; margin: 0; padding: 0; counter-reset: rec; }
+.fr-rec li { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 10px; counter-increment: rec; }
+.fr-rec li::before { content: counter(rec); width: 1.2em; font-weight: 900; color: var(--muted); }
+.fr-rec li .fr-ava { flex: none; width: 30px; height: 30px; font-size: 1rem; }
+.fr-rec li span:not(.fr-ava) { flex: 1; min-width: 0; }
+.fr-rec li.is-me { background: var(--tint); }
+.fr-news { display: flex; gap: 10px; padding: 10px 0; border-top: 2px solid var(--line); }
+.fr-news:first-of-type { border-top: 0; }
+.fr-news-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.fr-reacts { display: flex; flex-wrap: wrap; gap: 6px; }
+.fr-react-form { display: flex; flex-wrap: wrap; gap: 6px; }
+.fr-react-form .btn.is-on { border-color: var(--primary); color: var(--primary); }
+html[data-theme="dark"] .fr-react-form .btn.is-on { color: #8FB4FF; }
+.fr-like { text-align: center; }
+.game-rec { display: block; margin-top: 4px; color: var(--primary); font-weight: 800; }
+html[data-theme="dark"] .game-rec { color: #8FB4FF; }
+.game-record { font-weight: 900; color: var(--primary); }
+html[data-theme="dark"] .game-record { color: #8FB4FF; }

@@ -8,6 +8,7 @@ import tempfile
 
 import backup_db
 import database
+import friends
 import goals
 import speech
 import tg
@@ -91,6 +92,7 @@ def delete_student(sid):
     db.execute("DELETE FROM garden WHERE student_id=?", (sid,))
     for table in ("wardrobe_items", "wardrobe_wear", "story_done", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal", "goal_settings", "vacations", "activity", "weekly_done", "boss_wins", "season_log", "advent", "birthday_gifts", "house_items", "house_place"):
         db.execute(f"DELETE FROM {table} WHERE student_id=?", (sid,))
+    friends.forget_student(db, sid)
     db.execute("DELETE FROM students WHERE id=?", (sid,))
     db.commit()
     flash(f"Аккаунт {student['display_name']} удалён вместе с его прогрессом.", "success")
@@ -256,6 +258,22 @@ def parent_birthday(sid):
     db.execute("UPDATE students SET birthday=? WHERE id=?", (value, sid))
     db.commit()
     flash("День рождения сохранён 🎂 — в эти дни у ученика будет праздник." if value else "День рождения убран.", "ok")
+    return redirect(_student_page())
+
+
+@bp.route("/parent/students/<int:sid>/competitions", methods=["POST"])
+def parent_competitions(sid):
+    """Участвует ли ученик в «Друзьях»: дуэли, рекорды, лента, гости."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    if not db.execute("SELECT 1 FROM students WHERE id=?", (sid,)).fetchone():
+        abort(404)
+    on = request.form.get("on") == "1"
+    db.execute("UPDATE students SET competitions=? WHERE id=?", (int(on), sid))
+    db.commit()
+    flash("Соревнования включены." if on else "Соревнования выключены: ученик не видит друзей, а друзья — его.", "ok")
     return redirect(_student_page())
 
 
