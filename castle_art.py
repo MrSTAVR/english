@@ -91,24 +91,29 @@ def win(x, y, w=56, h=46):
 
 
 ART = {
-    "bedroom": lambda: (win(128, 22) +
-        '<rect x="14" y="96" width="104" height="38" rx="6" fill="#8A6B4A"></rect><rect x="18" y="84" width="96" height="30" rx="8" fill="#2563C9"></rect>'
-        '<rect x="20" y="78" width="32" height="20" rx="8" fill="#FFFFFF" stroke="#E3CFA4" stroke-width="2"></rect>'
-        '<rect x="216" y="40" width="66" height="94" rx="4" fill="#C9A27A" stroke="#8A6B4A" stroke-width="3"></rect><path d="M249 40v94" stroke="#8A6B4A" stroke-width="3"></path>'
-        '<circle cx="244" cy="88" r="3" fill="#8A6B4A"></circle><circle cx="254" cy="88" r="3" fill="#8A6B4A"></circle>'
-        '<rect x="170" y="98" width="4" height="36" fill="#6B4F32"></rect><path d="M158 100h28l-6-22h-16z" fill="#FFC83D" stroke="#D99A00" stroke-width="2"></path>'
-        '<ellipse cx="150" cy="160" rx="56" ry="10" fill="#E8618C" opacity=".85"></ellipse>'),
-    "kitchen": lambda: (win(122, 20) +
-        '<rect x="12" y="34" width="56" height="100" rx="8" fill="#FFFFFF" stroke="#C9D3E3" stroke-width="3"></rect><path d="M12 72h56" stroke="#C9D3E3" stroke-width="3"></path>'
-        '<rect x="56" y="46" width="4" height="16" rx="2" fill="#9AA6BD"></rect><rect x="56" y="82" width="4" height="22" rx="2" fill="#9AA6BD"></rect>'
-        '<rect x="76" y="92" width="60" height="42" rx="4" fill="#5E6478"></rect><rect x="76" y="86" width="60" height="8" rx="2" fill="#1E2A45"></rect>'
-        '<circle cx="92" cy="88" r="5" fill="#9AA6BD"></circle><circle cx="120" cy="88" r="5" fill="#9AA6BD"></circle><rect x="84" y="102" width="44" height="24" rx="3" fill="#2B2F3F"></rect>'
-        '<path d="M100 72h22l-2 14h-18z" fill="#D9661A"></path><path d="M122 76q8 0 8 6" stroke="#D9661A" stroke-width="3" fill="none"></path>'
-        '<rect x="196" y="104" width="94" height="8" rx="3" fill="#8A6B4A"></rect><rect x="204" y="112" width="6" height="22" fill="#8A6B4A"></rect><rect x="276" y="112" width="6" height="22" fill="#8A6B4A"></rect>'
-        '<ellipse cx="222" cy="102" rx="14" ry="3" fill="#FFFFFF" stroke="#C9D3E3" stroke-width="2"></ellipse>'
-        '<path d="M250 90h16v10a8 8 0 0 1-16 0z" fill="#2563C9"></path><path d="M266 92q6 0 5 6t-5 4" stroke="#2563C9" stroke-width="2.5" fill="none"></path>'
-        '<rect x="196" y="40" width="92" height="6" rx="2" fill="#8A6B4A"></rect><path d="M204 40q8-14 16 0zM230 40q9-12 18 0z" fill="#FFFFFF" stroke="#C9D3E3" stroke-width="2"></path>'
-        '<rect x="262" y="24" width="8" height="16" rx="2" fill="#9AA6BD"></rect><rect x="274" y="22" width="8" height="18" rx="2" fill="#9AA6BD"></rect>'),
+    "bedroom": lambda: [
+        ("window", win(128, 22)),
+        ("bed", '<rect x="14" y="96" width="104" height="38" rx="6" fill="#8A6B4A"></rect><rect x="18" y="88" width="96" height="14" rx="6" fill="#FFFFFF" stroke="#E3CFA4" stroke-width="2"></rect>'),
+        ("blanket", '<rect x="18" y="84" width="96" height="30" rx="8" fill="#2563C9"></rect>'),
+        ("pillow", '<rect x="20" y="78" width="32" height="20" rx="8" fill="#FFFFFF" stroke="#E3CFA4" stroke-width="2"></rect>'),
+        ("wardrobe", '<rect x="216" y="40" width="66" height="94" rx="4" fill="#C9A27A" stroke="#8A6B4A" stroke-width="3"></rect><path d="M249 40v94" stroke="#8A6B4A" stroke-width="3"></path>'
+                     '<circle cx="244" cy="88" r="3" fill="#8A6B4A"></circle><circle cx="254" cy="88" r="3" fill="#8A6B4A"></circle>'),
+        ("lamp", '<rect x="170" y="98" width="4" height="36" fill="#6B4F32"></rect><path d="M158 100h28l-6-22h-16z" fill="#FFC83D" stroke="#D99A00" stroke-width="2"></path>'),
+        ("carpet", '<ellipse cx="150" cy="160" rx="56" ry="10" fill="#E8618C" opacity=".85"></ellipse>')],
+    "kitchen": lambda: [
+        (None, win(122, 20)),
+        ("fridge", '<rect x="12" y="34" width="56" height="100" rx="8" fill="#FFFFFF" stroke="#C9D3E3" stroke-width="3"></rect><path d="M12 72h56" stroke="#C9D3E3" stroke-width="3"></path>'
+                   '<rect x="56" y="46" width="4" height="16" rx="2" fill="#9AA6BD"></rect><rect x="56" y="82" width="4" height="22" rx="2" fill="#9AA6BD"></rect>'),
+        ("cooker", '<rect x="76" y="92" width="60" height="42" rx="4" fill="#5E6478"></rect><rect x="76" y="86" width="60" height="8" rx="2" fill="#1E2A45"></rect>'
+                   '<circle cx="92" cy="88" r="5" fill="#9AA6BD"></circle><circle cx="120" cy="88" r="5" fill="#9AA6BD"></circle>'),
+        ("oven", '<rect x="84" y="102" width="44" height="24" rx="3" fill="#2B2F3F"></rect>'),
+        ("kettle", '<path d="M100 72h22l-2 14h-18z" fill="#D9661A"></path><path d="M122 76q8 0 8 6" stroke="#D9661A" stroke-width="3" fill="none"></path>'),
+        (None, '<rect x="196" y="104" width="94" height="8" rx="3" fill="#8A6B4A"></rect><rect x="204" y="112" width="6" height="22" fill="#8A6B4A"></rect><rect x="276" y="112" width="6" height="22" fill="#8A6B4A"></rect>'),
+        ("plate", '<ellipse cx="222" cy="102" rx="14" ry="3" fill="#FFFFFF" stroke="#C9D3E3" stroke-width="2"></ellipse>'),
+        (None, '<path d="M250 90h16v10a8 8 0 0 1-16 0z" fill="#2563C9"></path><path d="M266 92q6 0 5 6t-5 4" stroke="#2563C9" stroke-width="2.5" fill="none"></path>'
+               '<rect x="196" y="40" width="92" height="6" rx="2" fill="#8A6B4A"></rect>'),
+        ("bowl", '<path d="M204 40q8-14 16 0zM230 40q9-12 18 0z" fill="#FFFFFF" stroke="#C9D3E3" stroke-width="2"></path>'),
+        (None, '<rect x="262" y="24" width="8" height="16" rx="2" fill="#9AA6BD"></rect><rect x="274" y="22" width="8" height="18" rx="2" fill="#9AA6BD"></rect>')],
     "library": lambda: (
         ''.join(f'<rect x="{x}" y="22" width="76" height="112" rx="4" fill="#8A6B4A"></rect>' +
                 ''.join(f'<rect x="{x + 4}" y="{y}" width="68" height="4" fill="#6B4F32"></rect>' for y in (54, 88, 122)) +
@@ -117,21 +122,24 @@ ART = {
                 for x in (12, 212)) +
         '<circle cx="150" cy="92" r="20" fill="#7FC4F5" stroke="#2563C9" stroke-width="3"></circle><path d="M138 84q8 4 6 12q10-2 14 6" stroke="#1E9E5A" stroke-width="4" fill="none"></path>'
         '<rect x="148" y="112" width="4" height="14" fill="#8A6B4A"></rect><rect x="136" y="126" width="28" height="8" rx="3" fill="#8A6B4A"></rect>'),
-    "classroom": lambda: (
-        '<rect x="70" y="18" width="160" height="70" rx="6" fill="#1F5A3E" stroke="#8A6B4A" stroke-width="5"></rect>'
-        '<text x="150" y="62" text-anchor="middle" font-family="Nunito, sans-serif" font-weight="900" font-size="26" fill="#FFFFFF">A B C</text>'
-        '<circle cx="264" cy="40" r="16" fill="#FFFFFF" stroke="#1E2A45" stroke-width="3"></circle><path d="M264 30v10l7 5" stroke="#1E2A45" stroke-width="3" fill="none"></path>'
-        + ''.join(f'<rect x="{x}" y="112" width="70" height="8" rx="2" fill="#C9A27A"></rect><rect x="{x + 6}" y="120" width="6" height="16" fill="#8A6B4A"></rect><rect x="{x + 58}" y="120" width="6" height="16" fill="#8A6B4A"></rect>'
-                  f'<rect x="{x + 20}" y="100" width="22" height="12" rx="2" fill="#2563C9"></rect>' for x in (24, 206)) +
-        '<rect x="120" y="96" width="60" height="30" rx="4" fill="#1E2A45"></rect><rect x="124" y="100" width="52" height="22" rx="2" fill="#7FC4F5"></rect><rect x="140" y="126" width="20" height="8" fill="#5E6478"></rect>'),
-    "living": lambda: (
-        '<rect x="110" y="26" width="64" height="44" rx="4" fill="#1E2A45"></rect><rect x="114" y="30" width="56" height="36" rx="2" fill="#2563C9"></rect><rect x="138" y="70" width="8" height="10" fill="#5E6478"></rect>'
-        '<rect x="20" y="88" width="120" height="46" rx="12" fill="#E8618C"></rect><rect x="12" y="98" width="20" height="36" rx="8" fill="#C94A72"></rect><rect x="128" y="98" width="20" height="36" rx="8" fill="#C94A72"></rect>'
-        '<rect x="34" y="78" width="40" height="26" rx="8" fill="#F28AAA"></rect><rect x="82" y="78" width="40" height="26" rx="8" fill="#F28AAA"></rect>'
-        '<path d="M232 134l6-34h20l6 34z" fill="#2563C9"></path><path d="M248 100c-2-14-14-22-20-30M248 100c2-16 10-26 18-30M248 100v-36" stroke="#1E9E5A" stroke-width="3" fill="none"></path>'
-        '<circle cx="228" cy="70" r="7" fill="#FFC83D"></circle><circle cx="266" cy="70" r="7" fill="#E8618C"></circle><circle cx="248" cy="62" r="7" fill="#FFFFFF"></circle>'
-        '<rect x="214" y="22" width="48" height="36" rx="3" fill="#FFFFFF" stroke="#8A6B4A" stroke-width="4"></rect><circle cx="238" cy="40" r="9" fill="#FFC83D"></circle>'
-        '<ellipse cx="150" cy="160" rx="70" ry="11" fill="#7A5BC4" opacity=".7"></ellipse>'),
+    "classroom": lambda: [
+        (None, '<rect x="70" y="18" width="160" height="70" rx="6" fill="#1F5A3E" stroke="#8A6B4A" stroke-width="5"></rect>'
+        '<text x="150" y="62" text-anchor="middle" font-family="Nunito, sans-serif" font-weight="900" font-size="26" fill="#FFFFFF">A B C</text>'),
+        ("clock", '<circle cx="264" cy="40" r="16" fill="#FFFFFF" stroke="#1E2A45" stroke-width="3"></circle><path d="M264 30v10l7 5" stroke="#1E2A45" stroke-width="3" fill="none"></path>'),
+        ("desk", ''.join(f'<rect x="{x}" y="112" width="70" height="8" rx="2" fill="#C9A27A"></rect><rect x="{x + 6}" y="120" width="6" height="16" fill="#8A6B4A"></rect><rect x="{x + 58}" y="120" width="6" height="16" fill="#8A6B4A"></rect>'
+                         for x in (24, 206))),
+        ("book", '<rect x="44" y="100" width="22" height="12" rx="2" fill="#2563C9"></rect>'),
+        ("notebook", '<rect x="226" y="100" width="22" height="12" rx="2" fill="#2563C9"></rect>'),
+        ("computer", '<rect x="120" y="96" width="60" height="30" rx="4" fill="#1E2A45"></rect><rect x="124" y="100" width="52" height="22" rx="2" fill="#7FC4F5"></rect><rect x="140" y="126" width="20" height="8" fill="#5E6478"></rect>')],
+    "living": lambda: [
+        ("tv", '<rect x="110" y="26" width="64" height="44" rx="4" fill="#1E2A45"></rect><rect x="114" y="30" width="56" height="36" rx="2" fill="#2563C9"></rect><rect x="138" y="70" width="8" height="10" fill="#5E6478"></rect>'),
+        ("sofa", '<rect x="20" y="88" width="120" height="46" rx="12" fill="#E8618C"></rect><rect x="12" y="98" width="20" height="36" rx="8" fill="#C94A72"></rect><rect x="128" y="98" width="20" height="36" rx="8" fill="#C94A72"></rect>'
+        '<rect x="34" y="78" width="40" height="26" rx="8" fill="#F28AAA"></rect><rect x="82" y="78" width="40" height="26" rx="8" fill="#F28AAA"></rect>'),
+        ("vase", '<path d="M232 134l6-34h20l6 34z" fill="#2563C9"></path>'),
+        ("plant", '<path d="M248 100c-2-14-14-22-20-30M248 100c2-16 10-26 18-30M248 100v-36" stroke="#1E9E5A" stroke-width="3" fill="none"></path>'
+        '<circle cx="228" cy="70" r="7" fill="#FFC83D"></circle><circle cx="266" cy="70" r="7" fill="#E8618C"></circle><circle cx="248" cy="62" r="7" fill="#FFFFFF"></circle>'),
+        (None, '<rect x="214" y="22" width="48" height="36" rx="3" fill="#FFFFFF" stroke="#8A6B4A" stroke-width="4"></rect><circle cx="238" cy="40" r="9" fill="#FFC83D"></circle>'),
+        ("rug", '<ellipse cx="150" cy="160" rx="70" ry="11" fill="#7A5BC4" opacity=".7"></ellipse>')],
     "music": lambda: (
         '<rect x="16" y="70" width="110" height="64" rx="6" fill="#1E2A45"></rect>' +
         ''.join(f'<rect x="{22 + i * 13}" y="78" width="11" height="34" fill="#FFFFFF"></rect>' for i in range(7)) +
@@ -148,11 +156,11 @@ ART = {
         '<rect x="70" y="84" width="60" height="12" fill="#FFFFFF" stroke="#C9D3E3" stroke-width="2"></rect>' +
         ''.join(f'<rect x="{150 + i * 22}" y="78" width="16" height="18" rx="3" fill="{c}"></rect>' for i, c in enumerate(("#E8618C", "#2563C9", "#FFC83D", "#1E9E5A"))) +
         '<rect x="24" y="24" width="80" height="50" rx="4" fill="#FFFFFF" stroke="#8A6B4A" stroke-width="4"></rect><path d="M34 62l18-22 14 16 10-10 18 16" stroke="#1E9E5A" stroke-width="4" fill="none"></path>'),
-    "roof": lambda: (
-        '<circle cx="262" cy="34" r="18" fill="#FFC83D"></circle>' +
-        ''.join(f'<path d="M{x} 134v-26" stroke="#1E9E5A" stroke-width="3"></path><circle cx="{x}" cy="104" r="8" fill="{c}"></circle><circle cx="{x}" cy="104" r="3" fill="#FFC83D"></circle>'
-                for x, c in ((40, "#E8618C"), (66, "#FFFFFF"), (92, "#7A5BC4"), (210, "#E8618C"), (236, "#FFFFFF"))) +
-        '<rect x="120" y="108" width="70" height="8" rx="3" fill="#8A6B4A"></rect><rect x="126" y="116" width="6" height="18" fill="#6B4F32"></rect><rect x="178" y="116" width="6" height="18" fill="#6B4F32"></rect>'),
+    "roof": lambda: [
+        ("sun", '<circle cx="262" cy="34" r="18" fill="#FFC83D"></circle>'),
+        ("flower", ''.join(f'<path d="M{x} 134v-26" stroke="#1E9E5A" stroke-width="3"></path><circle cx="{x}" cy="104" r="8" fill="{c}"></circle><circle cx="{x}" cy="104" r="3" fill="#FFC83D"></circle>'
+                for x, c in ((40, "#E8618C"), (66, "#FFFFFF"), (92, "#7A5BC4"), (210, "#E8618C"), (236, "#FFFFFF")))),
+        ("bench", '<rect x="120" y="108" width="70" height="8" rx="3" fill="#8A6B4A"></rect><rect x="126" y="116" width="6" height="18" fill="#6B4F32"></rect><rect x="178" y="116" width="6" height="18" fill="#6B4F32"></rect>')],
 }
 
 
@@ -219,11 +227,20 @@ def items_svg(key, words):
     return "".join(out)
 
 
-def room_svg(key, w=None, h=None, extra="", under=""):
+def art(key, words=None):
+    """Рисунок комнаты; у части комнат он разбит на предметы-слова — рисуем только открытые (words=None — всё)."""
+    a = ART[key]()
+    if isinstance(a, str):
+        return a
+    have = None if words is None else {w.lower() for w in words}
+    return "".join(svg for w, svg in a if w is None or have is None or w in have)
+
+
+def room_svg(key, w=None, h=None, extra="", under="", words=None):
     size = f' width="{w}" height="{h}"' if w else ' width="100%" height="100%"'
     return (f'<svg viewBox="0 0 300 180"{size} preserveAspectRatio="xMidYMin slice" aria-hidden="true" style="display: block">'
             f'<rect width="300" height="180" fill="{WALL[key]}"></rect><rect y="134" width="300" height="46" fill="{FLOOR[key]}"></rect>'
-            f'<path d="M0 134h300" stroke="rgba(30,42,69,.12)" stroke-width="3"></path>{under}{ART[key]()}{extra}</svg>')
+            f'<path d="M0 134h300" stroke="rgba(30,42,69,.12)" stroke-width="3"></path>{under}{art(key, words)}{extra}</svg>')
 
 
 GATE = (  # ворота замка: каменная арка, решётка, двустворчатые двери с железными полосами, фонари

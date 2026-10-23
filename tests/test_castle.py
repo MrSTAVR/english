@@ -250,3 +250,17 @@ def test_admin_sets_bricks(parent, make_student):
     assert castle.bricks(conn(), sid) == 25
     parent.post(f"/parent/students/{sid}/garden", data={"bricks": "3"})
     assert castle.bricks(conn(), sid) == 3
+
+
+def test_drawn_things_appear_with_their_words():
+    import castle_art
+    for key in castle.ROOMS:
+        parts = castle_art.ART[key]()
+        if isinstance(parts, str):
+            continue
+        for lv in (1, 2, 3):
+            art, _ = castle.scene(key, lv)
+            have = {w["en"].lower() for w in castle.room_words(key, lv)}
+            for word, svg in parts:
+                if word:
+                    assert (svg in art) == (word in have), (key, lv, word)

@@ -173,7 +173,7 @@ def scene(key, level):
     words = room_words(key, max(level, 1))
     pins = [{"en": w["en"], "ru": w["ru"], "x": round(POS[key][w["en"].lower()][0] / 3, 2),
              "y": round(POS[key][w["en"].lower()][1] / 1.8, 2)} for w in words if w["en"].lower() in POS[key]]
-    return room_svg(key, extra=level_deco(level) + items_svg(key, words), under=level_floor(key, level)), pins
+    return room_svg(key, extra=level_deco(level) + items_svg(key, words), under=level_floor(key, level), words=[w["en"] for w in words]), pins
 
 
 BRICKS_FIND = 1   # «Find the…!» в комнате — раз в день за каждую комнату
