@@ -85,3 +85,12 @@ def test_no_color_emoji_in_interface(make_student, parent):
         body = re.sub(r"<script.*?</script>|<style.*?</style>", "", body, flags=re.S)
         text = H.unescape(re.sub(r"<[^>]+>", " ", body))
         assert not EMOJI_RE.findall(text), (url, set(EMOJI_RE.findall(text)))
+
+
+def test_listen_buttons_have_outline_icon():
+    html = open("templates/student_home.html", encoding="utf-8").read()
+    m = re.search(r'<button[^>]*class="wod-say[^"]*"[^>]*>(.*?)</button>', html, re.S)
+    assert m and 'href="#o-sound"' in m.group(1)
+    assert "#o-sound" in open("static/dialogs.js", encoding="utf-8").read()
+    css = open("static/design.css", encoding="utf-8").read()
+    assert ".wod-say.say-btn" in css and "#FFFFFF" in css

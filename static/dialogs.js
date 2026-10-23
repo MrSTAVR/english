@@ -27,7 +27,7 @@
       var role = !mine && d.who.role ? ' <span class="dlg-role">· ' + esc(d.who.role) + '</span>' : '';
       b.innerHTML = '<div class="dlg-ava' + '" style="background:' + bg + '" aria-hidden="true">' + esc(pic) + '</div>' +
         '<div class="dlg-main"><div class="dlg-name">' + esc(who) + role + '</div><div class="dlg-bubble">' + esc(en) +
-        '<button type="button" class="dlg-say" title="Послушать">🔊</button><div class="dlg-ru">' + esc(ru) + '</div></div></div>';
+        '<button type="button" class="dlg-say" title="Послушать" aria-label="Послушать"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></button><div class="dlg-ru">' + esc(ru) + '</div></div></div>';
       b.querySelector('.dlg-say').onclick = function () { say(en); };
       chat.appendChild(b);
       b.scrollIntoView({ block: 'nearest', behavior: 'smooth' });

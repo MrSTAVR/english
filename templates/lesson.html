@@ -237,7 +237,7 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='practice.js') }}?v=2"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=3"></script>{% endif %}
-{% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=4"></script>{% endif %}
+{% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=5"></script>{% endif %}
 <script>
 const START_TS = {{ started_ts }};
 

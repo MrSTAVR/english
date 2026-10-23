@@ -532,3 +532,17 @@ html[data-theme="dark"] .adm-avatar { background: var(--sand); color: #FFE3A3; }
 .theme-toggle .icon { color: var(--muted); }
 .stat-icon { color: var(--primary); }
 .login-art { color: var(--primary); }
+
+/* кнопки «послушать»: всегда видна контурная иконка динамика; на синем фоне — белая */
+.wod-say.say-btn, .ls-play, .st-pop .st-sp, .btn-primary .ico { color: #FFFFFF; }
+html[data-theme="dark"] .wod-say.say-btn, html[data-theme="dark"] .ls-play, html[data-theme="dark"] .st-pop .st-sp { color: #FFFFFF; }
+.wod-say .ico { width: 24px; height: 24px; }
+.ls-play .ico { width: 46px; height: 46px; }
+.tts-btn { background: var(--surface); color: var(--primary); border: 2px solid var(--line); }
+.tts-btn .icon { width: 18px; height: 18px; }
+html[data-theme="dark"] .tts-btn { background: var(--surface); color: #8FB4FF; border-color: var(--line); }
+.dlg-say, .st-sp { color: var(--primary); display: inline-flex; align-items: center; justify-content: center; min-width: 32px; min-height: 32px; }
+.dlg-say .ico, .st-sp .ico, .sp-say .ico { width: 20px; height: 20px; }
+html[data-theme="dark"] .dlg-say { color: #8FB4FF; }
+.btn-small.btn-primary { background: var(--primary); color: #FFFFFF; border-color: transparent; box-shadow: 0 3px 0 var(--primary-deep); }
+html[data-theme="dark"] .btn-small.btn-primary { background: var(--primary); color: #FFFFFF; }
