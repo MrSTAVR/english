@@ -233,3 +233,18 @@ html[data-theme="dark"] .step .btn.btn-check { background: var(--primary); box-s
 .step .match-tile.placed { opacity: .45; box-shadow: none; }
 html[data-theme="dark"] .step .match-tile { background: var(--surface); color: #FFFFFF; box-shadow: 0 4px 0 #0E0B1F; }
 html[data-theme="dark"] .step .match-tile.tap-selected { background: #1E2A4D; border-color: #8FB4FF; box-shadow: 0 4px 0 #3B6FD8; }
+
+/* «Слушать» и «Медленно» — в одну ровную строку; «Послушать» под полем — без отступа */
+.step p:has(> .say-btn) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.step .say-btn, .step .tts-listen { margin: 0; vertical-align: middle; line-height: 1.2; }
+.step .typein + .tts-listen { margin: 8px 0 0; }
+
+/* продолжение незаконченного урока */
+.ls-resume { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 10px 14px; border-radius: 18px; background: var(--ok-bg); color: var(--ok-ink); font-weight: 800; }
+.ls-resume[hidden] { display: none; }
+.ls-resume > .ico { width: 22px; height: 22px; flex: none; }
+.ls-resume span { flex: 1; min-width: 0; }
+.ls-resume .btn-aux { background: var(--surface); color: var(--ok-ink); flex: none; }
+html[data-theme="dark"] .ls-resume { background: #183D2A; color: #8FE3B0; }
+html[data-theme="dark"] .ls-resume .btn-aux { background: transparent; color: #8FE3B0; box-shadow: inset 0 0 0 2px #2F6B4A; }
+.ls-resume .btn-aux { min-height: 36px; padding: 0 14px; border: 0; border-radius: 999px; font-weight: 800; box-shadow: none; }

@@ -12,7 +12,7 @@ from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID, pass_mark, unlocked_
 from data.extra_lessons import EXTRA_LESSONS
 from database import get_db
 from datetime import datetime
-from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
 import activity
 import weekly
 import seasons
@@ -196,15 +196,61 @@ def lesson_page(lesson_id):
         "INSERT INTO attempts (student_id, lesson_id, started_at) VALUES (?, ?, ?)",
         (student["id"], lesson_id, started.isoformat(timespec="seconds")))
     db.commit()
+    saved = load_progress(db, student["id"], lesson_id)
     mascot = build_mascot_ctx()
     mascot["lessonId"] = lesson_id
     mascot["lessonTitle"] = lesson["title"]
     return render_template("lesson.html", lesson=lesson, speaking=config.SPEAKING, need=pass_mark(lesson), total_lessons=len(LESSONS),
+                           saved_state=saved,
                            lesson_dialogs=dialogs_for(db, student["id"], {lesson_id}),
                            me_emoji=student["emoji"] or "🎒", me_name=student["display_name"],
                            attempt_id=cur.lastrowid,
-                           started_ts=started.timestamp(),
+                           started_ts=started.timestamp() - (saved or {}).get("secs", 0),   # время урока копится
                            mascot=mascot)
+
+
+PROGRESS_MAX = 20000          # байт JSON на один урок
+PROGRESS_STEPS = ("step-theory", "step-material", "step-exercises", "step-test")
+
+
+def load_progress(db, student_id, lesson_id):
+    """Сохранённое место в уроке (или None)."""
+    row = db.execute("SELECT state FROM lesson_progress WHERE student_id=? AND lesson_id=?", (student_id, lesson_id)).fetchone()
+    if not row:
+        return None
+    try:
+        state = json.loads(row["state"])
+    except ValueError:
+        return None
+    if not isinstance(state, dict) or state.get("step") not in PROGRESS_STEPS:
+        return None
+    secs = state.get("secs")
+    state["secs"] = min(int(secs), 4 * 3600) if isinstance(secs, (int, float)) and secs > 0 else 0
+    return state
+
+
+@bp.route("/api/lesson/<int:lesson_id>/progress", methods=["POST"])
+def save_progress(lesson_id):
+    """Запоминаем, где ученик в уроке: шаг, слово, ответы. {"reset": true} — начать заново."""
+    if session.get("role") != "student" or lesson_id not in LESSONS_BY_ID:
+        abort(403 if session.get("role") != "student" else 404)
+    db = get_db()
+    student = get_student_or_none(db)
+    if not student:
+        abort(403)
+    data = request.get_json(silent=True) or {}
+    if data.get("reset"):
+        db.execute("DELETE FROM lesson_progress WHERE student_id=? AND lesson_id=?", (student["id"], lesson_id))
+        db.commit()
+        return jsonify(ok=True)
+    state = data.get("state")
+    raw = json.dumps(state, ensure_ascii=False) if isinstance(state, dict) else ""
+    if not raw or len(raw.encode()) > PROGRESS_MAX or state.get("step") not in PROGRESS_STEPS:
+        abort(400)
+    db.execute("INSERT OR REPLACE INTO lesson_progress (student_id, lesson_id, state, updated_at) VALUES (?, ?, ?, ?)",
+               (student["id"], lesson_id, raw, datetime.now().isoformat(timespec="seconds")))
+    db.commit()
+    return jsonify(ok=True)
 
 
 @bp.route("/lesson/<int:lesson_id>/submit", methods=["POST"])
@@ -269,6 +315,7 @@ def submit_test(lesson_id):
     db.commit()
     if first_pass:
         feed_post(db, student["id"], "lesson", f"Урок пройден: «{lesson['title']}»")
+    db.execute("DELETE FROM lesson_progress WHERE student_id=? AND lesson_id=?", (student["id"], lesson_id))   # урок сдан
     to_review = send_mistakes(db, student["id"], results, lesson_id)     # ошибки — в повторение слов
 
     stats = compute_stats(db, student["id"])

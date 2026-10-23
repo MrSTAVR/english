@@ -70,6 +70,13 @@ CREATE TABLE IF NOT EXISTS friend_seen (               -- когда учени�
     student_id INTEGER PRIMARY KEY,
     seen_at    TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS lesson_progress (            -- незаконченный урок: где остановились (стирается после теста)
+    student_id INTEGER NOT NULL,
+    lesson_id  INTEGER NOT NULL,
+    state      TEXT NOT NULL,                          -- JSON: шаг, слово, ответы, секунды
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (student_id, lesson_id)
+);
 CREATE TABLE IF NOT EXISTS birthday_gifts (           -- подарок на день рождения: раз в год
     student_id INTEGER NOT NULL,
     year       INTEGER NOT NULL,
