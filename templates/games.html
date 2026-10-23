@@ -19,7 +19,8 @@
   {% for key, g in games.items() %}
   <a class="game-card" href="{{ url_for('games.game_play', game=key, lesson=lesson.id if lesson else None) }}">
     
-    <span class="game-text"><b>{{ g.title|noemoji }}</b><small>{{ g.desc|noemoji }}</small></span>
+    <span class="game-text"><b>{{ g.title|noemoji }}</b><small>{{ g.desc|noemoji }}</small>
+      {% set rec = records.get(key) %}{% if rec and (rec.mine or rec.top) %}<small class="game-rec"><svg class="ico" aria-hidden="true"><use href="#o-trophy"/></svg> {% if rec.mine %}Твой рекорд: {{ rec.mine }}{% endif %}{% if rec.top and not rec.top.me %}{{ ' · ' if rec.mine }}Рекорд друзей: {{ rec.top.who.name }} — {{ rec.top.text }}{% elif rec.top %} — лучший среди друзей!{% endif %}</small>{% endif %}</span>
     <span class="game-best">{% if best.get(key) %}{{ '★' * best[key].best }}{{ '☆' * (3 - best[key].best) }}<small>{{ best[key].plays }} игр</small>{% else %}<small>новая!</small>{% endif %}</span>
   </a>
   {% endfor %}

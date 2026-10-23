@@ -6,16 +6,22 @@
   <h1>{{ info.title|noemoji }}</h1>
 </div>
 <p class="subtitle">{{ info.desc }}</p>
+{% if duel %}<div class="duel-call duel-now"><span class="fr-ava" aria-hidden="true">{{ rival.emoji or '🎒' }}</span><span><b>Дуэль!</b> Соперник — {{ rival.display_name }}. Слова у вас одинаковые, попытка одна — постарайся!</span></div>{% endif %}
 <section class="card">
-  <div id="game" data-game="{{ game }}" data-words='{{ words | tojson }}' data-distract='{{ distract | tojson }}'></div>
+  <div id="game" data-game="{{ game }}"{% if duel %} data-duel="{{ duel.id }}"{% endif %} data-words='{{ words | tojson }}' data-distract='{{ distract | tojson }}'></div>
 </section>
 <section class="card hero hidden" id="game-end">
   <div class="big-emoji" id="game-end-emoji"></div>
   <h2 id="game-end-title">Игра окончена!</h2>
   <p id="game-end-text"></p>
   <p class="sp-stars" id="game-end-stars"></p>
+  <p class="game-record hidden" id="game-end-record"></p>
+  {% if duel %}
+  <a class="btn btn-primary" href="{{ url_for('friends.friends_page') }}#duels">К друзьям</a>
+  {% else %}
   <a class="btn btn-primary" href="{{ url_for('games.game_play', game=game, lesson=lesson.id if lesson else None) }}">Ещё раз</a>
   <a class="btn btn-secondary" href="{{ url_for('games.games_hub', lesson=lesson.id if lesson else None) }}">Другая игра</a>
+  {% endif %}
 </section>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='games.js') }}?v=4"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='games.js') }}?v=5"></script>{% endblock %}

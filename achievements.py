@@ -7,6 +7,7 @@ from badges import TIERS, TIER_ORDER, badge_svg
 from curriculum import MAIN_COUNT
 from data.dialogs import DIALOGS
 from data.stories import STORIES
+from friends import post as feed_post
 
 CATEGORIES = [
     ("lessons", "Уроки", "📚"),
@@ -166,6 +167,10 @@ def update_achievements(db, stats, student_id):
                        (student_id, ach["key"], now))
             new_earned.append(ach)
     db.commit()
+    if new_earned:
+        feed_post(db, student_id, "achievement",
+                  ("Новая награда: " if len(new_earned) == 1 else "Новые награды: ") +
+                  ", ".join(f"«{a['title']}»" for a in new_earned))
     return new_earned
 
 

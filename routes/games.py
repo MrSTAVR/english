@@ -5,6 +5,7 @@ import random
 from datetime import datetime
 
 import activity
+import friends
 from achievements import public, update_achievements
 from curriculum import LESSONS_BY_ID, unlocked_lesson_ids
 from data.dialogs import DIALOGS, DIALOGS_BY_KEY, character
@@ -27,6 +28,7 @@ GAMES = {
     "runner": {"title": "Бег с препятствиями", "emoji": "🏃", "desc": "Цыплёнок бежит! Выбери верный перевод, чтобы он перепрыгнул препятствие. Три жизни."},
 }
 MIN_WORDS = 4
+KEEP = ("key", "en", "ru", "hint", "pic")      # поля слова, которые нужны игре
 
 
 def _student():
@@ -62,10 +64,11 @@ def games_hub():
     pool, lesson, stats = _pool(db, student, lesson_id)
     best = {r["game"]: r for r in db.execute(
         "SELECT game, best, plays FROM game_scores WHERE student_id=?", (student["id"],)).fetchall()}
+    records = friends.best_by_game(db, student)
     mascot = build_mascot_ctx()
     mascot["page"] = "games"
     mascot["empty"] = len(pool) < MIN_WORDS
-    return render_template("games.html", mascot=mascot, games=GAMES, best=best, lesson=lesson,
+    return render_template("games.html", mascot=mascot, games=GAMES, best=best, lesson=lesson, records=records,
                            pool_size=len(pool), enough=len(pool) >= MIN_WORDS)
 
 
@@ -77,6 +80,9 @@ def game_play(game):
     if err:
         return err
     db, student = ctx
+    duel_id = request.args.get("duel", type=int)
+    if duel_id:
+        return _duel_play(db, student, game, duel_id)
     lesson_id = request.args.get("lesson", type=int)
     pool, lesson, stats = _pool(db, student, lesson_id)
     if len(pool) < MIN_WORDS:
@@ -87,12 +93,31 @@ def game_play(game):
     rng.shuffle(words)
     others = [w for w in all_words() if w["key"] not in {x["key"] for x in words}]
     rng.shuffle(others)
-    keep = ("key", "en", "ru", "hint", "pic")
     mascot = build_mascot_ctx()
     mascot["page"] = "games"
     return render_template("game.html", mascot=mascot, game=game, info=GAMES[game], lesson=lesson,
-                           words=[{k: w[k] for k in keep} for w in words[:40]],
-                           distract=[{k: w[k] for k in keep} for w in others[:30]])
+                           words=[{k: w[k] for k in KEEP} for w in words[:40]],
+                           distract=[{k: w[k] for k in KEEP} for w in others[:30]])
+
+
+def _duel_play(db, student, game, duel_id):
+    """Своя часть дуэли: те же слова, что у соперника."""
+    d = friends.duel_to_play(db, student["id"], duel_id) if friends.competing(student) else None
+    if not d or d["game"] != game:
+        flash("Эта дуэль уже сыграна или закончилась.", "error")
+        return redirect(url_for("friends.friends_page") + "#duels")
+    words = friends.duel_words(d)
+    keys = {w["key"] for w in words}
+    others = [w for w in all_words() if w["key"] not in keys]
+    random.shuffle(others)
+    other_id = d["to_id"] if d["from_id"] == student["id"] else d["from_id"]
+    rival = db.execute("SELECT display_name, emoji FROM students WHERE id=?", (other_id,)).fetchone()
+    mascot = build_mascot_ctx()
+    mascot["page"] = "games"
+    return render_template("game.html", mascot=mascot, game=game, info=GAMES[game], lesson=None,
+                           duel=d, rival=rival,
+                           words=[{k: w[k] for k in KEEP} for w in words],
+                           distract=[{k: w[k] for k in KEEP} for w in others[:30]])
 
 
 @bp.route("/api/game", methods=["POST"])
@@ -116,11 +141,25 @@ def api_game():
                (student["id"], game, stars))
     db.commit()
     activity.log(db, student["id"], "game")
+    message = ""
+    try:
+        score = int(data.get("score"))
+    except (TypeError, ValueError):
+        score = None
+    if score is not None:
+        duel_id = data.get("duel")
+        if isinstance(duel_id, int) and friends.competing(student):
+            message = friends.finish_part(db, student["id"], duel_id, score) or ""
+        rec = friends.save_record(db, student, game, score)
+        if rec["top"]:
+            message = (message + " " if message else "") + "Это новый рекорд среди друзей!"
+        elif rec["personal"]:
+            message = (message + " " if message else "") + "Новый личный рекорд!"
     stats = compute_stats(db, student["id"])
     new = update_achievements(db, stats, student["id"])
     if new:
         session["new_achievements"] = (session.get("new_achievements") or []) + [a["key"] for a in new]
-    return jsonify(ok=True, plays=stats["games_played"], newAchievements=[public(a) for a in new])
+    return jsonify(ok=True, plays=stats["games_played"], message=message, newAchievements=[public(a) for a in new])
 
 
 def _dialog_payload(d, done):

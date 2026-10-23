@@ -3,7 +3,7 @@
   'use strict';
   var root = document.getElementById('game');
   if (!root) return;
-  var game = root.dataset.game, words = [], distract = [];
+  var game = root.dataset.game, duel = root.dataset.duel ? parseInt(root.dataset.duel, 10) : null, words = [], distract = [];
   try { words = JSON.parse(root.dataset.words || '[]'); distract = JSON.parse(root.dataset.distract || '[]'); } catch (e) { /* noop */ }
 
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
@@ -13,8 +13,8 @@
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   var finished = false;
 
-  /* Конец игры: показываем итог, сохраняем звёзды, зовём компаньона */
-  function end(stars, text) {
+  /* Конец игры: показываем итог, сохраняем звёзды и счёт (для рекордов и дуэлей), зовём компаньона */
+  function end(stars, text, score) {
     if (finished) return;
     finished = true;
     root.parentNode.classList.add('hidden');
@@ -27,8 +27,9 @@
     fetch('/api/game', {
       method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf() },
-      body: JSON.stringify({ game: game, stars: stars })
+      body: JSON.stringify({ game: game, stars: stars, score: score, duel: duel })
     }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (j && j.message) { var rec = document.getElementById('game-end-record'); rec.textContent = j.message; rec.classList.remove('hidden'); }
       if (j && j.newAchievements && j.newAchievements.length) {
         setTimeout(function () { document.dispatchEvent(new CustomEvent('ach:new', { detail: { list: j.newAchievements } })); }, 1500);
       }
@@ -61,7 +62,7 @@
             clearInterval(timer);
             var sec = Math.round((Date.now() - t0) / 1000), n = set.length;
             var stars = (sec <= n * 5 && mistakes <= 1) ? 3 : sec <= n * 9 ? 2 : 1;
-            setTimeout(function () { end(stars, 'Время: ' + sec + ' с, ошибок: ' + mistakes + '.'); }, 500);
+            setTimeout(function () { end(stars, 'Время: ' + sec + ' с, ошибок: ' + mistakes + '.', sec); }, 500);
           }
         } else {
           mistakes++; document.getElementById('g-err').textContent = mistakes;
@@ -100,7 +101,7 @@
           left--;
           if (!left) {
             var n = set.length, stars = moves <= n * 1.6 ? 3 : moves <= n * 2.6 ? 2 : 1;
-            setTimeout(function () { end(stars, 'Ходов: ' + moves + '.'); }, 900);
+            setTimeout(function () { end(stars, 'Ходов: ' + moves + '.', moves); }, 900);
           }
         } else {
           lock = true;
@@ -124,7 +125,7 @@
     }, 1000);
     function stars() {
       var s = score >= 12 ? 3 : score >= 7 ? 2 : score >= 1 ? 1 : 0;
-      end(s, 'Правильных ответов: ' + score + ', лучшая серия: ' + best + '.');
+      end(s, 'Правильных ответов: ' + score + ', лучшая серия: ' + best + '.', score);
     }
     function ask() {
       if (finished) return;
@@ -169,7 +170,7 @@
     function ask() {
       if (pos >= rounds.length) {
         var st = score >= rounds.length - 1 ? 3 : score >= Math.ceil(rounds.length * 0.6) ? 2 : score >= 1 ? 1 : 0;
-        end(st, 'Угадано: ' + score + ' из ' + rounds.length + '.'); return;
+        end(st, 'Угадано: ' + score + ' из ' + rounds.length + '.', score); return;
       }
       cur = rounds[pos++];
       bar.innerHTML = '<span>Слово ' + pos + ' из ' + rounds.length + '</span><span>Верно: ' + score + '</span>';
@@ -210,8 +211,8 @@
 
     function head() { bar.innerHTML = '<span>Препятствие ' + Math.min(pos, total) + ' из ' + total + '</span><span>' + '❤️'.repeat(lives) + '🖤'.repeat(3 - lives) + '</span>'; }
     function finish() {
-      if (lives <= 0) { end(0, 'Цыплёнок споткнулся. Пройдено препятствий: ' + Math.max(pos - 1, 0) + ' из ' + total + '.'); return; }
-      end(lives, 'Дистанция пройдена! Осталось жизней: ' + lives + '.');
+      if (lives <= 0) { end(0, 'Цыплёнок споткнулся. Пройдено препятствий: ' + Math.max(pos - 1, 0) + ' из ' + total + '.', Math.max(pos - 1, 0)); return; }
+      end(lives, 'Дистанция пройдена! Осталось жизней: ' + lives + '.', total);
     }
     function flash(cls) { hero.classList.remove('jump', 'oops'); void hero.offsetWidth; hero.classList.add(cls); }
     function resolve(ok) {

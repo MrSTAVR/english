@@ -18,6 +18,8 @@ import weekly
 import seasons
 from seasons import active_season, advent_open, content
 from garden import award_coins, get_garden, on_vacation, refresh_garden, touch_streak, tree_count_for, tree_stage
+import friends
+from friends import post as feed_post
 from grading import grade_question
 from mascot import build_mascot_ctx
 from review import counts as review_counts, learned_pool, send_mistakes, state as review_state, word_of_day
@@ -144,6 +146,9 @@ def student_home():
                            rv_mastered=rv_mastered, wod=word_of_day(rv_pool, rv_state, student["id"]), mascot=mascot, speaking=config.SPEAKING,
                            name=student["display_name"],
                            emoji=student["emoji"],
+                           friends_on=friends.competing(student),
+                           friends_news=friends.news_count(db, student["id"]) if friends.competing(student) else 0,
+                           duel_calls=friends.incoming_count(db, student["id"]) if friends.competing(student) else 0,
                            lessons=lessons_info,
                            hidden_lessons_count=hidden_count,
                            extra_lessons=extra_info,
@@ -251,6 +256,9 @@ def submit_test(lesson_id):
     percent = round(100 * correct / total) if total else 0
     need = pass_mark(lesson)
     passed = percent >= need
+    first_pass = passed and not db.execute(
+        "SELECT 1 FROM attempts WHERE student_id=? AND lesson_id=? AND passed=1 AND id<>?",
+        (student["id"], lesson_id, attempt_id)).fetchone()
     finished = datetime.now()
     db.execute(
         """UPDATE attempts SET finished_at=?, seconds_spent=?, score_percent=?,
@@ -259,6 +267,8 @@ def submit_test(lesson_id):
          total, correct, json.dumps(mistakes, ensure_ascii=False),
          json.dumps({"results": results}, ensure_ascii=False), attempt_id))
     db.commit()
+    if first_pass:
+        feed_post(db, student["id"], "lesson", f"Урок пройден: «{lesson['title']}»")
     to_review = send_mistakes(db, student["id"], results, lesson_id)     # ошибки — в повторение слов
 
     stats = compute_stats(db, student["id"])
