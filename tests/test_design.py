@@ -82,7 +82,7 @@ def test_no_color_emoji_in_interface(make_student, parent):
     c = make_student()
     for client, url in ((c, "/student"), (c, "/student/map"), (c, "/student/games"), (parent, "/parent"), (parent, "/parent/progress")):
         body = client.get(url).get_data(as_text=True)
-        body = re.sub(r"<script.*?</script>|<style.*?</style>", "", body, flags=re.S)
+        body = re.sub(r"<script.*?</script>|<style.*?</style>|<span class=\"welcome-emoji\"[^>]*>.*?</span>", "", body, flags=re.S)
         text = H.unescape(re.sub(r"<[^>]+>", " ", body))
         assert not EMOJI_RE.findall(text), (url, set(EMOJI_RE.findall(text)))
 
@@ -94,3 +94,21 @@ def test_listen_buttons_have_outline_icon():
     assert "#o-sound" in open("static/dialogs.js", encoding="utf-8").read()
     css = open("static/design.css", encoding="utf-8").read()
     assert ".wod-say.say-btn" in css and "#FFFFFF" in css
+
+
+def test_student_avatar_on_home(make_student, parent):
+    import database
+    c = make_student()
+    html = c.get("/student").get_data(as_text=True)
+    assert '<span class="welcome-emoji" aria-hidden="true">🦄</span>' in html
+    assert 'class="logo"><span>English Fun</span>' in html
+    import sqlite3
+    con = sqlite3.connect(database.DB_PATH)
+    sid = con.execute("SELECT id FROM students WHERE username='masha'").fetchone()[0]
+    con.close()
+    assert "Аватарка" in parent.get(f"/parent/students/{sid}").get_data(as_text=True)
+    r = parent.post(f"/parent/students/{sid}/avatar", data={"emoji": "🐼"}, follow_redirects=True)
+    assert "Аватарка сохранена" in r.get_data(as_text=True)
+    assert "🐼</span>" in c.get("/student").get_data(as_text=True)
+    r = parent.post(f"/parent/students/{sid}/avatar", data={"emoji": "💣"}, follow_redirects=True)
+    assert "Выберите аватарку" in r.get_data(as_text=True)

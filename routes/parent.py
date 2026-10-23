@@ -259,6 +259,25 @@ def parent_birthday(sid):
     return redirect(_student_page())
 
 
+@bp.route("/parent/students/<int:sid>/avatar", methods=["POST"])
+def parent_avatar(sid):
+    """Аватарка ученика (эмодзи из STUDENT_EMOJIS)."""
+    err = require_role("parent")
+    if err:
+        return err
+    db = get_db()
+    if not db.execute("SELECT 1 FROM students WHERE id=?", (sid,)).fetchone():
+        abort(404)
+    emoji = request.form.get("emoji") or ""
+    if emoji not in STUDENT_EMOJIS:
+        flash("Выберите аватарку из списка.", "error")
+        return redirect(_student_page())
+    db.execute("UPDATE students SET emoji=? WHERE id=?", (emoji, sid))
+    db.commit()
+    flash("Аватарка сохранена.", "ok")
+    return redirect(_student_page())
+
+
 @bp.route("/parent/students/<int:sid>/goal", methods=["POST"])
 def parent_goal(sid):
     """Цель дня ученика: сколько уроков и слов повторения."""
@@ -450,7 +469,7 @@ def parent_student(sid):
     rows = [{"lesson": l, "state": ("credited" if l["id"] in sstats["credited_ids"] else
                                     "done" if l["id"] in sstats["completed_ids"] else "none")} for l in ALL_LESSONS]
     earned = db.execute("SELECT COUNT(*) FROM achievements WHERE student_id=?", (sid,)).fetchone()[0]
-    return _admin("student.html", tab="students", st=st, stats=sstats, garden=garden, vacation=vac,
+    return _admin("student.html", tab="students", st=st, student_emojis=STUDENT_EMOJIS, stats=sstats, garden=garden, vacation=vac,
                   tree_stage=tree_stage(garden["streak_days"]), tree_count=tree_count_for(garden["streak_days"]),
                   deco_count=db.execute("SELECT COUNT(*) FROM decorations WHERE student_id=?", (sid,)).fetchone()[0],
                   goal=goals.target(db, sid), goal_limits=(goals.MAX_LESSONS, goals.MAX_WORDS), credit_rows=rows,
