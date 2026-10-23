@@ -20,19 +20,32 @@ START_PER_LESSON, START_MAX = 1, 20   # при переезде — за уже 
 
 # Порядок — снизу вверх по этажам замка (FLOORS — сверху вниз, как рисуем).
 ROOMS = {
+# more — слова сверх урока: чтобы каждый уровень комнаты добавлял предметы (уровень 1 — 6 слов, 2 — 10, 3 — все)
     "bedroom": {"name": "Спальня", "theme": "дом и мебель", "lesson": 20001, "who": None},
-    "kitchen": {"name": "Кухня", "theme": "еда и посуда", "lesson": 20002, "who": "Benny"},
+    "kitchen": {"name": "Кухня", "theme": "еда и посуда", "lesson": 20002, "who": "Benny",
+                "more": [("cup", "чашка", "☕"), ("fork", "вилка", "🍴")]},
     "library": {"name": "Библиотека", "theme": "книги и истории", "lesson": None, "who": "Olly",
-                "words": ["book", "map", "letter", "pencil", "shelf", "lamp", "armchair", "plant"]},
-    "living": {"name": "Гостиная", "theme": "дом и гости", "lesson": 20005, "who": "Mia"},
+                "words": ["book", "map", "letter", "pencil", "shelf", "lamp", "armchair", "plant"],
+                "more": [("globe", "глобус", "🌍"), ("clock", "часы", "🕰️"), ("candle", "свеча", "🕯️"), ("magazine", "журнал", "📰"),
+                         ("ladder", "лестница", "🪜")]},
+    "living": {"name": "Гостиная", "theme": "дом и гости", "lesson": 20005, "who": "Mia",
+               "more": [("picture", "картина", "🖼️"), ("clock", "часы", "🕰️"), ("lamp", "лампа", "💡"), ("book", "книга", "📕")]},
     "classroom": {"name": "Класс", "theme": "школа", "lesson": 46, "who": "Felix",
-                  "words": ["book", "notebook", "pencil", "ruler", "rubber", "desk", "computer", "map", "clock"]},
+                  "words": ["book", "notebook", "pencil", "ruler", "rubber", "desk", "computer", "map", "clock"],
+                  "more": [("bag", "рюкзак", "🎒"), ("globe", "глобус", "🌍"), ("chair", "стул", "🪑"), ("glue", "клей", "🧴")]},
     "workshop": {"name": "Мастерская", "theme": "поделки", "lesson": 20006, "who": None,
-                 "words": ["paper", "scissors", "glue", "paint", "brush", "box"]},
-    "music": {"name": "Музыкальная", "theme": "музыка", "lesson": 20003, "who": None},
-    "gym": {"name": "Спортзал", "theme": "спорт и игры", "lesson": 20004, "who": "Max"},
+                 "words": ["paper", "scissors", "glue", "paint", "brush", "box"],
+                 "more": [("hammer", "молоток", "🔨"), ("picture", "картина", "🖼️"), ("crayon", "мелок", "🖍️"), ("ribbon", "лента", "🎀"),
+                          ("thread", "нитки", "🧵"), ("saw", "пила", "🪚")]},
+    "music": {"name": "Музыкальная", "theme": "музыка", "lesson": 20003, "who": None,
+              "more": [("microphone", "микрофон", "🎤"), ("headphones", "наушники", "🎧"), ("notes", "ноты", "🎵"), ("radio", "радио", "📻"),
+                       ("saxophone", "саксофон", "🎷"), ("bell", "колокольчик", "🔔"), ("banjo", "банджо", "🪕"), ("accordion", "аккордеон", "🪗")]},
+    "gym": {"name": "Спортзал", "theme": "спорт и игры", "lesson": 20004, "who": "Max",
+            "more": [("trophy", "кубок", "🏆"), ("medal", "медаль", "🏅"), ("bike", "велосипед", "🚲")]},
     "roof": {"name": "Сад на крыше", "theme": "природа", "lesson": None, "who": "Bella",
-             "words": ["flower", "grass", "sun", "bee", "butterfly", "bird", "bench"]},
+             "words": ["flower", "grass", "sun", "bee", "butterfly", "bird", "bench"],
+             "more": [("tree", "дерево", "🌳"), ("cloud", "облако", "☁️"), ("rainbow", "радуга", "🌈"), ("ladybird", "божья коровка", "🐞"),
+                      ("snail", "улитка", "🐌")]},
 }
 FLOORS = [["roof"], ["music", "gym"], ["workshop", "classroom"], ["library", "living"], ["bedroom", "kitchen"]]
 RESIDENT_RU = {"Benny": "медвежонок Benny", "Olly": "совёнок Olly", "Mia": "кошечка Mia", "Felix": "лисёнок Felix",
@@ -163,6 +176,8 @@ def room_words(key, level):
     else:
         words = [w for w in LESSONS_BY_ID[r["lesson"]]["material"]
                  if " " not in w["en"].strip() and w["en"].lower() not in NOT_THINGS]   # предметы, без фраз и грамматики
+    have = {w["en"].lower() for w in words}
+    words = words + [{"en": en, "ru": ru, "pic": pic} for en, ru, pic in r.get("more", ()) if en not in have]
     limit = {0: 0, 1: 6, 2: 10}.get(level)
     return words if limit is None else words[:limit]
 

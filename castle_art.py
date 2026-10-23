@@ -110,18 +110,18 @@ ART = {
         ("kettle", '<path d="M100 72h22l-2 14h-18z" fill="#D9661A"></path><path d="M122 76q8 0 8 6" stroke="#D9661A" stroke-width="3" fill="none"></path>'),
         (None, '<rect x="196" y="104" width="94" height="8" rx="3" fill="#8A6B4A"></rect><rect x="204" y="112" width="6" height="22" fill="#8A6B4A"></rect><rect x="276" y="112" width="6" height="22" fill="#8A6B4A"></rect>'),
         ("plate", '<ellipse cx="222" cy="102" rx="14" ry="3" fill="#FFFFFF" stroke="#C9D3E3" stroke-width="2"></ellipse>'),
-        (None, '<path d="M250 90h16v10a8 8 0 0 1-16 0z" fill="#2563C9"></path><path d="M266 92q6 0 5 6t-5 4" stroke="#2563C9" stroke-width="2.5" fill="none"></path>'
-               '<rect x="196" y="40" width="92" height="6" rx="2" fill="#8A6B4A"></rect>'),
+        ("cup", '<path d="M250 90h16v10a8 8 0 0 1-16 0z" fill="#2563C9"></path><path d="M266 92q6 0 5 6t-5 4" stroke="#2563C9" stroke-width="2.5" fill="none"></path>'),
+        (None, '<rect x="196" y="40" width="92" height="6" rx="2" fill="#8A6B4A"></rect>'),
         ("bowl", '<path d="M204 40q8-14 16 0zM230 40q9-12 18 0z" fill="#FFFFFF" stroke="#C9D3E3" stroke-width="2"></path>'),
         (None, '<rect x="262" y="24" width="8" height="16" rx="2" fill="#9AA6BD"></rect><rect x="274" y="22" width="8" height="18" rx="2" fill="#9AA6BD"></rect>')],
-    "library": lambda: (
-        ''.join(f'<rect x="{x}" y="22" width="76" height="112" rx="4" fill="#8A6B4A"></rect>' +
+    "library": lambda: [
+        (None, ''.join(f'<rect x="{x}" y="22" width="76" height="112" rx="4" fill="#8A6B4A"></rect>' +
                 ''.join(f'<rect x="{x + 4}" y="{y}" width="68" height="4" fill="#6B4F32"></rect>' for y in (54, 88, 122)) +
                 ''.join(f'<rect x="{x + 6 + i * 10}" y="{y - 26 + (i % 3) * 3}" width="8" height="{26 - (i % 3) * 3}" fill="{c}"></rect>'
                         for y in (54, 88, 122) for i, c in enumerate(("#E8618C", "#2563C9", "#1E9E5A", "#FFC83D", "#7A5BC4", "#D9661A")))
-                for x in (12, 212)) +
-        '<circle cx="150" cy="92" r="20" fill="#7FC4F5" stroke="#2563C9" stroke-width="3"></circle><path d="M138 84q8 4 6 12q10-2 14 6" stroke="#1E9E5A" stroke-width="4" fill="none"></path>'
-        '<rect x="148" y="112" width="4" height="14" fill="#8A6B4A"></rect><rect x="136" y="126" width="28" height="8" rx="3" fill="#8A6B4A"></rect>'),
+                for x in (12, 212))),
+        ("globe", '<circle cx="150" cy="92" r="20" fill="#7FC4F5" stroke="#2563C9" stroke-width="3"></circle><path d="M138 84q8 4 6 12q10-2 14 6" stroke="#1E9E5A" stroke-width="4" fill="none"></path>'
+                  '<rect x="148" y="112" width="4" height="14" fill="#8A6B4A"></rect><rect x="136" y="126" width="28" height="8" rx="3" fill="#8A6B4A"></rect>')],
     "classroom": lambda: [
         (None, '<rect x="70" y="18" width="160" height="70" rx="6" fill="#1F5A3E" stroke="#8A6B4A" stroke-width="5"></rect>'
         '<text x="150" y="62" text-anchor="middle" font-family="Nunito, sans-serif" font-weight="900" font-size="26" fill="#FFFFFF">A B C</text>'),
@@ -138,7 +138,7 @@ ART = {
         ("vase", '<path d="M232 134l6-34h20l6 34z" fill="#2563C9"></path>'),
         ("plant", '<path d="M248 100c-2-14-14-22-20-30M248 100c2-16 10-26 18-30M248 100v-36" stroke="#1E9E5A" stroke-width="3" fill="none"></path>'
         '<circle cx="228" cy="70" r="7" fill="#FFC83D"></circle><circle cx="266" cy="70" r="7" fill="#E8618C"></circle><circle cx="248" cy="62" r="7" fill="#FFFFFF"></circle>'),
-        (None, '<rect x="214" y="22" width="48" height="36" rx="3" fill="#FFFFFF" stroke="#8A6B4A" stroke-width="4"></rect><circle cx="238" cy="40" r="9" fill="#FFC83D"></circle>'),
+        ("picture", '<rect x="214" y="22" width="48" height="36" rx="3" fill="#FFFFFF" stroke="#8A6B4A" stroke-width="4"></rect><circle cx="238" cy="40" r="9" fill="#FFC83D"></circle>'),
         ("rug", '<ellipse cx="150" cy="160" rx="70" ry="11" fill="#7A5BC4" opacity=".7"></ellipse>')],
     "music": lambda: (
         '<rect x="16" y="70" width="110" height="64" rx="6" fill="#1E2A45"></rect>' +
@@ -151,11 +151,11 @@ ART = {
         '<rect x="236" y="20" width="44" height="30" rx="2" fill="#FFFFFF" stroke="#1E2A45" stroke-width="3"></rect><path d="M244 50h28l-4 18h-20z" fill="none" stroke="#D9661A" stroke-width="3"></path>'
         '<rect x="276" y="20" width="6" height="114" fill="#5E6478"></rect><circle cx="70" cy="118" r="16" fill="#D9661A"></circle><path d="M54 118h32M70 102v32" stroke="#6B3A16" stroke-width="2"></path>'
         '<rect x="110" y="122" width="100" height="12" rx="4" fill="#2563C9"></rect><circle cx="26" cy="40" r="10" fill="#FFC83D"></circle>'),
-    "workshop": lambda: (
-        '<rect x="40" y="96" width="220" height="10" rx="3" fill="#8A6B4A"></rect><rect x="50" y="106" width="8" height="28" fill="#6B4F32"></rect><rect x="242" y="106" width="8" height="28" fill="#6B4F32"></rect>'
+    "workshop": lambda: [
+        (None, '<rect x="40" y="96" width="220" height="10" rx="3" fill="#8A6B4A"></rect><rect x="50" y="106" width="8" height="28" fill="#6B4F32"></rect><rect x="242" y="106" width="8" height="28" fill="#6B4F32"></rect>'
         '<rect x="70" y="84" width="60" height="12" fill="#FFFFFF" stroke="#C9D3E3" stroke-width="2"></rect>' +
-        ''.join(f'<rect x="{150 + i * 22}" y="78" width="16" height="18" rx="3" fill="{c}"></rect>' for i, c in enumerate(("#E8618C", "#2563C9", "#FFC83D", "#1E9E5A"))) +
-        '<rect x="24" y="24" width="80" height="50" rx="4" fill="#FFFFFF" stroke="#8A6B4A" stroke-width="4"></rect><path d="M34 62l18-22 14 16 10-10 18 16" stroke="#1E9E5A" stroke-width="4" fill="none"></path>'),
+        ''.join(f'<rect x="{150 + i * 22}" y="78" width="16" height="18" rx="3" fill="{c}"></rect>' for i, c in enumerate(("#E8618C", "#2563C9", "#FFC83D", "#1E9E5A")))),
+        ("picture", '<rect x="24" y="24" width="80" height="50" rx="4" fill="#FFFFFF" stroke="#8A6B4A" stroke-width="4"></rect><path d="M34 62l18-22 14 16 10-10 18 16" stroke="#1E9E5A" stroke-width="4" fill="none"></path>')],
     "roof": lambda: [
         ("sun", '<circle cx="262" cy="34" r="18" fill="#FFC83D"></circle>'),
         ("flower", ''.join(f'<path d="M{x} 134v-26" stroke="#1E9E5A" stroke-width="3"></path><circle cx="{x}" cy="104" r="8" fill="{c}"></circle><circle cx="{x}" cy="104" r="3" fill="#FFC83D"></circle>'
@@ -172,20 +172,28 @@ POS = {
                 "picture": (70, 40, 20), "mirror": (104, 44, 20), "toy": (268, 160, 20)},
     "kitchen": {"fridge": (40, 84, 0), "kettle": (111, 76, 0), "cooker": (80, 94, 0), "oven": (106, 116, 0), "plate": (222, 100, 0),
                 "bowl": (217, 34, 0), "sink": (160, 100, 20), "glass": (286, 96, 16), "spoon": (196, 72, 16), "knife": (228, 72, 16),
-                "pan": (262, 70, 18)},
+                "pan": (262, 70, 18), "cup": (258, 96, 0), "fork": (290, 66, 14)},
     "library": {"book": (50, 70, 0), "shelf": (250, 100, 0), "map": (150, 40, 24), "letter": (190, 40, 18, "✉️"), "pencil": (110, 60, 14),
-                "lamp": (110, 24, 16), "armchair": (180, 120, 26), "plant": (30, 160, 22)},
+                "lamp": (110, 24, 16), "armchair": (180, 120, 26), "plant": (30, 160, 22),
+                "globe": (150, 92, 0), "clock": (194, 76, 18), "candle": (50, 12, 14), "magazine": (250, 162, 18), "ladder": (230, 146, 26)},
     "classroom": {"clock": (264, 40, 0), "desk": (59, 124, 0), "book": (55, 104, 0), "notebook": (237, 104, 0), "computer": (150, 110, 0),
-                  "map": (36, 46, 22), "pencil": (200, 96, 16), "ruler": (264, 76, 18), "rubber": (100, 96, 14)},
+                  "map": (36, 46, 22), "pencil": (200, 96, 16), "ruler": (264, 76, 18), "rubber": (100, 96, 14),
+                  "bag": (106, 152, 20), "globe": (244, 154, 18), "chair": (40, 156, 22), "glue": (142, 158, 16)},
     "living": {"tv": (142, 48, 0), "sofa": (80, 106, 0), "vase": (248, 118, 0), "plant": (248, 72, 0), "rug": (150, 164, 0),
-               "armchair": (282, 122, 22), "curtains": (40, 44, 24), "fireplace": (60, 162, 20), "computer": (240, 164, 18)},
-    "music": {"piano": (70, 100, 0), "guitar": (190, 96, 0), "drum": (262, 112, 0), "violin": (130, 40, 22), "trumpet": (60, 40, 22)},
+               "armchair": (282, 122, 22), "curtains": (40, 44, 24), "fireplace": (60, 162, 20), "computer": (240, 164, 18),
+               "picture": (238, 40, 0), "clock": (192, 36, 18), "lamp": (290, 40, 16), "book": (110, 162, 16)},
+    "music": {"piano": (70, 100, 0), "guitar": (190, 96, 0), "drum": (262, 112, 0), "violin": (130, 40, 22), "trumpet": (60, 40, 22),
+              "microphone": (240, 34, 18), "headphones": (95, 20, 18), "notes": (162, 28, 16), "radio": (60, 160, 22),
+              "saxophone": (147, 112, 22), "bell": (282, 30, 16), "banjo": (230, 160, 22), "accordion": (140, 162, 22)},
     "gym": {"basketball": (70, 118, 0), "ball": (24, 124, 18), "tennis": (104, 116, 14), "racket": (150, 110, 18), "skates": (110, 162, 20),
-            "skateboard": (270, 162, 22), "kite": (120, 40, 24), "doll": (165, 44, 20), "puzzle": (205, 44, 20), "robot": (40, 162, 22)},
+            "skateboard": (270, 162, 22), "kite": (120, 40, 24), "doll": (165, 44, 20), "puzzle": (205, 44, 20), "robot": (40, 162, 22),
+            "trophy": (70, 44, 20), "medal": (40, 84, 16), "bike": (150, 160, 26)},
     "workshop": {"paper": (100, 88, 0), "paint": (190, 86, 0), "scissors": (140, 86, 14), "glue": (246, 84, 18), "brush": (150, 48, 22),
-                 "box": (60, 160, 24)},
+                 "box": (60, 160, 24),
+                 "picture": (64, 50, 0), "hammer": (205, 48, 20), "crayon": (52, 88, 14), "ribbon": (250, 40, 18), "thread": (130, 160, 18), "saw": (220, 160, 22)},
     "roof": {"sun": (262, 34, 0), "flower": (66, 104, 0), "bench": (155, 112, 0), "grass": (150, 160, 0), "bee": (110, 60, 18),
-             "butterfly": (190, 50, 20), "bird": (60, 30, 20)},
+             "butterfly": (190, 50, 20), "bird": (60, 30, 20),
+             "tree": (276, 112, 30), "cloud": (150, 22, 24), "rainbow": (215, 24, 20), "ladybird": (60, 160, 14), "snail": (240, 162, 16)},
 }
 RESIDENT_X = {"library": 112, "roof": 112, "classroom": 192}   # центр жителя на большом рисунке (по умолчанию 200)
 

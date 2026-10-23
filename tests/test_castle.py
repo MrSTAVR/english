@@ -277,3 +277,11 @@ def test_castle_awards(make_student):
     assert db_scalar("SELECT COUNT(*) FROM achievements WHERE key='castle_find_10'") == 1
     body = c.get("/student/achievements").get_data(as_text=True)
     assert "Замок" in body and "Зоркий глаз" in body
+
+
+def test_every_level_adds_things():
+    for key in castle.ROOMS:
+        n1, n2, n3 = (len(castle.room_words(key, lv)) for lv in (1, 2, 3))
+        assert n1 == 6 and n2 - n1 >= 2 and n3 - n2 >= 2, key
+        arts = [castle.scene(key, lv)[0] for lv in (1, 2, 3)]
+        assert len(set(arts)) == 3, key
