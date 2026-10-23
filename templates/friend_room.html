@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_castle.html" import stars, room_main with context %}
 {% block title %}{{ room.name }}: {{ friend.name }} — English Fun{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=5">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=6">{% endblock %}
 {% block content %}
 <div class="cs-head">
   <a class="cs-back" href="{{ url_for('friends.visit', fid=friend.id, what='house') }}" aria-label="Назад в замок друга">←</a>
