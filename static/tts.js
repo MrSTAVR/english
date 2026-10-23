@@ -105,12 +105,22 @@
     return s;
   }
 
-  /* Основной вызов: speak("Hello, how are you?") */
+  /* Основной вызов: speak("Hello, how are you?").
+     Говорит только последнее слово: если голос ещё занят, сначала обрываем его и ждём чуть-чуть —
+     иначе Chrome (особенно на Windows и Android) не всегда очищает очередь и старые слова
+     звучат позже сами, например уже на следующем шаге урока. */
+  var speakToken = 0;
   function speak(text, rate) {
     if (!synth || !text) return false;
     var clean = stripForSpeech(text);
     if (!clean) return false;
+    var token = ++speakToken, busy = synth.speaking || synth.pending;
     try { synth.cancel(); } catch (e) { /* noop */ }
+    if (busy) setTimeout(function () { if (token === speakToken) say(clean, rate); }, 60);
+    else say(clean, rate);
+    return true;
+  }
+  function say(clean, rate) {
     var u = new SpeechSynthesisUtterance(clean);
     u.lang = 'en-US';
     if (enVoice) u.voice = enVoice;
@@ -118,13 +128,12 @@
     u.pitch = 1.05;
     u.volume = 1;
     synth.speak(u);
-    return true;
   }
   window.ttsSpeak = speak;
 
   /* Читаем список предложений подряд: ttsSpeakSeq(list, {rate, onSentence(i), onDone}) */
   var seqToken = 0;
-  function stopSeq() { seqToken++; try { if (synth) synth.cancel(); } catch (e) { /* noop */ } }
+  function stopSeq() { seqToken++; speakToken++; try { if (synth) synth.cancel(); } catch (e) { /* noop */ } }
   function speakSeq(list, o) {
     o = o || {};
     if (!synth || !list || !list.length) { if (o.onDone) o.onDone(); return false; }
@@ -194,10 +203,14 @@
 
     // 3) Автоматически озвучиваем варианты ответов в тестах/упражнениях choice
     //    (клик по варианту = услышал ответ)
+    //    Слушаем выбор самого варианта (change), а не клик по подписи: клик по <label> приходит дважды
+    //    (подпись + переключатель), а восстановление ответов урока ставит отметку без озвучки.
     document.querySelectorAll('.opt').forEach(function (label) {
-      label.addEventListener('click', function () {
+      var inp = label.querySelector('input');
+      if (!inp) return;
+      inp.addEventListener('change', function () {
         var t = label.textContent.trim();
-        if (t) speak(t);
+        if (t && inp.checked) speak(t);
       });
     });
 

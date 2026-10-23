@@ -277,7 +277,7 @@
 </section>
 
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=5">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=6">{% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='practice.js') }}?v=3"></script>
@@ -296,6 +296,7 @@ function goStep(id) {
     if (li.dataset.s === id) { li.classList.add('active'); seen = false; }
     else if (seen) li.classList.add('done');
   });
+  if (window.ttsStop) window.ttsStop();          // новый шаг — недосказанные слова прошлого шага не звучат
   if (window.lessonStepChanged) window.lessonStepChanged(id);
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
