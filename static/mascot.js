@@ -60,7 +60,7 @@
     wordsPage: ['Это твой словарь{who}! 📚 Нажимай 🔊 и повторяй за диктором.',
                 'Столько слов выучено! Попробуй «скрыть перевод» и вспомнить сама 🧠',
                 'Каждое слово тут — твоя победа 🏅'],
-    achPage: ['Вот твоя коллекция! 🏅 Собрано {n} из {total}. Нажми на «Скоро получишь» — и увидишь, сколько осталось!',
+    achPage: ['Вот твоя коллекция! 🏅 Собрано {n} из {total}. Загляни в «Скоро получишь» — там видно, сколько осталось!',
               'Столько медалей! ✨ {n} из {total}. Золотые и легендарные — самые редкие 👑'],
     achPageEmpty: 'Тут пока пусто, но это ненадолго: пройди урок — и получишь первую медаль! 🥉',
     speakPage: ['Сейчас потренируем произношение! 🎤 Нажми на микрофон и скажи слово вслух.',
@@ -625,8 +625,8 @@
   if (hiddenHere) { root.classList.add('mascot-off'); showReopen(); }
 
   /* ---------- 🎁 вручение наград: подарок → медали по одной ---------- */
-  var TIER_FX = { bronze: ['#f4a261', '#ffd7b0', '#fff'], silver: ['#e6ecf8', '#9aa8c7', '#7c5cff', '#fff'],
-                  gold: ['#ffd54f', '#ffb300', '#fff3c4', '#ff7ab6'], legend: ['#ff7ab6', '#ffd54f', '#6fe3b0', '#7c5cff', '#4fc3f7', '#fff'] };
+  var TIER_FX = { bronze: ['#FFE9D6', '#9A3B00', '#FFFFFF'], silver: ['#E3EDFC', '#5E6478', '#FFFFFF'],      // цвета палитры макета
+                  gold: ['#FFC83D', '#FFEFC2', '#D99A00', '#FFFFFF'], legend: ['#FFC83D', '#2563C9', '#E3EDFC', '#DDF5E7', '#FFFFFF'] };
   var STAR = '<svg width="100%" height="100%" viewBox="-10 -10 20 20"><path d="M0 -9 L2.4 -2.4 L9 0 L2.4 2.4 L0 9 L-2.4 2.4 L-9 0 L-2.4 -2.4Z" fill="{c}"/></svg>';
 
   function burstAt(x, y, colors, n, dist) {           // «салют»: разлетающиеся точки и звёздочки
@@ -680,16 +680,16 @@
     giftEl.setAttribute('role', 'dialog');
     giftEl.setAttribute('aria-label', 'Награда');
     giftEl.innerHTML =
-      '<div class="gift-hint">Нажми на коробку! 🐣 принёс тебе ' + (list.length > 1 ? list.length + ' награды' : 'награду') + '</div>' +
+      '<div class="gift-hint">Нажми на коробку! Чик-чик принёс тебе ' + (list.length > 1 ? list.length + ' награды' : 'награду') + '</div>' +
       '<button type="button" class="gift-box" aria-label="Открыть подарок">' +
       '  <svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">' +
-      '    <g class="gb-lid"><rect x="8" y="26" width="124" height="26" rx="7" fill="#FF5D8F"/>' +
-      '      <rect x="60" y="26" width="20" height="26" fill="#FFD54F"/>' +
-      '      <path d="M70 30 Q52 6 42 16 Q38 26 70 30 Z" fill="#FFD54F"/>' +
-      '      <path d="M70 30 Q88 6 98 16 Q102 26 70 30 Z" fill="#FFD54F"/></g>' +
-      '    <rect x="16" y="52" width="108" height="70" rx="8" fill="#FF8FB8"/>' +
-      '    <rect x="60" y="52" width="20" height="70" fill="#FFD54F"/>' +
-      '    <rect x="16" y="52" width="108" height="10" fill="rgba(0,0,0,.08)"/>' +
+      '    <g class="gb-lid"><rect x="8" y="26" width="124" height="26" rx="7" fill="#1E4FA8"/>' +
+      '      <rect x="60" y="26" width="20" height="26" fill="#FFC83D"/>' +
+      '      <path d="M70 30 Q52 6 42 16 Q38 26 70 30 Z" fill="#FFC83D" stroke="#D99A00" stroke-width="2"/>' +
+      '      <path d="M70 30 Q88 6 98 16 Q102 26 70 30 Z" fill="#FFC83D" stroke="#D99A00" stroke-width="2"/></g>' +
+      '    <rect x="16" y="52" width="108" height="70" rx="8" fill="#2563C9"/>' +
+      '    <rect x="60" y="52" width="20" height="70" fill="#FFC83D"/>' +
+      '    <rect x="16" y="52" width="108" height="10" fill="rgba(0,0,0,.12)"/>' +
       '  </svg></button>';
     document.body.appendChild(giftEl);
     var box = giftEl.querySelector('.gift-box');
@@ -723,7 +723,7 @@
         '<div class="ach-desc-big">' + esc(a.desc || '') + '</div>' +
         (giftList.length > 1 ? '<div class="ach-dots">' + dots + '</div>' : '') +
         '<div class="ach-actions"><button type="button" class="btn btn-secondary ach-next">' +
-          (last ? 'Забрать в коллекцию! 🎉' : 'Дальше ▶') + '</button>' +
+          (last ? 'Забрать в коллекцию!' : 'Дальше →') + '</button>' +
           (giftList.length > 1 && !last ? '<button type="button" class="ach-skip">Забрать все сразу</button>' : '') + '</div>' +
       '</div>';
     giftEl.classList.add('gift-reveal');
@@ -774,7 +774,7 @@
 
   function confettiBurst(n) {
     if (RM) return;
-    var colors = ['#FF5D8F', '#FFD54F', '#4FC3F7', '#AED581', '#BA68C8', '#FB8C00'];
+    var colors = ['#2563C9', '#FFC83D', '#E3EDFC', '#1E9E5A', '#FFE9D6', '#FFFFFF'];
     n = n || 34;
     for (var i = 0; i < n; i++) {
       var c = document.createElement('i');

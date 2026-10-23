@@ -492,25 +492,8 @@ html[data-theme="dark"] .adv-today { background: var(--sand); border-color: var(
 html[data-theme="dark"] .adv-open { background: #183D2A; color: #8FE3B0; border-color: #2F6B4A; }
 html[data-theme="dark"] .adv-locked { background: #241F3D; color: var(--muted); }
 
-/* --- награды: карточки и полоски в палитре (медали остаются рисунками) --- */
-.ach-card, .ach-card.is-earned.tier-bronze, .ach-card.is-earned.tier-silver, .ach-card.is-earned.tier-gold, .ach-card.is-earned.tier-legend {
-  background: var(--surface); border-color: var(--line); box-shadow: 0 4px 0 var(--shade); }
-.ach-card.is-locked { background: #F3EBDA; box-shadow: none; }
-.ach-prog-fill { background: var(--primary); }
-.ach-card-date { color: var(--muted); }
-html[data-theme="dark"] .ach-card, html[data-theme="dark"] .ach-card.is-earned.tier-bronze, html[data-theme="dark"] .ach-card.is-earned.tier-silver,
-html[data-theme="dark"] .ach-card.is-earned.tier-gold, html[data-theme="dark"] .ach-card.is-earned.tier-legend { background: var(--surface); border-color: var(--line); box-shadow: 0 4px 0 #0E0B1F; }
-html[data-theme="dark"] .ach-card.is-locked { background: #241F3D; }
-html[data-theme="dark"] .ach-prog-fill { background: #8FB4FF; }
-
 /* --- ещё остатки старой палитры --- */
-.ach-card .ach-prog-fill, .ach-card[class*="tier-"] .ach-prog-fill { background: var(--primary); }
-.ach-card.is-earned .ach-card-date { color: var(--muted); }
-.tier-chip.tier-bronze, .tier-chip.tier-silver, .tier-chip.tier-gold, .tier-chip.tier-legend { background: var(--surface); border-color: var(--line); }
-html[data-theme="dark"] .ach-card .ach-prog-fill { background: #8FB4FF; }
-html[data-theme="dark"] .ach-card.is-earned .ach-card-date { color: var(--muted); }
-html[data-theme="dark"] .tier-chip.tier-bronze, html[data-theme="dark"] .tier-chip.tier-silver,
-html[data-theme="dark"] .tier-chip.tier-gold, html[data-theme="dark"] .tier-chip.tier-legend { background: var(--surface); border-color: var(--line); }
+/* награды — в achievements.css */
 .stage-msg { color: var(--muted); }
 .btn-danger { background: #B8322F; color: #FFFFFF; box-shadow: 0 3px 0 #8A2522; }
 .pill-warn { background: var(--sand); color: #8A5A00; border-color: #F3DFA6; }
