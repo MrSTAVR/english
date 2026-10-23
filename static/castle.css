@@ -72,8 +72,8 @@ div.cs-room { cursor: default; }
 .cs-earn-ico { width: 34px; height: 34px; border-radius: 11px; background: var(--sky); color: var(--primary-dark); display: flex; align-items: center; justify-content: center; flex: none; }
 
 /* комната */
-.cs-big { position: relative; height: 300px; border-radius: 24px; overflow: hidden; border: 2px solid var(--line); box-shadow: var(--shadow); }
-.cs-big .cs-who { width: 80px; height: 104px; right: 22%; bottom: 8px; }
+.cs-big { position: relative; aspect-ratio: 5 / 3; border-radius: 24px; overflow: hidden; border: 2px solid var(--line); box-shadow: var(--shadow); }
+.cs-big .cs-who { width: 80px; height: 104px; right: auto; bottom: 8px; transform: translateX(-50%); }
 .cs-big .cs-chick { width: 100px; height: 100px; }
 .cs-words { margin-top: 16px; }
 .cs-words h2 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.25rem; }
@@ -106,11 +106,48 @@ div.cs-room { cursor: default; }
   .cs-stars svg { width: 11px; height: 11px; }
   .cs-room.is-locked b, .cs-room.is-build b { font-size: .85rem; }
   .cs-why { font-size: .7rem; }
-  .cs-big { height: 230px; }
-  .cs-big .cs-who { width: 64px; height: 84px; }
-  .cs-big .cs-who svg { width: 64px; height: 84px; }
+  .cs-big .cs-who { width: 56px; height: 74px; }
+  .cs-pin-label { font-size: .75rem; padding: 1px 6px; bottom: 26px; }
+  .cs-find-chick { width: 38px; height: 38px; }
+  .cs-find .cs-go { padding: 0 14px; }
+  .cs-big .cs-who svg { width: 56px; height: 74px; }
   .cs-big .cs-chick { width: 78px; height: 78px; }
 }
+
+/* метки слов на рисунке комнаты и «Find the…!» */
+.cs-pin { position: absolute; width: 38px; height: 38px; margin: -19px 0 0 -19px; padding: 0; border: 0; background: none; cursor: pointer; z-index: 2;
+  -webkit-tap-highlight-color: transparent; }
+.cs-pin::before { content: ""; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
+  background: var(--primary); border: 3px solid #FFFFFF; box-shadow: 0 2px 0 rgba(30, 42, 69, .3); box-sizing: content-box; }
+.cs-pin-label { position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%); white-space: nowrap; padding: 2px 8px; border-radius: 999px;
+  background: #FFFFFF; color: #1E2A45; font-weight: 900; font-size: .85rem; box-shadow: 0 2px 0 rgba(30, 42, 69, .2); display: none; pointer-events: none; }
+.cs-big.show-labels .cs-pin-label, .cs-pin.is-tip .cs-pin-label, .cs-pin.is-ok .cs-pin-label { display: block; }
+.cs-pin.is-tip { z-index: 3; }
+.cs-pin.is-tip::before { background: var(--yellow); }
+.cs-big.is-finding .cs-pin-label { display: none; }
+.cs-big.is-finding .cs-pin.is-ok .cs-pin-label { display: block; }
+.cs-pin.is-ok::before { background: #1E9E5A; }
+.cs-pin.is-no::before { background: #E5484D; }
+.cs-pin.is-no { animation: cs-shake .35s; }
+@keyframes cs-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+@media (prefers-reduced-motion: reduce) { .cs-pin.is-no { animation: none; } }
+.cs-tip, .cs-find { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 8px 12px 8px 8px; border-radius: 18px; background: var(--surface); }
+.cs-tip { border: 2px solid var(--primary); }
+.cs-tip[hidden], .cs-find [hidden] { display: none; }
+.cs-tip > span, .cs-find-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cs-tip b { font-size: 1.3rem; }
+.cs-tip span span, .cs-find-text span { color: var(--muted); font-weight: 700; font-size: .92rem; }
+.cs-tip-say { width: 44px; height: 44px; border-radius: 14px; border: 0; background: var(--primary); color: #FFFFFF; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex: none; }
+.cs-tip-say .ico { color: #FFFFFF; width: 22px; height: 22px; }
+.cs-find { border: 2px solid var(--line); box-shadow: var(--shadow); padding: 10px 12px; }
+.cs-find b { font-size: 1.15rem; }
+.cs-find-chick { width: 44px; height: 44px; flex: none; }
+.cs-find .cs-tip-say { background: var(--sky); }
+.cs-find .cs-tip-say .ico { color: var(--primary-dark); }
+.cs-find.is-win { border-color: #1E9E5A; }
+.cs-labels { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; font-weight: 800; color: var(--muted); cursor: pointer; }
+.cs-labels input { width: 20px; height: 20px; accent-color: var(--primary); }
 
 /* тёмная тема: рисунки остаются светлыми, рамки и карточки — из темы */
 html[data-theme="dark"] .cs-castle { background: #3A3150; box-shadow: 0 5px 0 #241F3D; }
@@ -118,7 +155,7 @@ html[data-theme="dark"] .cs-room.is-locked { background: #2A2445; border-color: 
 html[data-theme="dark"] .cs-room.is-build { background: #1E2A4D; border-color: #8FB4FF; }
 html[data-theme="dark"] .cs-upgrade { background: #1E2A4D; }
 html[data-theme="dark"] .cs-upgrade p { color: #8FB4FF; }
-html[data-theme="dark"] .cs-go-lesson, html[data-theme="dark"] .cs-earn-ico { background: #1E2A4D; color: #8FB4FF; }
+html[data-theme="dark"] .cs-go-lesson, html[data-theme="dark"] .cs-earn-ico, html[data-theme="dark"] .cs-find .cs-tip-say { background: #1E2A4D; color: #8FB4FF; }
 html[data-theme="dark"] .cs-card, html[data-theme="dark"] .cs-big, html[data-theme="dark"] .cs-word { box-shadow: 0 4px 0 #0E0B1F; }
 @media (max-width: 480px) {
   .cs-head { flex-wrap: wrap; }
@@ -128,3 +165,4 @@ html[data-theme="dark"] .cs-card, html[data-theme="dark"] .cs-big, html[data-the
   .cs-back + .cs-room-title { flex-basis: calc(100% - 60px); }
   .cs-back ~ .cs-chip:first-of-type { margin-left: 54px; }
 }
+html[data-theme="dark"] .cs-find .cs-tip-say .ico { color: #8FB4FF; }

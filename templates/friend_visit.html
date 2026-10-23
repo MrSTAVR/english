@@ -23,5 +23,5 @@
   <p><a class="btn btn-small" href="{{ url_for('friends.visit', fid=friend.id, what='house' if what == 'garden' else 'garden') }}">{{ 'Заглянуть в замок' if what == 'garden' else 'Заглянуть в сад' }}</a></p>
 </section>
 {% endblock %}
-{% block head %}{% if what == 'house' %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=1">{% endif %}{% endblock %}
-{% block scripts %}{% if what == 'house' %}<script src="{{ url_for('static', filename='castle.js') }}?v=1"></script>{% endif %}{% endblock %}
+{% block head %}{% if what == 'house' %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=2">{% endif %}{% endblock %}
+{% block scripts %}{% if what == 'house' %}<script src="{{ url_for('static', filename='castle.js') }}?v=2"></script>{% endif %}{% endblock %}
