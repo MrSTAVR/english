@@ -221,6 +221,8 @@
         words: deck ? deck.get() : null,
         ex: answers('step-exercises'),
         test: answers('step-test'),
+        dlg: window.LessonDialogs ? window.LessonDialogs.get() : null,
+        speak: ($('speak-block') && $('speak-block')._speak) ? $('speak-block')._speak.get() : null,
         secs: start ? Math.max(0, Math.round(Date.now() / 1000 - start)) : 0
       };
     }
@@ -231,6 +233,7 @@
       var box = $(id);
       if (box) ['change', 'input', 'click', 'pointerup'].forEach(function (ev) { box.addEventListener(ev, save); });
     });
+    document.addEventListener('lesson:changed', save);   // диалоги и «Скажи вслух» сообщают сами
     var scrollT = null;                                  // место на странице — тоже часть «где остановились»
     window.addEventListener('scroll', function () { clearTimeout(scrollT); scrollT = setTimeout(save, 400); }, { passive: true });
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') { clearTimeout(timer); saveNow(); } });
@@ -251,6 +254,11 @@
         putAnswers('step-exercises', saved.ex);
         putAnswers('step-test', saved.test);
         if (saved.step && saved.step !== 'step-theory' && window.goStep) window.goStep(saved.step);
+        setTimeout(function () {                         // диалоги и «Скажи вслух» строятся на DOMContentLoaded после нас
+          if (saved.dlg && window.LessonDialogs) window.LessonDialogs.set(saved.dlg);
+          var sb = $('speak-block');
+          if (saved.speak && sb && sb._speak) sb._speak.set(saved.speak);
+        }, 0);
         var y = saved.scroll | 0;
         if (y > 0) setTimeout(function () { window.scrollTo({ top: y, behavior: 'auto' }); }, 80);   // goStep сначала поднимает наверх
         var form2 = $('test-form');
