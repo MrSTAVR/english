@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """Дополнительные уроки: доступны ВСЕГДА, независимо от основного курса.
 Формат полностью совпадает с LESSONS из lessons.py (теория, карточки,
-тренировка, тест). Флаг is_extra=True включает их в отдельный блок."""
+тренировка, тест). Флаг is_extra=True включает их в отдельный блок.
+В конец списка добавляются уроки замка Чик-чика (data/castle_lessons.py)."""
+
+from data.castle_lessons import CASTLE_LESSONS
 
 EXTRA_LESSONS = [
    {
@@ -90,4 +93,4 @@ EXTRA_LESSONS = [
          "explain": "Post office — почта."},
     ],
 }
-]
+] + CASTLE_LESSONS

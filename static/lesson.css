@@ -248,3 +248,4 @@ html[data-theme="dark"] .step .match-tile.tap-selected { background: #1E2A4D; bo
 html[data-theme="dark"] .ls-resume { background: #183D2A; color: #8FE3B0; }
 html[data-theme="dark"] .ls-resume .btn-aux { background: transparent; color: #8FE3B0; box-shadow: inset 0 0 0 2px #2F6B4A; }
 .ls-resume .btn-aux { min-height: 36px; padding: 0 14px; border: 0; border-radius: 999px; font-weight: 800; box-shadow: none; }
+.wd-know[hidden], .wd-ru[hidden], .wd-tap[hidden] { display: none; }   /* display у плашки перебивал hidden */
