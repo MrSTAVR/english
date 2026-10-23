@@ -146,7 +146,7 @@
 </main>
 
 <footer class="footer">{% if speech_area %}Логопедические занятия{% else %}<svg class="icon"><use href="#i-chick"/></svg> Сделано с любовью для изучения английского{% endif %}
-  <span class="app-version" title="{{ app_version.subject }}">{{ app_version.full }}</span></footer>
+  <span class="app-version"{% if not speech_area %} title="{{ app_version.subject }}"{% endif %}>{{ app_version.full }}</span></footer>
 
 
 {# ---------- Анимированный помощник Чик-чик (правый нижний угол); в логопедической части его нет ---------- #}
