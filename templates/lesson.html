@@ -102,7 +102,7 @@
   {% for ex in lesson.exercises %}
     {% set outer_loop = loop %}
     <div class="exercise card-inner" data-answer="{{ ex.answer if ex.type in ('choice','type_in') else '' }}" data-type="{{ ex.type }}">
-      <p class="q"><b>Задание {{ loop.index }}.</b> {{ ex.q }}</p>
+      <p class="q"><b>Задание {{ loop.index }}.</b> {{ ex.q|noemoji }}</p>
       {% if ex.type == 'choice' %}
         <div class="options">
           {% for opt in ex.options %}
@@ -125,8 +125,8 @@
               {% endfor %}
             </div>
           </div>
-          <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
-          <button type="button" class="btn btn-small" onclick="checkDndExercise(this)">Проверить</button>
+          <button type="button" class="btn btn-small btn-aux" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
+          <button type="button" class="btn btn-small btn-check" onclick="checkDndExercise(this)"><svg class="ico" aria-hidden="true"><use href="#o-check"/></svg> Проверить</button>
           <span class="ex-result"></span>
         </div>
       {% elif ex.type == 'sort' %}
@@ -145,8 +145,8 @@
               </div>
             {% endfor %}
           </div>
-          <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
-          <button type="button" class="btn btn-small" onclick="checkDndExercise(this)">Проверить</button>
+          <button type="button" class="btn btn-small btn-aux" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
+          <button type="button" class="btn btn-small btn-check" onclick="checkDndExercise(this)"><svg class="ico" aria-hidden="true"><use href="#o-check"/></svg> Проверить</button>
           <span class="ex-result"></span>
         </div>
       {% else %}
@@ -158,7 +158,7 @@
         {% endif %}
       {% endif %}
       {% if ex.type not in ('match', 'sort') %}
-        <button class="btn btn-small" onclick="checkExercise(this)">Проверить</button>
+        <button class="btn btn-small btn-check" onclick="checkExercise(this)"><svg class="ico" aria-hidden="true"><use href="#o-check"/></svg> Проверить</button>
         <span class="ex-result"></span>
       {% endif %}
       <div class="explain hidden">{{ ex.explain }}</div>
@@ -198,7 +198,7 @@
     {% for q in lesson.test %}
       {% set outer_loop = loop %}
       <div class="question card-inner" data-qindex="{{ loop.index0 }}">
-        <p class="q"><b>Вопрос {{ loop.index }}.</b> {{ q.q }}</p>
+        <p class="q"><b>Вопрос {{ loop.index }}.</b> {{ q.q|noemoji }}</p>
         {% if q.audio %}<p><button type="button" class="btn btn-small say-btn" data-say="{{ q.audio }}"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Слушать</button> <button type="button" class="btn btn-small say-btn" data-say="{{ q.audio }}" data-slow="1">Медленно</button></p>{% endif %}
         {% if q.type == 'choice' %}
           <div class="options">
@@ -216,7 +216,7 @@
             </div>
             <div class="answer-line" id="line-{{ outer_loop.index0 }}"></div>
             <input type="hidden" name="q{{ outer_loop.index0 }}_order" id="order-{{ outer_loop.index0 }}">
-            <button type="button" class="btn btn-small" onclick="clearLine({{ outer_loop.index0 }})">Очистить</button>
+            <button type="button" class="btn btn-small btn-aux" onclick="clearLine({{ outer_loop.index0 }})">Очистить</button>
             <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakLine({{ outer_loop.index0 }})" title="Послушать, как звучит твоя фраза"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Послушать</button>
           </div>
         {% elif q.type == 'match' %}
@@ -236,7 +236,7 @@
                 {% endfor %}
               </div>
             </div>
-            <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
+            <button type="button" class="btn btn-small btn-aux" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
             <input type="hidden" name="q{{ outer_loop.index0 }}_match" id="match-{{ outer_loop.index0 }}">
           </div>
         {% elif q.type == 'sort' %}
@@ -256,7 +256,7 @@
                 </div>
               {% endfor %}
             </div>
-            <button type="button" class="btn btn-small" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
+            <button type="button" class="btn btn-small btn-aux" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
             <input type="hidden" name="q{{ outer_loop.index0 }}_sort" id="sort-{{ outer_loop.index0 }}">
           </div>
         {% else %}
@@ -275,10 +275,10 @@
 </section>
 
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=1">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=3">{% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='practice.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='practice.js') }}?v=3"></script>
 <script src="{{ url_for('static', filename='lesson.js') }}?v=1"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=3"></script>{% endif %}
 {% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=5"></script>{% endif %}

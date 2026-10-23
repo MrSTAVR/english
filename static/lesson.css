@@ -203,3 +203,33 @@ html[data-theme="dark"] .wd-dot.is-on, html[data-theme="dark"] .ls-steps.stepper
 html[data-theme="dark"] .ls-now b { color: #8FB4FF; }
 html[data-theme="dark"] .wd-slow .ico, html[data-theme="dark"] .wd-all .ico { color: #8FB4FF; }
 @media (min-width: 701px) { html[data-theme="dark"] .ls-steps.stepper li.active { background-color: transparent; } }
+
+/* ---------- задания: варианты ответа ≠ кнопки-действия ---------- */
+/* вариант ответа — большая белая плитка с кружком выбора слева */
+.step .opt { gap: 12px; padding-left: 14px; cursor: pointer; }
+.step .opt::before { content: ""; width: 22px; height: 22px; flex: none; border-radius: 50%; border: 2px solid var(--line-deep); background: var(--surface); box-sizing: border-box; }
+.step .opt:has(input:checked)::before { border: 7px solid var(--primary); }
+/* «Проверить» — синяя кнопка действия */
+.step .btn-check { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 18px; border-radius: 14px; border: 0;
+  background: var(--primary); color: #FFFFFF; box-shadow: 0 3px 0 var(--primary-deep); font-weight: 900; }
+.step .btn-check .ico { color: #FFFFFF; width: 18px; height: 18px; }
+.step .btn-check:hover { background: var(--primary-dark); color: #FFFFFF; }
+/* вспомогательные: послушать, медленно, сбросить, очистить — плоские голубые «таблетки» */
+.step .tts-listen, .step .say-btn, .step .btn-aux { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 999px;
+  border: 0; background: var(--sky); color: var(--primary-dark); box-shadow: none; font-weight: 800; font-size: .92rem; }
+.step .tts-listen .ico, .step .say-btn .ico { color: var(--primary-dark); width: 18px; height: 18px; }
+.step .tts-listen:hover, .step .say-btn:hover, .step .btn-aux:hover { background: #D5E4FA; color: var(--primary-dark); }
+.step .typein + .tts-listen { margin-top: 8px; }
+.step .exercise > .btn-check, .step .exercise > .ex-result { margin-top: 12px; }
+html[data-theme="dark"] .step .opt:has(input:checked)::before { border-color: #8FB4FF; }
+html[data-theme="dark"] .step .tts-listen, html[data-theme="dark"] .step .say-btn, html[data-theme="dark"] .step .btn-aux { background: #1E2A4D; color: #8FB4FF; }
+html[data-theme="dark"] .step .tts-listen .ico, html[data-theme="dark"] .step .say-btn .ico { color: #8FB4FF; }
+html[data-theme="dark"] .step .btn-check, html[data-theme="dark"] .step .btn-check .ico { color: #FFFFFF; }
+html[data-theme="dark"] .step .btn.btn-check { background: var(--primary); box-shadow: 0 3px 0 #173F87; }
+@media (max-width: 480px) { .step .question .options, .step .exercise .options { grid-template-columns: minmax(0, 1fr); } }
+/* «Соедини пары»: плитки — это ответы (белые, как варианты), а не кнопки */
+.step .match-tile { background: var(--surface); color: var(--ink); border: 2px solid var(--line); box-shadow: 0 4px 0 var(--shade); }
+.step .match-tile.tap-selected, .step .match-tile.dragging { background: var(--sky); border-color: var(--primary); box-shadow: 0 4px 0 var(--primary); color: var(--ink); }
+.step .match-tile.placed { opacity: .45; box-shadow: none; }
+html[data-theme="dark"] .step .match-tile { background: var(--surface); color: #FFFFFF; box-shadow: 0 4px 0 #0E0B1F; }
+html[data-theme="dark"] .step .match-tile.tap-selected { background: #1E2A4D; border-color: #8FB4FF; box-shadow: 0 4px 0 #3B6FD8; }
