@@ -14,6 +14,7 @@ from database import get_db
 from datetime import datetime
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
 import activity
+import castle
 import weekly
 import seasons
 from seasons import active_season, advent_open, content
@@ -313,8 +314,10 @@ def submit_test(lesson_id):
          total, correct, json.dumps(mistakes, ensure_ascii=False),
          json.dumps({"results": results}, ensure_ascii=False), attempt_id))
     db.commit()
+    bricks_earned = 0
     if first_pass:
         feed_post(db, student["id"], "lesson", f"Урок пройден: «{lesson['title']}»")
+        bricks_earned = castle.on_lesson_passed(db, student["id"], lesson)
     db.execute("DELETE FROM lesson_progress WHERE student_id=? AND lesson_id=?", (student["id"], lesson_id))   # урок сдан
     to_review = send_mistakes(db, student["id"], results, lesson_id)     # ошибки — в повторение слов
 
@@ -342,7 +345,7 @@ def submit_test(lesson_id):
                            lesson=lesson, percent=percent, passed=passed, need=need,
                            correct=correct, total=total,
                            seconds=seconds, results=results, to_review=to_review,
-                           coins_earned=coins_earned,
+                           coins_earned=coins_earned, bricks_earned=bricks_earned,
                            coins_total=garden["coins"],
                            streak_days=garden["streak_days"],
                            tier_names={k: v["name"] for k, v in TIERS.items()},

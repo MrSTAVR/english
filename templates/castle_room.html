@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_castle.html" import stars %}
+{% block title %}{{ room.name }} — Замок Чик-чика{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=1">{% endblock %}
+{% block content %}
+<div class="cs-head">
+  <a class="cs-back" href="{{ url_for('castle.castle_page') }}" aria-label="Назад в замок">←</a>
+  <div class="cs-room-title"><h1>{{ room.name }}</h1><span>Уровень {{ level }} {{ stars(level) }}</span></div>
+  <span class="cs-chip">{{ brick(20) }}<b>{{ bricks }}</b></span>
+  <span class="cs-chip">{{ coin(20) }}<b>{{ coins }}</b></span>
+</div>
+
+<div class="cs-layout cs-room-layout">
+  <section class="cs-main">
+    <div class="cs-big">
+      <span class="cs-art">{{ room_svg(key) }}</span>
+      {% if key == 'bedroom' %}<span class="cs-who cs-chick" data-outfit='{{ (outfit or {}) | tojson }}'></span>{% elif room.who %}<span class="cs-who">{{ animal(room.who, 92) }}</span>{% endif %}
+    </div>
+    <div class="cs-words">
+      <h2>Слова этой комнаты <span class="pill pill-soft">{{ words|length }}</span></h2>
+      <p class="hint">Нажми на слово — услышишь, как оно звучит.</p>
+      <div class="cs-word-list">
+        {% for w in words %}<button type="button" class="cs-word say-btn" data-say="{{ w.en }}">{% if w.pic %}<span class="cs-word-pic" aria-hidden="true">{{ w.pic }}</span>{% endif %}<b lang="en">{{ w.en }}</b><small>{{ w.ru }}</small></button>{% endfor %}
+      </div>
+    </div>
+  </section>
+  <aside class="cs-side">
+    {% if room.who %}
+    <div class="cs-card cs-resident">{{ animal_ava(room.who, 48) }}<span><b>Здесь живёт {{ who_ru }}</b><span class="hint">Скоро у соседа будут поручения для тебя.</span></span></div>
+    {% endif %}
+    <div class="cs-upgrade">
+      {% if next_cost %}
+      <div class="cs-up-head"><b>Уровень {{ level + 1 }} {{ stars(level + 1) }}</b><span>{{ brick(18) }}{{ next_cost[0] }} · {{ coin(18) }}{{ next_cost[1] }}</span></div>
+      {% if next_words %}<p>Новые предметы: {% for w in next_words %}<b lang="en">{{ w.en }}</b>{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+      <form method="post" action="{{ url_for('castle.build', room=key) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn cs-go cs-go-build" type="submit">Улучшить до уровня {{ level + 1 }}</button>
+      </form>
+      {% else %}
+      <div class="cs-up-head"><b>Самый высокий уровень!</b></div><p>Эта комната обустроена полностью. Молодец!</p>
+      {% endif %}
+    </div>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='castle.js') }}?v=1"></script>{% endblock %}

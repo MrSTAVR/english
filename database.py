@@ -77,6 +77,27 @@ CREATE TABLE IF NOT EXISTS lesson_progress (            -- незакончен�
     updated_at TEXT NOT NULL,
     PRIMARY KEY (student_id, lesson_id)
 );
+CREATE TABLE IF NOT EXISTS castle (                    -- замок Чик-чика: переезд из домика
+    student_id  INTEGER PRIMARY KEY,
+    moved_coins INTEGER DEFAULT 0,                     -- сколько монеток вернули за старый домик
+    note_seen   INTEGER DEFAULT 0,
+    created_at  TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS castle_rooms (              -- построенные комнаты (уровень 1–3)
+    student_id INTEGER NOT NULL,
+    room       TEXT NOT NULL,
+    level      INTEGER NOT NULL,
+    at         TEXT NOT NULL,
+    PRIMARY KEY (student_id, room)
+);
+CREATE TABLE IF NOT EXISTS castle_bricks (             -- кирпичики: начисления (+) и траты (−), каждое один раз
+    student_id INTEGER NOT NULL,
+    reason     TEXT NOT NULL,                          -- start / lesson / goal / build / task
+    ref        TEXT NOT NULL,
+    amount     INTEGER NOT NULL,
+    at         TEXT NOT NULL,
+    UNIQUE (student_id, reason, ref)
+);
 CREATE TABLE IF NOT EXISTS birthday_gifts (           -- подарок на день рождения: раз в год
     student_id INTEGER NOT NULL,
     year       INTEGER NOT NULL,

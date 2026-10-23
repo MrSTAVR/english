@@ -1,0 +1,36 @@
+{# Замок в разрезе: этажи с комнатами. selectable — комнаты выбираются нажатием (страница замка). #}
+{% macro stars(n) %}<span class="cs-stars" aria-label="уровень {{ n }}">{% for i in range(3) %}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" fill="{{ '#FFC83D' if i < n else '#FFFFFF' }}" stroke="#D99A00" stroke-width="2"/></svg>{% endfor %}</span>{% endmacro %}
+
+{% macro castle_view(view, selectable=false, selected=none, outfit=none) %}
+<div class="cs-castle">
+  <span class="cs-tower cs-tower-l" aria-hidden="true"><svg viewBox="0 0 46 40"><path d="M23 2v16" stroke="#5E6478" stroke-width="2"/><path d="M23 3h14l-4 4 4 4H23z" fill="#2563C9"/><path d="M6 40V20h6v5h6v-5h10v5h6v-5h6v20z" fill="#E3CFA4" stroke="#C9A27A" stroke-width="2"/></svg></span>
+  <span class="cs-tower cs-tower-r" aria-hidden="true"><svg viewBox="0 0 46 40"><path d="M23 2v16" stroke="#5E6478" stroke-width="2"/><path d="M23 3h14l-4 4 4 4H23z" fill="#FFC83D"/><path d="M6 40V20h6v5h6v-5h10v5h6v-5h6v20z" fill="#E3CFA4" stroke="#C9A27A" stroke-width="2"/></svg></span>
+  {% for floor in view.floors %}
+  <div class="cs-floor">
+    {% for r in floor %}
+      {% set data %}data-room="{{ r.key }}" data-state="{{ r.state }}" data-name="{{ r.name }}" data-level="{{ r.level }}" data-who="{{ r.who_ru or '' }}" data-words="{{ r.words }}" data-lock="{{ r.lock or '' }}" data-lesson="{{ url_for('student.lesson_page', lesson_id=r.lesson) if r.lesson else '' }}" data-cost-b="{{ r.next_cost[0] if r.next_cost else '' }}" data-cost-c="{{ r.next_cost[1] if r.next_cost else '' }}"{% endset %}
+      {% set tag = 'button type="button"' if selectable else 'div' %}
+      {% if r.state == 'built' %}
+      <{{ tag|safe }} class="cs-room is-built{{ ' is-sel' if r.key == selected }}" {{ data }} aria-label="{{ r.name }}, уровень {{ r.level }}">
+        <span class="cs-art">{{ room_svg(r.key) }}</span>
+        {% if r.key == 'bedroom' %}<span class="cs-who cs-chick" data-outfit='{{ (outfit or {}) | tojson }}'></span>{% elif r.who %}<span class="cs-who">{{ animal(r.who, 40) }}</span>{% endif %}
+        <span class="cs-label">{{ r.name }} {{ stars(r.level) }}</span>
+      </{{ 'button' if selectable else 'div' }}>
+      {% elif not selectable %}
+      <div class="cs-room is-locked"><b>{{ r.name }}</b><span class="cs-why">Ещё не построена</span></div>
+      {% elif r.state == 'build' %}
+      <{{ tag|safe }} class="cs-room is-build{{ ' is-sel' if r.key == selected }}" {{ data }}>
+        <span class="cs-plus"><svg class="ico" aria-hidden="true"><use href="#o-castle"/></svg></span>
+        <b>{{ r.name }}</b><span class="cs-price">{{ brick(15) }}{{ r.next_cost[0] }} · {{ coin(15) }}{{ r.next_cost[1] }}</span>
+      </{{ 'button' if selectable else 'div' }}>
+      {% else %}
+      <{{ tag|safe }} class="cs-room is-locked{{ ' is-sel' if r.key == selected }}" {{ data }}>
+        <svg class="ico" aria-hidden="true"><use href="#o-lock"/></svg><b>{{ r.name }}</b><span class="cs-why">{{ r.lock }}</span>
+      </{{ 'button' if selectable else 'div' }}>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+  <div class="cs-gate">{{ gate(46) }}</div>
+</div>
+{% endmacro %}

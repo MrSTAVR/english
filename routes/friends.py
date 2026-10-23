@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Друзья: дуэли, рекорды, лента «Что нового», в гостях у друга (сад и домик)."""
+"""Друзья: дуэли, рекорды, лента «Что нового», в гостях у друга (сад и замок)."""
 
+import castle
 import friends
 from database import get_db
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
-from garden import garden_view, refresh_garden
-from house import placed
+from garden import garden_view, get_garden, refresh_garden
 from mascot import build_mascot_ctx
+from stats import compute_stats
 from wardrobe import outfit
 
+from routes.castle import art_helpers
 from routes.common import get_student_or_none, require_role
 
 bp = Blueprint("friends", __name__)
@@ -88,7 +90,9 @@ def visit(fid, what):
         g = garden_view(db, fid)
         ctx.update(scene=g["scene"], streak=g["garden"]["streak_days"], trees=g["tree_count"])
     else:
-        ctx.update(placed=placed(db, fid), outfit=outfit(db, fid))
+        stats = compute_stats(db, fid)
+        castle.ensure(db, fid, stats["completed_ids"])
+        ctx.update(view=castle.view(db, fid, stats, get_garden(db, fid)), outfit=outfit(db, fid), **art_helpers())
     mascot = build_mascot_ctx()
     mascot["page"] = "friends"
     return render_template("friend_visit.html", mascot=mascot, **ctx)

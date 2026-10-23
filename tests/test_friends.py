@@ -115,7 +115,7 @@ def test_visit_garden_and_house_with_like(make_student, parent):
     aid = _sid("anya")
     assert "garden-stage" in masha.get(f"/student/friends/{aid}/garden").get_data(as_text=True)
     page = masha.get(f"/student/friends/{aid}/house").get_data(as_text=True)
-    assert 'id="hs-scene"' in page and "house.js" in page
+    assert "cs-castle" in page and "castle.js" in page
     masha.post(f"/student/friends/{aid}/house/like")
     assert "Нравится: Маша" in masha.get(f"/student/friends/{aid}/house").get_data(as_text=True)
     assert masha.get(f"/student/friends/{aid}/kitchen").status_code == 404
