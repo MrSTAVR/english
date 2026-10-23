@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_castle.html" import stars, room_main with context %}
+{% block title %}{{ room.name }}: {{ friend.name }} — English Fun{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=5">{% endblock %}
+{% block content %}
+<div class="cs-head">
+  <a class="cs-back" href="{{ url_for('friends.visit', fid=friend.id, what='house') }}" aria-label="Назад в замок друга">←</a>
+  <div class="cs-room-title"><h1>{{ room.name }}</h1><span>Замок: {{ friend.name }} · уровень {{ level }} {{ stars(level) }}</span></div>
+</div>
+<div class="cs-layout cs-room-layout">
+  <section class="cs-main">
+    {{ room_main(key, room, art, pins, words, who_x, outfit) }}
+  </section>
+  <aside class="cs-side">
+    {% if room.who %}
+    <div class="cs-earn cs-resident"><div class="cs-resident-head">{{ animal_ava(room.who, 48) }}<span><b>Здесь живёт {{ who_ru }}</b><span>Сосед в замке друга передаёт: «Hello!»</span></span></div></div>
+    {% endif %}
+    <p><a class="btn" href="{{ url_for('castle.castle_page') }}"><svg class="ico" aria-hidden="true"><use href="#o-castle"/></svg> В свой замок</a></p>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='castle.js') }}?v=4"></script>{% endblock %}

@@ -20,7 +20,7 @@ LOCKED = {"ring": "#FFF3D9", "edge": "#E3CFA4", "face": "#FFF3D9", "ink": "#B3A2
 # Значок медали — по категории ачивки (контурные иконки спрайта)
 CAT_ICONS = {"lessons": "book", "tests": "check", "answers": "flame", "words": "abc", "time": "clock",
              "grit": "mountain", "speak": "mic", "review": "repeat", "goals": "target", "games": "game",
-             "garden": "sprout", "special": "gift"}
+             "garden": "sprout", "castle": "castle", "special": "gift"}
 
 _uid = itertools.count(1)
 

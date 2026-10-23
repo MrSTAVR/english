@@ -82,6 +82,7 @@
       title.textContent = 'Well done!';
       info.textContent = 'Все предметы найдены: ' + ROUNDS + ' из ' + ROUNDS + '!';
       go.textContent = 'Ещё раз'; go.hidden = false; say('Well done!');
+      if (!scene.dataset.findUrl) { game = null; return; }   /* в гостях у друга — без награды */
       var meta = document.querySelector('meta[name="csrf-token"]');
       fetch(scene.dataset.findUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': meta ? meta.content : '' }, body: '{}' })
         .then(function (r) { return r.ok ? r.json() : null; })

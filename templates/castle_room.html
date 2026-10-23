@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_castle.html" import stars, task_row with context %}
+{% from "_castle.html" import stars, task_row, room_main with context %}
 {% block title %}{{ room.name }} — Замок Чик-чика{% endblock %}
 {% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=5">{% endblock %}
 {% block content %}
@@ -19,29 +19,7 @@
 {% endif %}
 <div class="cs-layout cs-room-layout">
   <section class="cs-main">
-    <div class="cs-big" id="cs-scene" data-room="{{ key }}" data-find-url="{{ url_for('castle.find_done', room=key) }}">
-      <span class="cs-art">{{ art }}</span>
-      {% if key == 'bedroom' %}<span class="cs-who cs-chick" style="left: {{ who_x }}%" data-outfit='{{ (outfit or {}) | tojson }}'></span>{% elif room.who %}<span class="cs-who" style="left: {{ who_x }}%">{{ animal(room.who, 92) }}</span>{% endif %}
-      {% for p in pins %}<button type="button" class="cs-pin{{ ' is-new' if p.new }}" style="left: {{ p.x }}%; top: {{ p.y }}%" data-en="{{ p.en }}" data-ru="{{ p.ru }}" aria-label="{{ p.en }}"><span class="cs-pin-label" lang="en">{{ p.en }}</span></button>{% endfor %}
-    </div>
-    <div class="cs-tip" id="cs-tip" hidden>
-      <button type="button" class="cs-tip-say" id="cs-tip-say" aria-label="Послушать"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></button>
-      <span><b lang="en" id="cs-tip-en"></b><span id="cs-tip-ru"></span></span>
-    </div>
-    <div class="cs-find" id="cs-find">
-      <svg class="icon cs-find-chick" aria-hidden="true"><use href="#i-chick"/></svg>
-      <span class="cs-find-text"><b id="cs-find-title">Find the…!</b><span id="cs-find-info">Чик-чик скажет слово по-английски — найди предмет на картинке</span></span>
-      <button type="button" class="cs-tip-say" id="cs-find-say" aria-label="Послушать ещё раз" hidden><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></button>
-      <button type="button" class="btn cs-go" id="cs-find-go">Играть</button>
-    </div>
-    <label class="cs-labels"><input type="checkbox" id="cs-labels"> Показать подписи на картинке</label>
-    <div class="cs-words">
-      <h2>Слова этой комнаты <span class="pill pill-soft">{{ words|length }}</span></h2>
-      <p class="hint">Нажми на слово — услышишь, как оно звучит.</p>
-      <div class="cs-word-list">
-        {% for w in words %}<button type="button" class="cs-word say-btn" data-say="{{ w.en }}">{% if w.pic %}<span class="cs-word-pic" aria-hidden="true">{{ w.pic }}</span>{% endif %}<b lang="en">{{ w.en }}</b><small>{{ w.ru }}</small></button>{% endfor %}
-      </div>
-    </div>
+    {{ room_main(key, room, art, pins, words, who_x, outfit, url_for('castle.find_done', room=key)) }}
   </section>
   <aside class="cs-side">
     {% if room.who %}
@@ -65,4 +43,4 @@
   </aside>
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='castle.js') }}?v=3"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='castle.js') }}?v=4"></script>{% endblock %}

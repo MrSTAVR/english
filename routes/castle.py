@@ -2,6 +2,7 @@
 """Замок Чик-чика: этажи с комнатами, комната-словарь, постройка и улучшение."""
 
 import castle
+import friends
 import castle_art
 from achievements import update_achievements
 from database import get_db
@@ -65,6 +66,13 @@ def castle_page():
                            outfit=outfit(db, student["id"]), cost=castle.COST, earn_rules=EARN_RULES, **art_helpers())
 
 
+def _awards(db, sid):
+    """Проверить награды (замок мог дать новые) и показать их при следующей странице."""
+    new = update_achievements(db, compute_stats(db, sid), sid)
+    if new:
+        session["new_achievements"] = (session.get("new_achievements") or []) + [a["key"] for a in new]
+
+
 def _tasks(db, sid):
     out = castle.tasks(db, sid)
     for t in out:
@@ -81,6 +89,8 @@ def collect():
     _state(db, student)
     ok, msg = castle.collect_income(db, student["id"])
     flash(msg, "ok" if ok else "error")
+    if ok:
+        _awards(db, student["id"])
     return redirect(url_for("castle.castle_page") + "#cs-neighbours")
 
 
@@ -93,6 +103,8 @@ def claim(room):
     _state(db, student)
     ok, msg = castle.claim_task(db, student["id"], room)
     flash(msg, "ok" if ok else "error")
+    if ok:
+        _awards(db, student["id"])
     back = request.form.get("back")
     return redirect(url_for("castle.room_page", room=room) if back == "room" else url_for("castle.castle_page") + "#cs-neighbours")
 
@@ -146,6 +158,8 @@ def find_done(room):
     if not castle.levels(db, student["id"]).get(room):
         abort(404)
     n = castle.on_find_done(db, student["id"], room)
+    if n:
+        _awards(db, student["id"])
     task = any(t["room"] == room and t["kind"] == "find" and not t["taken"] for t in castle.tasks(db, student["id"]))
     return jsonify({"ok": True, "bricks": n, "total": castle.bricks(db, student["id"]), "task": task})
 
@@ -160,8 +174,12 @@ def build(room):
     ok, msg = castle.build(db, student["id"], room, stats, g)
     flash(msg, "ok" if ok else "error")
     if ok:
-        new = update_achievements(db, compute_stats(db, student["id"]), student["id"])
-        if new:
-            session["new_achievements"] = (session.get("new_achievements") or []) + [a["key"] for a in new]
+        level = castle.levels(db, student["id"])[room]
+        name = castle.ROOMS[room]["name"]
+        if level == 1:
+            friends.post(db, student["id"], "castle", f"Новая комната в замке: «{name}»")
+        elif level == castle.LEVEL_MAX:
+            friends.post(db, student["id"], "castle", f"Комната замка на {level} уровне: «{name}»")
+        _awards(db, student["id"])
         return redirect(url_for("castle.room_page", room=room, up=1))
     return redirect(url_for("castle.castle_page"))
