@@ -165,7 +165,7 @@
   }
   /* дизайн 3.0: в репликах нет цветных значков — только слова */
   var EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2300}-\u{23FF}\u{FE0F}\u{200D}\u{20E3}]/gu;
-  function noEmoji(t) { return t.replace(EMOJI, '').replace(/\s+([!?.,:;)])/g, '$1').replace(/\s{2,}/g, ' ').trim(); }
+  function noEmoji(t) { return t.replace(EMOJI, '').replace(/\s+([!?.,:;)»])/g, '$1').replace(/\s{2,}/g, ' ').trim(); }
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
   }
