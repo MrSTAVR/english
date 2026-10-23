@@ -54,7 +54,7 @@ def test_all_new_lesson_pages_render_and_pass(parent, make_student):
     parent.post(f"/parent/students/{sid}/credit", data={"upto": "99", "action": "add"})
     for l in NEW_LESSONS:
         html = student.get(f"/lesson/{l['id']}").get_data(as_text=True)
-        assert f"Урок {l['num']}: " in html
+        assert f"Урок {l['num']} из " in html
         assert "Идеально" in submit_lesson(student, l["id"]), l["id"]
 
 

@@ -1,61 +1,104 @@
 {% extends "base.html" %}
 {% block title %}{{ lesson.title|noemoji }} — English Fun{% endblock %}
 {% block content %}
+{% set ltitle = lesson.title|noemoji %}
+<div class="ls-top">
+<div class="ls-head">
+  <a class="ls-close" href="{{ url_for('student.student_home') }}" aria-label="Выйти из урока"><svg class="ico" aria-hidden="true"><use href="#o-close"/></svg></a>
+  <a class="btn btn-small ls-back" href="{{ url_for('student.course_map') }}">← К карте</a>
+  <div class="ls-titles">
+    <span class="ls-kicker">{% if lesson.num %}Урок {{ lesson.num }} из {{ total_lessons }}{% else %}Дополнительный урок{% endif %}</span>
+    <h1>{{ ltitle }}</h1>
+  </div>
+</div>
 
-<h1>{% if lesson.num %}Урок {{ lesson.num }}: {% endif %}{{ lesson.title|noemoji }}</h1>
-<p class="subtitle">{{ lesson.description }}</p>
-
-<ol class="stepper" id="stepper" aria-label="Шаги урока">
+<ol class="stepper ls-steps" id="stepper" aria-label="Шаги урока">
   <li data-s="step-theory" class="active"><i>1</i><span>Теория</span></li>
   <li data-s="step-material"><i>2</i><span>Слова</span></li>
   <li data-s="step-exercises"><i>3</i><span>Тренировка</span></li>
   <li data-s="step-test"><i>4</i><span>Тест</span></li>
 </ol>
+</div>
+<div class="ls-now"><span>{% if lesson.num %}Урок {{ lesson.num }} · {% endif %}{{ ltitle }}</span><b id="ls-now">Теория · 1/4</b></div>
 
 <!-- Шаг 1: теория -->
-<section class="card step" id="step-theory">
-  <h2>Шаг 1 — Теория</h2>
+<section class="step" id="step-theory">
+  <h2 class="ls-step-title">Как это сказать</h2>
   {% if lesson.theory %}
-    <p class="theory-intro">{{ lesson.theory.intro|noemoji | safe }}</p>
-    {% for b in lesson.theory.blocks %}
-      <div class="theory-block card-inner">
-        <h3>{{ b.title|noemoji }}</h3>
-        <p>{{ b.text | safe }}</p>
+  <div class="th-layout">
+    <div class="th-main">
+      <p class="theory-intro">{{ lesson.theory.intro|noemoji | safe }}</p>
+      <div class="th-grid">
+      {% for b in lesson.theory.blocks %}
+        <div class="theory-block">
+          <h3>{{ b.title|noemoji }}</h3>
+          <p>{{ b.text | safe }}</p>
+        </div>
+      {% endfor %}
       </div>
-    {% endfor %}
-    {% if lesson.theory.tip %}
-      <div class="theory-tip"><b>Совет:</b> {{ lesson.theory.tip }}</div>
-    {% endif %}
+    </div>
+    <aside class="th-side">
+      {% if lesson.theory.tip %}
+      <div class="theory-tip"><svg class="th-chick" aria-hidden="true"><use href="#i-chick"/></svg><span><b>Совет Чик-чика</b>{{ lesson.theory.tip|noemoji }}</span></div>
+      {% endif %}
+      <button class="btn ls-next" onclick="goStep('step-material')">Понятно! К словам →</button>
+    </aside>
+  </div>
   {% else %}
-    <p>Теории в этом уроке пока нет — переходи сразу к словам!</p>
+    <p class="theory-intro">Теории в этом уроке пока нет — переходи сразу к словам!</p>
+    <button class="btn ls-next" onclick="goStep('step-material')">К словам →</button>
   {% endif %}
-  <button class="btn btn-primary" onclick="goStep('step-material')">Прочитал(а)! Изучаем слова →</button>
 </section>
 
-<!-- Шаг 2: материал (карточки) -->
-<section class="card step hidden" id="step-material">
-  <h2>Шаг 2 — Изучи слова</h2>
-  <p>Читай слово вслух (подсказка произношения в скобках). Нажимай на карточку, чтобы перевернуть её и увидеть перевод. Кнопка <b><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></b> рядом со словом — послушаешь правильное произношение!</p>
-  <div class="flashcards{% if lesson.material|selectattr('pic')|list %} has-pics{% endif %}">
-    {% for w in lesson.material %}
-      <div class="flashcard{% if w.pic %} has-pic{% endif %}" onclick="this.classList.toggle('flipped')">
-        <div class="fc-front">
-          {% if w.pic %}<div class="fc-pic" aria-hidden="true">{{ w.pic }}</div>{% endif %}
-          <div class="fc-en">{{ w.en }}</div>
-          <div class="fc-hint">[{{ w.hint }}]</div>
-          <div class="fc-tap">нажми</div>
-        </div>
-        <div class="fc-back">{{ w.ru }}</div>
-      </div>
-    {% endfor %}
+<!-- Шаг 2: новые слова — одна большая карточка, список всех слов, «Дальше» -->
+<section class="step hidden" id="step-material">
+  <div class="wd-headrow">
+    <h2 class="ls-step-title">Новые слова</h2>
+    <button type="button" class="btn btn-small wd-all" id="wd-all"><svg class="ico" aria-hidden="true"><use href="#o-list"/></svg> Все слова<span class="wd-all-n"> · {{ lesson.material|length }}</span></button>
   </div>
-  <button class="btn btn-primary" onclick="goStep('step-exercises')">Я выучил(а)! Переходим к упражнениям →</button>
+  <div class="wd-layout">
+    <div class="wd-main">
+      <div class="wd-card" id="wd-card" role="button" tabindex="0" aria-label="Показать перевод">
+        <span class="wd-num" id="wd-num"></span>
+        <span class="wd-know" id="wd-know" hidden><svg class="ico" aria-hidden="true"><use href="#o-check"/></svg> знаю</span>
+        <div class="wd-pic" id="wd-pic" aria-hidden="true"></div>
+        <div class="wd-en" id="wd-en" lang="en"></div>
+        <div class="wd-hint" id="wd-hint"></div>
+        <div class="wd-ru" id="wd-ru" hidden></div>
+        <div class="wd-tap" id="wd-tap">Нажми — покажу перевод</div>
+      </div>
+      <div class="wd-sound">
+        <button type="button" class="btn btn-primary wd-say" id="wd-say"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Послушать</button>
+        <button type="button" class="btn wd-slow" id="wd-slow"><svg class="ico" aria-hidden="true"><use href="#o-turtle"/></svg> Медленно</button>
+      </div>
+      <div class="wd-tipline"><svg class="th-chick" aria-hidden="true"><use href="#i-chick"/></svg><div class="wd-tip">Послушай и повтори вслух 2 раза. Нажми на карточку, чтобы проверить себя!</div></div>
+      <div class="wd-dots" id="wd-dots" aria-label="Слова урока"></div>
+      <div class="wd-nav">
+        <button type="button" class="btn wd-prev" id="wd-prev" aria-label="Предыдущее слово">←</button>
+        <button type="button" class="btn ls-next wd-next" id="wd-next">Дальше →</button>
+      </div>
+    </div>
+    <aside class="wd-list" aria-label="Все слова урока">
+      <div class="wd-list-head"><h3>Все слова урока</h3><span class="wd-count" id="wd-count"></span></div>
+      <div class="wd-rows" id="wd-rows"></div>
+    </aside>
+  </div>
+  <div class="wd-sheet" id="wd-sheet" hidden>
+    <div class="wd-sheet-bg" data-close></div>
+    <div class="wd-sheet-panel" role="dialog" aria-modal="true" aria-label="Все слова урока">
+      <div class="wd-sheet-grip"></div>
+      <div class="wd-list-head"><span><b>Все слова урока</b><span class="wd-count" id="wd-count2"></span></span>
+        <button type="button" class="wd-sheet-x" data-close aria-label="Закрыть"><svg class="ico" aria-hidden="true"><use href="#o-close"/></svg></button></div>
+      <div class="wd-rows" id="wd-rows2"></div>
+    </div>
+  </div>
+  <script type="application/json" id="wd-data">{{ lesson.material | tojson }}</script>
 </section>
 
 <!-- Шаг 3: упражнения -->
-<section class="card step hidden" id="step-exercises">
-  <h2>Шаг 3 — Потренируйся</h2>
-  <p>Это тренировка — ошибки здесь не считаются. Проверяй себя кнопкой!</p>
+<section class="step hidden" id="step-exercises">
+  <h2 class="ls-step-title">Потренируйся</h2>
+  <p class="ls-step-sub">Это тренировка — ошибки здесь не считаются. Проверяй себя кнопкой!</p>
   {% for ex in lesson.exercises %}
     {% set outer_loop = loop %}
     <div class="exercise card-inner" data-answer="{{ ex.answer if ex.type in ('choice','type_in') else '' }}" data-type="{{ ex.type }}">
@@ -135,13 +178,13 @@
   <h3 class="pr-title">Скажи вслух</h3>
   <div id="speak-block" class="speak-block" data-items='{{ lesson.speak | tojson }}' data-lesson="{{ lesson.id }}"></div>
   {% endif %}
-  <button class="btn btn-primary" onclick="goStep('step-test')">Всё понятно! Открываю тест</button>
+  <button class="btn ls-next" onclick="goStep('step-test')">Всё понятно! К тесту →</button>
 </section>
 
 <!-- Шаг 4: тест -->
-<section class="card step hidden" id="step-test">
-  <h2>Шаг 4 — Итоговый тест</h2>
-  <p>Ответь на {{ lesson.test|length }} вопросов. Чтобы урок считался пройденным, нужно набрать минимум {{ need }}%. Не торопись!</p>
+<section class="step hidden" id="step-test">
+  <h2 class="ls-step-title">Итоговый тест</h2>
+  <p class="ls-step-sub">Ответь на {{ lesson.test|length }} вопросов. Чтобы урок считался пройденным, нужно набрать минимум {{ need }}%. Не торопись!</p>
   <div class="test-progress" id="test-progress" aria-live="polite">
     <span class="tp-label">Отвечено</span>
     <span class="tp-bar"><span class="tp-fill"></span></span>
@@ -231,11 +274,12 @@
   </form>
 </section>
 
-<a href="{{ url_for('student.student_home') }}" class="back-link">← Вернуться к урокам</a>
 {% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=1">{% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='practice.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='lesson.js') }}?v=1"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=3"></script>{% endif %}
 {% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=5"></script>{% endif %}
 <script>
@@ -250,6 +294,7 @@ function goStep(id) {
     if (li.dataset.s === id) { li.classList.add('active'); seen = false; }
     else if (seen) li.classList.add('done');
   });
+  if (window.lessonStepChanged) window.lessonStepChanged(id);
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
