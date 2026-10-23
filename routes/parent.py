@@ -123,7 +123,7 @@ def reset_student_password(sid):
 
 @bp.route("/parent/students/<int:sid>/garden", methods=["POST"])
 def parent_update_garden(sid):
-    """Тестовая настройка сада ребёнка: серия дней и монетки."""
+    """Настройка сада и замка ребёнка: серия дней, монетки, кирпичики."""
     err = require_role("parent")
     if err:
         return err
@@ -144,7 +144,8 @@ def parent_update_garden(sid):
 
     streak = _num("streak_days")
     coins = _num("coins")
-    if streak is None and coins is None:
+    bricks = _num("bricks")
+    if streak is None and coins is None and bricks is None:
         flash("Ничего не изменено — заполни хотя бы одно поле.", "error")
         return redirect(_student_page())
     if streak is not None:
@@ -163,9 +164,11 @@ def parent_update_garden(sid):
         db.execute("UPDATE garden SET best_streak=? WHERE student_id=?", (best, sid))
     if coins is not None:
         db.execute("UPDATE garden SET coins=? WHERE student_id=?", (coins, sid))
+    if bricks is not None:
+        castle.set_bricks(db, sid, bricks)
     db.commit()
-    flash(f"Сад для {student['display_name']} обновлён: серия {streak if streak is not None else g['streak_days']} дн., "
-          f"монет {coins if coins is not None else g['coins']} 🌳", "success")
+    flash(f"Сад и замок для {student['display_name']} обновлены: серия {streak if streak is not None else g['streak_days']} дн., "
+          f"монет {coins if coins is not None else g['coins']}, кирпичиков {castle.bricks(db, sid)}", "success")
     return redirect(_student_page())
 
 
@@ -492,6 +495,7 @@ def parent_student(sid):
     return _admin("student.html", tab="students", st=st, student_emojis=STUDENT_EMOJIS, stats=sstats, garden=garden, vacation=vac,
                   tree_stage=tree_stage(garden["streak_days"]), tree_count=tree_count_for(garden["streak_days"]),
                   deco_count=db.execute("SELECT COUNT(*) FROM decorations WHERE student_id=?", (sid,)).fetchone()[0],
+                  bricks=castle.bricks(db, sid),
                   goal=goals.target(db, sid), goal_limits=(goals.MAX_LESSONS, goals.MAX_WORDS), credit_rows=rows,
                   main_count=len(LESSONS), total_lessons=len(LESSONS), earned_count=earned,
                   achievements_total=len(ACHIEVEMENTS), last=_last_activity(db, sid))

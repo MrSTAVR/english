@@ -66,7 +66,7 @@ def test_locked_room_needs_lesson(make_student):
     submit_lesson(c, 20002)                                             # урок замка «Кухня»
     assert "kitchen" not in castle.levels(conn(), sid)
     r = c.post("/student/castle/kitchen/build")
-    assert r.status_code == 302 and r.headers["Location"].endswith("/student/castle/kitchen")
+    assert r.status_code == 302 and r.headers["Location"].endswith("/student/castle/kitchen?up=1")
     assert castle.levels(conn(), sid)["kitchen"] == 1
     b, coins = castle.COST[1]
     assert db_scalar("SELECT coins FROM garden WHERE student_id=?", (sid,)) < 100 + 1   # монетки списаны (урок мог дать свои)
@@ -225,3 +225,28 @@ def test_at_most_three_tasks(make_student):
     assert len(ts) == castle.TASKS_PER_DAY and len({t["room"] for t in ts}) == castle.TASKS_PER_DAY
     assert len({t["kind"] for t in ts}) == castle.TASKS_PER_DAY
     assert castle.income(cn, sid)["amount"] == 5 * castle.INCOME[1]
+
+
+def test_level_decorations_differ():
+    a1, _ = castle.scene("bedroom", 1)
+    a2, _ = castle.scene("bedroom", 2)
+    a3, _ = castle.scene("bedroom", 3)
+    assert a1 != a2 != a3 and "#E8618C" in a2 and 'fill="#FFF3B0"' in a3 and 'fill="#FFF3B0"' not in a2
+
+
+def test_upgrade_shows_celebration(make_student):
+    c = make_student(); sid = sid_of(); c.get("/student/castle"); give(sid, 100, 30)
+    r = c.post("/student/castle/bedroom/build")
+    assert r.headers["Location"].endswith("/student/castle/bedroom?up=1")
+    body = c.get("/student/castle/bedroom?up=1").get_data(as_text=True)
+    assert "Уровень 2!" in body and body.count("cs-pin is-new") == 4
+    assert "cs-levelup" not in c.get("/student/castle/bedroom").get_data(as_text=True)
+
+
+def test_admin_sets_bricks(parent, make_student):
+    c = make_student(); sid = sid_of(); c.get("/student/castle"); give(sid, 0, 7)
+    assert "кирпичиков <b>7</b>" in parent.get(f"/parent/students/{sid}").get_data(as_text=True)
+    parent.post(f"/parent/students/{sid}/garden", data={"bricks": "25"})
+    assert castle.bricks(conn(), sid) == 25
+    parent.post(f"/parent/students/{sid}/garden", data={"bricks": "3"})
+    assert castle.bricks(conn(), sid) == 3

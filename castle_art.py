@@ -182,6 +182,31 @@ POS = {
 RESIDENT_X = {"library": 112, "roof": 112, "classroom": 192}   # центр жителя на большом рисунке (по умолчанию 200)
 
 
+FLAGS = ("#E8618C", "#2563C9", "#FFC83D", "#1E9E5A", "#7A5BC4")
+
+
+def level_floor(key, level):
+    """Под мебелью: золотой плинтус на 3 уровне (на крыше — нет)."""
+    if level < 3 or key == "roof":
+        return ""
+    return '<rect y="127" width="300" height="7" fill="#FFC83D"></rect><path d="M0 127h300" stroke="#D99A00" stroke-width="1.5"></path>'
+
+
+def level_deco(level):
+    """Украшения уровня поверх рисунка: 2 — гирлянда флажков, 3 — ещё огоньки."""
+    if level < 2:
+        return ""
+    out = ['<path d="M0 4Q75 16 150 6T300 4" fill="none" stroke="#8A6B4A" stroke-width="1.5"></path>']
+    for i in range(14):
+        x = 6 + i * 21.5
+        y = 4 + 6 * abs(((x % 150) / 150) - .5) * -2 + 6        # флажки висят по провисающей нитке
+        out.append(f'<path d="M{x - 6:.1f} {y:.1f}h12l-6 11z" fill="{FLAGS[i % len(FLAGS)]}"></path>')
+    if level >= 3:
+        out.append("".join(f'<circle cx="{17 + i * 21.5:.1f}" cy="{14 + (6 if i % 7 in (2, 3, 4) else 3)}" r="2.6" fill="#FFF3B0" stroke="#FFC83D" stroke-width="1.5"></circle>'
+                           for i in range(13)))
+    return "".join(out)
+
+
 def items_svg(key, words):
     """Картинки слов, которых нет на основном рисунке (появляются с уровнем комнаты)."""
     out = []
@@ -194,11 +219,11 @@ def items_svg(key, words):
     return "".join(out)
 
 
-def room_svg(key, w=None, h=None, extra=""):
+def room_svg(key, w=None, h=None, extra="", under=""):
     size = f' width="{w}" height="{h}"' if w else ' width="100%" height="100%"'
-    return (f'<svg viewBox="0 0 300 180"{size} preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="display: block">'
+    return (f'<svg viewBox="0 0 300 180"{size} preserveAspectRatio="xMidYMin slice" aria-hidden="true" style="display: block">'
             f'<rect width="300" height="180" fill="{WALL[key]}"></rect><rect y="134" width="300" height="46" fill="{FLOOR[key]}"></rect>'
-            f'<path d="M0 134h300" stroke="rgba(30,42,69,.12)" stroke-width="3"></path>{ART[key]()}{extra}</svg>')
+            f'<path d="M0 134h300" stroke="rgba(30,42,69,.12)" stroke-width="3"></path>{under}{ART[key]()}{extra}</svg>')
 
 
 GATE = (  # ворота замка: каменная арка, решётка, двустворчатые двери с железными полосами, фонари
