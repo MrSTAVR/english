@@ -59,7 +59,9 @@
 .th-say .ico { display: inline-block; width: 20px; height: 20px; padding: 3px; margin-right: 4px; border-radius: 6px; background: var(--primary); color: #FFFFFF;
   box-sizing: border-box; vertical-align: -4px; }
 .th-say b { color: var(--ink); font-weight: 900; }
+.th-say-head { white-space: nowrap; }
 .th-say:hover { background: #D5E4FA; }
+.th-say:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
 
 /* ---------- шаг 2: новые слова ---------- */
 .wd-headrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }

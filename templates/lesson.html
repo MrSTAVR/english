@@ -277,11 +277,11 @@
 </section>
 
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=6">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=8">{% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='practice.js') }}?v=3"></script>
-<script src="{{ url_for('static', filename='lesson.js') }}?v=4"></script>
+<script src="{{ url_for('static', filename='lesson.js') }}?v=6"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=4"></script>{% endif %}
 {% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=6"></script>{% endif %}
 <script>
