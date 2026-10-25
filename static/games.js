@@ -82,7 +82,7 @@
     var set = shuffle(usePic ? withPic : words).slice(0, 6), moves = 0, open = [], left = set.length, lock = false;
     var cards = [];
     set.forEach(function (w) {
-      cards.push({ key: w.key, w: w, face: usePic ? '<span class="g-big">' + esc(w.pic) + '</span>' : esc(w.ru) });
+      cards.push({ key: w.key, w: w, face: usePic ? '<span class="g-big">' + picHtml(w.pic) + '</span>' : esc(w.ru) });
       cards.push({ key: w.key, w: w, face: '<b>' + esc(w.en) + '</b>' });
     });
     root.appendChild(el('div', 'g-bar', '<span>Ходов: <b id="g-moves">0</b></span><span>' + (usePic ? 'Картинка ↔ слово' : 'Слово ↔ перевод') + '</span>'));
@@ -135,7 +135,7 @@
       var field = toRu ? 'ru' : 'en';
       var wrong = shuffle(pool.filter(function (w) { return w.key !== cur.key && w[field] !== cur[field]; })).slice(0, 3);
       var options = shuffle(wrong.concat([cur]));
-      qbox.innerHTML = (cur.pic && toRu ? '<div class="g-big">' + esc(cur.pic) + '</div>' : '') +
+      qbox.innerHTML = (cur.pic && toRu ? '<div class="g-big">' + picHtml(cur.pic) + '</div>' : '') +
         '<div class="g-word">' + esc(toRu ? cur.en : cur.ru) + '</div>';
       if (toRu) say(cur.en);
       opts.innerHTML = '';
@@ -182,7 +182,7 @@
       });
       opts.innerHTML = ''; opts.className = 'ls-opts' + (picMode ? ' pics' : '');
       shuffle(wrong.concat([cur])).forEach(function (o) {
-        var b = el('button', picMode ? 'ls-opt pic' : 'rv-opt', esc(o[field])); b.type = 'button';
+        var b = el('button', picMode ? 'ls-opt pic' : 'rv-opt', picMode ? picHtml(o.pic) : esc(o[field])); b.type = 'button'; b.dataset.key = o.key;
         b.onclick = function () {
           if (b.classList.contains('lock')) return;
           var ok = o.key === cur.key;
@@ -190,7 +190,7 @@
           b.classList.add(ok ? 'is-right' : 'is-wrong');
           if (ok) score++;
           box.querySelector('.ls-hint').innerHTML = (ok ? '' : '') + '<b>' + esc(cur.en) + '</b> — ' + esc(cur.ru);
-          if (!ok) { var right = [].filter.call(opts.children, function (x) { return x.textContent === cur[field]; })[0]; if (right) right.classList.add('is-right'); }
+          if (!ok) { var right = [].filter.call(opts.children, function (x) { return x.dataset.key === String(cur.key); })[0]; if (right) right.classList.add('is-right'); }
           setTimeout(function () { box.querySelector('.ls-hint').textContent = 'Что ты услышал?'; ask(); }, ok ? 900 : 1600);
         };
         opts.appendChild(b);
@@ -227,7 +227,7 @@
       busy = false; cur = seq[pos++]; head();
       var wrong = shuffle(words.concat(distract).filter(function (w) { return w.key !== cur.key && w.ru !== cur.ru; })).slice(0, 2);
       obs.className = 'rn-obs';
-      obs.innerHTML = '<div class="rn-sign">' + (cur.pic ? esc(cur.pic) + ' ' : '') + esc(cur.en) + '</div><div class="rn-obj">' + OBJ[Math.floor(Math.random() * OBJ.length)] + '</div>';
+      obs.innerHTML = '<div class="rn-sign">' + (cur.pic ? picHtml(cur.pic) + ' ' : '') + esc(cur.en) + '</div><div class="rn-obj">' + OBJ[Math.floor(Math.random() * OBJ.length)] + '</div>';
       opts.innerHTML = '';
       shuffle(wrong.concat([cur])).forEach(function (o) {
         var b = el('button', 'rv-opt', esc(o.ru)); b.type = 'button';

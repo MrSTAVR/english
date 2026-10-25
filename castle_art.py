@@ -271,7 +271,10 @@ def items_svg(key, words):
         p = POS[key].get(w["en"].lower())
         if p and p[2]:
             pic = p[3] if len(p) > 3 else w.get("pic")
-            if pic:
+            if pic and pic.startswith("@"):    # свой рисунок к слову (static/pics)
+                sz = p[2] * 1.35
+                out.append(f'<image href="/static/pics/{pic[1:]}.svg" x="{p[0] - sz / 2:g}" y="{p[1] - sz / 2:g}" width="{sz:g}" height="{sz:g}"></image>')
+            elif pic:
                 out.append(f'<text x="{p[0]}" y="{p[1]}" font-size="{p[2] * 1.35:g}" text-anchor="middle" dominant-baseline="central">{pic}</text>')
     return "".join(out)
 

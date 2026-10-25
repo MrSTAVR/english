@@ -39,7 +39,7 @@
     pool.forEach(function (d) { var t = toRu ? d.ru : d.en; if (opts.length < 4 && t && !seen[t]) { seen[t] = 1; opts.push(t); } });
     opts = shuffle(opts);
     body.innerHTML = '';
-    body.appendChild(el('div', 'boss-q', (w.pic ? '<span class="boss-pic">' + esc(w.pic) + '</span> ' : '') + (toRu ? '<b>' + esc(w.en) + '</b>' : '<b>' + esc(w.ru) + '</b>')));
+    body.appendChild(el('div', 'boss-q', (w.pic ? '<span class="boss-pic">' + picHtml(w.pic) + '</span> ' : '') + (toRu ? '<b>' + esc(w.en) + '</b>' : '<b>' + esc(w.ru) + '</b>')));
     var grid = el('div', 'boss-opts');
     opts.forEach(function (o) {
       var b = el('button', 'btn btn-secondary boss-opt', esc(o)); b.type = 'button';

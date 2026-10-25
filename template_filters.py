@@ -104,6 +104,15 @@ EMOJI_RE = __import__("re").compile(
 # стрелки ← →, звёзды ★ ☆ и крестик ✕ — не цветные значки, их оставляем
 
 
+def pic_html(pic):
+    """Картинка к слову: эмодзи как текст или свой рисунок («@table» → static/pics/table.svg)."""
+    from markupsafe import Markup, escape
+    pic = str(pic or "")
+    if pic.startswith("@") and pic[1:].isalpha():
+        return Markup(f'<img class="pic-img" src="/static/pics/{pic[1:]}.svg" alt="">')
+    return escape(pic)
+
+
 def noemoji(text):
     """Убирает эмодзи из текста интерфейса (названия уроков, баннеры, сообщения)."""
     if text is None:

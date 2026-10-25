@@ -11,7 +11,7 @@
 <section class="card hw-phrase"><b>{{ data.PHRASE.en }}</b> — {{ data.PHRASE.ru }} <button class="btn btn-small hw-say" type="button" data-say="{{ data.PHRASE.en }}"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></button></section>
 <div class="hw-grid">
 {% for w in data.WORDS %}
-  <button type="button" class="card hw-card" data-say="{{ w.en }}"><span class="hw-pic">{{ w.pic }}</span><b>{{ w.en }}</b><small>{{ w.ru }}</small></button>
+  <button type="button" class="card hw-card" data-say="{{ w.en }}"><span class="hw-pic">{{ w.pic|pic }}</span><b>{{ w.en }}</b><small>{{ w.ru }}</small></button>
 {% endfor %}
 </div>
 <section class="card" id="season-quiz" data-words='{{ data.WORDS | tojson }}' data-len="{{ data.QUIZ_LEN }}" data-pass="{{ data.PASS_MARK }}"
@@ -22,4 +22,4 @@
 </section>
 <p><a class="btn btn-secondary" href="{{ url_for('wardrobe.wardrobe_page') }}">В гардероб</a></p>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='season.js') }}?v=2"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='season.js') }}?v=3"></script>{% endblock %}

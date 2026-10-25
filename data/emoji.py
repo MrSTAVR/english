@@ -41,6 +41,12 @@ for _chunk in _PAIRS.replace("\n", "|").split("|"):
         _word, _, _pic = _chunk.rpartition(" ")
         EMOJI[_word.strip().lower()] = _pic
 
+# Для этих слов подходящего эмодзи нет (стул вместо стола, лампочка вместо лампы…) — свой рисунок
+# static/pics/<слово>.svg; в данных пишется «@слово», выводится фильтром |pic и window.picHtml.
+DRAWN = ("table", "desk", "wardrobe", "carpet", "rug", "curtains", "armchair", "fireplace", "rubber", "glue",
+         "sink", "shelf", "cooker", "oven", "lamp", "blanket", "pillow")
+EMOJI.update({_w: "@" + _w for _w in DRAWN})
+
 
 def emoji_for(en):
     """Эмодзи к слову или '' (для фраз и абстрактных слов картинки нет)."""

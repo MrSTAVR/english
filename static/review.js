@@ -29,7 +29,7 @@
       '<div class="rv-explain">' + esc(item.explain || '') + '</div>');
     box.appendChild(fb);
     // после ответа всегда можно услышать английское слово (и оно озвучивается само)
-    var hearEn = el('div', 'rv-sayline', '<span class="rv-pic">' + esc(item.pic || '') + '</span><button type="button" class="btn btn-small"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> ' + esc(item.en) + '</button><span class="rv-hint">[' + esc(item.hint || '') + ']</span>');
+    var hearEn = el('div', 'rv-sayline', '<span class="rv-pic">' + picHtml(item.pic) + '</span><button type="button" class="btn btn-small"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> ' + esc(item.en) + '</button><span class="rv-hint">[' + esc(item.hint || '') + ']</span>');
     hearEn.querySelector('button').onclick = function () { say(item.en); };
     box.appendChild(hearEn);
     setTimeout(function () { say(item.en); }, 350);
@@ -59,7 +59,7 @@
     var it = items[idx];
     var box = el('div', 'rv-q');
     box.appendChild(el('p', 'q', '<b>' + esc(it.q) + '</b>'));
-    if (it.pic && it.q.indexOf('Что значит') === 0) box.appendChild(el('div', 'rv-pic-big', esc(it.pic)));
+    if (it.pic && it.q.indexOf('Что значит') === 0) box.appendChild(el('div', 'rv-pic-big', picHtml(it.pic)));
     if (!it.audio && it.type === 'choice' && it.q.indexOf('Что значит') === 0) {   // английское слово в вопросе — можно послушать
       var hear = el('p', null, '<button type="button" class="btn btn-small say-btn"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Послушать слово</button>');
       hear.querySelector('button').onclick = function () { say(it.en); };

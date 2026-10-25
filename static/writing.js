@@ -52,7 +52,7 @@
     var cur, words, placed, tries;
     function show() {
       bar.innerHTML = '<span>Фраза ' + (pos + 1) + ' из ' + items.length + '</span><span>С первой попытки: ' + firstTry + '</span>';
-      pic.textContent = cur.pic || ''; ru.textContent = cur.ru; fb.textContent = '';
+      pic.innerHTML = picHtml(cur.pic); ru.textContent = cur.ru; fb.textContent = '';
       words = shuffle(cur.en.split(/\s+/)); placed = [];
       if (words.join(' ') === cur.en.split(/\s+/).join(' ') && words.length > 2) words.reverse();
       render();

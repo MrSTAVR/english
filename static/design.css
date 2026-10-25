@@ -575,3 +575,6 @@ html[data-theme="dark"] .fr-react-form .btn.is-on { color: #8FB4FF; }
 html[data-theme="dark"] .game-rec { color: #8FB4FF; }
 .game-record { font-weight: 900; color: var(--primary); }
 html[data-theme="dark"] .game-record { color: #8FB4FF; }
+
+/* свой рисунок к слову (static/pics, «@table») — размером с эмодзи вокруг */
+.pic-img { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em; object-fit: contain; }
