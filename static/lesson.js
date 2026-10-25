@@ -90,7 +90,7 @@
     var card = $('wd-card'), sheet = $('wd-sheet');
     var i = 0, flipped = false, seen = {};
 
-    function picHtml(w) { return w.pic ? '<span class="wd-emoji">' + esc(w.pic) + '</span>' : ICO('chat'); }
+    function picHtml(w) { return w.pic ? '<span class="wd-emoji">' + window.picHtml(w.pic) + '</span>' : ICO('chat'); }
     function rowsHtml() {
       return W.map(function (w, k) {
         return '<button type="button" class="wd-row' + (k === i ? ' is-on' : '') + '" data-k="' + k + '">' +

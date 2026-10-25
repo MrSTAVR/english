@@ -84,7 +84,7 @@
   <div class="tcard tcard-wod">
     <div class="tcard-head"><span class="tcard-title">Слово дня</span></div>
     <div class="wod-body">
-      {% if wod.pic %}<span class="wod-pic">{{ wod.pic }}</span>{% endif %}
+      {% if wod.pic %}<span class="wod-pic">{{ wod.pic|pic }}</span>{% endif %}
       <div class="wod-main">
         <span class="wod-en">{{ wod.en }}</span>
         <span class="wod-tr">[{{ wod.hint }}] — {{ wod.ru }}</span>

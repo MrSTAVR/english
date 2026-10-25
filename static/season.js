@@ -18,7 +18,7 @@
     var w = order[n], toRu = n % 2 === 0, good = toRu ? w.ru : w.en;
     var opts = [good];
     shuffle(words).forEach(function (d) { var t = toRu ? d.ru : d.en; if (opts.length < 4 && t !== good) opts.push(t); });
-    host.appendChild(el('p', 'boss-q', '<span class="boss-pic">' + w.pic + '</span> <b>' + (toRu ? w.en : w.ru) + '</b> <small>(' + (n + 1) + '/' + order.length + ')</small>'));
+    host.appendChild(el('p', 'boss-q', '<span class="boss-pic">' + picHtml(w.pic) + '</span> <b>' + (toRu ? w.en : w.ru) + '</b> <small>(' + (n + 1) + '/' + order.length + ')</small>'));
     var grid = el('div', 'boss-opts');
     shuffle(opts).forEach(function (o) {
       var b = el('button', 'btn btn-secondary boss-opt', o); b.type = 'button';

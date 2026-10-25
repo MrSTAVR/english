@@ -21,7 +21,7 @@
       if (!j) { b.disabled = false; msg.textContent = 'Не получилось открыть окошко — попробуй ещё раз.'; return; }
       var w = j.word;
       b.classList.add('adv-open', 'adv-pop');
-      b.innerHTML = '<span class="adv-num">' + esc(b.dataset.day) + '</span><span class="adv-pic">' + esc(w.pic) + '</span><b>' +
+      b.innerHTML = '<span class="adv-num">' + esc(b.dataset.day) + '</span><span class="adv-pic">' + picHtml(w.pic) + '</span><b>' +
         esc(w.en) + '</b><small>' + esc(w.ru) + '</small>';
       b.dataset.say = w.en;
       delete b.dataset.day;

@@ -76,7 +76,7 @@
       <h2>Слова этой комнаты <span class="pill pill-soft">{{ words|length }}</span></h2>
       <p class="hint">Нажми на слово — услышишь, как оно звучит.</p>
       <div class="cs-word-list">
-        {% for w in words %}<button type="button" class="cs-word say-btn" data-say="{{ w.en }}">{% if w.pic %}<span class="cs-word-pic" aria-hidden="true">{{ w.pic }}</span>{% endif %}<b lang="en">{{ w.en }}</b><small>{{ w.ru }}</small></button>{% endfor %}
+        {% for w in words %}<button type="button" class="cs-word say-btn" data-say="{{ w.en }}">{% if w.pic %}<span class="cs-word-pic" aria-hidden="true">{{ w.pic|pic }}</span>{% endif %}<b lang="en">{{ w.en }}</b><small>{{ w.ru }}</small></button>{% endfor %}
       </div>
     </div>
 {% endmacro %}

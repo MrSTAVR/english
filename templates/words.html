@@ -24,7 +24,7 @@
   <ul class="dict-list">
     {% for w in g.words %}
     <li class="dict-row" data-en="{{ w.en|lower }}" data-ru="{{ w.ru|lower }}">
-      <span class="dict-pic" aria-hidden="true">{{ w.pic }}</span>
+      <span class="dict-pic" aria-hidden="true">{{ w.pic|pic }}</span>
       <span class="dict-en" data-tts="{{ w.en }}">{{ w.en }}</span>
       <span class="dict-hint">[{{ w.hint }}]</span>
       <span class="dict-ru">{{ w.ru }}</span>
