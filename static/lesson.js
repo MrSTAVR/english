@@ -27,12 +27,19 @@
   document.querySelectorAll('#step-theory .theory-block b, #step-theory .theory-intro b').forEach(function (b) {
     var text = b.textContent.trim();
     if (!/[A-Za-z]/.test(text) || /[А-Яа-яЁё]/.test(text)) return;
-    var btn = document.createElement('button');
-    btn.type = 'button';
+    // не <button>: кнопка в Chrome всегда «блок в строке» — не переносится и раздувает строку;
+    // строчный <span> с ролью кнопки переносится вместе с текстом
+    var btn = document.createElement('span');
     btn.className = 'th-say';
+    btn.setAttribute('role', 'button');
+    btn.tabIndex = 0;
     btn.title = 'Послушать';
-    btn.innerHTML = ICO('sound') + '<b lang="en">' + esc(text) + '</b>';
+    var sp = text.indexOf(' ');                         // значок не отрывается от первого слова при переносе
+    var head = sp < 0 ? text : text.slice(0, sp), tail = sp < 0 ? '' : text.slice(sp);
+    btn.innerHTML = '<span class="th-say-head">' + ICO('sound') + '<b lang="en">' + esc(head) + '</b></span>' +
+      (tail ? '<b lang="en">' + esc(tail) + '</b>' : '');
     btn.addEventListener('click', function () { say(text.replace(/…|\.\.\./g, '')); });
+    btn.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); } });
     b.replaceWith(btn);
   });
 
