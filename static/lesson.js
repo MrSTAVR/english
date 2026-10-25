@@ -43,6 +43,44 @@
     b.replaceWith(btn);
   });
 
+  /* группы «фраза + [транскрипция] — перевод»: каждая с новой строки; фраза с транскрипцией —
+     одно целое (переносится вместе, а если не влезает в строку — переносится внутри) */
+  var thParents = [];
+  document.querySelectorAll('#step-theory .theory-block > p > .th-say').forEach(function (b) { if (thParents.indexOf(b.parentNode) < 0) thParents.push(b.parentNode); });
+  thParents.forEach(function (p) {
+    var nodes = [].slice.call(p.childNodes), item = null, lead = document.createDocumentFragment();
+    p.textContent = '';
+    nodes.forEach(function (n, k) {
+      // новая строка — только если фраза начинает пункт (в начале или после «,.;:!?»), а не стоит посреди предложения
+      var cur = item || lead, prevText = cur.textContent.replace(/\s+$/, ''), last = cur.lastChild;
+      while (last && last.nodeType === 3 && !last.nodeValue.trim()) last = last.previousSibling;
+      if (n.nodeType === 1 && n.classList.contains('th-say') && (!prevText || /[,.;:!?)]$/.test(prevText) || (last && last.nodeName === 'BR'))) {
+        item = document.createElement('span'); item.className = 'th-item';
+        var head = document.createElement('span'); head.className = 'th-head';
+        head.appendChild(n);
+        var next = nodes[k + 1], m = next && next.nodeType === 3 && /^\s*\[[^\]]*\]/.exec(next.nodeValue);
+        if (m) {
+          var tr = document.createElement('span'); tr.className = 'th-tr'; tr.textContent = m[0].trim();
+          head.appendChild(document.createTextNode(' ')); head.appendChild(tr);
+          next.nodeValue = next.nodeValue.slice(m[0].length);
+        }
+        item.appendChild(head);
+        p.appendChild(item);
+        return;
+      }
+      if (item) item.appendChild(n); else lead.appendChild(n);
+    });
+    if (lead.textContent.trim()) {
+      var first = document.createElement('span'); first.className = 'th-item th-lead';
+      first.appendChild(lead); p.insertBefore(first, p.firstChild);
+    }
+    [].forEach.call(p.querySelectorAll('.th-item'), function (it) {   // перенос и пробелы в конце пункта не нужны — следующий и так с новой строки
+      var t = it.lastChild;
+      while (t && (t.nodeName === 'BR' || (t.nodeType === 3 && !t.nodeValue.trim()))) { var prev = t.previousSibling; t.remove(); t = prev; }
+      if (t && t.nodeType === 3) t.nodeValue = t.nodeValue.replace(/\s+$/, '');
+    });
+  });
+
   /* ---------- колода слов ---------- */
   deck = (function () {
     var dataEl = $('wd-data');

@@ -34,7 +34,7 @@
       {% for b in lesson.theory.blocks %}
         <div class="theory-block">
           <h3>{{ b.title|noemoji }}</h3>
-          <p>{{ b.text | safe }}</p>
+          <p>{{ b.text|noemoji | safe }}</p>
         </div>
       {% endfor %}
       </div>
@@ -277,11 +277,11 @@
 </section>
 
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=8">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=10">{% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='practice.js') }}?v=3"></script>
-<script src="{{ url_for('static', filename='lesson.js') }}?v=6"></script>
+<script src="{{ url_for('static', filename='lesson.js') }}?v=9"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=4"></script>{% endif %}
 {% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=6"></script>{% endif %}
 <script>
