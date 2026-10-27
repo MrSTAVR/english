@@ -5,9 +5,11 @@ import json
 import logging
 import sqlite3
 import tempfile
+import time
 
 import backup_db
 import castle
+import config
 import visits
 import database
 import friends
@@ -514,7 +516,7 @@ def switch_to_student(sid):
     session["role"] = "student"
     session["student_id"] = st["id"]
     session["student_name"] = st["display_name"]
-    session["admin_back"] = True
+    session["admin_back"] = time.time() + config.ADMIN_BACK_MINUTES * 60   # срок кнопки «В админку»
     session["admin_last_student"] = st["id"]
     return redirect(url_for("student.student_home"))
 

@@ -111,7 +111,7 @@ def compute_stats(db, student_id=None):
         except (ValueError, TypeError):
             log.warning("попытка %s: не читается details_json", r["id"])
             details = {}
-        results = details.get("results", [])
+        results = details.get("results", []) if isinstance(details, dict) else []
         streak = cur = 0
         for item in results:
             if item.get("correct"):
@@ -123,6 +123,12 @@ def compute_stats(db, student_id=None):
 
         lid = r["lesson_id"]
         attempts_by_lesson[lid] = attempts_by_lesson.get(lid, 0) + 1
+        n_mistakes = None                                # None — ошибок не записано или запись испорчена
+        try:
+            if r["mistakes_json"]:
+                n_mistakes = len(json.loads(r["mistakes_json"]))
+        except (ValueError, TypeError):
+            log.warning("попытка %s: не читается mistakes_json", r["id"])
         hour = None
         try:
             hour = int((r["finished_at"] or "")[11:13])
@@ -139,7 +145,7 @@ def compute_stats(db, student_id=None):
         if r["passed"]:
             if lid not in best_by_lesson or r["score_percent"] > best_by_lesson[lid]["score_percent"]:
                 best_by_lesson[lid] = r
-            if r["mistakes_json"] and len(json.loads(r["mistakes_json"])) == 0:
+            if n_mistakes == 0:
                 has_perfect = True
                 perfect_count += 1
                 if attempts_by_lesson[lid] == 1:
@@ -151,15 +157,12 @@ def compute_stats(db, student_id=None):
         else:
             clean_run = 0
 
-        try:
-            total_mistakes += len(json.loads(r["mistakes_json"] or "[]"))
-        except (ValueError, TypeError):
-            log.warning("попытка %s: не читается mistakes_json", r["id"])
+        total_mistakes += n_mistakes or 0
 
     for lid, r in credited.items():
         best_by_lesson.setdefault(lid, r)           # настоящая попытка важнее зачёта
 
-    completed_ids = sorted(best_by_lesson.keys())
+    completed_ids = sorted(i for i in best_by_lesson if i in LESSONS_BY_ID)   # урок могли убрать из данных
     real_best = [r for r in best_by_lesson.values() if not r["manual"]]
     main_ids = [i for i in completed_ids if not LESSONS_BY_ID[i].get("is_extra")]
     # уникальные слова: «Orange» в уроках про цвета и про фрукты — одно слово

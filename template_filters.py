@@ -64,6 +64,13 @@ def _stable_shuffle(items, seed):
     return items
 
 
+def shuffle_options(q):
+    """Для задания 'choice': варианты перемешиваем стабильно (в данных правильный часто стоит первым).
+    Возвращает список [(исходный_индекс, текст)] — value радиокнопки остаётся исходным индексом."""
+    opts = list(q.get("options", []))
+    return [(i, opts[i]) for i in _stable_shuffle(range(len(opts)), "o" + str(q.get("q", "")) + "|".join(map(str, opts)))]
+
+
 def shuffle_match(q):
     """Для задания 'match': правый столбик перемешиваем стабильно.
     Работает с обоими форматами (left/right и пары [[l, r], ...]).

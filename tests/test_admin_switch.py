@@ -40,3 +40,24 @@ def test_back_expires_with_admin_login(parent, make_student):
 def test_switch_requires_admin(make_student):
     c = make_student(); sid = sid_of()
     assert c.post(f"/parent/students/{sid}/switch").headers["Location"].endswith("/")
+
+
+def test_back_button_lives_only_15_minutes(parent, make_student):
+    """Администратор зашёл в учётку на планшете ребёнка и отдал планшет — кабинет без пароля только недолго."""
+    make_student(); sid = sid_of()
+    parent.post(f"/parent/students/{sid}/switch")
+    with parent.session_transaction() as s:
+        assert time.time() + 14 * 60 < s["admin_back"] <= time.time() + 15 * 60
+        s["admin_back"] = time.time() - 1                                   # прошло 15 минут, вход админа ещё действует
+    assert "/admin/back" not in parent.get("/student").get_data(as_text=True)
+    assert parent.post("/admin/back").headers["Location"].endswith("/admin")
+
+
+def test_admin_in_student_account_is_not_logged_as_visit(parent, make_student):
+    """Проверки администратора в учётке ученика не попадают в «Заходы» как занятия ребёнка."""
+    from tests.helpers import db_scalar
+    make_student(); sid = sid_of()
+    before = db_scalar("SELECT COUNT(*) FROM visits WHERE student_id=?", (sid,))   # вход самой ученицы
+    parent.post(f"/parent/students/{sid}/switch")
+    parent.get("/student")
+    assert db_scalar("SELECT COUNT(*) FROM visits WHERE student_id=?", (sid,)) == before

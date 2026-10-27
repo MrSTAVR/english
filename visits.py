@@ -43,13 +43,13 @@ def init_app(app):
     @app.after_request
     def _log_visit(resp):
         sid = session.get("student_id")
-        if session.get("role") != "student" or not sid or _SKIP.search(request.path):
-            return resp
+        if session.get("role") != "student" or not sid or _SKIP.search(request.path) or "admin_back" in session:
+            return resp                                 # в учётку перешёл администратор — это не занятия ученика
         if request.method == "GET":
             if resp.status_code != 200 or resp.mimetype != "text/html":
                 return resp
             kind = "page"
-        elif request.method == "POST" and not request.path.startswith("/login"):
+        elif request.method == "POST" and resp.status_code < 400 and not request.path.startswith("/login"):
             kind = "act"
         else:
             return resp

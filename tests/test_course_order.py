@@ -119,11 +119,11 @@ def test_score_between_60_and_70_passes_only_on_soft_lessons(make_student):
     n = len(LESSONS_BY_ID[1]["test"])
     right = -(-n * 62 // 100)                      # ≈62%
     assert 60 <= 100 * right / n < 70
-    assert "Нужно минимум" not in _partial(c, 1, right)          # урок 1: порог 60% — сдан
+    assert "Пройти тест ещё раз" not in _partial(c, 1, right)          # урок 1: порог 60% — сдан
     assert db_scalar("SELECT passed FROM attempts ORDER BY id DESC LIMIT 1") == 1
     n2 = len(LESSONS_BY_ID[9]["test"])
     html = _partial(c, 9, -(-n2 * 62 // 100))                     # обычный урок: 62% — мало
-    assert "Нужно минимум 70%" in html
+    assert "Нужно 70%" in html
 
 
 def test_new_topic_lessons_are_placed_sensibly():

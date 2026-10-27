@@ -43,7 +43,7 @@ a { color: var(--primary); }
 .topbar nav a { color: var(--ink); }
 .topbar nav a:hover { background: var(--tint); }
 .topbar nav a.on { background: var(--primary); color: #FFFFFF; box-shadow: 0 3px 0 var(--primary-deep); }
-.topbar nav a.nav-exit { color: var(--muted); }
+.topbar nav .nav-exit { color: var(--muted); font-weight: 700; }
 
 /* ---------- карточки, плашки ---------- */
 .card, .glass { background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
@@ -181,7 +181,7 @@ select, input, textarea { max-width: 100%; box-sizing: border-box; }
   body.has-tabbar { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
   .has-tabbar .topbar { backdrop-filter: none; -webkit-backdrop-filter: none; flex-wrap: nowrap; }
   .has-tabbar .topbar nav { width: auto; flex: none; gap: 6px; }
-  .has-tabbar .topbar nav a.nav-exit { flex: none; padding: 9px 10px; }
+  .has-tabbar .topbar nav .nav-exit { flex: none; padding: 9px 10px; }
   .has-tabbar .theme-toggle { position: static; flex: none; }
   .has-tabbar .tabbar { position: fixed; z-index: 900; left: 0; right: 0; bottom: 0; display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; flex-wrap: nowrap;
@@ -581,4 +581,11 @@ html[data-theme="dark"] .game-record { color: #8FB4FF; }
 
 /* быстрый переход админка ↔ учётка ученика: кнопка в шапке выглядит как «Выйти» */
 .nav-switch { display: contents; }
-.nav-switch button.nav-exit { background: none; border: 0; font: inherit; cursor: pointer; }
+.nav-switch button.nav-exit { background: none; border: 0; font-family: inherit; font-size: inherit; cursor: pointer;
+  display: inline-flex; align-items: center; padding: 8px 14px; border-radius: 999px; }
+.nav-switch button.nav-exit:hover { background: var(--tint); }
+
+/* Результат теста: кнопки под процентами, правильные ответы свёрнуты */
+.result-actions-top { flex-wrap: wrap; margin: 14px 0 4px; }
+.rev-all { margin-top: 10px; }
+.rev-all > summary { cursor: pointer; color: var(--primary); font-weight: 700; padding: 8px 0; }

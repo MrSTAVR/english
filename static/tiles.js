@@ -17,11 +17,39 @@
     }
     return d[a.length][b.length];
   }
+  /* как grading.near_answer: опечатка максимум в одном слове от 5 букв, первая буква та же,
+     не другое слово курса (#near-dict) и не другая форма (sock/socks, runing/running); русские ответы не прощаем */
+  var dict = null;
+  function words() {
+    if (!dict) {
+      var el = document.getElementById('near-dict');
+      try { dict = el ? JSON.parse(el.textContent) : []; } catch (e) { dict = []; }
+    }
+    return dict;
+  }
+  var FORMS = ['s', 'es', 'ed', 'd', 'ing', "'s"];
+  function formChange(g, e) {
+    return [[g, e], [e, g]].some(function (p) {
+      var a = p[0], b = p[1], i;
+      if (FORMS.some(function (s) { return a + s === b; })) return true;
+      if (b.length === a.length + 1) {
+        for (i = 1; i < b.length; i++) if (b[i] === b[i - 1] && b.slice(0, i) + b.slice(i + 1) === a) return true;
+      }
+      return false;
+    });
+  }
+  function wordTypo(g, e) {
+    return g !== e && e.length >= 5 && g.charAt(0) === e.charAt(0) && words().indexOf(g) < 0 &&
+      !formChange(g, e) && dist(g, e) <= (e.length < 10 ? 1 : 2);
+  }
   function near(given, answer) {
     var g = norm(given), e = norm(answer);
-    if (!g || g === e) return false;
-    var lim = e.length < 4 ? 0 : e.length < 10 ? 1 : 2;
-    return dist(g, e) <= lim;
+    if (!g || g === e || /[а-яё]/.test(e)) return false;
+    var gw = g.split(' '), ew = e.split(' ');
+    if (gw.length !== ew.length) return false;
+    var diff = [];
+    gw.forEach(function (w, i) { if (w !== ew[i]) diff.push([w, ew[i]]); });
+    return diff.length === 1 && wordTypo(diff[0][0], diff[0][1]);
   }
 
   /* плитки из ответа (для заданий, собранных в браузере) — как template_filters.letter_tiles */
@@ -89,8 +117,14 @@
         if (k >= 0) left.splice(k, 1);
       });
     }
-    hintBtn.addEventListener('click', function () { mask.hidden = !mask.hidden; hintBtn.classList.toggle('is-on', !mask.hidden); });
-    openBtn.addEventListener('click', function () { box.hidden = false; openBtn.hidden = true; sync(); });
+    /* в тесте отмечаем, что была подсказка: ответ засчитаем, но слово отправим в повторение */
+    function helped() {
+      if (!inp.name || !inp.form || inp.form.querySelector('input[name="' + inp.name + '_help"]')) return;
+      var h = document.createElement('input'); h.type = 'hidden'; h.name = inp.name + '_help'; h.value = '1';
+      inp.form.appendChild(h);
+    }
+    hintBtn.addEventListener('click', function () { mask.hidden = !mask.hidden; hintBtn.classList.toggle('is-on', !mask.hidden); helped(); });
+    openBtn.addEventListener('click', function () { box.hidden = false; openBtn.hidden = true; sync(); helped(); });
     inp.addEventListener('input', sync);
     host._sync = sync;
     sync();

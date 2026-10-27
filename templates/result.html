@@ -3,17 +3,21 @@
 {% block content %}
 
 <section class="card result-card {{ 'result-pass' if passed else 'result-fail' }}">
-  <div class="big-emoji">{{ '' if percent == 100 else ('' if passed else '') }}</div>
   <h1>
     {% if percent == 100 %}Идеально! 100%!
     {% elif passed %}Урок пройден!
-    {% else %}Почти получилось!
+    {% elif percent < 30 %}Этот урок пока трудный
+    {% else %}Почти! Не хватило {{ missing }} {{ 'ответа' if missing % 10 == 1 and missing % 100 != 11 else 'ответов' }}
     {% endif %}
   </h1>
   <div class="score-ring">{{ percent }}%</div>
   <p>Правильных ответов: <b>{{ correct }}</b> из <b>{{ total }}</b> · Время: <b>{{ seconds|human_time }}</b></p>
   {% if not passed %}
-    <p class="hint-text">Нужно минимум {{ need }}%, чтобы урок считался пройденным. Попробуй ещё разок — у тебя получится!</p>
+    <p class="hint-text">{% if percent < 30 %}Ничего страшного — разберём ошибки, повторим слова, и всё получится.{% else %}Нужно {{ need }}%. Посмотри ошибки ниже и попробуй ещё раз — ты уже близко!{% endif %}</p>
+    <div class="result-actions result-actions-top">
+      <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id, step='test') }}">Пройти тест ещё раз</a>
+      <a class="btn btn-secondary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id) }}">Повторить урок</a>
+    </div>
   {% endif %}
 </section>
 
@@ -49,26 +53,34 @@
 {% endif %}
 
 <section class="card">
-  <h2>Разбор теста</h2>
-  {% if to_review %}<p class="hint">Слова из ошибок отправлены в повторение — потренируем их ещё: <b>{{ to_review|join(', ') }}</b></p>{% endif %}
-  {% for r in results %}
+  <h2>{{ 'Разбор ошибок' if not passed else 'Разбор теста' }}</h2>
+  {% if to_review %}<p class="hint">Эти слова отправлены в повторение — потренируем их ещё: <b>{{ to_review|join(', ') }}</b></p>{% endif %}
+  {% macro review_item(r) %}
     <div class="review-item {{ 'rev-ok' if r.correct else 'rev-bad' }}">
-      <div>{{ '' if r.correct else '' }} <b>{{ r.q }}</b></div>
+      <div><b>{{ r.q|noemoji }}</b></div>
       {% if r.almost %}
         <div class="rev-detail">Засчитано! Только пишется так: <b>{{ r.correct_answer }}</b> (у тебя: <i>{{ r.given }}</i>)</div>
       {% endif %}
       {% if not r.correct %}
-        <div class="rev-detail">Твой ответ: <i>{{ r.given or '(пусто)' }}</i> → Правильно: <b>{{ r.correct_answer }}</b></div>
+        <div class="rev-detail">{% if r.given or r.type not in ('match', 'sort') %}Твой ответ: <i>{{ r.given or '(пусто)' }}</i> → {% endif %}Правильно: <b>{{ r.correct_answer }}</b></div>
       {% endif %}
-      {% if r.explain %}<div class="rev-explain">{{ r.explain }}</div>{% endif %}
+      {% if r.explain %}<div class="rev-explain">{{ r.explain|noemoji }}</div>{% endif %}
     </div>
-  {% endfor %}
+  {% endmacro %}
+  {% if passed %}
+    {% for r in results %}{{ review_item(r) }}{% endfor %}
+  {% else %}
+    {% for r in results if not r.correct or r.almost %}{{ review_item(r) }}{% endfor %}
+    <details class="rev-all"><summary>Показать правильные ответы</summary>
+      {% for r in results if r.correct and not r.almost %}{{ review_item(r) }}{% endfor %}
+    </details>
+  {% endif %}
 </section>
 
 <div class="result-actions">
   {% if not passed %}
-    <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id) }}">Попробовать ещё раз</a>
+    <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id, step='test') }}">Пройти тест ещё раз</a>
   {% endif %}
-  <a class="btn btn-secondary" href="{{ url_for('student.student_home') }}">К списку уроков</a>
+  <a class="btn btn-secondary" href="{{ url_for('student.student_home') }}">На главную</a>
 </div>
 {% endblock %}

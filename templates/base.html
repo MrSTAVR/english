@@ -21,7 +21,7 @@ window.picHtml=function(p){p=String(p||'');if(/^@[a-z]+$/.test(p))return '<img c
 <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=32">
 <link rel="stylesheet" href="{{ url_for('static', filename='achievements.css') }}?v=3">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=3">
-<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}?v=29">
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}?v=30">
 {% block head %}{% endblock %}
 </head>
 <body{% if speech_area %} class="area-speech{{ ' has-tabbar sp-logoped' if session.get('role') == 'logoped' }}"{% elif session.get('role') == 'student' and request.endpoint not in ('student.lesson_page', 'student.submit_test') %} class="has-tabbar"{% elif request.endpoint == 'student.lesson_page' %} class="lesson-focus"{% endif %}>
@@ -160,7 +160,7 @@ window.picHtml=function(p){p=String(p||'');if(/^@[a-z]+$/.test(p))return '<img c
 {% if not speech_area %}
 <script>window.MASCOT_SETTINGS = {{ mascot|tojson }};</script>
 <script src="{{ url_for('static', filename='chick.js') }}?v=5"></script>
-<script src="{{ url_for('static', filename='mascot.js') }}?v=15"></script>
+<script src="{{ url_for('static', filename='mascot.js') }}?v=16"></script>
 <script src="{{ url_for('static', filename='tts.js') }}?v=4"></script>
 <script src="{{ url_for('static', filename='pwa.js') }}?v=2"></script>
 {% endif %}
