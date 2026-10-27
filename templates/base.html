@@ -21,7 +21,7 @@ window.picHtml=function(p){p=String(p||'');if(/^@[a-z]+$/.test(p))return '<img c
 <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=32">
 <link rel="stylesheet" href="{{ url_for('static', filename='achievements.css') }}?v=3">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=3">
-<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}?v=28">
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}?v=29">
 {% block head %}{% endblock %}
 </head>
 <body{% if speech_area %} class="area-speech{{ ' has-tabbar sp-logoped' if session.get('role') == 'logoped' }}"{% elif session.get('role') == 'student' and request.endpoint not in ('student.lesson_page', 'student.submit_test') %} class="has-tabbar"{% elif request.endpoint == 'student.lesson_page' %} class="lesson-focus"{% endif %}>
@@ -109,9 +109,11 @@ window.picHtml=function(p){p=String(p||'');if(/^@[a-z]+$/.test(p))return '<img c
       {% endfor %}
         <span class="tab-mascot" aria-hidden="true"></span>
       </div>
+      {% if admin_back %}<form method="post" action="{{ url_for('auth.admin_back') }}" class="nav-switch"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="nav-exit">В админку</button></form>{% endif %}
       <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
     {% elif session.get('role') == 'parent' %}
       <a href="{{ url_for('parent.parent_dashboard') }}" class="{{ 'on' if ep.startswith('parent.') }}"><svg class="icon"><use href="#i-shield"/></svg><span>Администратор</span></a>
+      {% if admin_last %}<form method="post" action="{{ url_for('parent.switch_to_student', sid=admin_last.id) }}" class="nav-switch"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="nav-exit">В учётку {{ admin_last.display_name }}</button></form>{% endif %}
       <a href="{{ url_for('auth.logout') }}" class="nav-exit">Выйти</a>
     {% elif session.get('role') == 'logoped' %}
       {% set tabs = [

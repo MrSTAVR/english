@@ -34,7 +34,17 @@
 
 <div class="home-hero">
 <!-- 2. Кнопка «Следующий урок» -->
-{% if next_lesson %}
+{% if resume %}
+  <a class="next-cta next-cta-resume" href="{{ url_for('student.lesson_page', lesson_id=resume.lesson.id) }}">
+    <span class="next-cta-emoji"><svg aria-hidden="true"><use href="#i-chick"/></svg></span>
+    <span class="next-cta-text">
+      <span class="next-cta-kicker">Продолжи урок</span>
+      <span class="next-cta-title">{% if resume.lesson.num %}Урок {{ resume.lesson.num }} — {% endif %}{{ resume.lesson.title|noemoji }}</span>
+      <span class="next-cta-sub">{{ resume.sub }}</span>
+    </span>
+    <span class="next-cta-btn">Продолжить</span>
+  </a>
+{% elif next_lesson %}
   <a class="next-cta" href="{{ url_for('student.lesson_page', lesson_id=next_lesson.id) }}">
     <span class="next-cta-emoji"><svg aria-hidden="true"><use href="#i-chick"/></svg></span>
     <span class="next-cta-text">

@@ -80,6 +80,28 @@ def login_parent():
     return redirect(url_for("parent.parent_dashboard"))
 
 
+def admin_back_ok():
+    """Можно ли из учётки ученика вернуться в админку без пароля: в эту учётку перешли из админки
+    («Войти как ученик»), и вход администратора ещё действует (config.PARENT_SESSION_HOURS)."""
+    return bool(session.get("admin_back")) and time.time() < session.get("parent_until", 0)
+
+
+@bp.route("/admin/back", methods=["POST"])
+def admin_back():
+    """Вернуться из учётки ученика в админку, не вводя пароль."""
+    if session.get("role") != "student" or not admin_back_ok():
+        session.clear()
+        new_seed()
+        flash("Вход администратора закончился. Войди снова 🔐", "error")
+        return redirect(url_for("auth.admin_login"))
+    last = session.get("student_id")
+    for k in ("student_id", "student_name", "admin_back"):
+        session.pop(k, None)
+    session["role"] = "parent"
+    session["admin_last_student"] = last
+    return redirect(url_for("parent.parent_student", sid=last) if last else url_for("parent.parent_dashboard"))
+
+
 @bp.route("/logout")
 def logout():
     role = session.get("role")
