@@ -21,7 +21,7 @@ from seasons import active_season, advent_open, content
 from garden import award_coins, get_garden, on_vacation, refresh_garden, touch_streak, tree_count_for, tree_stage
 import friends
 from friends import post as feed_post
-from grading import grade_question
+from grading import grade_question, near_miss
 from mascot import build_mascot_ctx
 from review import counts as review_counts, learned_pool, send_mistakes, state as review_state, word_of_day
 from stats import compute_stats
@@ -287,6 +287,8 @@ def submit_test(lesson_id):
         else:
             given = request.form.get(f"q{i}", "")
         ok, correct_disp = grade_question(q, given)
+        almost = not ok and q["type"] == "type_in" and near_miss(q, given)   # опечатку засчитываем
+        ok = ok or almost
         if ok:
             correct += 1
         else:
@@ -297,7 +299,7 @@ def submit_test(lesson_id):
                         "given": str(given if given != -1 else ""),
                         "correct_answer": str(correct_disp),
                         "explain": q.get("explain", ""),
-                        "correct": bool(ok)})
+                        "correct": bool(ok), "almost": almost})
 
     total = len(test)
     percent = round(100 * correct / total) if total else 0

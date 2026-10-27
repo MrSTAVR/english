@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ lesson.title|noemoji }} — English Fun{% endblock %}
 {% block content %}
+{% set tiles_open = lesson.num and lesson.num <= TILES_UPTO %}
 {% set ltitle = lesson.title|noemoji %}
 <div class="ls-top">
 <div class="ls-head">
@@ -155,8 +156,9 @@
         {% if ex is russian_answer %}
         <input type="text" class="typein" placeholder="Напиши перевод по-русски" lang="ru">
         {% else %}
-        <input type="text" class="typein" placeholder="Напиши ответ по-английски" lang="en">
+        <input type="text" class="typein" placeholder="Напиши ответ по-английски" lang="en" autocomplete="off">
         <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Послушать</button>
+        <div class="lt" data-lt='{{ ex|tiles|tojson }}'{% if tiles_open %} data-open="1"{% endif %}></div>
         {% endif %}
       {% endif %}
       {% if ex.type not in ('match', 'sort') %}
@@ -168,7 +170,7 @@
   {% endfor %}
   {% if lesson.practice %}
   <h3 class="pr-title">Ещё потренируемся</h3>
-  <div id="practice" data-items='{{ lesson.practice | tojson }}'></div>
+  <div id="practice" data-items='{{ lesson.practice | tojson }}'{% if tiles_open %} data-tiles-open="1"{% endif %}></div>
   {% endif %}
   <h3 class="pr-title">Поиграй со словами урока</h3>
   <p><a class="btn btn-secondary" href="{{ url_for('games.games_hub', lesson=lesson.id) }}">Открыть игры</a></p>
@@ -267,6 +269,7 @@
           {% else %}
           <input type="text" class="typein" name="q{{ outer_loop.index0 }}" placeholder="{{ 'Напиши то, что услышал(а), по-английски' if q.audio else 'Напиши ответ по-английски' }}" autocomplete="off" lang="en">
           <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Послушать</button>
+          <div class="lt" data-lt='{{ q|tiles|tojson }}'{% if tiles_open %} data-open="1"{% endif %}></div>
           {% endif %}
         {% endif %}
       </div>
@@ -277,10 +280,11 @@
 </section>
 
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=10">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=11">{% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='practice.js') }}?v=3"></script>
+<script src="{{ url_for('static', filename='tiles.js') }}?v=1"></script>
+<script src="{{ url_for('static', filename='practice.js') }}?v=4"></script>
 <script src="{{ url_for('static', filename='lesson.js') }}?v=11"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=4"></script>{% endif %}
 {% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=6"></script>{% endif %}
@@ -315,8 +319,10 @@ function checkExercise(btn) {
     given = box.querySelector('.typein').value.toLowerCase().trim();
   }
   const res = box.querySelector('.ex-result');
-  const ok = (type === 'choice') ? (given === 'OK') : (given === answer);
-  res.textContent = ok ? ' Правильно!' : ' Пока нет, попробуй ещё!';
+  const exact = (type === 'choice') ? (given === 'OK') : (given === answer);
+  const almost = !exact && type !== 'choice' && window.LetterTiles && window.LetterTiles.near(given, answer);
+  const ok = exact || almost;
+  res.textContent = exact ? ' Правильно!' : almost ? ' Почти! Пишется: ' + box.dataset.answer : ' Пока нет, попробуй ещё!';
   res.className = 'ex-result ' + (ok ? 'ok' : 'bad');
   if (ok) box.querySelector('.explain').classList.remove('hidden');
 }

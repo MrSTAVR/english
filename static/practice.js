@@ -48,7 +48,13 @@
     } else if (item.type === 'type_in') {
       var inp = el('input', 'typein'); inp.type = 'text'; inp.autocomplete = 'off'; inp.placeholder = 'Напиши по-английски';
       box.appendChild(inp);
-      check = function () { return norm(inp.value) === norm(item.answer); };
+      if (window.LetterTiles && /[a-z]/i.test(item.answer) && !/[а-яё]/i.test(item.answer)) {
+        var lt = el('div', 'lt'); box.appendChild(lt);
+        window.LetterTiles.attach(lt, inp, item.answer, !!(document.getElementById('practice') || {dataset: {}}).dataset.tilesOpen);
+      }
+      check = function () {
+        return norm(inp.value) === norm(item.answer) || !!(window.LetterTiles && window.LetterTiles.near(inp.value, item.answer));
+      };
     } else if (item.type === 'scramble') {
       var line = el('div', 'answer-line pr-line'), bank = el('div', 'word-bank pr-bank');
       item.letters.forEach(function (ch) {
