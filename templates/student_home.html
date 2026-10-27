@@ -52,7 +52,7 @@
       <span class="next-cta-title">Урок {{ next_lesson.num }} — {{ next_lesson.title|noemoji }}</span>
       <span class="next-cta-sub">~15 минут · тест из {{ next_lesson.test|length }} вопросов</span>
     </span>
-    <span class="next-cta-btn">Продолжить</span>
+    <span class="next-cta-btn">Начать</span>
   </a>
 {% elif stats.lessons_completed and stats.lessons_completed >= total_lessons %}
   <div class="next-cta next-cta-done">

@@ -42,6 +42,7 @@ MIN_PARENT_PASSWORD_LEN = 8
 TIMEZONE = os.environ.get("ENGLISH_TZ", "Europe/Moscow")   # часовой пояс расписания логопеда
 SESSION_DAYS = int(os.environ.get("ENGLISH_SESSION_DAYS", "30"))   # ученик не вводит пароль каждый раз
 PARENT_SESSION_HOURS = int(os.environ.get("ENGLISH_PARENT_SESSION_HOURS", "12"))
+ADMIN_BACK_MINUTES = 15   # из учётки ученика «В админку» без пароля — только недолго (планшет могут отдать ребёнку)
 # Secure-cookie уходят только по HTTPS. В боевом режиме включены автоматически.
 COOKIE_SECURE = _env_flag("ENGLISH_COOKIE_SECURE", IS_PRODUCTION)
 

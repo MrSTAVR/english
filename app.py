@@ -25,7 +25,7 @@ from version import info as app_version
 from routes import register_blueprints
 from security import load_secret_key
 from template_filters import human_time, noemoji, pic_html, letter_tiles, TILES_UPTO, is_russian_answer, match_answer_json, match_cols, match_expected_json, mistakes_count, \
-    shuffle_match, shuffle_sort, shuffle_words, tree_mini
+    shuffle_match, shuffle_options, shuffle_sort, shuffle_words, tree_mini
 
 app = Flask(__name__)
 if not logging.getLogger().handlers:           # журнал приложения: под systemd — в journalctl -u english
@@ -70,6 +70,7 @@ app.jinja_env.filters["match_cols"] = match_cols
 app.jinja_env.filters["match_answer"] = match_answer_json
 
 app.jinja_env.filters["shuffle_match"] = shuffle_match
+app.jinja_env.filters["shuffle_options"] = shuffle_options
 
 
 app.jinja_env.filters["match_expected"] = match_expected_json

@@ -199,14 +199,15 @@ def word_of_day(pool, st, student_id, today=None):
 
 
 def words_in_mistakes(results, lesson_id, limit_per_question=2):
-    """Слова курса, на которых ученик ошибся в тесте (вопросы «выбери» и «напиши»).
+    """Слова курса, на которых ученик ошибся в тесте (вопросы «выбери» и «напиши»),
+    и слова, засчитанные с опечаткой (almost) или с подсказкой (helped) — их тоже надо повторить.
 
     Слово ищем в правильном ответе и в тексте вопроса: по-английски — целым словом,
     по-русски — по переводу («Как по-английски «синий»?» → blue)."""
     pool = all_words()
     keys = []
     for res in results:
-        if res.get("correct") or res.get("type") not in ("choice", "type_in"):
+        if (res.get("correct") and not res.get("almost") and not res.get("helped")) or res.get("type") not in ("choice", "type_in"):
             continue
         text = f"{res.get('q', '')} {res.get('correct_answer', '')}".lower()
         found = []

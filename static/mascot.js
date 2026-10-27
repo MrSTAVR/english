@@ -17,7 +17,8 @@
   var WHO = S.student ? ', ' + S.student : '';           // «, Маша» или пусто
   var RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-  var HIDE_AFTER = 22000;        // облачко сворачивается через …
+  var NARROW = window.matchMedia && window.matchMedia('(max-width: 700px)').matches;
+  var HIDE_AFTER = NARROW ? 5000 : 22000;   // облачко сворачивается через … (на телефоне оно закрывает задание — быстрее)
   var SLEEP_AFTER = 75000;       // засыпает без действий
   var CHAIN_GAP = 650;           // макс. пауза между «быстрыми» тыками
   var EXPLODE_AT = 8;            // тык, на котором взрывается
@@ -284,9 +285,13 @@
   })();
 
   /* ---------- реплики ---------- */
+  function typing() {                                    // ребёнок пишет ответ — облачко не должно закрывать поле
+    var a = document.activeElement;
+    return !!a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && /^(text|search|)$/.test(a.type || '')));
+  }
   function say(text, o) {
     o = o || {};
-    if (!text || busy) return;
+    if (!text || busy || (NARROW && typing())) return;
     if (sleeping) wake(true);
     text = fmt(text);
     clearTimeout(hideTimer); clearInterval(typeTimer);
@@ -321,6 +326,7 @@
     balloon.classList.remove('visible');
     svg.classList.remove('is-talking');
   }
+  document.addEventListener('focusin', function () { if (NARROW && typing()) { clearInterval(typeTimer); collapse(); } });
   var chatTimes = [];
   function say2(list, ms, o) {                           // вторая реплика с задержкой
     setTimeout(function () { say(Array.isArray(list) ? pick(list) : list, o); }, ms);

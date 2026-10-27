@@ -310,6 +310,8 @@
         if (form2) form2.dispatchEvent(new Event('change', { bubbles: true }));   // полоска «Отвечено»
         var note = $('ls-resume');
         if (note) note.hidden = false;
+      } else if (/[?&]step=test(&|$)/.test(location.search) && window.goStep) {
+        window.goStep('step-test');                      // «Пройти тест ещё раз» со страницы результата
       }
       ready = true;
     });

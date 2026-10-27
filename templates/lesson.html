@@ -108,8 +108,8 @@
       <p class="q"><b>Задание {{ loop.index }}.</b> {{ ex.q|noemoji }}</p>
       {% if ex.type == 'choice' %}
         <div class="options">
-          {% for opt in ex.options %}
-            <label class="opt"><input type="radio" name="ex{{ outer_loop.index0 }}" value="{{ loop.index0 }}"> {{ opt }}</label>
+          {% for oi, opt in ex|shuffle_options %}
+            <label class="opt"><input type="radio" name="ex{{ outer_loop.index0 }}" value="{{ oi }}"> {{ opt }}</label>
           {% endfor %}
         </div>
       {% elif ex.type == 'match' %}
@@ -206,9 +206,9 @@
         {% if q.audio %}<p><button type="button" class="btn btn-small say-btn" data-say="{{ q.audio }}"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Слушать</button> <button type="button" class="btn btn-small say-btn" data-say="{{ q.audio }}" data-slow="1">Медленно</button></p>{% endif %}
         {% if q.type == 'choice' %}
           <div class="options">
-            {% for opt in q.options %}
-              {# value = реальный индекс варианта (outer_loop.index0), а не счётчик вложенного цикла #}
-              <label class="opt"><input type="radio" name="q{{ outer_loop.index0 }}" value="{{ loop.index0 }}"> {{ opt }}</label>
+            {% for oi, opt in q|shuffle_options %}
+              {# варианты перемешаны; value — исходный индекс варианта, его и проверяет сервер #}
+              <label class="opt"><input type="radio" name="q{{ outer_loop.index0 }}" value="{{ oi }}"> {{ opt }}</label>
             {% endfor %}
           </div>
         {% elif q.type == 'order' %}
@@ -269,7 +269,7 @@
           {% else %}
           <input type="text" class="typein" name="q{{ outer_loop.index0 }}" placeholder="{{ 'Напиши то, что услышал(а), по-английски' if q.audio else 'Напиши ответ по-английски' }}" autocomplete="off" lang="en">
           <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Послушать</button>
-          <div class="lt" data-lt='{{ q|tiles|tojson }}'{% if tiles_open %} data-open="1"{% endif %}></div>
+          <div class="lt" data-lt='{{ q|tiles|tojson }}'></div>{# в тесте плитки — только по кнопке: тест проверяет, помнит ли сама #}
           {% endif %}
         {% endif %}
       </div>
@@ -283,9 +283,10 @@
 {% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=11">{% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='tiles.js') }}?v=1"></script>
+<script type="application/json" id="near-dict">{{ near_words|tojson }}</script>
+<script src="{{ url_for('static', filename='tiles.js') }}?v=3"></script>
 <script src="{{ url_for('static', filename='practice.js') }}?v=4"></script>
-<script src="{{ url_for('static', filename='lesson.js') }}?v=11"></script>
+<script src="{{ url_for('static', filename='lesson.js') }}?v=12"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=4"></script>{% endif %}
 {% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=6"></script>{% endif %}
 <script>
@@ -322,7 +323,7 @@ function checkExercise(btn) {
   const exact = (type === 'choice') ? (given === 'OK') : (given === answer);
   const almost = !exact && type !== 'choice' && window.LetterTiles && window.LetterTiles.near(given, answer);
   const ok = exact || almost;
-  res.textContent = exact ? ' Правильно!' : almost ? ' Почти! Пишется: ' + box.dataset.answer : ' Пока нет, попробуй ещё!';
+  res.textContent = exact ? ' Правильно!' : almost ? ' Засчитано! Только пишется так: ' + box.dataset.answer : ' Пока нет, попробуй ещё!';
   res.className = 'ex-result ' + (ok ? 'ok' : 'bad');
   if (ok) box.querySelector('.explain').classList.remove('hidden');
 }
@@ -709,7 +710,11 @@ document.getElementById('test-form').addEventListener('submit', function (e) {
     alert('Остались вопросы без ответа: ' + unanswered.join(', ') + ' \nОтветь на все — тогда проверим!');
     const first = document.querySelector(`.question[data-qindex="${unanswered[0] - 1}"]`);
     if (first) first.scrollIntoView({behavior: 'smooth', block: 'center'});
+    return;
   }
+  if (this.dataset.sent) { e.preventDefault(); return; }   // двойное нажатие «Проверить»
+  this.dataset.sent = '1';
+  this.querySelectorAll('button[type="submit"]').forEach(b => { b.disabled = true; });
 });
 </script>
 {% endblock %}

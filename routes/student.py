@@ -21,7 +21,7 @@ from seasons import active_season, advent_open, content
 from garden import award_coins, get_garden, on_vacation, refresh_garden, touch_streak, tree_count_for, tree_stage
 import friends
 from friends import post as feed_post
-from grading import grade_question, near_miss
+from grading import grade_question, near_miss, near_dict
 from mascot import build_mascot_ctx
 from review import counts as review_counts, learned_pool, send_mistakes, state as review_state, word_of_day
 from stats import compute_stats
@@ -120,7 +120,7 @@ def student_home():
         if l["id"] in unlocked and l["id"] not in stats["completed_ids"]:
             next_lesson = l
             break
-    resume = resume_info(db, student["id"], unlocked)
+    resume = resume_info(db, student["id"], unlocked, stats["completed_ids"])
     # Компактный вид блока «Мои уроки»: последний пройденный, следующий
     # доступный и первый закрытый. Остальные — за кнопкой «показать все».
     last_done_id = None
@@ -176,34 +176,54 @@ def student_home():
                            tree_count=tree_count_for(garden["streak_days"]))
 
 
-STEP_NAMES = {"step-theory": "теория", "step-material": "новые слова", "step-exercises": "тренировка", "step-test": "тест"}
+STEP_NAMES = {"step-theory": "Теория", "step-material": "Слова", "step-exercises": "Тренировка", "step-test": "Тест"}
 
 
-def resume_info(db, student_id, unlocked):
-    """Последний начатый и не сданный урок (сохранённое место) — для карточки «Продолжи урок» на главной."""
+def _resume_sub(lesson, st):
+    """Подпись карточки «Продолжи урок» по сохранённому месту (st — dict из lesson_progress)."""
+    step = st.get("step") if st.get("step") in STEP_NAMES else "step-theory"
+    sub = "Ты на шаге «" + STEP_NAMES[step] + "»"
+    if step == "step-material":
+        words = st.get("words")
+        seen = words.get("seen") if isinstance(words, dict) else None
+        if isinstance(seen, list) and seen:
+            sub += f" · {len(seen)} из {len(lesson['material'])} слов"
+    elif step == "step-test":
+        t = st.get("test") if isinstance(st.get("test"), dict) else {}
+
+        def n(key, as_list):
+            v = t.get(key)
+            if as_list:
+                return sum(1 for x in v if x and str(x).strip()) if isinstance(v, list) else 0
+            return len(v) if isinstance(v, dict) else 0
+        done = n("radio", False) + n("lines", False) + n("text", True) + n("match", True) + n("sort", True)
+        total = len(lesson["test"])
+        if done:
+            done = min(done, total)
+            sub = f"Ты на тесте · отвечено {done} из {total}"
+            if done * 4 >= total * 3 or total - done <= 2:
+                sub += " — осталось совсем чуть-чуть!"
+            elif done * 2 >= total:
+                sub += " — уже половина!"
+    return sub
+
+
+def resume_info(db, student_id, unlocked, completed=()):
+    """Последний начатый и не сданный урок (сохранённое место) — для карточки «Продолжи урок» на главной.
+    Сданные уроки пропускаем: туда заходят повторить, а главная кнопка должна вести вперёд."""
     rows = db.execute("SELECT lesson_id, state FROM lesson_progress WHERE student_id=? ORDER BY updated_at DESC",
                       (student_id,)).fetchall()
     for r in rows:
         lesson = LESSONS_BY_ID.get(r["lesson_id"])
-        if not lesson or r["lesson_id"] not in unlocked:
+        if not lesson or r["lesson_id"] not in unlocked or r["lesson_id"] in completed:
             continue
         try:
             st = json.loads(r["state"] or "{}")
         except ValueError:
             continue
-        step = st.get("step") or "step-theory"
-        sub = "Остановились на шаге «" + STEP_NAMES.get(step, "теория") + "»"
-        if step == "step-material":
-            seen = len(((st.get("words") or {}).get("seen")) or [])
-            sub += f" · слов {seen} из {len(lesson['material'])}"
-        elif step == "step-test":
-            t = st.get("test") or {}
-            done = (len(t.get("radio") or {}) + sum(1 for x in t.get("text") or [] if str(x).strip()) + len(t.get("lines") or {})
-                    + sum(1 for x in t.get("match") or [] if x) + sum(1 for x in t.get("sort") or [] if x))
-            total = len(lesson["test"])
-            if done:
-                sub = f"Ты на тесте · ответов {min(done, total)} из {total}" + (" — осталось совсем чуть-чуть!" if done * 2 >= total else "")
-        return {"lesson": lesson, "sub": sub}
+        if not isinstance(st, dict):
+            continue
+        return {"lesson": lesson, "sub": _resume_sub(lesson, st)}
     return None
 
 
@@ -233,7 +253,7 @@ def lesson_page(lesson_id):
     mascot = build_mascot_ctx()
     mascot["lessonId"] = lesson_id
     mascot["lessonTitle"] = lesson["title"]
-    return render_template("lesson.html", lesson=lesson, speaking=config.SPEAKING, need=pass_mark(lesson), total_lessons=len(LESSONS),
+    return render_template("lesson.html", lesson=lesson, near_words=near_dict(lesson), speaking=config.SPEAKING, need=pass_mark(lesson), total_lessons=len(LESSONS),
                            saved_state=saved,
                            lesson_dialogs=dialogs_for(db, student["id"], {lesson_id}),
                            me_emoji=student["emoji"] or "🎒", me_name=student["display_name"],
@@ -300,8 +320,22 @@ def submit_test(lesson_id):
         session.clear()
         return redirect(url_for("auth.index"))
     attempt = db.execute("SELECT * FROM attempts WHERE id=?", (attempt_id,)).fetchone()
-    if not attempt or attempt["finished_at"] or attempt["student_id"] != student["id"]:
+    if not attempt or attempt["student_id"] != student["id"] or attempt["lesson_id"] != lesson_id:
         abort(400)
+    if lesson_id not in unlocked_lesson_ids(compute_stats(db, student["id"])):
+        abort(400)
+    if attempt["finished_at"]:
+        try:
+            ago = (datetime.now() - datetime.fromisoformat(attempt["finished_at"])).total_seconds()
+        except ValueError:
+            ago = 3600
+        if ago < 60:                                     # повторная отправка той же формы (двойное нажатие, «Назад»)
+            flash("Этот тест уже проверен — результат сохранён.", "info")
+            return redirect(url_for("student.student_home"))
+        # страница урока из офлайн-кэша со старой попыткой — ответы не теряем, заводим новую попытку
+        cur = db.execute("INSERT INTO attempts (student_id, lesson_id, started_at) VALUES (?, ?, ?)",
+                         (student["id"], lesson_id, datetime.now().isoformat(timespec="seconds")))
+        attempt_id = cur.lastrowid
 
     test = lesson["test"]
     results, mistakes = [], []
@@ -321,17 +355,24 @@ def submit_test(lesson_id):
         ok, correct_disp = grade_question(q, given)
         almost = not ok and q["type"] == "type_in" and near_miss(q, given)   # опечатку засчитываем
         ok = ok or almost
+        if q["type"] == "choice":                        # в разборе — текст выбранного варианта, а не его номер
+            shown = q["options"][given] if 0 <= given < len(q["options"]) else ""
+        elif q["type"] in ("match", "sort"):             # служебная запись пар — ребёнку не показываем
+            shown = ""
+        else:
+            shown = str(given)
         if ok:
             correct += 1
         else:
             mistakes.append({"question": q["q"],
-                             "given": str(given if given != -1 else "(пусто)"),
+                             "given": shown or "(пусто)",
                              "correct": str(correct_disp)})
         results.append({"q": q["q"], "type": q["type"],
-                        "given": str(given if given != -1 else ""),
+                        "given": shown,
                         "correct_answer": str(correct_disp),
                         "explain": q.get("explain", ""),
-                        "correct": bool(ok), "almost": almost})
+                        "correct": bool(ok), "almost": almost,
+                        "helped": bool(ok and request.form.get(f"q{i}_help"))})   # с подсказкой — слово в повторение
 
     total = len(test)
     percent = round(100 * correct / total) if total else 0
@@ -377,7 +418,7 @@ def submit_test(lesson_id):
     mascot["newAchievements"] = [public(a) for a in new_achievements]
     return render_template("result.html", mascot=mascot,
                            lesson=lesson, percent=percent, passed=passed, need=need,
-                           correct=correct, total=total,
+                           correct=correct, total=total, missing=max(0, -(-need * total // 100) - correct),
                            seconds=seconds, results=results, to_review=to_review,
                            coins_earned=coins_earned, bricks_earned=bricks_earned,
                            coins_total=garden["coins"],

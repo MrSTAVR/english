@@ -82,8 +82,11 @@ def login_parent():
 
 def admin_back_ok():
     """Можно ли из учётки ученика вернуться в админку без пароля: в эту учётку перешли из админки
-    («Войти как ученик»), и вход администратора ещё действует (config.PARENT_SESSION_HOURS)."""
-    return bool(session.get("admin_back")) and time.time() < session.get("parent_until", 0)
+    («Войти как ученик») не дольше config.ADMIN_BACK_MINUTES назад, и вход администратора ещё действует."""
+    until = session.get("admin_back")
+    now = time.time()
+    return (isinstance(until, (int, float)) and not isinstance(until, bool)
+            and now < until and now < session.get("parent_until", 0))
 
 
 @bp.route("/admin/back", methods=["POST"])
