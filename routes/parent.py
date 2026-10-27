@@ -8,6 +8,7 @@ import tempfile
 
 import backup_db
 import castle
+import visits
 import database
 import friends
 import goals
@@ -95,6 +96,7 @@ def delete_student(sid):
         db.execute(f"DELETE FROM {table} WHERE student_id=?", (sid,))
     friends.forget_student(db, sid)
     castle.forget_student(db, sid)
+    visits.forget_student(db, sid)
     db.execute("DELETE FROM students WHERE id=?", (sid,))
     db.commit()
     flash(f"Аккаунт {student['display_name']} удалён вместе с его прогрессом.", "success")
@@ -498,7 +500,23 @@ def parent_student(sid):
                   bricks=castle.bricks(db, sid),
                   goal=goals.target(db, sid), goal_limits=(goals.MAX_LESSONS, goals.MAX_WORDS), credit_rows=rows,
                   main_count=len(LESSONS), total_lessons=len(LESSONS), earned_count=earned,
-                  achievements_total=len(ACHIEVEMENTS), last=_last_activity(db, sid))
+                  achievements_total=len(ACHIEVEMENTS), last=_last_activity(db, sid), visits=visits.sessions(db, sid))
+
+
+@bp.route("/parent/students/<int:sid>/switch", methods=["POST"])
+def switch_to_student(sid):
+    """Перейти в учётку ученика без пароля (для проверки нового); обратно — кнопкой «В админку»,
+    пока действует вход администратора."""
+    err = require_role("parent")
+    if err:
+        return err
+    st = get_db().execute("SELECT * FROM students WHERE id=?", (sid,)).fetchone() or abort(404)
+    session["role"] = "student"
+    session["student_id"] = st["id"]
+    session["student_name"] = st["display_name"]
+    session["admin_back"] = True
+    session["admin_last_student"] = st["id"]
+    return redirect(url_for("student.student_home"))
 
 
 @bp.route("/parent/progress")

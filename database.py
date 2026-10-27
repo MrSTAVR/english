@@ -98,6 +98,14 @@ CREATE TABLE IF NOT EXISTS castle_bricks (             -- кирпичики: н
     at         TEXT NOT NULL,
     UNIQUE (student_id, reason, ref)
 );
+CREATE TABLE IF NOT EXISTS visits (                    -- журнал посещений ученика (visits.py), хранится 60 дней
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    at         TEXT NOT NULL,
+    path       TEXT NOT NULL,
+    kind       TEXT NOT NULL                           -- page — открыл страницу, act — действие (POST)
+);
+CREATE INDEX IF NOT EXISTS idx_visits_student_at ON visits (student_id, at);
 CREATE TABLE IF NOT EXISTS castle_coins (              -- монетки замка: доход за день и поручения соседей, каждое один раз
     student_id INTEGER NOT NULL,
     day        TEXT NOT NULL,

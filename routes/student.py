@@ -120,6 +120,7 @@ def student_home():
         if l["id"] in unlocked and l["id"] not in stats["completed_ids"]:
             next_lesson = l
             break
+    resume = resume_info(db, student["id"], unlocked)
     # Компактный вид блока «Мои уроки»: последний пройденный, следующий
     # доступный и первый закрытый. Остальные — за кнопкой «показать все».
     last_done_id = None
@@ -159,7 +160,7 @@ def student_home():
                            achievements=achievements, ach_recent=ach_recent, ach_next=ach_next,
                            total_lessons=len(LESSONS),
                            new_badge=new_badge,
-                           next_lesson=next_lesson,
+                           next_lesson=next_lesson, resume=resume,
                            earned_count=earned_count,
                            garden=garden,
                            on_vacation=on_vacation(db, student["id"]),
@@ -173,6 +174,37 @@ def student_home():
                            weekly_got=weekly_got,
                            tree_stage=tree_stage(garden["streak_days"]),
                            tree_count=tree_count_for(garden["streak_days"]))
+
+
+STEP_NAMES = {"step-theory": "теория", "step-material": "новые слова", "step-exercises": "тренировка", "step-test": "тест"}
+
+
+def resume_info(db, student_id, unlocked):
+    """Последний начатый и не сданный урок (сохранённое место) — для карточки «Продолжи урок» на главной."""
+    rows = db.execute("SELECT lesson_id, state FROM lesson_progress WHERE student_id=? ORDER BY updated_at DESC",
+                      (student_id,)).fetchall()
+    for r in rows:
+        lesson = LESSONS_BY_ID.get(r["lesson_id"])
+        if not lesson or r["lesson_id"] not in unlocked:
+            continue
+        try:
+            st = json.loads(r["state"] or "{}")
+        except ValueError:
+            continue
+        step = st.get("step") or "step-theory"
+        sub = "Остановились на шаге «" + STEP_NAMES.get(step, "теория") + "»"
+        if step == "step-material":
+            seen = len(((st.get("words") or {}).get("seen")) or [])
+            sub += f" · слов {seen} из {len(lesson['material'])}"
+        elif step == "step-test":
+            t = st.get("test") or {}
+            done = (len(t.get("radio") or {}) + sum(1 for x in t.get("text") or [] if str(x).strip()) + len(t.get("lines") or {})
+                    + sum(1 for x in t.get("match") or [] if x) + sum(1 for x in t.get("sort") or [] if x))
+            total = len(lesson["test"])
+            if done:
+                sub = f"Ты на тесте · ответов {min(done, total)} из {total}" + (" — осталось совсем чуть-чуть!" if done * 2 >= total else "")
+        return {"lesson": lesson, "sub": sub}
+    return None
 
 
 @bp.route("/lesson/<int:lesson_id>")

@@ -578,3 +578,7 @@ html[data-theme="dark"] .game-record { color: #8FB4FF; }
 
 /* свой рисунок к слову (static/pics, «@table») — размером с эмодзи вокруг */
 .pic-img { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em; object-fit: contain; }
+
+/* быстрый переход админка ↔ учётка ученика: кнопка в шапке выглядит как «Выйти» */
+.nav-switch { display: contents; }
+.nav-switch button.nav-exit { background: none; border: 0; font: inherit; cursor: pointer; }

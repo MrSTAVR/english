@@ -4,6 +4,10 @@
 <div class="dict-head">
   <a class="btn btn-small" href="{{ url_for('parent.parent_students') }}">← Ученики</a>
   <h2 class="adm-title">{{ st.display_name }} <code>{{ st.username }}</code></h2>
+  <form method="post" action="{{ url_for('parent.switch_to_student', sid=st.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-small" type="submit" title="Без пароля; вернуться — кнопкой «В админку» вверху, пока действует вход администратора">Войти как {{ st.display_name }}</button>
+  </form>
 </div>
 <p class="subtitle">наград {{ earned_count }} из {{ achievements_total }}{% if last %} · последнее занятие {{ last }}{% endif %}
   · <a href="{{ url_for('parent.parent_progress') }}#s{{ st.id }}">прогресс по неделям</a></p>
@@ -93,6 +97,20 @@
     </form>
   </section>
 </div>
+
+<details class="card" id="visits">
+  <summary><b>Заходы за 2 недели</b>{% if visits %} <span class="hint">· {{ visits|length }} · всего {{ visits|sum(attribute='minutes') }} мин</span>{% endif %}</summary>
+  {% if visits %}
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Когда</th><th>Минут</th><th>Что делал(а)</th></tr></thead><tbody>
+    {% for v in visits %}
+    <tr><td>{{ v.start.strftime('%d.%m %H:%M') }}–{{ v.end.strftime('%H:%M') }}</td><td>{{ v.minutes }}</td>
+      <td>{% for name, n in v.sections %}{{ name }}{% if n > 1 %} ×{{ n }}{% endif %}{{ ', ' if not loop.last }}{% else %}только главная{% endfor %}</td></tr>
+    {% endfor %}
+  </tbody></table></div>
+  <p class="hint">Время сервера. Заход — подряд открытые страницы без перерыва дольше 15 минут; учитываются и действия (ответы, игры).</p>
+  {% else %}<p class="hint">Пока заходов нет — журнал ведётся с этого обновления.</p>{% endif %}
+</details>
 
 <details class="card" id="credit">
   <summary><b>Зачесть пройденные уроки</b></summary>

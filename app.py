@@ -18,6 +18,7 @@ from flask import Flask, g, request, session
 import config
 from database import init_db
 from hardening import init_hardening
+import visits
 from badges import medal
 from mascot import build_mascot_ctx
 from version import info as app_version
@@ -41,6 +42,7 @@ if config.IS_PRODUCTION:
 # Постоянный секретный ключ, чтобы сессии не сбрасывались после перезапуска
 app.secret_key = load_secret_key()
 init_hardening(app)
+visits.init_app(app)
 
 
 @app.teardown_appcontext
@@ -90,6 +92,20 @@ def inject_mascot():
     чтобы JS-помощник знал, что говорить и когда."""
     return {"mascot": build_mascot_ctx(), "app_version": app_version(),
             "speech_area": request.blueprint == "speech"}
+
+
+@app.context_processor
+def inject_admin_switch():
+    """Кнопки быстрого перехода: «В админку» у ученика (если пришли из админки) и «В учётку …» в админке."""
+    from routes.auth import admin_back_ok
+    role, out = session.get("role"), {"admin_back": False, "admin_last": None}
+    if role == "student":
+        out["admin_back"] = admin_back_ok()
+    elif role == "parent" and session.get("admin_last_student"):
+        from database import get_db
+        out["admin_last"] = get_db().execute("SELECT id, display_name FROM students WHERE id=?",
+                                             (session["admin_last_student"],)).fetchone()
+    return out
 
 
 @app.context_processor
