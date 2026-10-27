@@ -14,6 +14,28 @@ def is_russian_answer(q):
     return bool(re.search("[а-яёА-ЯЁ]", str(q.get("answer", ""))))
 
 
+TILES_UPTO = 20   # в уроках курса с этим номером и раньше буквы-плитки открыты сразу, дальше — по кнопке
+
+
+def letter_tiles(q):
+    """Плитки к заданию «напиши по-английски»: перемешанные буквы ответа (+2 лишние) или слова фразы,
+    и подсказка-маска «f _ _ _». Ответ целиком в страницу не попадает."""
+    import random
+    import re
+    answer = " ".join(re.sub(r"[.!?,;:]+(\s|$)", " ", str(q.get("answer", "")).lower().replace("’", "'")).split())
+    words = answer.split(" ")
+    mask = " ".join(w[0] + "_" * (len(w) - 1) for w in words if w)
+    rnd = random.Random(str(q.get("q", "")) + "|" + answer)   # одни и те же плитки при каждом открытии (иначе после
+    if len(words) > 1:                                         # «продолжить урок» буквы в поле не совпали бы с плитками)
+        tiles = list(words)
+    else:
+        tiles = list(answer)
+        spare = [c for c in "abcdefghijklmnoprstuwy" if c not in answer]
+        tiles += rnd.sample(spare, min(2, len(spare)))
+    rnd.shuffle(tiles)
+    return {"t": tiles, "m": mask, "w": len(words) > 1}
+
+
 def human_time(seconds):
     seconds = int(seconds or 0)
     if seconds < 60:

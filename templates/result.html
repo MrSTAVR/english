@@ -54,6 +54,9 @@
   {% for r in results %}
     <div class="review-item {{ 'rev-ok' if r.correct else 'rev-bad' }}">
       <div>{{ '' if r.correct else '' }} <b>{{ r.q }}</b></div>
+      {% if r.almost %}
+        <div class="rev-detail">Засчитано! Только пишется так: <b>{{ r.correct_answer }}</b> (у тебя: <i>{{ r.given }}</i>)</div>
+      {% endif %}
       {% if not r.correct %}
         <div class="rev-detail">Твой ответ: <i>{{ r.given or '(пусто)' }}</i> → Правильно: <b>{{ r.correct_answer }}</b></div>
       {% endif %}

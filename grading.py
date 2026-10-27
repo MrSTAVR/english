@@ -7,6 +7,36 @@ def norm_answer(text):
     return " ".join(str(text or "").lower().replace("’", "'").split()).strip(" .!?,;:")
 
 
+def _distance(a, b):
+    """Сколько правок нужно, чтобы из a получить b: вставка, удаление, замена буквы
+    или две соседние буквы местами (eigth → eight — одна опечатка)."""
+    d = [[i + j if i * j == 0 else 0 for j in range(len(b) + 1)] for i in range(len(a) + 1)]
+    for i in range(1, len(a) + 1):
+        for j in range(1, len(b) + 1):
+            d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] != b[j - 1]))
+            if i > 1 and j > 1 and a[i - 1] == b[j - 2] and a[i - 2] == b[j - 1]:
+                d[i][j] = min(d[i][j], d[i - 2][j - 2] + 1)
+    return d[len(a)][len(b)]
+
+
+def typo_limit(expected):
+    """Сколько опечаток прощаем: в коротких словах — ни одной, в длинных — одну-две."""
+    n = len(expected)
+    return 0 if n < 4 else 1 if n < 10 else 2
+
+
+def near_miss(q, given):
+    """True, если ответ type_in написан с маленькой опечаткой (засчитываем, но показываем, как правильно)."""
+    g = norm_answer(given)
+    if not g:
+        return False
+    for a in [q["answer"]] + list(q.get("accept", [])):
+        e = norm_answer(a)
+        if g != e and _distance(g, e) <= typo_limit(e):
+            return True
+    return False
+
+
 def parse_pairs(raw):
     """Разбирает ответ match-задания из формы: 'leftIdx:rightIdx,leftIdx:rightIdx,...'
     Возвращает dict {int: int} (только полные пары)."""
