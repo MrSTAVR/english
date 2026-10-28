@@ -15,7 +15,7 @@
     "we'll": 'we will', "they'll": 'they will', "i'd": 'i would', "you'd": 'you would', "mustn't": 'must not',
     "shouldn't": 'should not' };
   function norm(s) {
-    return String(s || '').toLowerCase().replace(/’/g, "'").replace(/[.!?,;:]/g, ' ').split(/\s+/)
+    return String(s || '').toLowerCase().replace(/[’`]/g, "'").replace(/[.!?,;:]/g, ' ').split(/\s+/)
       .filter(Boolean).map(function (w) { return SHORT[w] || w; }).join(' ');
   }
   function dist(a, b) {                               // как grading._distance: соседние буквы местами — одна опечатка

@@ -52,3 +52,7 @@ def test_sort():
     assert grade_question(q, "x|a;y|b;z|a")[0] is True
     assert grade_question(q, "z|a;x|a;y|b")[0] is True     # порядок не важен
     assert grade_question(q, "x|b;y|a;z|a")[0] is False
+
+
+def test_backtick_is_apostrophe():
+    assert norm_answer("masha`s cat") == norm_answer("Masha's cat") == "masha's cat"

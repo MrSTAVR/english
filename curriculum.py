@@ -9,6 +9,7 @@ from data.later_lessons import LATER_LESSONS
 from data.lessons import LESSONS as _OLD_LESSONS
 from data.more_lessons import MORE_LESSONS
 from data.new_lessons import NEW_LESSONS
+from data.topic_lessons import TOPIC_LESSONS
 
 from grading import match_columns
 from practice import add_review_questions, augment
@@ -16,7 +17,7 @@ from practice import add_review_questions, augment
 
 # Все уроки: основные (с последовательной разблокировкой) + дополнительные
 # (всегда открыты, id >= 101, флаг is_extra).
-_main_by_id = {l["id"]: l for l in _OLD_LESSONS + NEW_LESSONS + MORE_LESSONS + LATER_LESSONS}
+_main_by_id = {l["id"]: l for l in _OLD_LESSONS + NEW_LESSONS + MORE_LESSONS + LATER_LESSONS + TOPIC_LESSONS}
 assert sorted(ORDER) == sorted(_main_by_id), "data/course.py: порядок не совпадает с набором уроков"
 LESSONS = [_main_by_id[i] for i in ORDER]       # основной курс в порядке прохождения
 for _n, _l in enumerate(LESSONS, 1):
