@@ -56,7 +56,7 @@
         window.LetterTiles.attach(lt, inp, item.answer, !!(document.getElementById('practice') || {dataset: {}}).dataset.tilesOpen);
       }
       check = function () {
-        return norm(inp.value) === norm(item.answer) || !!(window.LetterTiles && window.LetterTiles.near(inp.value, item.answer));
+        return norm(inp.value) === norm(item.answer) || !!(window.LetterTiles && (window.LetterTiles.same(inp.value, item.answer) || window.LetterTiles.near(inp.value, item.answer)));
       };
     } else if (item.type === 'scramble') {
       var line = el('div', 'answer-line pr-line'), bank = el('div', 'word-bank pr-bank');

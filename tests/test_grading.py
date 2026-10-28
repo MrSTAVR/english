@@ -56,3 +56,11 @@ def test_sort():
 
 def test_backtick_is_apostrophe():
     assert norm_answer("masha`s cat") == norm_answer("Masha's cat") == "masha's cat"
+
+
+def test_extra_article_is_ok_only_when_answer_has_none():
+    """Урок про a/an учит «an egg» — лишний артикль в ответе без артикля не ошибка, но и не наоборот."""
+    assert grade_question({"type": "type_in", "answer": "egg"}, "an egg")[0]
+    assert grade_question({"type": "type_in", "answer": "bread"}, "some bread")[0]
+    assert not grade_question({"type": "type_in", "answer": "an apple"}, "apple")[0]
+    assert not grade_question({"type": "type_in", "answer": "egg"}, "an")[0]

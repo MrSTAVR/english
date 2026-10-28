@@ -54,8 +54,18 @@
     return g !== e && e.length >= 5 && g.charAt(0) === e.charAt(0) && words().indexOf(g) < 0 &&
       !formChange(g, e) && dist(g, e) <= (e.length < 10 ? 1 : 2);
   }
+  /* «an egg» = «egg»: лишний артикль в начале не ошибка, если в ответе его нет (как grading.drop_article) */
+  function dropArticle(t) {
+    var m = /^(a|an|the|some) (.+)$/.exec(t);
+    return m ? m[2] : t;
+  }
+  function same(given, answer) {
+    var g = norm(given), e = norm(answer);
+    return g === e || (e === dropArticle(e) && dropArticle(g) === e);
+  }
   function near(given, answer) {
     var g = norm(given), e = norm(answer);
+    if (e === dropArticle(e)) g = dropArticle(g);
     if (!g || g === e || /[а-яё]/.test(e)) return false;
     var gw = g.split(' '), ew = e.split(' ');
     if (gw.length !== ew.length) return false;
@@ -156,6 +166,6 @@
   /* после восстановления ответов урока (lesson.js ставит значения без событий) — отметить использованные плитки */
   function resyncAll() { document.querySelectorAll('.lt').forEach(function (h) { if (h._sync) h._sync(); }); }
 
-  window.LetterTiles = { near: near, norm: norm, attach: attach, resync: resyncAll };
+  window.LetterTiles = { near: near, norm: norm, same: same, attach: attach, resync: resyncAll };
   document.addEventListener('DOMContentLoaded', function () { initAll(); setTimeout(resyncAll, 0); });
 })();

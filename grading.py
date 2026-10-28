@@ -19,6 +19,16 @@ CONTRACTIONS = {
 }
 
 
+ARTICLES = ("a", "an", "the", "some")
+
+
+def drop_article(norm):
+    """«an egg» → «egg»: лишний артикль в начале ответа не ошибка, если в правильном ответе его нет
+    (урок про a/an учит писать an egg — Маша так и напишет)."""
+    head, _, rest = norm.partition(" ")
+    return rest if head in ARTICLES and rest else norm
+
+
 def norm_answer(text):
     """Нормализация ответа для проверки type_in: регистр, апостроф, знаки препинания (и внутри фразы —
     «Yes, I am» = «yes i am»), сокращения (he's = he is)."""
@@ -112,6 +122,8 @@ def near_answer(given, expected, words=None):
     """Ответ с маленькой опечаткой: слова те же и по порядку, опечатка — максимум в одном слове.
     Русские ответы не прощаем (там легко «засчитать» другое слово: правильный/неправильный)."""
     g, e = norm_answer(given), norm_answer(expected)
+    if e == drop_article(e):
+        g = drop_article(g)
     if not g or g == e or _has_cyrillic(e):
         return False
     gw, ew = g.split(), e.split()
@@ -203,7 +215,8 @@ def grade_question(q, given):
         return ok, disp
     # type_in
     accepted = [norm_answer(q["answer"])] + [norm_answer(a) for a in q.get("accept", [])]
-    ok = norm_answer(given) in accepted
+    g = norm_answer(given)
+    ok = g in accepted or drop_article(g) in [a for a in accepted if a == drop_article(a)]
     return ok, q["answer"]
 
 
