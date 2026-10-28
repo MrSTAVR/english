@@ -284,8 +284,8 @@
 
 {% block scripts %}
 <script type="application/json" id="near-dict">{{ near_words|tojson }}</script>
-<script src="{{ url_for('static', filename='tiles.js') }}?v=4"></script>
-<script src="{{ url_for('static', filename='practice.js') }}?v=5"></script>
+<script src="{{ url_for('static', filename='tiles.js') }}?v=5"></script>
+<script src="{{ url_for('static', filename='practice.js') }}?v=6"></script>
 <script src="{{ url_for('static', filename='lesson.js') }}?v=12"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=4"></script>{% endif %}
 {% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=6"></script>{% endif %}
@@ -310,7 +310,8 @@ function checkExercise(btn) {
   const box = btn.closest('.exercise');
   const type = box.dataset.type;
   // как grading.norm_answer, но и без знаков внутри фразы: «I'd like a pizza, please» = «i'd like a pizza please»
-  const norm = t => String(t || '').toLowerCase().replace(/’/g, "'").replace(/[.,!?;:]/g, ' ').replace(/\s+/g, ' ').trim();
+  const norm = t => window.LetterTiles ? window.LetterTiles.norm(t)
+    : String(t || '').toLowerCase().replace(/’/g, "'").replace(/[.,!?;:]/g, ' ').replace(/\s+/g, ' ').trim();
   const answer = norm(box.dataset.answer);
   let given = '';
   if (type === 'choice') {

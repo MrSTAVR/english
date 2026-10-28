@@ -75,7 +75,7 @@ def test_tiles_are_stable_between_visits():
 
 def test_punctuation_inside_phrase_does_not_matter():
     from grading import grade_question, norm_answer
-    assert norm_answer("I'd like a pizza, please.") == norm_answer("i'd like a pizza please") == "i'd like a pizza please"
+    assert norm_answer("I'd like a pizza, please.") == norm_answer("i would like a pizza please") == "i would like a pizza please"
     assert grade_question({"type": "type_in", "answer": "Yes, I am."}, "yes i am")[0]
 
 

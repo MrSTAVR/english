@@ -5,7 +5,19 @@
 (function () {
   'use strict';
 
-  function norm(s) { return String(s || '').toLowerCase().replace(/’/g, "'").replace(/[.!?,;:]/g, ' ').replace(/\s+/g, ' ').trim(); }
+  /* как grading.norm_answer: регистр, апостроф, знаки препинания, сокращения (he's = he is) */
+  var SHORT = { "i'm": 'i am', "you're": 'you are', "we're": 'we are', "they're": 'they are', "he's": 'he is', "she's": 'she is',
+    "it's": 'it is', "what's": 'what is', "that's": 'that is', "there's": 'there is', "where's": 'where is', "who's": 'who is',
+    "how's": 'how is', "isn't": 'is not', "aren't": 'are not', "wasn't": 'was not', "weren't": 'were not', "don't": 'do not',
+    "doesn't": 'does not', "didn't": 'did not', "can't": 'can not', 'cannot': 'can not', "couldn't": 'could not',
+    "won't": 'will not', "haven't": 'have not', "hasn't": 'has not', "i've": 'i have', "you've": 'you have', "we've": 'we have',
+    "they've": 'they have', "i'll": 'i will', "you'll": 'you will', "he'll": 'he will', "she'll": 'she will', "it'll": 'it will',
+    "we'll": 'we will', "they'll": 'they will', "i'd": 'i would', "you'd": 'you would', "mustn't": 'must not',
+    "shouldn't": 'should not' };
+  function norm(s) {
+    return String(s || '').toLowerCase().replace(/’/g, "'").replace(/[.!?,;:]/g, ' ').split(/\s+/)
+      .filter(Boolean).map(function (w) { return SHORT[w] || w; }).join(' ');
+  }
   function dist(a, b) {                               // как grading._distance: соседние буквы местами — одна опечатка
     var d = [], i, j;
     for (i = 0; i <= a.length; i++) { d.push([]); for (j = 0; j <= b.length; j++) d[i].push(i * j === 0 ? i + j : 0); }
@@ -144,6 +156,6 @@
   /* после восстановления ответов урока (lesson.js ставит значения без событий) — отметить использованные плитки */
   function resyncAll() { document.querySelectorAll('.lt').forEach(function (h) { if (h._sync) h._sync(); }); }
 
-  window.LetterTiles = { near: near, attach: attach, resync: resyncAll };
+  window.LetterTiles = { near: near, norm: norm, attach: attach, resync: resyncAll };
   document.addEventListener('DOMContentLoaded', function () { initAll(); setTimeout(resyncAll, 0); });
 })();

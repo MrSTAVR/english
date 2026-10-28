@@ -100,7 +100,7 @@ MORE_LESSONS = [
             "blocks": [
                 {"title": "Названия профессий 💼", "text": "<b>doctor</b> [доктэ] — врач, <b>teacher</b> [ти:чэ] — учитель, <b>cook</b> [кук] — повар, <b>driver</b> [драйвэ] — водитель, <b>farmer</b> [фа:мэ] — фермер, <b>pilot</b> [пайлэт] — лётчик, <b>singer</b> [сингэ] — певец, <b>policeman</b> [пэли:смэн] — полицейский."},
                 {"title": "Кто он? Кто она? 🙋", "text": "Говорим так: <b>He is a doctor.</b> — Он врач. <b>She is a teacher.</b> — Она учитель. Помнишь глагол <i>to be</i>? Перед профессией ставим <b>a</b> (а перед гласной — <b>an</b>: <i>an artist</i>)."},
-                {"title": "Вопрос о профессии ❓", "text": "<b>What is your mum?</b> — Кем работает твоя мама? <b>What do you want to be?</b> — Кем ты хочешь быть? Ответ: <b>I want to be a pilot.</b> — Я хочу стать лётчиком."},
+                {"title": "Вопрос о профессии ❓", "text": "<b>What does your mum do?</b> — Кем работает твоя мама? <b>What do you want to be?</b> — Кем ты хочешь быть? Ответ: <b>I want to be a pilot.</b> — Я хочу стать лётчиком."},
             ],
             "tip": "Расскажи по-английски, кем работают мама и папа: «My mum is a …».",
         },

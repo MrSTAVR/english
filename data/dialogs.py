@@ -240,7 +240,7 @@ DIALOGS += [
        _p("Do you have a pencil?", "У тебя есть карандаш?"),
        _me(["Yes, I do.", "Yes, I am.", "No, thanks, ruler."], 0, "Да, есть.")),
     _d("jobs-mum", 47, "Кем работает мама?", "Anna",
-       _p("What is your mum?", "Кем работает твоя мама?"),
+       _p("What does your mum do?", "Кем работает твоя мама?"),
        _me(["She is a doctor.", "He is a doctor.", "She are a doctor."], 0, "Она врач."),
        _p("And your dad?", "А папа?"),
        _me(["He is a driver.", "She is a driver.", "He am a driver."], 0, "Он водитель."),

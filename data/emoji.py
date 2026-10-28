@@ -9,7 +9,7 @@ one 1️⃣|two 2️⃣|three 3️⃣|four 4️⃣|five 5️⃣|six 6️⃣|seve
 ship 🚢|fish 🐟|chat 💬|chip 🍟|think 🤔|phone 📱|photo 📷|tree 🌳|sea 🌊|moon 🌙|car 🚗|star ⭐|fork 🍴|door 🚪|clock 🕐|crab 🦀|swim 🏊|lamb 🐑|climb 🧗|wrong ❌|write ✍️|go 🚶|cycle 🚲|city 🏙️|gym 🏋️
 mother 👩|father 👨|sister 👧|brother 👦|grandmother 👵|grandfather 👴|family 👨‍👩‍👧‍👦|man 👨|woman 👩|child 🧒|children 🧒
 horse 🐴|sheep 🐑|cow 🐮|duck 🦆|chicken 🐔|lion 🦁|tiger 🐯|bear 🐻|fox 🦊|elephant 🐘|monkey 🐵|giraffe 🦒|mouse 🐭|mice 🐭
-apple 🍎|banana 🍌|grape 🍇|peach 🍑|carrot 🥕|tomato 🍅|potato 🥔|bread 🍞|milk 🥛|water 💧|juice 🧃|cheese 🧀|egg 🥚|ice cream 🍦
+apple 🍎|banana 🍌|grape 🍇|grapes 🍇|peach 🍑|carrot 🥕|tomato 🍅|potato 🥔|bread 🍞|milk 🥛|water 💧|juice 🧃|cheese 🧀|egg 🥚|ice cream 🍦
 head 🙂|face 😀|eye 👁️|ear 👂|nose 👃|mouth 👄|hair 💇|hand ✋|arm 💪|leg 🦵|foot 🦶|feet 🦶|finger ☝️|tooth 🦷|teeth 🦷
 t-shirt 👕|shirt 👔|jeans 👖|trousers 👖|shoes 👟|socks 🧦|coat 🧥|dress 👗
 kitchen 🍳|bedroom 🛏️|bathroom 🛁|living room 🛋️|garden 🌷
