@@ -227,6 +227,26 @@ def resume_info(db, student_id, unlocked, completed=()):
     return None
 
 
+def fix_correct(db, student_id, lesson, attempt_id):
+    """«Исправь ошибки»: {номер вопроса: результат} верных ответов прошлой несданной попытки этого урока —
+    их не спрашиваем снова. Пусто, если попытка чужая, не та, сдана или тест с тех пор поменялся."""
+    if not attempt_id:
+        return {}
+    a = db.execute("SELECT * FROM attempts WHERE id=? AND student_id=? AND lesson_id=?",
+                   (attempt_id, student_id, lesson["id"])).fetchone()
+    if not a or not a["finished_at"] or a["passed"]:
+        return {}
+    try:
+        results = json.loads(a["details_json"] or "{}").get("results")
+    except (ValueError, AttributeError):
+        return {}
+    test = lesson["test"]
+    if not isinstance(results, list) or len(results) != len(test):
+        return {}
+    return {i: r for i, r in enumerate(results)
+            if isinstance(r, dict) and r.get("correct") and r.get("q") == test[i]["q"]}
+
+
 @bp.route("/lesson/<int:lesson_id>")
 def lesson_page(lesson_id):
     err = require_role("student")
@@ -250,6 +270,8 @@ def lesson_page(lesson_id):
         (student["id"], lesson_id, started.isoformat(timespec="seconds")))
     db.commit()
     saved = load_progress(db, student["id"], lesson_id)
+    fix_from = request.args.get("fix", type=int)
+    fix_done = fix_correct(db, student["id"], lesson, fix_from)
     mascot = build_mascot_ctx()
     mascot["lessonId"] = lesson_id
     mascot["lessonTitle"] = lesson["title"]
@@ -257,7 +279,7 @@ def lesson_page(lesson_id):
                            saved_state=saved,
                            lesson_dialogs=dialogs_for(db, student["id"], {lesson_id}),
                            me_emoji=student["emoji"] or "🎒", me_name=student["display_name"],
-                           attempt_id=cur.lastrowid,
+                           attempt_id=cur.lastrowid, fix_from=fix_from, fix_done=fix_done,
                            started_ts=started.timestamp() - (saved or {}).get("secs", 0),   # время урока копится
                            mascot=mascot)
 
@@ -340,7 +362,12 @@ def submit_test(lesson_id):
     test = lesson["test"]
     results, mistakes = [], []
     correct = 0
+    fixed = fix_correct(db, student["id"], lesson, request.form.get("fix_from", type=int))
     for i, q in enumerate(test):
+        if i in fixed:                                   # «Исправь ошибки»: верный ответ прошлой попытки засчитан
+            results.append(fixed[i])
+            correct += 1
+            continue
         if q["type"] == "choice":
             raw = request.form.get(f"q{i}")
             given = int(raw) if raw is not None and raw.isdigit() else -1
@@ -406,7 +433,7 @@ def submit_test(lesson_id):
 
     if passed:
         activity.log(db, student["id"], "lesson")
-    coins_earned = award_coins(db, student["id"], percent, passed)
+    coins_earned = award_coins(db, student["id"], min(percent, 99) if fixed else percent, passed)   # «идеально» — только с первого раза
     garden = get_garden(db, student["id"])
 
     mascot = build_mascot_ctx()
@@ -418,7 +445,7 @@ def submit_test(lesson_id):
     mascot["newAchievements"] = [public(a) for a in new_achievements]
     return render_template("result.html", mascot=mascot,
                            lesson=lesson, percent=percent, passed=passed, need=need,
-                           correct=correct, total=total, missing=max(0, -(-need * total // 100) - correct),
+                           correct=correct, total=total, missing=max(0, -(-need * total // 100) - correct), attempt_id=attempt_id, fixed=bool(fixed),
                            seconds=seconds, results=results, to_review=to_review,
                            coins_earned=coins_earned, bricks_earned=bricks_earned,
                            coins_total=garden["coins"],

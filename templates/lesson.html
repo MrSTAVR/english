@@ -187,8 +187,13 @@
 
 <!-- Шаг 4: тест -->
 <section class="step hidden" id="step-test">
+  {% if fix_done %}
+  <h2 class="ls-step-title">Исправь ошибки</h2>
+  <p class="ls-step-sub">Правильные ответы уже засчитаны — осталось {{ lesson.test|length - fix_done|length }}. Не торопись!</p>
+  {% else %}
   <h2 class="ls-step-title">Итоговый тест</h2>
   <p class="ls-step-sub">Ответь на {{ lesson.test|length }} вопросов. Чтобы урок считался пройденным, нужно набрать минимум {{ need }}%. Не торопись!</p>
+  {% endif %}
   <div class="test-progress" id="test-progress" aria-live="polite">
     <span class="tp-label">Отвечено</span>
     <span class="tp-bar"><span class="tp-fill"></span></span>
@@ -198,10 +203,11 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
     <input type="hidden" name="seconds" id="seconds-input" value="0">
+    {% if fix_done %}<input type="hidden" name="fix_from" value="{{ fix_from }}">{% endif %}
 
     {% for q in lesson.test %}
       {% set outer_loop = loop %}
-      <div class="question card-inner" data-qindex="{{ loop.index0 }}">
+      <div class="question card-inner{% if loop.index0 in fix_done %} hidden fix-done{% endif %}" data-qindex="{{ loop.index0 }}">
         <p class="q"><b>Вопрос {{ loop.index }}.</b> {{ q.q|noemoji }}</p>
         {% if q.audio %}<p><button type="button" class="btn btn-small say-btn" data-say="{{ q.audio }}"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Слушать</button> <button type="button" class="btn btn-small say-btn" data-say="{{ q.audio }}" data-slow="1">Медленно</button></p>{% endif %}
         {% if q.type == 'choice' %}
@@ -664,7 +670,7 @@ function checkDndExercise(btn) {
 // вопросы теста без ответа (номера с 1) — для проверки перед отправкой и для полоски «отвечено»
 function unansweredQuestions() {
   const unanswered = [];
-  document.querySelectorAll('.question').forEach(qDiv => {
+  document.querySelectorAll('.question:not(.fix-done)').forEach(qDiv => {   // уже засчитанные в «Исправь ошибки» не спрашиваем
     const qi = qDiv.dataset.qindex;
     if (qDiv.querySelector('.options')) {               // выбор ответа
       if (!qDiv.querySelector(`input[name="q${qi}"]:checked`)) unanswered.push(+qi + 1);
@@ -692,7 +698,7 @@ function unansweredQuestions() {
   const form = document.getElementById('test-form');
   const bar = document.getElementById('test-progress');
   if (!form || !bar) return;
-  const total = document.querySelectorAll('.question').length;
+  const total = document.querySelectorAll('.question:not(.fix-done)').length;
   function update() {
     const done = total - unansweredQuestions().length;
     bar.querySelector('.tp-fill').style.width = (total ? 100 * done / total : 0) + '%';
