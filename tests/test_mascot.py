@@ -4,7 +4,7 @@ import json
 import re
 from pathlib import Path
 
-from tests.helpers import submit_lesson
+from tests.helpers import N, submit_lesson
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -30,7 +30,7 @@ def test_student_pages_have_names_and_page_keys(make_student):
     assert w["page"] == "words" and w["empty"] is True
     t = settings(c.get("/student/theory").get_data(as_text=True))
     assert t["page"] == "theory" and t["empty"] is True
-    submit_lesson(c, 1)
+    submit_lesson(c, N(1))
     assert settings(c.get("/student/words").get_data(as_text=True))["empty"] is False
     assert settings(c.get("/student/theory").get_data(as_text=True))["empty"] is False
 

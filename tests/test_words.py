@@ -19,11 +19,12 @@ def test_empty_dictionary_for_new_student(make_student):
 
 def test_dictionary_shows_only_passed_lessons(make_student):
     student = make_student()
-    submit_lesson(student, 1)
+    submit_lesson(student, N(1))
     html = words_html(student)
-    w1 = LESSONS_BY_ID[1]["material"]
-    assert all(f'data-tts="{w["en"]}"' in html for w in w1)
-    assert noemoji(LESSONS_BY_ID[1]["title"]) in html
+    w1 = LESSONS_BY_ID[N(1)]["material"]
+    from markupsafe import escape
+    assert all(f'data-tts="{escape(w["en"])}"' in html for w in w1)       # What&#39;s your name?
+    assert noemoji(LESSONS_BY_ID[N(1)]["title"]) in html
     assert LESSONS_BY_ID[2]["title"] not in html            # урок 2 ещё не пройден
     assert f"Все слова из пройденных уроков: <b>{len(w1)}</b>" in html
 
@@ -39,7 +40,7 @@ def test_credited_lessons_appear_in_dictionary(parent, make_student):
 
 def test_dictionary_has_search_translation_toggle_and_audio(parent, make_student):
     student = make_student()
-    submit_lesson(student, 1)
+    submit_lesson(student, N(1))
     html = words_html(student)
     assert 'id="dict-search"' in html and 'id="dict-hide"' in html and "data-play" in html
     assert "tts.js" in html                                   # кнопки 🔊 рисует общий скрипт

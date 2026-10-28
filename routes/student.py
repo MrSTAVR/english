@@ -9,6 +9,7 @@ import config
 import goals
 from routes.games import dialogs_for
 from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID, pass_mark, unlocked_lesson_ids
+from data.course import ISLANDS
 from data.extra_lessons import EXTRA_LESSONS
 from database import get_db
 from datetime import datetime
@@ -455,9 +456,6 @@ def submit_test(lesson_id):
                                              if a["key"] in [n["key"] for n in new_achievements]])
 
 
-MAP_PARTS = ["Первые шаги 🌱", "Слова вокруг нас 🏡", "Говорим о себе 💬", "Большой мир 🌍", "Грамматика-гора 🧠",
-             "Финишная прямая 🏆", "Новые горизонты 🚀", "Дальние страны 🗺️"]
-MAP_PART_SIZE = 9
 
 
 def _stars(score):
@@ -488,8 +486,8 @@ def course_map():
             current = node
             node["current"] = True
         nodes.append(node)
-    parts = [{"title": MAP_PARTS[i // MAP_PART_SIZE] if i // MAP_PART_SIZE < len(MAP_PARTS) else f"Часть {i // MAP_PART_SIZE + 1}",
-              "nodes": nodes[i:i + MAP_PART_SIZE]} for i in range(0, len(nodes), MAP_PART_SIZE)]
+    by_id = {n["lesson"]["id"]: n for n in nodes}
+    parts = [{"title": title, "nodes": [by_id[i] for i in ids if i in by_id]} for title, ids in ISLANDS]   # острова — data/course.py
     for part in parts:
         part["done"] = all(n["done"] for n in part["nodes"])
     mascot = build_mascot_ctx()

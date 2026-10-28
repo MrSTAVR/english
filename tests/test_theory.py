@@ -18,9 +18,9 @@ def test_empty_theory_for_new_student(make_student):
 
 def test_theory_only_for_passed_lessons(make_student):
     student = make_student()
-    submit_lesson(student, 1)
+    submit_lesson(student, N(1))
     html = theory_html(student)
-    t1 = LESSONS_BY_ID[1]["theory"]
+    t1 = LESSONS_BY_ID[N(1)]["theory"]
     assert t1["intro"] in html and noemoji(t1["blocks"][0]["title"]) in html and t1["tip"] in html
     assert LESSONS_BY_ID[2]["theory"]["intro"] not in html
     assert "Правила из всех пройденных уроков: <b>1</b>" in html

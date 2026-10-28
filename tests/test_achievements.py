@@ -4,7 +4,7 @@ import re
 
 from achievements import ACHIEVEMENTS, BY_KEY, CATEGORIES, progress, public, tier_counts
 from badges import TIERS, badge_svg, medal
-from tests.helpers import db_all, submit_lesson
+from tests.helpers import N, db_all, submit_lesson
 
 
 def earned_keys():
@@ -64,23 +64,23 @@ def test_collection_page(make_student):
     assert "Мои награды" in html and "0</b>" in html
     assert html.count("ach-card ") >= len(ACHIEVEMENTS)
     assert '"page": "achievements"' in html
-    submit_lesson(c, 1)
+    submit_lesson(c, N(1))
     html = c.get("/student/achievements").get_data(as_text=True)
     assert "is-earned" in html and "получено" in html
 
 
 def test_new_achievements_payload_on_result_page(make_student):
     c = make_student()
-    body = submit_lesson(c, 1)
+    body = submit_lesson(c, N(1))
     assert '"tierName"' in body and '"svg"' in body          # данные для анимации вручения
     assert "Новые награды" in body
 
 
 def test_comeback_and_counters(make_student):
     c = make_student()
-    submit_lesson(c, 1, wrong=True)
+    submit_lesson(c, N(1), wrong=True)
     assert "comeback" not in earned_keys()
-    submit_lesson(c, 1)
+    submit_lesson(c, N(1))
     assert "comeback" in earned_keys()
     assert "first_lesson" in earned_keys()
     home = c.get("/student").get_data(as_text=True)

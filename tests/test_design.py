@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Дизайн 3.0: файл стилей подключён, логопедическая часть в своём стиле, шрифты локальные, у Чик-чика один клюв."""
+from tests.helpers import N
 import re
 from pathlib import Path
 
@@ -50,13 +51,13 @@ def test_student_tabbar(make_student):
     assert 'class="tab on" aria-current="page"' in body
     garden = c.get("/student/garden").get_data(as_text=True)
     assert 'href="/student/garden" class="tab on"' in garden
-    lesson = c.get("/lesson/1").get_data(as_text=True)          # в уроке нижнего меню нет
+    lesson = c.get(f"/lesson/{N(1)}").get_data(as_text=True)          # в уроке нижнего меню нет
     assert 'class="has-tabbar"' not in lesson
 
 
 def test_lesson_test_has_progress_bar(make_student):
     c = make_student()
-    html = c.get("/lesson/1").get_data(as_text=True)
+    html = c.get(f"/lesson/{N(1)}").get_data(as_text=True)
     assert 'id="test-progress"' in html and "function unansweredQuestions()" in html
     assert html.count("unansweredQuestions()") >= 3          # и полоска, и проверка перед отправкой
 
