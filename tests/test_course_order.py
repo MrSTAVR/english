@@ -119,7 +119,7 @@ def test_score_between_60_and_70_passes_only_on_soft_lessons(parent, make_studen
     parent.post("/parent/students/1/credit", data={"upto": "2", "action": "add"})   # открыт «Алфавит A–I» (33)
     n = len(LESSONS_BY_ID[33]["test"])
     right = next(k for k in range(n + 1) if 60 <= 100 * k / n < 70)
-    assert "Исправь ошибки" not in _partial(c, 33, right)         # алфавит: порог 60% — сдан
+    assert "fix=" not in _partial(c, 33, right)                    # нет кнопки «Исправь ошибки» (сама фраза бывает в подписи версии)         # алфавит: порог 60% — сдан
     assert db_scalar("SELECT passed FROM attempts ORDER BY id DESC LIMIT 1") == 1
     n2 = len(LESSONS_BY_ID[10]["test"])                           # «Цифры» открылись после 33
     html = _partial(c, 10, next(k for k in range(n2 + 1) if 60 <= 100 * k / n2 < 70))   # обычный урок: 60–70% — мало

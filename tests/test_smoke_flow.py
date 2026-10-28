@@ -49,7 +49,7 @@ def test_failed_then_perfect_attempt(make_student):
     lesson = LESSONS_BY_ID[1]
 
     body = submit_lesson(c, 1, wrong=True)
-    assert "Исправь ошибки" in body
+    assert "fix=" in body and "Исправь ошибки" in body
     assert "Твой ответ" in body
 
     body = submit_lesson(c, 1)
