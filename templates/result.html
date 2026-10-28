@@ -4,7 +4,8 @@
 
 <section class="card result-card {{ 'result-pass' if passed else 'result-fail' }}">
   <h1>
-    {% if percent == 100 %}Идеально! 100%!
+    {% if passed and fixed %}Ошибки исправлены — урок пройден!
+    {% elif percent == 100 %}Идеально! 100%!
     {% elif passed %}Урок пройден!
     {% elif percent < 30 %}Этот урок пока трудный
     {% else %}Почти! Не хватило {{ missing }} {{ 'ответа' if missing % 10 == 1 and missing % 100 != 11 else 'ответов' }}
@@ -13,11 +14,12 @@
   <div class="score-ring">{{ percent }}%</div>
   <p>Правильных ответов: <b>{{ correct }}</b> из <b>{{ total }}</b> · Время: <b>{{ seconds|human_time }}</b></p>
   {% if not passed %}
-    <p class="hint-text">{% if percent < 30 %}Ничего страшного — разберём ошибки, повторим слова, и всё получится.{% else %}Нужно {{ need }}%. Посмотри ошибки ниже и попробуй ещё раз — ты уже близко!{% endif %}</p>
+    <p class="hint-text">{% if percent < 30 %}Ничего страшного — разберём ошибки, повторим слова, и всё получится.{% else %}Нужно {{ need }}%. Посмотри ошибки ниже и исправь их — правильные ответы уже засчитаны!{% endif %}</p>
     <div class="result-actions result-actions-top">
-      <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id, step='test') }}">Пройти тест ещё раз</a>
+      <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id, step='test', fix=attempt_id) }}">Исправь ошибки ({{ total - correct }})</a>
       <a class="btn btn-secondary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id) }}">Повторить урок</a>
     </div>
+    <p class="hint-text"><a href="{{ url_for('student.lesson_page', lesson_id=lesson.id, step='test') }}">Пройти весь тест заново</a></p>
   {% endif %}
 </section>
 
@@ -79,7 +81,7 @@
 
 <div class="result-actions">
   {% if not passed %}
-    <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id, step='test') }}">Пройти тест ещё раз</a>
+    <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id, step='test', fix=attempt_id) }}">Исправь ошибки</a>
   {% endif %}
   <a class="btn btn-secondary" href="{{ url_for('student.student_home') }}">На главную</a>
 </div>

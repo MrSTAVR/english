@@ -114,15 +114,15 @@ def _partial(client, lid, n_right):
     return client.post(f"/lesson/{lid}/submit", data=form).get_data(as_text=True)
 
 
-def test_score_between_60_and_70_passes_only_on_soft_lessons(make_student):
+def test_score_between_60_and_70_passes_only_on_soft_lessons(parent, make_student):
     c = make_student()
-    n = len(LESSONS_BY_ID[1]["test"])
-    right = -(-n * 62 // 100)                      # ≈62%
-    assert 60 <= 100 * right / n < 70
-    assert "Пройти тест ещё раз" not in _partial(c, 1, right)          # урок 1: порог 60% — сдан
+    parent.post("/parent/students/1/credit", data={"upto": "2", "action": "add"})   # открыт «Алфавит A–I» (33)
+    n = len(LESSONS_BY_ID[33]["test"])
+    right = next(k for k in range(n + 1) if 60 <= 100 * k / n < 70)
+    assert "Исправь ошибки" not in _partial(c, 33, right)         # алфавит: порог 60% — сдан
     assert db_scalar("SELECT passed FROM attempts ORDER BY id DESC LIMIT 1") == 1
-    n2 = len(LESSONS_BY_ID[9]["test"])
-    html = _partial(c, 9, -(-n2 * 62 // 100))                     # обычный урок: 62% — мало
+    n2 = len(LESSONS_BY_ID[10]["test"])                           # «Цифры» открылись после 33
+    html = _partial(c, 10, next(k for k in range(n2 + 1) if 60 <= 100 * k / n2 < 70))   # обычный урок: 60–70% — мало
     assert "Нужно 70%" in html
 
 

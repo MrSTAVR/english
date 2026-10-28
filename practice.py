@@ -104,10 +104,11 @@ def _letter_extras(lesson, rng, n_listen, n_dict):
     return out
 
 
-def listening_extras(lesson):
-    """Два вопроса для итогового теста: на слух (выбор) и диктант."""
+def listening_extras(lesson, dictation=True):
+    """Вопросы для итогового теста: на слух (выбор) и диктант (диктант — по желанию; в тест урока
+    его не берём: писать по памяти на слух — это тренировка, а не проверка)."""
     if lesson.get("letters"):
-        return _letter_extras(lesson, random.Random(lesson["id"] * 17 + 3), 1, 1)
+        return _letter_extras(lesson, random.Random(lesson["id"] * 17 + 3), 1, 1 if dictation else 0)
     rng = random.Random(lesson["id"] * 17 + 3)
     mat = lesson.get("material", [])
     cand = mat[:]
@@ -118,7 +119,7 @@ def listening_extras(lesson):
         if q:
             out.append(q)
             break
-    for w in cand:
+    for w in cand if dictation else []:
         if out and out[0].get("audio") == (_dictation_ok(w) or ""):
             continue
         q = _dictation(w)
@@ -212,9 +213,12 @@ def pool_from(lessons):
     return out
 
 
-def review_extras(lesson, earlier_lessons, n=2):
-    """Вопросы «🔁 Повторение» из прошлых уроков для итогового теста (детерминированно)."""
-    pool = pool_from(earlier_lessons)
+PHONICS_IDS = set(range(1, 9))     # фонетика: слова там — примеры звуков (hate, tap), не лексика для повторения
+
+
+def review_extras(lesson, earlier_lessons, n=1):
+    """Вопросы «Повторение» из прошлых уроков для итогового теста (детерминированно)."""
+    pool = pool_from([l for l in earlier_lessons if l["id"] not in PHONICS_IDS])
     if len(pool) < 6:
         return []
     rng = random.Random(lesson["id"] * 101 + 7)
@@ -236,19 +240,55 @@ def review_extras(lesson, earlier_lessons, n=2):
     return out
 
 
+MAX_WRITE = 2          # заданий «напиши по-английски» в тесте урока — не больше (остальные — «выбери»)
+_CYR = re.compile("[а-яё]", re.I)
+
+
+def limit_writing(lesson, test, max_write=MAX_WRITE):
+    """Тест не должен требовать писать по памяти больше, чем тренировали: лишние «напиши по-английски»
+    на слова урока превращаем в «выбери» (Как по-английски: «…»?)."""
+    rng = random.Random(lesson["id"] * 31 + 5)
+    out, kept = [], 0
+    for q in test:
+        if q.get("type") != "type_in" or _CYR.search(str(q.get("answer", ""))):
+            out.append(q)
+            continue
+        if kept < max_write:
+            kept += 1
+            out.append(q)
+            continue
+        ans = str(q["answer"]).strip().lower()
+        w = next((m for m in lesson.get("material", []) if ans in [v.lower() for v in _variants(m["en"])]), None)
+        pool = []
+        for o in lesson.get("material", []):
+            ov = _variants(o["en"])
+            if ov and ov[0].lower() != ans and ov[0] not in pool:
+                pool.append(ov[0])
+        if w is None or len(pool) < 2 or "[" in w["ru"]:
+            out.append(q)                               # не на слово урока — оставляем как есть
+            continue
+        right = _variants(w["en"])[0]
+        opts = rng.sample(pool, 2) + [right]
+        rng.shuffle(opts)
+        ru = re.sub(r"\s*\(.*?\)", "", w["ru"]).strip() or w["ru"]
+        out.append({"type": "choice", "q": f"Как по-английски: «{ru}»?", "options": opts,
+                    "answer": opts.index(right), "explain": q.get("explain") or f"{ru} — {right}"})
+    return out
+
+
 def augment(lessons):
-    """Один раз дополняет уроки: +2 вопроса в тест, +задания тренировки."""
+    """Один раз дополняет уроки: +вопрос на слух в тест, +задания тренировки."""
     for l in lessons:
         if l.get("_augmented"):
             continue
-        l["test"] = list(l["test"]) + listening_extras(l)
+        l["test"] = limit_writing(l, list(l["test"])) + listening_extras(l, dictation=False)
         l["practice"] = practice_extras(l)
         l["speak"] = speak_items(l)
         l["_augmented"] = True
 
 
 def add_review_questions(course):
-    """В тест каждого урока — по 2 вопроса из ранее пройденных (по порядку курса)."""
+    """В тест каждого урока — вопрос из ранее пройденных (по порядку курса, без фонетики)."""
     for i, l in enumerate(course):
         if i and not l.get("_review_added"):
             l["test"] = list(l["test"]) + review_extras(l, course[:i])
