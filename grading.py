@@ -22,7 +22,7 @@ CONTRACTIONS = {
 def norm_answer(text):
     """Нормализация ответа для проверки type_in: регистр, апостроф, знаки препинания (и внутри фразы —
     «Yes, I am» = «yes i am»), сокращения (he's = he is)."""
-    words = re.sub(r"[.!?,;:]", " ", str(text or "").lower().replace("’", "'")).split()
+    words = re.sub(r"[.!?,;:]", " ", str(text or "").lower().replace("’", "'").replace("`", "'")).split()   # ` — апостроф на русской раскладке
     return " ".join(CONTRACTIONS.get(w, w) for w in words)
 
 

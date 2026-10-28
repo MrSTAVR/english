@@ -290,7 +290,7 @@
 
 {% block scripts %}
 <script type="application/json" id="near-dict">{{ near_words|tojson }}</script>
-<script src="{{ url_for('static', filename='tiles.js') }}?v=5"></script>
+<script src="{{ url_for('static', filename='tiles.js') }}?v=6"></script>
 <script src="{{ url_for('static', filename='practice.js') }}?v=6"></script>
 <script src="{{ url_for('static', filename='lesson.js') }}?v=12"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=4"></script>{% endif %}
