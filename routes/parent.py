@@ -159,11 +159,10 @@ def parent_update_garden(sid):
             db.execute("UPDATE garden SET streak_days=?, broken=0, manual=1 WHERE student_id=?",
                        (streak, sid))
         else:
-            # «прерываем» серию — как будто пропущен день: дерево возвращается
-            # к начальному размеру, украшения снимаются (монетки остаются)
+            # «прерываем» серию — как будто пропущены дни: дерево возвращается
+            # к начальному размеру, сад «засыпает» (украшения и монетки остаются)
             db.execute("UPDATE garden SET streak_days=0, broken=1, manual=1 WHERE student_id=?",
                        (sid,))
-            db.execute("DELETE FROM decorations WHERE student_id=?", (sid,))
         best = cap_streak(max(int(g["best_streak"]), streak or 0))
         db.execute("UPDATE garden SET best_streak=? WHERE student_id=?", (best, sid))
     if coins is not None:

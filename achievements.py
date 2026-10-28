@@ -74,7 +74,7 @@ ACHIEVEMENTS = [
     _m("game_1", "🎮", "Первая игра", "Сыграна первая игра со словами.", "bronze", "games", "games_played", 1),
     _m("game_10", "🕹️", "Игроман", "Десять сыгранных игр.", "silver", "games", "games_played", 10),
     _m("game_50", "🎲", "Король игр", "Пятьдесят сыгранных игр!", "gold", "games", "games_played", 50),
-    _m("game_p4", "🏆", "Чемпион игр", "Три звезды во всех пяти играх.", "legend", "games", "games_perfect", 5),
+    _m("game_p4", "🏆", "Чемпион игр", "Три звезды во всех пяти играх.", "silver", "games", "games_perfect", 5),
     _m("write_1", "✍️", "Юный писатель", "Первое задание на письмо.", "bronze", "games", "writing_played", 1),
     _m("write_10", "📝", "Грамотей", "Десять заданий на письмо.", "silver", "games", "writing_played", 10),
     _m("write_p2", "🖋️", "Безупречное перо", "Три звезды в обоих заданиях на письмо.", "gold", "games", "writing_perfect", 2),
@@ -129,6 +129,10 @@ ACHIEVEMENTS = [
     _m("garden_7", "🌳", "Неделя в саду", "Семь дней подряд — сад зеленеет!", "silver", "garden", "garden_best", 7),
     _m("garden_14", "🦋", "Две недели", "Четырнадцать дней подряд — в саду бабочки!", "gold", "garden", "garden_best", 14),
     _m("garden_30", "🌈", "Хозяйка сада", "Тридцать дней подряд — сад в полном цвету!", "legend", "garden", "garden_best", 30),
+    # дни занятий всего (не подряд) — для тех, кто занимается через день
+    _m("days_10", "📅", "Десять дней с английским", "Десять дней занятий — не обязательно подряд.", "bronze", "garden", "study_days", 10),
+    _m("days_20", "🗓️", "Двадцать дней", "Двадцать дней занятий — это уже привычка!", "silver", "garden", "study_days", 20),
+    _m("days_40", "🏅", "Сорок дней", "Сорок дней занятий — настоящее упорство!", "gold", "garden", "study_days", 40),
     # --- Особые ---
     _m("early_bird", "🌅", "Ранняя пташка", "Тест сдан до девяти утра.", "bronze", "special", check=lambda s: s["early_bird"]),
     _m("evening", "🌙", "Вечерняя звезда", "Тест сдан после восьми вечера.", "bronze", "special", check=lambda s: s["evening"]),
@@ -145,6 +149,8 @@ def metrics(db, stats, student_id):
     row = db.execute("SELECT best_streak, streak_days FROM garden WHERE student_id=?",
                      (student_id,)).fetchone()
     s["garden_best"] = max(row["best_streak"] or 0, row["streak_days"] or 0) if row else 0
+    from garden import study_days
+    s["study_days"] = len(study_days(db, student_id))
     return s
 
 

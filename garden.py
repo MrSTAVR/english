@@ -11,8 +11,11 @@ from garden_scene import FIND_BY_DAY, FINDS, render_scene
 
 MAX_SLOTS = 5      # сколько украшений можно разместить в саду одновременно
 STREAK_CAP = 30    # серия ограничена 30 днями: дальше сад не растёт
-COIN_PASS = 5      # монеток за сданный тест
-COIN_PERFECT = 5   # бонусных монеток за идеальный тест (100%)
+COIN_PASS = 5      # монеток за урок, сданный впервые
+COIN_PERFECT = 5   # бонус за первые 100% в уроке (не после «Исправь ошибки»)
+COIN_RETRY = 2     # пересдача: только если побит свой лучший результат, раз в день на урок
+COIN_EFFORT = 2    # «за старание»: тест не сдан, но набрано EFFORT_MIN% — раз в день
+EFFORT_MIN = 40
 TREES_START = 1    # стартовое число деревьев в саду
 TREES_MAX = 6      # максимум деревьев
 # день серии -> сколько деревьев (должно совпадать с garden_scene.EXTRA_TREES)
@@ -146,32 +149,52 @@ def missed_days(last, today, vac):
     return n
 
 
-def compute_streak_from_history(db, student_id):
-    """Реальная серия дней по датам попыток (для синхронизации после ручных правок).
-    Дни каникул серию не прерывают и в неё не засчитываются."""
-    from datetime import timedelta
+FREEZE_EVERY = 7   # один пропущенный день серию не рвёт («запасной день»), но не чаще раза в 7 дней
+
+
+def study_days(db, student_id):
+    """Дни, когда ученик реально занимался: прошёл тест урока (даже не сдал), играл, читал историю,
+    говорил в диалоге (журнал activity), повторял слова или выполнял цель (daily_goal).
+    Просто открыть урок — не занятие."""
     rows = db.execute(
-        "SELECT DISTINCT substr(started_at, 1, 10) AS d FROM attempts "
-        "WHERE student_id=?", (student_id,)).fetchall()
-    days = sorted({r["d"] for r in rows if r["d"]}, reverse=True)
-    if not days:
+        "SELECT substr(started_at, 1, 10) AS d FROM attempts WHERE student_id=? AND finished_at IS NOT NULL "
+        "UNION SELECT day FROM activity WHERE student_id=? "
+        "UNION SELECT day FROM daily_goal WHERE student_id=? AND (lessons > 0 OR words > 0)",
+        (student_id, student_id, student_id)).fetchall()
+    out = set()
+    for r in rows:
+        try:
+            out.add(datetime.strptime((r[0] or "")[:10], "%Y-%m-%d").date())
+        except ValueError:
+            continue
+    return out
+
+
+def compute_streak_from_history(db, student_id):
+    """Серия дней по реальным занятиям. Дни каникул серию не прерывают и в неё не засчитываются;
+    один пропущенный день серию тоже не рвёт, если «запасной день» не тратился последние FREEZE_EVERY дней.
+    Возвращает (серия, последний день занятий 'YYYY-MM-DD' или None)."""
+    from datetime import timedelta
+    studied = study_days(db, student_id)
+    if not studied:
         return 0, None
     vac = vacation_days(db, student_id)
     today = datetime.now().date()
-    last = datetime.strptime(days[0], "%Y-%m-%d").date()
-    if missed_days(last, today, vac) > 0:   # был пропущен хотя бы один обычный день
-        return 0, days[0]
-    studied = {datetime.strptime(d, "%Y-%m-%d").date() for d in days}
-    streak, expected = 1, last - timedelta(days=1)
-    for d in days[1:]:
-        while expected in vac and expected not in studied:
-            expected -= timedelta(days=1)
-        if datetime.strptime(d, "%Y-%m-%d").date() == expected:
+    one = timedelta(days=1)
+    d = today if today in studied else today - one
+    streak, last_freeze = 0, None
+    for _ in range(400):
+        if d in studied:
             streak += 1
-            expected -= timedelta(days=1)
+        elif d in vac:
+            pass
+        elif ((last_freeze is None or (last_freeze - d).days >= FREEZE_EVERY)
+              and (d - one in studied or d - one in vac) and d != today):
+            last_freeze = d                              # одиночный пропуск — «запасной день»
         else:
             break
-    return streak, days[0]
+        d -= one
+    return streak, max(studied).isoformat()
 
 
 def refresh_garden(db, student_id):
@@ -179,9 +202,9 @@ def refresh_garden(db, student_id):
 
     Правила:
       • если сегодня/вчера были занятия — streak = реальная серия по истории;
-      • если между последним занятием и сегодняшним днём пропущен хотя бы
-        один день — серия считается прерванной: дерево возвращается к
-        начальному размеру (жёлудь), украшения пропадают (монетки остаются);
+      • если между последним занятием и сегодняшним днём пропущено больше, чем прощает
+        «запасной день», — серия прервана: дерево возвращается к жёлудю, сад «засыпает»
+        (серый), но украшения остаются — купленное не отнимаем;
       • родитель может вручную выставить streak/coins для теста — эти значения
         живут, пока ребёнок реально занимается (история попыток их подтверждает).
     """
@@ -199,8 +222,6 @@ def refresh_garden(db, student_id):
     else:
         streak = 0
         broken = 1 if stored > 0 or bool(g["broken"]) else 0
-        if broken:
-            db.execute("DELETE FROM decorations WHERE student_id=?", (student_id,))
 
     best = cap_streak(max(int(g["best_streak"]), streak))
     db.execute("UPDATE garden SET streak_days=?, best_streak=?, broken=?, "
@@ -210,19 +231,34 @@ def refresh_garden(db, student_id):
     return get_garden(db, student_id)
 
 
-def award_coins(db, student_id, percent, passed):
-    """Начисляет монетки за тест. Возвращает число полученных монет."""
-    earned = 0
-    if passed:
-        earned += COIN_PASS
-    if percent >= 100:
-        earned += COIN_PERFECT
+def award_coins(db, student_id, percent, passed, lesson_id=None, attempt_id=None, fixed=False):
+    """Начисляет монетки за тест урока (попытка attempt_id уже записана). Возвращает (монет, за что).
+    Первая сдача — COIN_PASS (+COIN_PERFECT за первые 100%); пересдача — COIN_RETRY, только за новый
+    лучший результат и раз в день на урок; не сдан, но старался (≥ EFFORT_MIN%) — COIN_EFFORT раз в день.
+    Так пересдавать лёгкий урок ради монеток невыгодно, а честная попытка не остаётся пустой."""
+    today = datetime.now().date().isoformat()
+    others = db.execute(
+        "SELECT score_percent, passed, substr(finished_at, 1, 10) AS day, lesson_id FROM attempts "
+        "WHERE student_id=? AND id<>? AND finished_at IS NOT NULL AND manual=0", (student_id, attempt_id or 0)).fetchall()
+    mine = [r for r in others if r["lesson_id"] == lesson_id]
+    earned, why = 0, ""
+    if passed and not any(r["passed"] for r in mine):
+        earned, why = COIN_PASS, "first"
+        if percent >= 100 and not fixed:
+            earned += COIN_PERFECT
+    elif passed:
+        best = max((r["score_percent"] or 0) for r in mine)
+        if percent > best and not any(r["passed"] and r["day"] == today for r in mine):
+            earned, why = COIN_RETRY, "retry"
+    elif percent >= EFFORT_MIN and not any(not r["passed"] and r["day"] == today and (r["score_percent"] or 0) >= EFFORT_MIN
+                                           for r in others):
+        earned, why = COIN_EFFORT, "effort"
     if earned:
         get_garden(db, student_id)                  # создаёт строку сада, если её ещё нет
         db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?",
                    (earned, student_id))
         db.commit()
-    return earned
+    return earned, why
 
 
 def touch_streak(db, student_id):
@@ -254,7 +290,7 @@ def garden_view(db, student_id):
     g = get_garden(db, student_id)
     streak = cap_streak(g["streak_days"])
     broken = bool(g["broken"])
-    day = 0 if broken else streak          # прерванная серия: сад «опустел» до жёлудя
+    day = 0 if broken else streak          # прерванная серия: дерево снова жёлудь, сад «уснул»
     stage = tree_stage(day)
     next_stage = next((s for s in TREE_STAGES if s["min"] > day), None)
     owned = db.execute(
