@@ -4,10 +4,26 @@ import re
 
 
 
+# Сокращения и полные формы засчитываем одинаково: he's = he is, don't = do not (притяжательное Tom's не трогаем)
+CONTRACTIONS = {
+    "i'm": "i am", "you're": "you are", "we're": "we are", "they're": "they are",
+    "he's": "he is", "she's": "she is", "it's": "it is", "what's": "what is", "that's": "that is",
+    "there's": "there is", "where's": "where is", "who's": "who is", "how's": "how is",
+    "isn't": "is not", "aren't": "are not", "wasn't": "was not", "weren't": "were not",
+    "don't": "do not", "doesn't": "does not", "didn't": "did not",
+    "can't": "can not", "cannot": "can not", "couldn't": "could not", "won't": "will not",
+    "haven't": "have not", "hasn't": "has not", "i've": "i have", "you've": "you have", "we've": "we have",
+    "they've": "they have", "i'll": "i will", "you'll": "you will", "he'll": "he will", "she'll": "she will",
+    "it'll": "it will", "we'll": "we will", "they'll": "they will", "i'd": "i would", "you'd": "you would",
+    "mustn't": "must not", "shouldn't": "should not",
+}
+
+
 def norm_answer(text):
     """Нормализация ответа для проверки type_in: регистр, апостроф, знаки препинания (и внутри фразы —
-    «Yes, I am» = «yes i am»)."""
-    return " ".join(re.sub(r"[.!?,;:]", " ", str(text or "").lower().replace("’", "'")).split())
+    «Yes, I am» = «yes i am»), сокращения (he's = he is)."""
+    words = re.sub(r"[.!?,;:]", " ", str(text or "").lower().replace("’", "'")).split()
+    return " ".join(CONTRACTIONS.get(w, w) for w in words)
 
 
 def _distance(a, b):

@@ -351,7 +351,7 @@ NEW_LESSONS = [
             {"en": "She hasn't got a cat.", "ru": "У неё нет кота.", "hint": "ши хэзнт гот э кэт"},
             {"en": "Have you got a pen?", "ru": "У тебя есть ручка?", "hint": "хэв ю гот э пэн"},
             {"en": "Yes, I have.", "ru": "Да, есть.", "hint": "йес ай хэв"},
-            {"en": "No, I haven't.", "ru": "Нет, нету.", "hint": "ноу ай хэвнт"},
+            {"en": "No, I haven't.", "ru": "Нет, нет.", "hint": "ноу ай хэвнт"},
         ],
         "exercises": [
             _ch("Выбери слово: She ___ got a bike.", "has", ["have", "is"], 0, "С she используем has: She has got a bike."),
@@ -415,8 +415,8 @@ NEW_LESSONS = [
         "test": [
             _ch("Что значит «her»?", "её", ["его", "их"], 0, "her — её."),
             _ch("Что значит «their»?", "их", ["наш", "её"], 0, "their — их."),
-            _ch("Выбери: Tom has a dog. It is ___ dog.", "his", ["her", "my"], 0, "Том — мальчик: his dog."),
-            _ch("Выбери: We have a house. It is ___ house.", "our", ["their", "my"], 0, "We → our."),
+            _ch("Выбери: This is Tom. It is ___ dog.", "his", ["her", "my"], 0, "Том — мальчик: his dog."),
+            _ch("Выбери: We live here. It is ___ house.", "our", ["their", "my"], 0, "We → our."),
             _ti("Допиши: You have a pen. It is ___ pen.", "your", "You → your."),
             _ch("Как по-английски «наша машина»?", "our car", ["their car", "my car"], 0, "our car — наша машина."),
             _order("Составь фразу: «Её сумка»", "Her bag", ["bag", "Her"], "Her bag — её сумка."),
@@ -452,7 +452,7 @@ NEW_LESSONS = [
         "exercises": [
             _ch("Выбери: ___ is a cat. (кот рядом)", "This", ["These", "Those"], 0, "Один предмет рядом — this."),
             _ch("Выбери: ___ are dogs. (собаки далеко)", "Those", ["That", "This"], 0, "Много и далеко — those."),
-            _ch("Выбери: ___ apple.", "an", ["a", "the"], 0, "apple начинается с гласного звука — an apple."),
+            _ch("a или an? ___ apple.", "an", ["a"], 0, "apple начинается с гласного звука — an apple."),
             _order("Составь вопрос: «Что это?»", "What is this", ["this", "What", "is"], "What is this? — Что это?"),
         ],
         "test": [
@@ -460,8 +460,8 @@ NEW_LESSONS = [
             _ch("Что значит «that»?", "тот", ["этот", "эти"], 0, "that — тот (далеко)."),
             _ch("Выбери: ___ is a pen. (одна, рядом)", "This", ["These", "Those"], 0, "This is a pen."),
             _ch("Выбери: ___ are books. (много, рядом)", "These", ["This", "That"], 0, "These are books."),
-            _ch("Выбери: ___ egg.", "an", ["a", "the"], 0, "egg — яйцо: an egg."),
-            _ch("Выбери: ___ dog.", "a", ["an", "the"], 0, "dog начинается на согласный: a dog."),
+            _ch("a или an? ___ egg.", "an", ["a"], 0, "egg — яйцо: an egg."),
+            _ch("a или an? ___ dog.", "a", ["an"], 0, "dog начинается на согласный: a dog."),
             _order("Составь предложение: «То — яблоко»", "That is an apple", ["apple", "That", "an", "is"], "That is an apple."),
         ],
     },
@@ -555,7 +555,7 @@ NEW_LESSONS = [
             _ch("Что значит «cold»?", "холодный", ["горячий", "старый"], 0, "cold — холодный."),
             _ch("Что значит «sad»?", "грустный", ["счастливый", "плохой"], 0, "sad — грустный."),
             _ch("Как по-английски «быстрый»?", "fast", ["slow", "short"], 0, "fast — быстрый."),
-            _ti("Напиши слово, противоположное слову big:", "small", "big — small."),
+            _ti("Напиши слово, противоположное слову big:", "small", "big — small.", ["little"]),
             _ti("Напиши слово, противоположное слову good:", "bad", "good — bad."),
             _order("Составь предложение: «Кот маленький»", "The cat is small", ["small", "The", "is", "cat"], "The cat is small."),
             _ch("Выбери правильный порядок:", "a new bike", ["a bike new", "new a bike"], 0, "Прилагательное стоит перед предметом: a new bike."),

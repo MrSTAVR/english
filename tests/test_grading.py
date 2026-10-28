@@ -5,7 +5,8 @@ from grading import grade_question, norm_answer
 
 def test_norm_answer():
     assert norm_answer("  Hello,   World! ") == "hello world"          # знаки внутри фразы не важны
-    assert norm_answer("don’t") == "don't"
+    assert norm_answer("don’t") == norm_answer("do not") == "do not"              # сокращение = полная форма
+    assert norm_answer("He's not my brother") == "he is not my brother" and norm_answer("Tom's dog") == "tom's dog"
     assert norm_answer(None) == ""
 
 

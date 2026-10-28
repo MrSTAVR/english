@@ -125,7 +125,7 @@ STORIES = [
                    _s("A woman says: Go straight and turn left.", "Женщина отвечает: Идите прямо и поверните налево."), _s("Sam says: Thank you!", "Сэм говорит: Спасибо!")],
      "gloss": {"sam": "Сэм", "london": "Лондон", "train": "поезд", "station": "вокзал", "taxi": "такси", "excuse": "извините", "woman": "женщина", "straight": "прямо", "turn": "повернуть", "left": "налево", "bus": "автобус", "go": "идти"},
      "questions": [_q("How does Sam go to London?", ["By train", "By bus", "By plane"], 0), _q("What does Sam ask?", ["Where is the school?", "Where is the shop?", "What time is it?"], 0),
-                   _q("Where must Sam go?", ["Straight and left", "Right", "Back"], 0)]},
+                   _q("Which way does Sam go?", ["Straight and left", "Right", "Back"], 0)]},
     {"key": "at-the-cafe", "lesson": 51, "title": "В кафе", "emoji": "🍕",
      "sentences": [_s("Anna and Tom are in a café.", "Анна и Том в кафе."), _s("The waiter says: What would you like?", "Официант спрашивает: Что вы хотите?"),
                    _s("Anna says: I'd like a pizza, please.", "Анна говорит: Я бы хотела пиццу, пожалуйста."), _s("Tom says: I'd like soup and juice.", "Том говорит: Я бы хотел суп и сок."),
