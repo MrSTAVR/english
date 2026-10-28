@@ -4,7 +4,7 @@ from grading import grade_question, norm_answer
 
 
 def test_norm_answer():
-    assert norm_answer("  Hello,   World! ") == "hello, world"
+    assert norm_answer("  Hello,   World! ") == "hello world"          # знаки внутри фразы не важны
     assert norm_answer("don’t") == "don't"
     assert norm_answer(None) == ""
 

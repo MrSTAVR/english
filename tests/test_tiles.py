@@ -71,3 +71,18 @@ def test_typo_counts_and_is_shown(parent, make_student):
 def test_tiles_are_stable_between_visits():
     q = {"q": "Напиши число 1 словом:", "answer": "one"}
     assert letter_tiles(q) == letter_tiles(dict(q))
+
+
+def test_punctuation_inside_phrase_does_not_matter():
+    from grading import grade_question, norm_answer
+    assert norm_answer("I'd like a pizza, please.") == norm_answer("i'd like a pizza please") == "i'd like a pizza please"
+    assert grade_question({"type": "type_in", "answer": "Yes, I am."}, "yes i am")[0]
+
+
+def test_training_order_exercises_have_answer(parent, make_student):
+    """«Составь фразу» в тренировке: правильный ответ должен быть в странице, иначе любой ответ — «Пока нет»."""
+    c = make_student()
+    parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
+    lesson = next(l for l in LESSONS if any(e["type"] == "order" for e in l["exercises"]))
+    html = c.get(f"/lesson/{lesson['id']}").get_data(as_text=True)
+    assert 'data-answer="" data-type="order"' not in html and 'data-type="order"' in html
