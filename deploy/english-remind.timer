@@ -1,0 +1,9 @@
+[Unit]
+Description=English Fun: напоминание в 18:00 (время сервера — Москва)
+
+[Timer]
+OnCalendar=*-*-* 18:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

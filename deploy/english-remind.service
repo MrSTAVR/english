@@ -1,0 +1,18 @@
+[Unit]
+Description=English Fun: вечернее напоминание администратору в Telegram (remind.py)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=english
+Group=english
+WorkingDirectory=/opt/english/app
+EnvironmentFile=/etc/english.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/english/venv/bin/python /opt/english/app/remind.py
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/english/data

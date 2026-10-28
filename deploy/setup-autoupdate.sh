@@ -5,7 +5,7 @@
 #   bash /opt/english/app/deploy/setup-autoupdate.sh sync   — обновить unit-файлы (вызывает autoupdate.sh)
 set -euo pipefail
 APP_DIR=/opt/english/app
-UNITS="english-autoupdate.service english-autoupdate.timer english-autoupdate.path"
+UNITS="english-autoupdate.service english-autoupdate.timer english-autoupdate.path english-remind.service english-remind.timer"
 [ "$(id -u)" = 0 ] || { echo "Запусти от root: sudo bash $0"; exit 1; }
 
 if [ "${1:-}" = "off" ]; then
@@ -25,11 +25,12 @@ done
 if [ "${1:-}" = "sync" ]; then
   # включаем кнопку «Обновить сейчас», только если автообновление уже настроено
   systemctl is-enabled -q english-autoupdate.timer && systemctl enable --now english-autoupdate.path >/dev/null 2>&1
+  systemctl is-enabled -q english-remind.timer || systemctl enable --now english-remind.timer >/dev/null 2>&1
   exit 0
 fi
 
 mkdir -p /opt/english/data/control && chown english:english /opt/english/data/control
-systemctl enable --now english-autoupdate.timer english-autoupdate.path >/dev/null
+systemctl enable --now english-autoupdate.timer english-autoupdate.path english-remind.timer >/dev/null
 echo "Автообновление включено: сервер проверяет GitHub раз в 5 минут, кнопка в кабинете обновляет сразу."
 echo "Журнал: journalctl -u english-autoupdate -n 30 --no-pager"
 systemctl list-timers english-autoupdate.timer --no-pager | head -3

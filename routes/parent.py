@@ -15,6 +15,7 @@ import database
 import friends
 import goals
 import speech
+import remind
 import tg
 import updates
 from achievements import ACHIEVEMENTS, update_achievements
@@ -595,7 +596,9 @@ def parent_telegram():
     if s["tg_token"] and host not in ("localhost", "127.0.0.1", s["tg_server"]):
         tg.save(db, tg_server=host)                    # для инструкции «как восстановить» в подписи к копии
     if request.method == "GET":
-        return _admin("telegram.html", tab="telegram", tg=tg.settings(db))
+        students = db.execute("SELECT id, display_name, tg_remind FROM students ORDER BY id").fetchall()
+        return _admin("telegram.html", tab="telegram", tg=tg.settings(db), students=students,
+                      remind_hour=remind.REMIND_HOUR)
     action = request.form.get("action")
     try:
         if action == "token":
@@ -622,6 +625,15 @@ def parent_telegram():
             tg.save(db, tg_backups="1" if action == "backups_on" else "0")
             flash("Ежедневная отправка копий включена ✅" if action == "backups_on" else
                   "Ежедневная отправка копий выключена", "ok")
+        elif action == "remind":                        # кому напоминать вечером (галочки по ученикам)
+            on = {int(x) for x in request.form.getlist("remind") if x.isdigit()}
+            for r in db.execute("SELECT id FROM students").fetchall():
+                db.execute("UPDATE students SET tg_remind=? WHERE id=?", (int(r["id"] in on), r["id"]))
+            db.commit()
+            flash("Напоминания сохранены ✅", "ok")
+        elif action == "remind_now":                    # пробное напоминание — сразу
+            n = remind.run(db, force=True)
+            flash(f"Отправлено напоминаний: {n} 📨" if n else "Некому напоминать — отметьте учеников", "ok")
         elif action == "forget":
             tg.forget(db)
             flash("Бот отключён. Удалите его в @BotFather (/deletebot), если он больше не нужен.", "ok")

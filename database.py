@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS students (
     emoji        TEXT DEFAULT '🎒',                    -- аватарка для ребёнка
     created_at   TEXT NOT NULL,
     birthday     TEXT,                                 -- 'ГГГГ-ММ-ДД' — личный праздник
-    competitions INTEGER DEFAULT 1                     -- участвует в «Друзьях» (рекорды, дуэли, лента)
+    competitions INTEGER DEFAULT 1,                    -- участвует в «Друзьях» (рекорды, дуэли, лента)
+    tg_remind    INTEGER DEFAULT 0                     -- вечернее напоминание администратору в Telegram (remind.py)
 );
 CREATE TABLE IF NOT EXISTS game_records (             -- рекорды в играх (friends.RECORDS: что и как считаем)
     student_id INTEGER NOT NULL,
@@ -404,6 +405,8 @@ def init_db():
         conn.execute("ALTER TABLE students ADD COLUMN birthday TEXT")
     if "competitions" not in st_cols:
         conn.execute("ALTER TABLE students ADD COLUMN competitions INTEGER DEFAULT 1")
+    if "tg_remind" not in st_cols:
+        conn.execute("ALTER TABLE students ADD COLUMN tg_remind INTEGER DEFAULT 0")
     sp_cols = {r[1] for r in conn.execute("PRAGMA table_info(sp_sessions)")}
     if sp_cols and "cancelled_by" not in sp_cols:
         conn.execute("ALTER TABLE sp_sessions ADD COLUMN cancelled_by TEXT")   # logoped / family
