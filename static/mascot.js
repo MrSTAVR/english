@@ -38,6 +38,8 @@
                  'Молодец! Запомнила главное? Идём к карточкам! 🧠'],
     wordsDone: ['Слова почти в кармане 😎 Теперь потренируемся!',
                 'Уже столько слов! Потренируйся — и можно сдавать тест 📝'],
+    sceneOpen: ['Начинается история! Отвечай за себя — а я послушаю 🐥',
+                'Ой, что сейчас будет! Читай реплики, а перевод — по нажатию 😉'],
     testOpen: ['Это итоговый тест. Не торопись, читай каждый вопрос дважды 😉',
                'Тест пошёл! Я рядом — держу за тебя крылышки 🤞'],
     right: ['Так правильно! 🎉', 'Верно! Ты умница 🌟', 'Есть! Так держать 🔥', 'Ура, правильный ответ! 👏',
@@ -870,7 +872,7 @@
     var stepMsgs = {
       'step-material': function () { return pick(T.theoryDone); },
       'step-exercises': function () { return pick(T.wordsDone); },
-      'step-test': function () { return pick(T.testOpen); }
+      'step-test': function () { return pick(document.getElementById('scene') ? T.sceneOpen : T.testOpen); }
     };
     var currentStep = function () {
       for (var i = 0; i < steps.length; i++) {

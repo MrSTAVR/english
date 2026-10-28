@@ -4,6 +4,7 @@
 (function () {
   'use strict';
   var STEPS = { 'step-theory': ['Теория', 1], 'step-material': ['Слова', 2], 'step-exercises': ['Тренировка', 3], 'step-test': ['Тест', 4] };
+  if (document.getElementById('scene')) STEPS['step-test'][0] = 'История';
   function say(text, slow) { if (window.ttsSpeak) window.ttsSpeak(text, slow ? 0.55 : null); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function ICO(name) { return '<svg class="ico" aria-hidden="true"><use href="#o-' + name + '"/></svg>'; }
@@ -267,6 +268,7 @@
         ex: answers('step-exercises'),
         test: answers('step-test'),
         dlg: window.LessonDialogs ? window.LessonDialogs.get() : null,
+        scene: window.LessonScene ? window.LessonScene.get() : null,
         speak: ($('speak-block') && $('speak-block')._speak) ? $('speak-block')._speak.get() : null,
         secs: start ? Math.max(0, Math.round(Date.now() / 1000 - start)) : 0
       };
@@ -301,6 +303,7 @@
         if (saved.step && saved.step !== 'step-theory' && window.goStep) window.goStep(saved.step);
         setTimeout(function () {                         // диалоги и «Скажи вслух» строятся на DOMContentLoaded после нас
           if (saved.dlg && window.LessonDialogs) window.LessonDialogs.set(saved.dlg);
+          if (saved.scene && window.LessonScene) window.LessonScene.set(saved.scene);
           var sb = $('speak-block');
           if (saved.speak && sb && sb._speak) sb._speak.set(saved.speak);
         }, 0);

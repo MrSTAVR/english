@@ -8,6 +8,7 @@ from achievements import (ACHIEVEMENTS, CATEGORIES, public, tier_counts,
 import config
 import goals
 from routes.games import dialogs_for
+import scenes
 from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID, pass_mark, unlocked_lesson_ids
 from data.course import ISLANDS
 from data.extra_lessons import EXTRA_LESSONS
@@ -19,7 +20,7 @@ import castle
 import weekly
 import seasons
 from seasons import active_season, advent_open, content
-from garden import award_coins, get_garden, on_vacation, refresh_garden, tree_count_for, tree_stage
+from garden import award_coins, on_vacation, refresh_garden, tree_count_for, tree_stage
 import friends
 from friends import post as feed_post
 from grading import grade_question, near_miss, near_dict
@@ -281,6 +282,7 @@ def lesson_page(lesson_id):
                            lesson_dialogs=dialogs_for(db, student["id"], {lesson_id}),
                            me_emoji=student["emoji"] or "🎒", me_name=student["display_name"],
                            attempt_id=cur.lastrowid, fix_from=fix_from, fix_done=fix_done,
+                           scene_steps=scenes.steps(lesson, fix_done) if lesson.get("scene") else None,
                            started_ts=started.timestamp() - (saved or {}).get("secs", 0),   # время урока копится
                            mascot=mascot)
 
@@ -435,7 +437,7 @@ def submit_test(lesson_id):
     if passed:
         activity.log(db, student["id"], "lesson")
     coins_earned, coins_why = award_coins(db, student["id"], percent, passed, lesson_id, attempt_id, fixed=bool(fixed))
-    garden = get_garden(db, student["id"])
+    garden = refresh_garden(db, student["id"])            # серия с учётом только что сданного теста
 
     mascot = build_mascot_ctx()
     mascot["percent"] = percent
