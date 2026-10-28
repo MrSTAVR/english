@@ -15,6 +15,7 @@ import database
 import friends
 import goals
 import speech
+import push
 import remind
 import tg
 import updates
@@ -95,7 +96,7 @@ def delete_student(sid):
     db.execute("DELETE FROM achievements WHERE student_id=?", (sid,))
     db.execute("DELETE FROM decorations WHERE student_id=?", (sid,))
     db.execute("DELETE FROM garden WHERE student_id=?", (sid,))
-    for table in ("wardrobe_items", "wardrobe_wear", "story_done", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal", "goal_settings", "vacations", "activity", "weekly_done", "boss_wins", "season_log", "advent", "birthday_gifts", "house_items", "house_place", "lesson_progress"):
+    for table in ("wardrobe_items", "wardrobe_wear", "story_done", "game_scores", "dialog_done", "word_review", "speaking", "daily_goal", "goal_settings", "vacations", "activity", "weekly_done", "boss_wins", "season_log", "advent", "birthday_gifts", "house_items", "house_place", "lesson_progress", "push_subs"):
         db.execute(f"DELETE FROM {table} WHERE student_id=?", (sid,))
     friends.forget_student(db, sid)
     castle.forget_student(db, sid)
@@ -596,7 +597,9 @@ def parent_telegram():
     if s["tg_token"] and host not in ("localhost", "127.0.0.1", s["tg_server"]):
         tg.save(db, tg_server=host)                    # для инструкции «как восстановить» в подписи к копии
     if request.method == "GET":
-        students = db.execute("SELECT id, display_name, tg_remind FROM students ORDER BY id").fetchall()
+        students = db.execute("SELECT s.id, s.display_name, s.tg_remind, "
+                              "(SELECT COUNT(*) FROM push_subs p WHERE p.student_id=s.id) AS devices "
+                              "FROM students s ORDER BY s.id").fetchall()
         return _admin("telegram.html", tab="telegram", tg=tg.settings(db), students=students,
                       remind_hour=remind.REMIND_HOUR)
     action = request.form.get("action")
@@ -634,6 +637,10 @@ def parent_telegram():
         elif action == "remind_now":                    # пробное напоминание — сразу
             n = remind.run(db, force=True)
             flash(f"Отправлено напоминаний: {n} 📨" if n else "Некому напоминать — отметьте учеников", "ok")
+        elif action == "push_test":                     # пробное уведомление на телефоны учеников
+            ids = [r["student_id"] for r in db.execute("SELECT DISTINCT student_id FROM push_subs").fetchall()]
+            n = sum(push.send(db, sid, "Чик-чик ждёт тебя!", "Проверка: напоминания работают 🐥") for sid in ids)
+            flash(f"Уведомлений отправлено: {n} 📱" if n else "Ни на одном телефоне уведомления не включены", "ok")
         elif action == "forget":
             tg.forget(db)
             flash("Бот отключён. Удалите его в @BotFather (/deletebot), если он больше не нужен.", "ok")

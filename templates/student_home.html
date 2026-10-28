@@ -65,6 +65,14 @@
   </div>
 {% endif %}
 
+<!-- Напоминания от Чик-чика (Web Push): показывает static/push.js, если браузер умеет и ещё не включено -->
+<section class="card push-card" id="push-card" hidden>
+  <svg class="ico push-ico" aria-hidden="true"><use href="#o-bell"/></svg>
+  <div class="push-text"><b>Напоминания от Чик-чика</b>
+    <span id="push-msg">Если забудешь позаниматься, вечером Чик-чик напомнит.</span></div>
+  <button type="button" class="btn btn-small btn-primary" id="push-on">Включить</button>
+</section>
+
 <!-- Сегодня: цель, челлендж, слово дня -->
 {% macro trow(emoji, text, have, need) %}
 <div class="trow{{ ' ok' if have >= need }}">
@@ -267,6 +275,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='push.js') }}?v=2"></script>
 <script>document.addEventListener('click', function (e) {
   var b = e.target.closest && e.target.closest('.say-btn');
   if (b && window.ttsSpeak) window.ttsSpeak(b.dataset.say);

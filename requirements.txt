@@ -1,3 +1,4 @@
 flask>=3.0
 waitress>=3.0
 gunicorn>=22.0; sys_platform != "win32"
+pywebpush>=2.0     # уведомления ученику от Чик-чика (push.py)

@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Вечернее напоминание администратору в Telegram: python remind.py [--force]
+"""Вечерние напоминания: администратору в Telegram и ученику от Чик-чика (push): python remind.py [--force]
 
 Запускается таймером english-remind.timer в REMIND_HOUR (18:00 по времени сервера — Москва).
 Для каждого ученика с включённым напоминанием (students.tg_remind, переключатель в кабинете
 на вкладке Telegram): не занимался сегодня — «ещё не занималась» + серия и следующий урок;
 занимался — короткая сводка дня. Каждому ученику — одно сообщение в день (app_settings
 tg_remind_<id> = дата). На каникулах не напоминаем. Позже LATEST_HOUR не шлём (сервер мог лежать).
+Ученику с включёнными уведомлениями (push_subs) — реплика Чик-чика, если сегодня не занимался
+(раз в день: push_remind_<id>); от Telegram это не зависит.
 """
 import argparse
 import logging
@@ -87,20 +89,52 @@ def build_message(db, student, today=None):
     return "\n".join(lines)
 
 
+def _sent_today(db, key, day):
+    row = db.execute("SELECT value FROM app_settings WHERE key=?", (key,)).fetchone()
+    return bool(row and row[0] == day)
+
+
+def _mark(db, key, day):
+    db.execute("INSERT INTO app_settings (key, value) VALUES (?, ?) "
+               "ON CONFLICT(key) DO UPDATE SET value=excluded.value", (key, day))
+    db.commit()
+
+
+def push_students(db, now, force=False):
+    """Реплика Чик-чика на телефон ученикам, которые сегодня не занимались. Возвращает число учеников."""
+    import garden
+    import push
+    from stats import compute_stats
+    day, n = now.date().isoformat(), 0
+    for st in db.execute("SELECT DISTINCT s.id, s.display_name FROM students s JOIN push_subs p ON p.student_id=s.id "
+                         "ORDER BY s.id").fetchall():
+        key = f"push_remind_{st['id']}"
+        if not force and _sent_today(db, key, day):
+            continue
+        if garden.on_vacation(db, st["id"], now.date()) or now.date() in garden.study_days(db, st["id"]):
+            continue
+        streak, _ = garden.compute_streak_from_history(db, st["id"])
+        nxt = _next_lesson(compute_stats(db, st["id"]))
+        text = push.nudge_text(st["display_name"], streak, _title(nxt) if nxt else None, seed=f"{day}-{st['id']}")
+        if push.send(db, st["id"], "Чик-чик ждёт тебя!", text):
+            _mark(db, key, day)
+            n += 1
+    return n
+
+
 def run(db, now=None, force=False):
-    """Разослать напоминания. Возвращает число отправленных сообщений."""
+    """Разослать напоминания. Возвращает число отправленных сообщений (Telegram + ученики на телефон)."""
     now = now or datetime.now()
-    s = tg.settings(db)
-    if not s["linked"]:
-        return 0
     if not force and not REMIND_HOUR <= now.hour < LATEST_HOUR:
         return 0
+    sent = push_students(db, now, force)
+    s = tg.settings(db)
+    if not s["linked"]:
+        return sent
     day = now.date().isoformat()
-    sent = 0
     for st in db.execute("SELECT id, display_name FROM students WHERE tg_remind=1 ORDER BY id").fetchall():
         key = f"tg_remind_{st['id']}"
-        row = db.execute("SELECT value FROM app_settings WHERE key=?", (key,)).fetchone()
-        if not force and row and row[0] == day:
+        if not force and _sent_today(db, key, day):
             continue
         text = build_message(db, st, now.date())
         if text is None:
@@ -110,9 +144,7 @@ def run(db, now=None, force=False):
         except tg.TgError as e:
             log.warning("напоминание ученику %s не отправлено: %s", st["id"], e)
             continue
-        db.execute("INSERT INTO app_settings (key, value) VALUES (?, ?) "
-                   "ON CONFLICT(key) DO UPDATE SET value=excluded.value", (key, day))
-        db.commit()
+        _mark(db, key, day)
         sent += 1
     return sent
 

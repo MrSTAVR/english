@@ -75,3 +75,28 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "clear-pages") event.waitUntil(caches.delete(PAGES));
 });
+
+// Уведомления от Чик-чика (push.py): показываем и по нажатию открываем приложение.
+self.addEventListener("push", (event) => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; } catch (e) { d = { body: event.data && event.data.text() }; }
+  event.waitUntil(self.registration.showNotification(d.title || "English Fun", {
+    body: d.body || "Чик-чик ждёт тебя!",
+    icon: "/static/icons/icon-192.png",
+    badge: "/static/icons/favicon-32.png",
+    tag: "chick-reminder",          // новое напоминание заменяет старое, а не копится
+    data: { url: d.url || "/student" },
+  }));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || "/student";
+  event.waitUntil((async () => {
+    const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const c of all) {
+      if ("focus" in c) { await c.focus(); if ("navigate" in c) await c.navigate(url); return; }
+    }
+    await self.clients.openWindow(url);
+  })());
+});
