@@ -120,9 +120,9 @@ def nudge_text(name, streak, next_title, seed=None):
              "Твой сад ждёт тебя 🌱 Одно занятие — и он расцветёт!",
              "Чик-чик спрашивает: сыграем сегодня в английские игры? 🎮"]
     if streak:
-        lines.append(f"Серия {streak} — не дай ей прерваться! Позанимайся сегодня 🔥")
+        lines.append(f"Серия {streak}! Сделаем {streak + 1}? Чик-чик в тебя верит 🔥")
     else:
-        lines.append("Сад уснул 🌙 Одно занятие сегодня — и он проснётся!")
+        lines.append("Чик-чик посадил в саду новое семечко 🌱 Польём его вместе?")
     if next_title:
         lines.append(f"Следующий урок: «{next_title}». Чик-чик ждёт тебя! 📚")
     return rng.choice(lines)
