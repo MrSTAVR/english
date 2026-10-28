@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Дизайн 3.0: файл стилей подключён, логопедическая часть в своём стиле, шрифты локальные, у Чик-чика один клюв."""
+from curriculum import LESSONS
 from tests.helpers import N
 import re
 from pathlib import Path
@@ -55,9 +56,11 @@ def test_student_tabbar(make_student):
     assert 'class="has-tabbar"' not in lesson
 
 
-def test_lesson_test_has_progress_bar(make_student):
+def test_lesson_test_has_progress_bar(parent, make_student):
     c = make_student()
-    html = c.get(f"/lesson/{N(1)}").get_data(as_text=True)
+    parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
+    lid = next(x for x in LESSONS if not x.get("scene"))["id"]     # у уроков-сцен своя форма
+    html = c.get(f"/lesson/{lid}").get_data(as_text=True)
     assert 'id="test-progress"' in html and "function unansweredQuestions()" in html
     assert html.count("unansweredQuestions()") >= 3          # и полоска, и проверка перед отправкой
 

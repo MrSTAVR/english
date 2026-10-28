@@ -17,7 +17,7 @@
   <li data-s="step-theory" class="active"><i>1</i><span>Теория</span></li>
   <li data-s="step-material"><i>2</i><span>Слова</span></li>
   <li data-s="step-exercises"><i>3</i><span>Тренировка</span></li>
-  <li data-s="step-test"><i>4</i><span>Тест</span></li>
+  <li data-s="step-test"><i>4</i><span>{{ 'История' if lesson.scene else 'Тест' }}</span></li>
 </ol>
 </div>
 <div class="ls-resume" id="ls-resume" hidden><svg class="ico" aria-hidden="true"><use href="#o-repeat"/></svg><span>Продолжаем с того же места</span><button type="button" class="btn btn-small btn-aux" id="ls-restart">Начать заново</button></div>
@@ -182,11 +182,12 @@
   <h3 class="pr-title">Скажи вслух</h3>
   <div id="speak-block" class="speak-block" data-items='{{ lesson.speak | tojson }}' data-lesson="{{ lesson.id }}"></div>
   {% endif %}
-  <button class="btn ls-next" onclick="goStep('step-test')">Всё понятно! К тесту →</button>
+  <button class="btn ls-next" onclick="goStep('step-test')">{% if lesson.scene %}Всё понятно! К истории →{% else %}Всё понятно! К тесту →{% endif %}</button>
 </section>
 
 <!-- Шаг 4: тест -->
 <section class="step hidden" id="step-test">
+  {% if lesson.scene %}{% include "_scene.html" %}{% else %}
   {% if fix_done %}
   <h2 class="ls-step-title">Исправь ошибки</h2>
   <p class="ls-step-sub">Правильные ответы уже засчитаны — осталось {{ lesson.test|length - fix_done|length }}. Не торопись!</p>
@@ -283,18 +284,20 @@
 
     <button type="submit" class="btn btn-big">Закончить тест и проверить</button>
   </form>
+  {% endif %}
 </section>
 
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=11">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=12">{% endblock %}
 
 {% block scripts %}
 <script type="application/json" id="near-dict">{{ near_words|tojson }}</script>
 <script src="{{ url_for('static', filename='tiles.js') }}?v=8"></script>
 <script src="{{ url_for('static', filename='practice.js') }}?v=7"></script>
-<script src="{{ url_for('static', filename='lesson.js') }}?v=12"></script>
+<script src="{{ url_for('static', filename='lesson.js') }}?v=13"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=4"></script>{% endif %}
 {% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=6"></script>{% endif %}
+{% if lesson.scene %}<script src="{{ url_for('static', filename='scene.js') }}?v=1"></script>{% endif %}
 <script>
 var START_TS = {{ started_ts }};   // var — виден lesson.js (сохранение времени урока)
 

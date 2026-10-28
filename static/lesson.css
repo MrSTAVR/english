@@ -274,3 +274,17 @@ html[data-theme="dark"] .ls-resume .btn-aux { background: transparent; color: #8
 .lt-back .ico { width: 22px; height: 22px; }
 html[data-theme="dark"] .lt-back, html[data-theme="dark"] .lt-hint-btn.is-on { background: #1E2A4D; color: #8FB4FF; }
 html[data-theme="dark"] .lt-mask { color: #8FB4FF; }
+
+/* Сцена истории вместо теста (_scene.html, scene.js) */
+.sc-intro, .sc-outro { padding: 12px 14px; margin: 8px 0 12px; line-height: 1.45; }
+.sc-intro .ico { width: 20px; height: 20px; vertical-align: -4px; color: var(--primary); }
+.sc-note { justify-self: center; max-width: 92%; text-align: center; font-style: italic; color: var(--muted); font-size: .95rem; padding: 2px 8px; }
+.sc-chick { background: var(--sand); }
+.sc-chick .ico { width: 30px; height: 30px; }
+.sc-tap { cursor: pointer; }
+.sc-turn { margin: 6px 0 12px; padding: 12px 14px; border: 2px solid var(--line); border-radius: 16px; background: var(--surface); }
+.sc-q { margin: 0 0 8px; }
+.sc-turn .typein { width: 100%; max-width: 420px; }
+.sc-ok { margin-top: 10px; }
+.sc-turn .answer-line { min-height: 44px; }
+.sc-end .btn-big { margin-top: 6px; }

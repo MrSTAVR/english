@@ -1,0 +1,17 @@
+{# Сцена истории вместо теста (scenes.py, static/scene.js). Ответы — скрытые поля q<i>/q<i>_order, как у теста. #}
+<h2 class="ls-step-title">{{ lesson.scene.title }}</h2>
+<p class="ls-step-sub">{% if fix_done %}Исправь ошибки: верные ответы уже засчитаны — история пойдёт дальше сама.{% else %}Отвечай за себя — и история пойдёт дальше. Чтобы урок засчитался, нужно минимум {{ need }}% верных ответов с первой попытки.{% endif %}</p>
+<div class="card-inner sc-intro"><svg class="ico" aria-hidden="true"><use href="#o-book"/></svg> {{ lesson.scene.intro }}</div>
+<form method="post" action="{{ url_for('student.submit_test', lesson_id=lesson.id) }}" id="test-form" class="sc-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
+  <input type="hidden" name="seconds" id="seconds-input" value="0">
+  {% if fix_done %}<input type="hidden" name="fix_from" value="{{ fix_from }}">{% endif %}
+  <div id="scene" class="dlg-chat sc-chat" data-me-emoji="{{ me_emoji }}" data-me-name="{{ me_name }}"{% if tiles_open %} data-tiles-open="1"{% endif %} aria-live="polite"></div>
+  <div class="sc-panel" id="scene-panel"></div>
+  <div class="sc-end" id="scene-end" hidden>
+    <div class="card-inner sc-outro"><b>Что будет дальше?</b> {{ lesson.scene.outro }}</div>
+    <button type="submit" class="btn btn-big">Закончить историю и узнать результат</button>
+  </div>
+</form>
+<script type="application/json" id="scene-data">{{ scene_steps|tojson }}</script>

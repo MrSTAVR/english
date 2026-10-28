@@ -30,9 +30,10 @@ def _fail_half(lesson, aid):
     return form, wrong
 
 
-def test_fix_mistakes_asks_only_wrong_questions(make_student):
+def test_fix_mistakes_asks_only_wrong_questions(parent, make_student):
     c = make_student()
-    l = LESSONS[0]
+    parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
+    l = next(x for x in LESSONS if not x.get("scene"))      # обычный тест (сцены — tests/test_scenes.py)
     aid = open_lesson(c, l["id"])
     form, wrong = _fail_half(l, aid)
     body = c.post(f"/lesson/{l['id']}/submit", data=form).get_data(as_text=True)
@@ -47,9 +48,10 @@ def test_fix_mistakes_asks_only_wrong_questions(make_student):
     assert db_scalar("SELECT passed FROM attempts WHERE id=?", (new_aid,)) == 1
 
 
-def test_fix_from_other_or_passed_attempt_is_ignored(make_student):
+def test_fix_from_other_or_passed_attempt_is_ignored(parent, make_student):
     c = make_student()
-    l = LESSONS[0]
+    parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
+    l = next(x for x in LESSONS if not x.get("scene"))      # обычный тест (сцены — tests/test_scenes.py)
     aid = open_lesson(c, l["id"])
     c.post(f"/lesson/{l['id']}/submit", data=build_form(l, aid))       # сдан — исправлять нечего
     page = c.get(f"/lesson/{l['id']}?step=test&fix={aid}").get_data(as_text=True)

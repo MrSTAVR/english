@@ -9,6 +9,7 @@ from data.later_lessons import LATER_LESSONS
 from data.lessons import LESSONS as _OLD_LESSONS
 from data.more_lessons import MORE_LESSONS
 from data.new_lessons import NEW_LESSONS
+from data.story import SCENES
 from data.topic_lessons import TOPIC_LESSONS
 
 from grading import match_columns
@@ -31,6 +32,8 @@ for _l in ALL_LESSONS:
         _w.setdefault("pic", emoji_for(_w["en"]))     # картинка-эмодзи ("" — если нет)
 for _l in ALL_LESSONS:
     _l["dialogs"] = [d for d in DIALOGS if d["lesson"] == _l["id"]]
+    if _l["id"] in SCENES:
+        _l["scene"] = SCENES[_l["id"]]               # тест урока — сцена истории (data/story.py)
 augment(ALL_LESSONS)
 add_review_questions(LESSONS)
 
@@ -97,6 +100,32 @@ def validate_lessons():
                 for b in th["blocks"]:
                     if not isinstance(b, dict) or not b.get("title") or not b.get("text"):
                         errors.append(f"урок {l['id']} — блок теории без title/text")
+    return errors
+
+
+SCENE_MAX = 9      # ходов в сцене: +1 «Повторение» — и тест не длиннее 10 вопросов
+
+
+def validate_scenes():
+    from data.dialogs import CHARACTERS
+    from scenes import CHICK
+    errors = []
+    for lid, sc in SCENES.items():
+        ref = f"сцена урока {lid}"
+        if lid not in LESSONS_BY_ID:
+            errors.append(f"{ref} — нет такого урока")
+            continue
+        if not sc.get("title") or not sc.get("intro") or not sc.get("outro"):
+            errors.append(f"{ref} — нужны title, intro и outro")
+        asks = [ln["ask"] for ln in sc["lines"] if "ask" in ln]
+        if not 5 <= len(asks) <= SCENE_MAX:
+            errors.append(f"{ref} — ходов ученицы {len(asks)}, нужно 5–{SCENE_MAX}")
+        for q in asks:
+            if q["type"] not in ("choice", "type_in", "order"):
+                errors.append(f"{ref} — в сцене не бывает заданий {q['type']!r}")
+        for ln in sc["lines"]:
+            if "say" in ln and (ln["say"] not in CHARACTERS and ln["say"] != CHICK or not ln.get("en") or not ln.get("ru")):
+                errors.append(f"{ref} — реплика без героя/en/ru: {ln}")
     return errors
 
 

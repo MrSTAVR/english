@@ -281,7 +281,10 @@ def augment(lessons):
     for l in lessons:
         if l.get("_augmented"):
             continue
-        l["test"] = limit_writing(l, list(l["test"])) + listening_extras(l, dictation=False)
+        if l.get("scene"):                              # сцена: вопросы — ходы ученицы, «на слух» уже в ней
+            l["test"] = [ln["ask"] for ln in l["scene"]["lines"] if "ask" in ln]
+        else:
+            l["test"] = limit_writing(l, list(l["test"])) + listening_extras(l, dictation=False)
         l["practice"] = practice_extras(l)
         l["speak"] = speak_items(l)
         l["_augmented"] = True
