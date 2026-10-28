@@ -5,8 +5,9 @@ import re
 
 
 def norm_answer(text):
-    """Нормализация ответа для проверки type_in."""
-    return " ".join(str(text or "").lower().replace("’", "'").split()).strip(" .!?,;:")
+    """Нормализация ответа для проверки type_in: регистр, апостроф, знаки препинания (и внутри фразы —
+    «Yes, I am» = «yes i am»)."""
+    return " ".join(re.sub(r"[.!?,;:]", " ", str(text or "").lower().replace("’", "'")).split())
 
 
 def _distance(a, b):

@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  function norm(s) { return String(s || '').toLowerCase().replace(/’/g, "'").replace(/\s+/g, ' ').trim().replace(/^[ .!?,;:]+|[ .!?,;:]+$/g, ''); }
+  function norm(s) { return String(s || '').toLowerCase().replace(/’/g, "'").replace(/[.!?,;:]/g, ' ').replace(/\s+/g, ' ').trim(); }
   function dist(a, b) {                               // как grading._distance: соседние буквы местами — одна опечатка
     var d = [], i, j;
     for (i = 0; i <= a.length; i++) { d.push([]); for (j = 0; j <= b.length; j++) d[i].push(i * j === 0 ? i + j : 0); }

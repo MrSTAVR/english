@@ -4,7 +4,7 @@
   'use strict';
 
   function say(text, slow) { if (window.ttsSpeak) window.ttsSpeak(text, slow ? 0.5 : undefined); }
-  function norm(s) { return String(s || '').toLowerCase().replace(/’/g, "'").replace(/\s+/g, ' ').trim().replace(/^[ .!?,;:]+|[ .!?,;:]+$/g, ''); }
+  function norm(s) { return String(s || '').toLowerCase().replace(/’/g, "'").replace(/[.!?,;:]/g, ' ').replace(/\s+/g, ' ').trim(); }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
