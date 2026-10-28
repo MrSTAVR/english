@@ -28,6 +28,14 @@ CREATE TABLE IF NOT EXISTS students (
     competitions INTEGER DEFAULT 1,                    -- участвует в «Друзьях» (рекорды, дуэли, лента)
     tg_remind    INTEGER DEFAULT 0                     -- вечернее напоминание администратору в Telegram (remind.py)
 );
+CREATE TABLE IF NOT EXISTS push_subs (                -- Web Push: подписки устройств ученика (push.py)
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    endpoint   TEXT NOT NULL UNIQUE,
+    p256dh     TEXT NOT NULL,
+    auth       TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS game_records (             -- рекорды в играх (friends.RECORDS: что и как считаем)
     student_id INTEGER NOT NULL,
     game       TEXT NOT NULL,

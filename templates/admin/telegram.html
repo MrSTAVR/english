@@ -51,17 +51,21 @@
   </form>
   <h3>Вечернее напоминание</h3>
   <p class="hint">В {{ remind_hour }}:00 бот пишет вам про отмеченных учеников: если ещё не занимались сегодня — напоминание
-    с серией и следующим уроком, если занимались — короткая сводка дня. На каникулах не пишет.</p>
+    с серией и следующим уроком, если занимались — короткая сводка дня. На каникулах не пишет.
+    Ученику, у которого на телефоне включены «Напоминания от Чик-чика» (кнопка на его главной), в это же время приходит
+    уведомление — если он сегодня ещё не занимался.</p>
   <form method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     {% for s in students %}
-      <label class="sp-check sp-wide"><input type="checkbox" name="remind" value="{{ s.id }}"{% if s.tg_remind %} checked{% endif %}> {{ s.display_name }}</label>
+      <label class="sp-check sp-wide"><input type="checkbox" name="remind" value="{{ s.id }}"{% if s.tg_remind %} checked{% endif %}> {{ s.display_name }}
+        <span class="hint">· {% if s.devices %}уведомления от Чик-чика включены ({{ s.devices }}){% else %}уведомления на телефоне не включены{% endif %}</span></label>
     {% else %}
       <p class="hint">Учеников пока нет.</p>
     {% endfor %}
     <p class="upd-actions">
       <button class="btn btn-primary" type="submit" name="action" value="remind">Сохранить</button>
       <button class="btn btn-small" type="submit" name="action" value="remind_now">Прислать напоминание сейчас</button>
+      <button class="btn btn-small" type="submit" name="action" value="push_test">Пробное уведомление на телефон</button>
     </p>
   </form>
   <details class="upd-log">

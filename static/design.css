@@ -589,3 +589,10 @@ html[data-theme="dark"] .game-record { color: #8FB4FF; }
 .result-actions-top { flex-wrap: wrap; margin: 14px 0 4px; }
 .rev-all { margin-top: 10px; }
 .rev-all > summary { cursor: pointer; color: var(--primary); font-weight: 700; padding: 8px 0; }
+
+/* Напоминания от Чик-чика: карточка на главной (static/push.js) */
+.push-card { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.push-card[hidden] { display: none; }            /* без этого display: flex перебивает hidden */
+.push-card .push-ico { width: 28px; height: 28px; color: var(--primary); flex: none; }
+.push-card .push-text { flex: 1 1 180px; display: flex; flex-direction: column; gap: 2px; }
+.push-card .push-text span { color: var(--muted); font-size: .95em; }
