@@ -24,8 +24,8 @@ def conn():
 
 
 def add_attempt(c, sid, day):
-    c.execute("INSERT INTO attempts (student_id, lesson_id, started_at) VALUES (?,?,?)",
-              (sid, 1, day + "T10:00:00"))
+    c.execute("INSERT INTO attempts (student_id, lesson_id, started_at, finished_at) VALUES (?,?,?,?)",
+              (sid, 1, day + "T10:00:00", day + "T10:10:00"))     # пройденный тест — день занятий
     c.commit()
 
 
@@ -111,3 +111,41 @@ def test_sw_caches_study_pages_offline(anon):
     assert "/lesson" in body and "games" in body and "stories" in body
     pj = anon.get("/static/pwa.js").get_data(as_text=True)
     assert "offline-bar" in pj and "clear-pages" in pj
+
+
+def test_one_missed_day_does_not_break_streak(make_student):
+    """«Запасной день»: один пропуск серию не рвёт, но не чаще раза в 7 дней; пропущенный день не считается."""
+    make_student(); sid = sid_of(); c = conn()
+    for n in (-4, -3, -1, 0):                                     # пропущен позавчера
+        add_attempt(c, sid, D(n))
+    assert garden.compute_streak_from_history(c, sid)[0] == 4
+
+
+def test_missed_yesterday_keeps_streak_until_today(make_student):
+    make_student(); sid = sid_of(); c = conn()
+    for n in (-4, -3, -2):                                        # вчера не занималась — серия ещё жива
+        add_attempt(c, sid, D(n))
+    assert garden.compute_streak_from_history(c, sid)[0] == 3
+
+
+def test_two_missed_days_break_streak(make_student):
+    make_student(); sid = sid_of(); c = conn()
+    for n in (-5, -4, -1):
+        add_attempt(c, sid, D(n))
+    assert garden.compute_streak_from_history(c, sid)[0] == 1
+
+
+def test_freeze_not_more_often_than_weekly(make_student):
+    make_student(); sid = sid_of(); c = conn()
+    for n in (-6, -4, -2, -1, 0):                                 # два одиночных пропуска за неделю
+        add_attempt(c, sid, D(n))
+    assert garden.compute_streak_from_history(c, sid)[0] == 4    # второй пропуск рвёт: -1, 0, -2 и -4
+
+
+def test_game_or_review_day_counts_but_opening_lesson_does_not(make_student):
+    make_student(); sid = sid_of(); c = conn()
+    c.execute("INSERT INTO activity (student_id, day, kind) VALUES (?, ?, 'game')", (sid, D(-1)))
+    c.execute("INSERT INTO daily_goal (student_id, day, lessons, words, done) VALUES (?, ?, 0, 5, 0)", (sid, D(0)))
+    c.execute("INSERT INTO attempts (student_id, lesson_id, started_at) VALUES (?, 1, ?)", (sid, D(-2) + "T10:00:00"))
+    c.commit()
+    assert garden.compute_streak_from_history(c, sid)[0] == 2

@@ -69,7 +69,8 @@ def test_remove_decoration_refunds_half(parent, make_student):
     assert coins(sid) == 14                                          # вернулась половина
 
 
-def test_broken_streak_removes_everything(parent, make_student):
+def test_broken_streak_garden_sleeps_but_keeps_decorations(parent, make_student):
+    """Пропуск — не наказание: сад «засыпает», но купленное остаётся."""
     c = make_student()
     sid = sid_of()
     set_garden(parent, sid, streak_days=12, coins=100)
@@ -77,9 +78,8 @@ def test_broken_streak_removes_everything(parent, make_student):
     assert db_scalar("SELECT COUNT(*) FROM decorations WHERE student_id=?", (sid,)) == 1
     set_garden(parent, sid, streak_days=0)                           # «пропущенный день»
     body = page(c)
-    assert "is-broken" in body and 'день серии 0"' in body
-    assert db_scalar("SELECT COUNT(*) FROM decorations WHERE student_id=?", (sid,)) == 0
-    assert "worn-item" not in body
+    assert "is-broken" in body and 'день серии 0"' in body and "Сад уснул" in body
+    assert db_scalar("SELECT COUNT(*) FROM decorations WHERE student_id=?", (sid,)) == 1
     assert coins(sid) == 92                                          # монеты остаются
     assert body.count("Сначала позанимайся") == len(garden.DECORATIONS)
 

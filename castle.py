@@ -50,7 +50,7 @@ ROOMS = {
 FLOORS = [["roof"], ["music", "gym"], ["workshop", "classroom"], ["library", "living"], ["bedroom", "kitchen"]]
 RESIDENT_RU = {"Benny": "медвежонок Benny", "Olly": "совёнок Olly", "Mia": "кошечка Mia", "Felix": "лисёнок Felix",
                "Max": "щенок Max", "Bella": "зайка Bella"}
-ROOF_STREAK = 7
+ROOF_DAYS = 10     # крыша — за 10 дней занятий всего (не подряд: ребёнок может заниматься через день)
 NOT_THINGS = {"under", "this", "that", "these", "those", "sing", "dance", "throw", "catch", "loud", "quiet", "song", "concert",
               "teacher", "classroom", "maths", "english", "art", "music", "pe"}
 
@@ -149,7 +149,9 @@ def lock_reason(db, student_id, key, stats, garden_row):
     if key == "library":
         return None if stats.get("stories_done", 0) >= 1 else "Прочитай первую историю"
     if key == "roof":
-        return None if (garden_row["best_streak"] if garden_row else 0) >= ROOF_STREAK else f"Занимайся {ROOF_STREAK} дней подряд"
+        from garden import study_days
+        done = len(study_days(db, student_id))
+        return None if done >= ROOF_DAYS else f"Позанимайся {ROOF_DAYS} дней (уже {done})"
     if r["lesson"] and r["lesson"] not in stats["completed_ids"]:
         from curriculum import LESSONS_BY_ID
         title = LESSONS_BY_ID[r["lesson"]]["title"]

@@ -285,3 +285,24 @@ def test_every_level_adds_things():
         assert n1 == 6 and n2 - n1 >= 2 and n3 - n2 >= 2, key
         arts = [castle.scene(key, lv)[0] for lv in (1, 2, 3)]
         assert len(set(arts)) == 3, key
+
+
+def test_roof_opens_after_ten_study_days_not_in_a_row(make_student):
+    """Крыша — за 10 дней занятий всего: Маша занимается через день, 7 подряд ей недостижимы."""
+    import sqlite3
+    import castle
+    import database
+    from datetime import date, timedelta
+    make_student()
+    conn = sqlite3.connect(database.DB_PATH); conn.row_factory = sqlite3.Row
+    sid = conn.execute("SELECT id FROM students").fetchone()[0]
+    stats = {"completed_ids": set(), "stories_done": 0}
+    for k in range(0, 18, 2):                                     # 9 дней через день
+        conn.execute("INSERT INTO activity (student_id, day, kind) VALUES (?, ?, 'game')",
+                     (sid, (date.today() - timedelta(days=k)).isoformat()))
+    conn.commit()
+    assert "уже 9" in castle.lock_reason(conn, sid, "roof", stats, None)
+    conn.execute("INSERT INTO activity (student_id, day, kind) VALUES (?, ?, 'story')",
+                 ((sid, (date.today() - timedelta(days=30)).isoformat())))
+    conn.commit()
+    assert castle.lock_reason(conn, sid, "roof", stats, None) is None

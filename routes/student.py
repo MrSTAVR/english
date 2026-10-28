@@ -18,7 +18,7 @@ import castle
 import weekly
 import seasons
 from seasons import active_season, advent_open, content
-from garden import award_coins, get_garden, on_vacation, refresh_garden, touch_streak, tree_count_for, tree_stage
+from garden import award_coins, get_garden, on_vacation, refresh_garden, tree_count_for, tree_stage
 import friends
 from friends import post as feed_post
 from grading import grade_question, near_miss, near_dict
@@ -262,7 +262,7 @@ def lesson_page(lesson_id):
     if lesson_id not in unlocked_lesson_ids(stats):
         flash("Сначала пройди предыдущий урок! 😉", "error")
         return redirect(url_for("student.student_home"))
-    touch_streak(db, student["id"])   # занялись сегодня — серия дня продлевается
+    # серию дня продлевает не открытие урока, а занятие (тест, игра, история…) — см. garden.study_days
     # Создаём новую попытку (начало занятия)
     started = datetime.now()
     cur = db.execute(
@@ -433,7 +433,7 @@ def submit_test(lesson_id):
 
     if passed:
         activity.log(db, student["id"], "lesson")
-    coins_earned = award_coins(db, student["id"], min(percent, 99) if fixed else percent, passed)   # «идеально» — только с первого раза
+    coins_earned, coins_why = award_coins(db, student["id"], percent, passed, lesson_id, attempt_id, fixed=bool(fixed))
     garden = get_garden(db, student["id"])
 
     mascot = build_mascot_ctx()
@@ -445,7 +445,7 @@ def submit_test(lesson_id):
     mascot["newAchievements"] = [public(a) for a in new_achievements]
     return render_template("result.html", mascot=mascot,
                            lesson=lesson, percent=percent, passed=passed, need=need,
-                           correct=correct, total=total, missing=max(0, -(-need * total // 100) - correct), attempt_id=attempt_id, fixed=bool(fixed),
+                           correct=correct, total=total, missing=max(0, -(-need * total // 100) - correct), attempt_id=attempt_id, fixed=bool(fixed), coins_why=coins_why,
                            seconds=seconds, results=results, to_review=to_review,
                            coins_earned=coins_earned, bricks_earned=bricks_earned,
                            coins_total=garden["coins"],
