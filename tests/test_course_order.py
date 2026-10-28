@@ -89,17 +89,17 @@ def test_grammar_comes_after_its_vocabulary():
     assert pos[27] < pos[28]                    # предлоги → дом
     assert pos[10] < pos[11] and pos[17] < pos[5]   # числа 1–10 → 11–20; животные → окончание -s
     assert pos[13] < pos[41] and pos[14] < pos[41]   # притяжательные — после семьи и to be
-    assert pos[19] < pos[42]                    # this/that с apple, egg — после еды
-    assert pos[17] < pos[44]                    # прилагательные описывают уже знакомых животных
+    assert pos[44] < pos[15]                    # прилагательные (happy, sad, big) — до отрицаний to be
     assert pos[21] < pos[40] and pos[5] < pos[43]   # have got — после частей тела; исключения — после правила -s
-    assert LESSONS[-1]["id"] == 32               # финал — последний
+    assert LESSONS[-1]["id"] == 60               # курс заканчивается «В гостях» (финал настоящего — 32 — раньше)
 
 
-def test_soft_pass_mark_for_dry_lessons(make_student):
+def test_soft_pass_mark_for_dry_lessons(parent, make_student):
     from curriculum import pass_mark
     assert pass_mark(LESSONS_BY_ID[1]) == 60 and pass_mark(LESSONS_BY_ID[33]) == 60
     assert pass_mark(LESSONS_BY_ID[14]) == 70 and pass_mark(LESSONS_BY_ID[10001]) == 70
     c = make_student()
+    parent.post("/parent/students/1/credit", data={"upto": "1", "action": "add"})   # урок 1 — второй в курсе
     html = c.get("/lesson/1").get_data(as_text=True)
     assert "минимум 60%" in html
 
@@ -126,16 +126,22 @@ def test_score_between_60_and_70_passes_only_on_soft_lessons(parent, make_studen
     assert "Нужно 70%" in html
 
 
-def test_new_topic_lessons_are_placed_sensibly():
-    from data.course import ORDER
+def test_order_keeps_dependencies():
+    """Порядок по ревизии методиста: урок не требует того, что объясняется позже."""
+    from data.course import ISLANDS, ORDER
     pos = {lid: i for i, lid in enumerate(ORDER)}
-    assert all(i in pos for i in range(45, 52))
-    assert ORDER[-1] == 32                                  # финал остаётся последним
-    assert pos[16] < pos[45]                                # вежливость — после простых команд
-    assert pos[19] < pos[51] and pos[45] < pos[51]          # кафе — после еды и вежливых слов
-    assert pos[24] < pos[48]                                # время — после «Моего дня»
-    assert pos[26] < pos[49] and pos[38] < pos[49]          # покупки — после одежды и чисел до 100
-    assert pos[28] < pos[50]                                # город — после дома
+    for chain in ([14, 15, 18, 31], [12, 26], [44, 26], [19, 20, 46], [20, 51], [22, 23, 47, 55], [25, 26, 31],
+                  [25, 30], [10, 11, 38, 49], [21, 40, 43], [50, 56], [44, 54], [52, 53, 59, 60], [25, 58],
+                  [24, 48], [28, 50]):
+        assert [pos[x] for x in chain] == sorted(pos[x] for x in chain), chain
+    assert ORDER[-1] == 60 and pos[32] < pos[52]            # «Большой финал» настоящего — до прошедшего времени
+    assert all(len(ids) <= 9 for _, ids in ISLANDS)
+
+
+def test_children_progress_stays_in_first_island():
+    """Сданное детьми (Маша: 1, 2, 3, 4, 9, 10, 33, 34) — на первом острове: иначе откроется всё перед ним."""
+    from data.course import ISLANDS
+    assert {1, 2, 3, 4, 9, 10, 33, 34, 12} == set(ISLANDS[0][1])
 
 
 def test_new_topic_lessons_have_dialogs():

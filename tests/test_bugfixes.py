@@ -26,7 +26,7 @@ def earned_keys():
 def test_extra_plus_main_counts_only_main(make_student):
     c = make_student()
     submit_lesson(c, EXTRA_LESSONS[0]["id"])
-    submit_lesson(c, 1)
+    submit_lesson(c, N(1))
     home = c.get("/student").get_data(as_text=True)
     assert f"1/{MAIN_COUNT}" in home
     assert "all_lessons" not in earned_keys()

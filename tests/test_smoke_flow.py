@@ -8,7 +8,7 @@ import pytest
 from achievements import ACHIEVEMENTS
 from curriculum import LESSONS, LESSONS_BY_ID, MAIN_COUNT
 from data.extra_lessons import EXTRA_LESSONS
-from tests.helpers import (build_form, db_all, db_scalar, open_lesson,
+from tests.helpers import (N, build_form, db_all, db_scalar, open_lesson,
                            submit_lesson)
 
 
@@ -40,19 +40,19 @@ def test_locked_lesson_redirects(make_student):
 
 def test_lesson_page_has_mascot_context(make_student):
     c = make_student()
-    body = c.get("/lesson/1").get_data(as_text=True)
+    body = c.get(f"/lesson/{N(1)}").get_data(as_text=True)
     assert '"page": "lesson"' in body and '"lessonTitle"' in body
 
 
 def test_failed_then_perfect_attempt(make_student):
     c = make_student()
-    lesson = LESSONS_BY_ID[1]
+    lesson = LESSONS_BY_ID[N(1)]
 
-    body = submit_lesson(c, 1, wrong=True)
+    body = submit_lesson(c, N(1), wrong=True)
     assert "fix=" in body and "Исправь ошибки" in body
     assert "Твой ответ" in body
 
-    body = submit_lesson(c, 1)
+    body = submit_lesson(c, N(1))
     assert "Идеально! 100%" in body
     assert '"page": "result"' in body and '"percent": 100' in body
 
@@ -74,8 +74,8 @@ def test_all_main_lessons_give_champion(make_student):
 
 def test_parent_sees_mistakes(parent, make_student):
     c = make_student()
-    submit_lesson(c, 1, wrong=True)
-    expected = len(LESSONS_BY_ID[1]["test"])
+    submit_lesson(c, N(1), wrong=True)
+    expected = len(LESSONS_BY_ID[N(1)]["test"])
 
     sid = db_scalar("SELECT id FROM students")
     body = parent.get(f"/parent/students/{sid}").get_data(as_text=True)

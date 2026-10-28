@@ -36,7 +36,7 @@ def test_progress_is_isolated(make_student):
     masha = make_student("masha", "Маша", "secret1", "🦄")
     petya = make_student("petya", "Петя", "secret2", "🐱")
 
-    assert "Идеально! 100%" in submit_lesson(masha, 1)
+    assert "Идеально! 100%" in submit_lesson(masha, N(1))
     assert f"1/{MAIN_COUNT}" in masha.get("/student").get_data(as_text=True)
 
     body = petya.get("/student").get_data(as_text=True)
@@ -96,7 +96,7 @@ def test_delete_requires_parent(make_student):
 
 def test_delete_removes_account_and_progress(parent, make_student, anon):
     masha = make_student()
-    submit_lesson(masha, 1)
+    submit_lesson(masha, N(1))
     sid = db_scalar("SELECT id FROM students WHERE username='masha'")
     r = parent.post(f"/parent/students/{sid}/delete", follow_redirects=True)
     assert "удалён" in r.get_data(as_text=True)

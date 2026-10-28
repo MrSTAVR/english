@@ -6,7 +6,7 @@ from curriculum import ALL_LESSONS, validate_lessons
 from grading import grade_question
 from practice import _variants, practice_extras, speak_items, listening_extras
 from stats import compute_stats
-from tests.helpers import db_scalar
+from tests.helpers import N, db_scalar
 
 
 def test_variants_clean():
@@ -100,7 +100,7 @@ def test_speak_page_and_lesson_blocks(make_student):
     c = make_student()
     r = c.get("/student/speak")
     assert r.status_code == 200 and "Говорим" in r.get_data(as_text=True)
-    html = c.get("/lesson/1").get_data(as_text=True)
+    html = c.get(f"/lesson/{N(1)}").get_data(as_text=True)
     assert 'id="speak-block"' in html and 'id="practice"' in html and "speak.js" in html
 
 
@@ -109,11 +109,12 @@ def test_speaking_can_be_disabled(make_student, monkeypatch):
     monkeypatch.setattr(config, "SPEAKING", False)
     assert c.get("/student/speak").status_code == 404
     assert c.post("/api/speak", json={"target": "cat", "score": 3}).status_code == 404
-    assert "speak.js" not in c.get("/lesson/1").get_data(as_text=True)
+    assert "speak.js" not in c.get(f"/lesson/{N(1)}").get_data(as_text=True)
 
 
-def test_russian_answer_placeholder(make_student):
+def test_russian_answer_placeholder(parent, make_student):
     c = make_student()
+    parent.post("/parent/students/1/credit", data={"upto": "1", "action": "add"})   # урок 1 (фонетика) — второй в курсе
     html = c.get("/lesson/1").get_data(as_text=True)
     assert "Напиши перевод по-русски" in html
     # у русскоязычных вопросов нет кнопки «Послушать» для вписанного ответа

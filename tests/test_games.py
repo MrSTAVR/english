@@ -70,7 +70,7 @@ def test_game_api_needs_student(anon):
 def test_dialogs_page_and_progress(parent, make_student):
     c = make_student()
     assert "откроются после уроков" in c.get("/student/dialogs").get_data(as_text=True)
-    submit_lesson(c, 1)
+    submit_lesson(c, N(1))
     submit_lesson(c, 9)                                      # приветствия пройдены
     html = c.get("/student/dialogs").get_data(as_text=True)
     assert "greet-meet" in html and 'id="dialogs"' in html
