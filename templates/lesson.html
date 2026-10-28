@@ -275,7 +275,7 @@
           {% else %}
           <input type="text" class="typein" name="q{{ outer_loop.index0 }}" placeholder="{{ 'Напиши то, что услышал(а), по-английски' if q.audio else 'Напиши ответ по-английски' }}" autocomplete="off" lang="en">
           <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Послушать</button>
-          <div class="lt" data-lt='{{ q|tiles|tojson }}'></div>{# в тесте плитки — только по кнопке: тест проверяет, помнит ли сама #}
+          <div class="lt" data-lt='{{ q|tiles|tojson }}'{% if tiles_open %} data-open="1"{% endif %}></div>{# в первых уроках плитки видны сразу, дальше — по кнопке; с плитками слово уходит в повторение #}
           {% endif %}
         {% endif %}
       </div>
@@ -290,7 +290,7 @@
 
 {% block scripts %}
 <script type="application/json" id="near-dict">{{ near_words|tojson }}</script>
-<script src="{{ url_for('static', filename='tiles.js') }}?v=7"></script>
+<script src="{{ url_for('static', filename='tiles.js') }}?v=8"></script>
 <script src="{{ url_for('static', filename='practice.js') }}?v=7"></script>
 <script src="{{ url_for('static', filename='lesson.js') }}?v=12"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=4"></script>{% endif %}

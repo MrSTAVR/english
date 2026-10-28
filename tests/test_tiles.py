@@ -51,7 +51,8 @@ def test_lesson_page_has_tiles(parent, make_student):
     html = c.get(f"/lesson/{early['id']}").get_data(as_text=True)
     train, test = html.split('id="test-form"', 1)
     assert 'class="lt" data-lt=' in train and 'data-open="1"' in train and "tiles.js" in html   # тренировка: плитки сразу
-    assert 'data-open="1"' not in test.split("</form>")[0]                                      # тест: только по кнопке
+    form = test.split("</form>")[0]
+    assert form.count('class="lt"') == form.count('data-open="1"')                             # тест первых уроков: тоже сразу
     html = c.get(f"/lesson/{late['id']}").get_data(as_text=True)
     assert 'class="lt" data-lt=' in html and 'data-open="1"' not in html
 

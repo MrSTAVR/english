@@ -112,6 +112,7 @@
         if (data.w) v = v.replace(/\s+$/, '') + (v.trim() ? ' ' : '') + ch;
         else v += ch;
         set(v);
+        helped();
       });
       box.appendChild(b);
       return b;
