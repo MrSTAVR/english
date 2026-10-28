@@ -290,8 +290,8 @@
 
 {% block scripts %}
 <script type="application/json" id="near-dict">{{ near_words|tojson }}</script>
-<script src="{{ url_for('static', filename='tiles.js') }}?v=6"></script>
-<script src="{{ url_for('static', filename='practice.js') }}?v=6"></script>
+<script src="{{ url_for('static', filename='tiles.js') }}?v=7"></script>
+<script src="{{ url_for('static', filename='practice.js') }}?v=7"></script>
 <script src="{{ url_for('static', filename='lesson.js') }}?v=12"></script>
 {% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=4"></script>{% endif %}
 {% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=6"></script>{% endif %}
@@ -329,7 +329,8 @@ function checkExercise(btn) {
     given = norm(box.querySelector('.typein').value);
   }
   const res = box.querySelector('.ex-result');
-  const exact = (type === 'choice') ? (given === 'OK') : (given === answer);
+  const exact = (type === 'choice') ? (given === 'OK')
+    : (window.LetterTiles ? window.LetterTiles.same(given, answer) : given === answer);
   const almost = !exact && type !== 'choice' && window.LetterTiles && window.LetterTiles.near(given, answer);
   const ok = exact || almost;
   res.textContent = exact ? ' Правильно!' : almost ? ' Засчитано! Только пишется так: ' + box.dataset.answer : ' Пока нет, попробуй ещё!';

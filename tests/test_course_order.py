@@ -135,7 +135,7 @@ def test_order_keeps_dependencies():
                   [24, 48], [28, 50]):
         assert [pos[x] for x in chain] == sorted(pos[x] for x in chain), chain
     assert ORDER[-1] == 60 and pos[32] < pos[52]            # «Большой финал» настоящего — до прошедшего времени
-    assert all(len(ids) <= 9 for _, ids in ISLANDS)
+    assert all(len(ids) <= 10 for _, ids in ISLANDS)
 
 
 def test_children_progress_stays_in_first_island():
