@@ -13,7 +13,8 @@ MAJOR = 1
 def _git(*args):
     # safe.directory: на сервере код принадлежит root, а сайт работает от другого пользователя
     out = subprocess.run(["git", "-c", f"safe.directory={BASE_DIR}", "-C", BASE_DIR, *args],
-                         capture_output=True, text=True, timeout=5)
+                         capture_output=True, text=True, timeout=5,
+                         encoding="utf-8", errors="replace")   # git отдаёт UTF-8; в Windows по умолчанию cp1251
     if out.returncode:
         raise OSError(out.stderr.strip())
     return out.stdout.strip()
