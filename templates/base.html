@@ -21,7 +21,7 @@ window.picHtml=function(p){p=String(p||'');if(/^@[a-z]+$/.test(p))return '<img c
 <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=32">
 <link rel="stylesheet" href="{{ url_for('static', filename='achievements.css') }}?v=3">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=3">
-<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}?v=32">
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}?v=33">
 {% block head %}{% endblock %}
 </head>
 <body{% if speech_area %} class="area-speech{{ ' has-tabbar sp-logoped' if session.get('role') == 'logoped' }}"{% elif session.get('role') == 'student' and request.endpoint not in ('student.lesson_page', 'student.submit_test') %} class="has-tabbar"{% elif request.endpoint == 'student.lesson_page' %} class="lesson-focus"{% endif %}>
@@ -88,6 +88,7 @@ window.picHtml=function(p){p=String(p||'');if(/^@[a-z]+$/.test(p))return '<img c
   <symbol id="o-castle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l3 2V6l3 2V4h4v4l3-2v5l3-2v12z"/><path d="M10 21v-5h4v5"/></symbol>
   <symbol id="o-gift" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="5" rx="1"/><path d="M5 13v8h14v-8M12 8v13M12 8c-2-4-6-3-5 0M12 8c2-4 6-3 5 0"/></symbol>
   <symbol id="o-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s-6.5 7.2-6.5 11.5a6.5 6.5 0 0 0 13 0C18.5 10.2 12 3 12 3z"/><path d="M9 15a3 3 0 0 0 3 3"/></symbol>
+  <symbol id="o-grain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V8"/><path d="M12 12c-3 0-4.5-2-4.5-4.5C10 7.5 12 9 12 12zM12 12c3 0 4.5-2 4.5-4.5C14 7.5 12 9 12 12zM12 17c-3 0-4.5-2-4.5-4.5 2.5 0 4.5 1.5 4.5 4.5zM12 17c3 0 4.5-2 4.5-4.5-2.5 0-4.5 1.5-4.5 4.5zM12 8c-1.2-1.2-1.2-3 0-5 1.2 2 1.2 3.8 0 5z"/></symbol>
   <symbol id="o-barn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-6 9 6v11H3z"/><path d="M8 21v-7h8v7M8 14l8 7M16 14l-8 7"/></symbol>
   <symbol id="o-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
 </svg>

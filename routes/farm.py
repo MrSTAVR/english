@@ -62,6 +62,9 @@ def api_action(action):
         ok, msg = farm.plant(db, sid, _int(data, "slot"), str(data.get("crop", "")), stats["lessons_completed"])
     elif action == "water":
         ok, msg = farm.water(db, sid, _int(data, "slot"))
+    elif action == "harvest" and data.get("slot") == "all":
+        got = farm.harvest_all(db, sid)
+        ok, msg, extra = bool(got), ("" if got else "Ещё не поспело."), {"got": sum(got.values())}
     elif action == "harvest":
         ok, n = farm.harvest(db, sid, _int(data, "slot"))
         msg, extra = ("" if ok else "Ещё не поспело."), {"got": n}

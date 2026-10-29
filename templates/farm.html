@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Ферма бабушки — English Fun{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='farm.css') }}?v=3">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='farm.css') }}?v=4">{% endblock %}
 {% block content %}
 <section class="fm" id="fm" aria-label="Ферма бабушки Тома">
   <canvas id="fm-canvas"></canvas>
@@ -15,9 +15,10 @@
   <div class="fm-moved" id="fm-moved" role="status">
     <p><b>Чик-чик переехал на ферму бабушки Тома!</b>{% if moved %} За замок вернулось <b>+{{ moved }}</b> монеток.{% endif %}
       Сажай, поливай и выполняй заказы — капли дают за уроки.</p>
-    <button type="button" class="btn btn-small btn-primary" onclick="this.parentNode.hidden = true">Ура!</button>
+    <button type="button" class="btn btn-small btn-primary" id="fm-moved-ok">Ура!</button>
   </div>
   {% endif %}
+  <button type="button" class="fm-home" id="fm-home" hidden><svg class="ico" aria-hidden="true"><use href="#o-target"/></svg>К грядкам</button>
   <div class="fm-bar">
     <button type="button" class="fm-btn" data-open="orders"><svg class="ico" aria-hidden="true"><use href="#o-list"/></svg><span>Заказы</span><b class="fm-badge" id="fm-orders-n" hidden></b></button>
     <button type="button" class="fm-btn fm-main" id="fm-main"></button>
@@ -26,7 +27,7 @@
   <div class="fm-sheet" id="fm-sheet" hidden>
     <div class="fm-sheet-bg" data-close></div>
     <div class="fm-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="fm-sheet-title">
-      <div class="fm-sheet-head"><h2 id="fm-sheet-title"></h2>
+      <div class="fm-sheet-head"><h2 id="fm-sheet-title" tabindex="-1"></h2>
         <button type="button" class="fm-x" data-close aria-label="Закрыть"><svg class="ico" aria-hidden="true"><use href="#o-close"/></svg></button></div>
       <div class="fm-sheet-body" id="fm-sheet-body"></div>
     </div>
@@ -37,5 +38,5 @@
 {% endblock %}
 {% block scripts %}
 <script type="importmap">{"imports": {"three": "{{ url_for('static', filename='vendor/three/three.module.min.js') }}", "three/addons/": "{{ url_for('static', filename='vendor/three/addons/') }}"}}</script>
-<script type="module" src="{{ url_for('static', filename='farm.js') }}?v=7"></script>
+<script type="module" src="{{ url_for('static', filename='farm.js') }}?v=8"></script>
 {% endblock %}

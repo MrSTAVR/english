@@ -29,6 +29,8 @@
   --shadow: 0 4px 0 var(--shade);
   --shadow-lg: 0 6px 0 var(--line-deep), 0 14px 26px rgba(30, 42, 69, .08);
   --ok-bg: #DDF5E7; --ok-ink: #146C3E;
+  --on-primary: #FFFFFF;        /* текст на синем акценте */
+  --scrim: rgba(30, 42, 69, .35); /* затемнение под шторкой */
   --oops-bg: #FFE9D6; --oops-ink: #9A3B00;
 }
 
@@ -104,6 +106,7 @@ html[data-theme="dark"] {
   --surface: #221E3D; --border: #322C57; --page: #16132B;
   --shadow: 0 4px 0 #0E0B1F; --shadow-lg: 0 6px 0 #0E0B1F, 0 14px 26px rgba(0, 0, 0, .35);
   --ok-bg: #183D2A; --ok-ink: #8FE3B0; --oops-bg: #45260F; --oops-ink: #FFB27A;
+  --scrim: rgba(0, 0, 0, .5);
 }
 html[data-theme="dark"] body { background: var(--page); color: var(--ink); }
 html[data-theme="dark"] .topbar { background: #1C1835; border-color: var(--line); box-shadow: 0 3px 0 #0E0B1F; }

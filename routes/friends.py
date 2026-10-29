@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Друзья: дуэли, рекорды, лента «Что нового», в гостях у друга (сад и замок)."""
+"""Друзья: дуэли, рекорды, лента «Что нового», в гостях у друга (сад)."""
 
-import castle
 import friends
 from database import get_db
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
-from garden import garden_view, get_garden, refresh_garden
+from garden import garden_view, refresh_garden
 from mascot import build_mascot_ctx
-from stats import compute_stats
-from wardrobe import outfit
 
-from routes.castle import art_helpers
 from routes.common import get_student_or_none, require_role
 
 bp = Blueprint("friends", __name__)
@@ -93,14 +89,9 @@ def visit(fid, what):
         return redirect(url_for("friends.visit", fid=fid, what="garden"))
     likes = friends.likes_of(db, fid, what)
     ctx = dict(friend=f, what=what, likes=likes, liked=student["display_name"] in likes)
-    if what == "garden":
-        refresh_garden(db, fid)
-        g = garden_view(db, fid)
-        ctx.update(scene=g["scene"], streak=g["garden"]["streak_days"], trees=g["tree_count"])
-    else:
-        stats = compute_stats(db, fid)
-        castle.ensure(db, fid, stats["completed_ids"])
-        ctx.update(view=castle.view(db, fid, stats, get_garden(db, fid)), outfit=outfit(db, fid), visit_fid=fid, **art_helpers())
+    refresh_garden(db, fid)
+    g = garden_view(db, fid)
+    ctx.update(scene=g["scene"], streak=g["garden"]["streak_days"], trees=g["tree_count"])
     mascot = build_mascot_ctx()
     mascot["page"] = "friends"
     return render_template("friend_visit.html", mascot=mascot, **ctx)

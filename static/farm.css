@@ -1,14 +1,15 @@
 /* Ферма бабушки Тома (templates/farm.html, static/farm.js): 3D-сцена во весь блок, поверх — интерфейс */
-.fm { position: relative; height: calc(100dvh - 170px); min-height: 440px; border-radius: var(--radius);
-  overflow: hidden; border: 2px solid var(--line); box-shadow: var(--shadow); background: #9bd967; touch-action: manipulation; }
+.fm { --farm-grass: #9bd967; --farm-grass-ink: #2f5a17;   /* палитра сцены (трава), не интерфейса */
+  position: relative; height: calc(100dvh - 170px); min-height: 440px; border-radius: var(--radius);
+  overflow: hidden; border: 2px solid var(--line); box-shadow: var(--shadow); background: var(--farm-grass); touch-action: manipulation; }
 .fm [hidden] { display: none !important; }
 .fm canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
 .fm .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.fm-loading { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font-weight: 800; color: #2f5a17; }
+.fm-loading { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font-weight: 800; color: var(--farm-grass-ink); }
 
 .fm-top { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; gap: 8px; flex-wrap: wrap; pointer-events: none; }
 .fm-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; pointer-events: auto;
-  background: var(--surface); color: var(--ink); border: 2px solid var(--line); box-shadow: var(--shadow); font-weight: 800; font: inherit; font-weight: 800; }
+  background: var(--surface); color: var(--ink); border: 2px solid var(--line); box-shadow: var(--shadow); font: inherit; font-weight: 800; }
 .fm-chip .ico { width: 20px; height: 20px; }
 .fm-drop-ico { color: var(--primary); }
 .fm-chip-btn { margin-left: auto; cursor: pointer; }
@@ -22,24 +23,28 @@
 .fm-main { background: var(--yellow); border-color: var(--yellow-deep); box-shadow: 0 4px 0 var(--yellow-deep); color: var(--ink); line-height: 1.15; }
 .fm-main[disabled] { opacity: .75; cursor: default; }
 .fm-badge { position: absolute; top: -8px; right: -6px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px;
-  background: var(--primary); color: #FFFFFF; font-size: .8rem; display: grid; place-items: center; }
+  background: var(--primary); color: var(--on-primary); font-size: .8rem; display: grid; place-items: center; }
 
 .fm-labels { position: absolute; inset: 0; pointer-events: none; }
-.fm-tag { position: absolute; transform: translate(-50%, -100%); display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px;
-  border-radius: 999px; background: var(--surface); color: var(--ink); border: 2px solid var(--line); box-shadow: 0 2px 0 var(--shade);
-  font-size: .78rem; font-weight: 800; white-space: nowrap; pointer-events: auto; cursor: pointer; }
-.fm-tag .ico { width: 15px; height: 15px; }
-.fm-tag.water { color: var(--primary); }
+.fm-tag { position: absolute; transform: translate(-50%, -50%); width: 40px; height: 40px; display: grid; place-items: center; padding: 0;
+  border-radius: 50%; background: var(--surface); color: var(--ink); border: 2px solid var(--line); box-shadow: 0 3px 0 var(--shade);
+  pointer-events: auto; cursor: pointer; }
+.fm-tag::after { content: ""; position: absolute; inset: -4px; }       /* зона нажатия 48px */
+.fm-tag .ico { width: 22px; height: 22px; }
+.fm-tag-n { position: absolute; top: -8px; right: -12px; min-width: 22px; height: 20px; padding: 0 5px; border-radius: 999px;
+  background: var(--yellow); color: var(--ink); font-size: .72rem; display: grid; place-items: center; }
+.fm-tag.water, .fm-tag.plant { color: var(--primary); }
+.fm-tag.plant { color: var(--green); }
 .fm-tag.ready { background: var(--ok-bg); color: var(--ok-ink); border-color: var(--ok-ink); }
 .fm-tag.lock { color: var(--muted); }
 
 .fm-sheet { position: absolute; inset: 0; z-index: 5; display: flex; align-items: flex-end; }
-.fm-sheet-bg { position: absolute; inset: 0; background: rgba(30, 42, 69, .35); }
+.fm-sheet-bg { position: absolute; inset: 0; background: var(--scrim); }
 .fm-sheet-panel { position: relative; width: 100%; max-height: 82%; overflow: auto; background: var(--page); color: var(--ink);
-  border-radius: 22px 22px 0 0; border-top: 2px solid var(--line); padding: 12px 16px 18px; }
+  border-radius: 22px 22px 0 0; border-top: 2px solid var(--line); padding: 12px 16px 64px; }   /* снизу — место под Чик-чика */
 .fm-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .fm-sheet-head h2 { margin: 0; font-size: 1.2rem; }
-.fm-x { border: 0; background: var(--tint); color: var(--ink); width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; cursor: pointer; }
+.fm-x { border: 0; background: var(--tint); color: var(--ink); width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; cursor: pointer; }
 .fm-x .ico { width: 20px; height: 20px; }
 .fm-note { margin: 0 0 10px; color: var(--muted); font-size: .92rem; }
 .fm-list { display: grid; gap: 8px; }
@@ -52,7 +57,7 @@ button.fm-row:disabled { cursor: default; opacity: .6; }
 .fm-row-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .fm-row-text b { font-size: 1.05rem; }
 .fm-row-text small { color: var(--muted); }
-.fm-say { flex: none; border: 0; background: var(--sky); color: var(--primary); width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; cursor: pointer; }
+.fm-say { flex: none; border: 0; background: var(--sky); color: var(--primary); width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; cursor: pointer; }
 .fm-say .ico { width: 20px; height: 20px; }
 .fm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .fm-actions .btn { flex: 1 1 auto; }
@@ -72,7 +77,7 @@ button.fm-row:disabled { cursor: default; opacity: .6; }
 .fm-pick-item.on { border-color: var(--primary); background: var(--sky); }
 .fm-pick-item .fm-pic { grid-row: span 2; }
 .fm-step { display: flex; align-items: center; gap: 6px; }
-.fm-step button { width: 34px; height: 34px; border-radius: 10px; border: 2px solid var(--line); background: var(--tint); color: var(--ink); font: inherit; font-weight: 900; cursor: pointer; }
+.fm-step button { width: 44px; height: 44px; border-radius: 10px; border: 2px solid var(--line); background: var(--tint); color: var(--ink); font: inherit; font-weight: 900; cursor: pointer; }
 .fm-msg { margin: 8px 0 0; padding: 8px 12px; border-radius: 12px; font-weight: 700; }
 .fm-msg.bad { background: var(--oops-bg); color: var(--oops-ink); }
 .fm-msg.good { background: var(--ok-bg); color: var(--ok-ink); }
@@ -83,14 +88,21 @@ button.fm-row:disabled { cursor: default; opacity: .6; }
 .fm-moved { position: absolute; z-index: 4; left: 10px; right: 10px; top: 62px; display: flex; align-items: center; gap: 10px;
   padding: 10px 14px; border-radius: 18px; background: var(--surface); color: var(--ink); border: 2px solid var(--line); box-shadow: var(--shadow); }
 .fm-moved p { margin: 0; flex: 1; min-width: 0; font-size: .92rem; }
-.fm-toast { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); z-index: 6; padding: 8px 16px; border-radius: 999px;
+.fm-toast { position: absolute; left: 50%; bottom: 76px; transform: translateX(-50%); z-index: 6; padding: 8px 16px; border-radius: 999px;
   background: var(--surface); color: var(--ink); border: 2px solid var(--line); box-shadow: var(--shadow); font-weight: 800; white-space: nowrap; }
+
+.fm-home { position: absolute; right: 10px; top: 62px; z-index: 3; display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
+  padding: 6px 14px; border-radius: 999px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); box-shadow: var(--shadow);
+  font: inherit; font-weight: 800; cursor: pointer; }
+.fm-home .ico { width: 20px; height: 20px; }
+html[data-theme="dark"] .fm canvas { filter: brightness(.72) saturate(.85); }   /* вечер на ферме */
+html[data-theme="dark"] .fm { --farm-grass: #4d6e33; --farm-grass-ink: #e6f2d5; }
 
 @media (min-width: 900px) {
   .fm { height: calc(100dvh - 140px); }
   .fm-bar { left: 50%; right: auto; width: 560px; transform: translateX(-50%); }
   .fm-sheet { align-items: stretch; justify-content: flex-end; }
-  .fm-sheet-panel { width: 420px; max-height: none; border-radius: 22px 0 0 22px; border-top: 0; border-left: 2px solid var(--line); }
+  .fm-sheet-panel { width: 420px; max-height: none; border-radius: 22px 0 0 22px; border-top: 0; border-left: 2px solid var(--line); padding-bottom: 18px; }
 }
 @media (max-width: 380px) {
   .fm-btn { font-size: .85rem; gap: 4px; }

@@ -20,7 +20,7 @@
 
     <div class="tree-info">
       <h2>{{ stage.name|noemoji }}</h2>
-      <p class="stage-msg">{{ stage.msg }}</p>
+      <p class="stage-msg">{% if fresh %}{{ stage.msg }}{% else %}Серия сейчас: {{ garden.streak_days }} дн. Позанимайся — и в саду снова появится новое!{% endif %}</p>
       <div class="streak-bar-wrap">
         <div class="streak-bar" style="width: {{ (scene_day / streak_cap * 100) | round(1) }}%;"></div>
         <span class="streak-bar-label">{{ scene_day }} / {{ streak_cap }} дн.</span>
