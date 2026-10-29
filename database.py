@@ -382,6 +382,48 @@ CREATE TABLE IF NOT EXISTS login_failures (
     ts    REAL NOT NULL                        -- unix-время неудачной попытки
 );
 CREATE INDEX IF NOT EXISTS idx_login_failures ON login_failures (scope, ident, ts);
+CREATE TABLE IF NOT EXISTS farm_drops (               -- капли фермы (farm.py): начисления (+) за учёбу и траты (−)
+    student_id INTEGER NOT NULL,
+    day        TEXT NOT NULL,
+    reason     TEXT NOT NULL,                          -- lesson / perfect / goal / effort / fix / review / game / water / feed
+    ref        TEXT NOT NULL,
+    amount     INTEGER NOT NULL,
+    at         TEXT NOT NULL,
+    UNIQUE (student_id, reason, ref)
+);
+CREATE TABLE IF NOT EXISTS farm_plots (               -- грядки: посажено, ready_at — когда поспеет (NULL — не полито)
+    student_id INTEGER NOT NULL,
+    slot       INTEGER NOT NULL,
+    crop       TEXT,
+    planted_at TEXT,
+    ready_at   TEXT,
+    PRIMARY KEY (student_id, slot)
+);
+CREATE TABLE IF NOT EXISTS farm_barn (                -- амбар: собранный урожай и продукты
+    student_id INTEGER NOT NULL,
+    item       TEXT NOT NULL,
+    qty        INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (student_id, item)
+);
+CREATE TABLE IF NOT EXISTS farm_animals (             -- животные: ready_at — когда будет продукт (NULL — голодное)
+    student_id INTEGER NOT NULL,
+    kind       TEXT NOT NULL,
+    fed_at     TEXT,
+    ready_at   TEXT,
+    PRIMARY KEY (student_id, kind)
+);
+CREATE TABLE IF NOT EXISTS farm_orders (              -- заказы героев: k — номер заказа за день, done_at — выполнен
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    day        TEXT NOT NULL,
+    k          INTEGER NOT NULL,
+    giver      TEXT NOT NULL,
+    items_json TEXT NOT NULL,
+    coins      INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    done_at    TEXT,
+    UNIQUE (student_id, day, k)
+);
 """
 
 

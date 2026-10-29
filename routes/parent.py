@@ -9,6 +9,7 @@ import time
 
 import backup_db
 import castle
+import farm
 import config
 import visits
 import database
@@ -100,6 +101,7 @@ def delete_student(sid):
         db.execute(f"DELETE FROM {table} WHERE student_id=?", (sid,))
     friends.forget_student(db, sid)
     castle.forget_student(db, sid)
+    farm.forget_student(db, sid)
     visits.forget_student(db, sid)
     db.execute("DELETE FROM students WHERE id=?", (sid,))
     db.commit()

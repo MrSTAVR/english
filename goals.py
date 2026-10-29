@@ -69,6 +69,8 @@ def add(db, student_id, stats, pool_size, lessons=0, words=0, today=None):
         coins = GOAL_COINS
         from castle import on_goal_done
         on_goal_done(db, student_id, today)
+        import farm
+        farm.on_goal_done(db, student_id, today)
     db.commit()
     row["done"] = row["done"] or bool(done)
     return row, coins, just

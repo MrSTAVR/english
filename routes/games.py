@@ -5,6 +5,7 @@ import random
 from datetime import datetime
 
 import activity
+import farm
 import friends
 from achievements import public, update_achievements
 from curriculum import LESSONS_BY_ID, unlocked_lesson_ids
@@ -141,6 +142,7 @@ def api_game():
                (student["id"], game, stars))
     db.commit()
     activity.log(db, student["id"], "game")
+    farm.on_game(db, student["id"], stars)
     message = ""
     try:
         score = int(data.get("score"))
