@@ -222,3 +222,37 @@ def test_delete_student_clears_farm(make_student, parent, db):
     parent.post(f"/parent/students/{sid}/delete")
     for t in ("farm_drops", "farm_plots", "farm_barn", "farm_animals", "farm_orders"):
         assert db.execute(f"SELECT COUNT(*) FROM {t} WHERE student_id=?", (sid,)).fetchone()[0] == 0
+
+
+def test_farm_page_and_api(make_student, db, anon):
+    c = make_student(); sid = sid_of()
+    html = c.get("/student/farm").get_data(as_text=True)
+    assert 'id="fm-data"' in html and "vendor/three/three.module.min.js" in html and "farm.js" in html
+    assert anon.get("/api/farm").status_code == 403
+    st = c.get("/api/farm").get_json()
+    assert st["drops"] == 0 and len(st["plots"]) == farm.PLOTS and st["orders"] == []
+    assert any(x["key"] == "carrot" and x["open"] for x in st["crops"])
+    r = c.post("/api/farm/plant", json={"slot": 0, "crop": "carrot"}).get_json()
+    assert r["ok"] and r["state"]["plots"][0]["state"] == "planted"
+    r = c.post("/api/farm/water", json={"slot": 0}).get_json()
+    assert not r["ok"] and "капли" in r["msg"]                          # капель нет
+    farm.give(db, sid, "lesson", 1, 12)
+    r = c.post("/api/farm/water", json={"slot": 0}).get_json()
+    assert r["ok"] and r["state"]["plots"][0]["state"] == "growing" and r["state"]["drops"] == 12 - farm.WATER_COST
+    assert c.post("/api/farm/plant", json={"slot": "x", "crop": "carrot"}).status_code == 400
+    assert c.post("/api/farm/nope", json={}).status_code == 404
+    assert c.post("/api/farm/order", json={"id": 1, "items": "x"}).status_code == 400
+    r = c.post("/api/farm/order", json={"id": 999, "items": {}}).get_json()
+    assert not r["ok"] and r["why"] == "gone"
+
+
+def test_farm_static_files_exist():
+    import os
+    for f in ("farm.js", "farm.css", "vendor/three/three.module.min.js", "vendor/three/addons/loaders/GLTFLoader.js",
+              "vendor/three/addons/environments/RoomEnvironment.js", "vendor/three/addons/utils/SkeletonUtils.js",
+              "vendor/three/addons/utils/BufferGeometryUtils.js"):
+        assert os.path.exists(os.path.join("static", f)), f
+    src = open("static/farm.js", encoding="utf-8").read()
+    import re
+    for name in set(re.findall(r"(?:at|put)\('([a-z0-9]+)'", src)) | {"carrot", "tomato", "corn", "pumpkin"}:
+        assert os.path.exists(os.path.join("static", "farm", name + ".glb")), name

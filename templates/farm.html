@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Ферма бабушки — English Fun{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='farm.css') }}?v=1">{% endblock %}
+{% block content %}
+<section class="fm" id="fm" aria-label="Ферма бабушки Тома">
+  <canvas id="fm-canvas"></canvas>
+  <div class="fm-labels" id="fm-labels"></div>
+  <div class="fm-top">
+    <span class="fm-chip" title="Капли — за уроки и цель дня"><svg class="ico fm-drop-ico" aria-hidden="true"><use href="#o-drop"/></svg><b id="fm-drops">{{ data.drops }}</b><span class="sr-only"> капель</span></span>
+    <span class="fm-chip" title="Монетки"><svg class="ico" aria-hidden="true"><use href="#i-coin"/></svg><b id="fm-coins">{{ data.coins }}</b><span class="sr-only"> монеток</span></span>
+    <button type="button" class="fm-chip fm-chip-btn" data-open="seeds"><svg class="ico" aria-hidden="true"><use href="#o-sprout"/></svg>Семена</button>
+  </div>
+  <p class="fm-loading" id="fm-loading">Ферма загружается…</p>
+  <div class="fm-bar">
+    <button type="button" class="fm-btn" data-open="orders"><svg class="ico" aria-hidden="true"><use href="#o-list"/></svg><span>Заказы</span><b class="fm-badge" id="fm-orders-n" hidden></b></button>
+    <button type="button" class="fm-btn fm-main" id="fm-main"></button>
+    <button type="button" class="fm-btn" data-open="barn"><svg class="ico" aria-hidden="true"><use href="#o-barn"/></svg><span>Амбар</span></button>
+  </div>
+  <div class="fm-sheet" id="fm-sheet" hidden>
+    <div class="fm-sheet-bg" data-close></div>
+    <div class="fm-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="fm-sheet-title">
+      <div class="fm-sheet-head"><h2 id="fm-sheet-title"></h2>
+        <button type="button" class="fm-x" data-close aria-label="Закрыть"><svg class="ico" aria-hidden="true"><use href="#o-close"/></svg></button></div>
+      <div class="fm-sheet-body" id="fm-sheet-body"></div>
+    </div>
+  </div>
+  <div class="fm-toast" id="fm-toast" role="status" aria-live="polite" hidden></div>
+</section>
+<script type="application/json" id="fm-data">{{ data|tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script type="importmap">{"imports": {"three": "{{ url_for('static', filename='vendor/three/three.module.min.js') }}", "three/addons/": "{{ url_for('static', filename='vendor/three/addons/') }}"}}</script>
+<script type="module" src="{{ url_for('static', filename='farm.js') }}?v=1"></script>
+{% endblock %}

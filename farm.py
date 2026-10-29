@@ -271,7 +271,7 @@ def feed(db, student_id, kind):
         return False, "Такого животного пока нет."
     row = _animal_row(db, student_id, kind)
     if animal_state(row) != "hungry":
-        return False, "Уже сыт(а)!"
+        return False, "Уже сыта!"
     if not _spend(db, student_id, "feed", kind, FEED_COST):
         return False, f"Нужно {FEED_COST} капли. Капли дают за уроки!"
     ready = now() + timedelta(minutes=ANIMALS[kind]["minutes"])
@@ -467,3 +467,60 @@ def summary(db, student_id):
     """Для админки и проверок: капли, грядки, амбар, заказы."""
     return {"drops": drops(db, student_id), "barn": barn(db, student_id),
             "plots": {s: plot_state(r) for s, r in _plot_rows(db, student_id).items()}, "date": date.today().isoformat()}
+
+
+# ── состояние для экрана фермы ──
+
+def _secs(ready_at, t):
+    return max(0, int((datetime.fromisoformat(ready_at) - t).total_seconds())) if ready_at else None
+
+
+def state(db, student_id, stats):
+    """Всё, что нужно экрану /student/farm (JSON)."""
+    from data.emoji import emoji_for
+    from garden import get_garden
+    t = now()
+    done = stats["lessons_completed"]
+    rows = _plot_rows(db, student_id)
+    n_plots = plots_count(db, student_id)
+    plots = []
+    for slot in range(n_plots):
+        r = rows.get(slot)
+        st = plot_state(r, t)
+        plots.append({"slot": slot, "state": st, "crop": r["crop"] if r is not None else None,
+                      "left": _secs(r["ready_at"], t) if st == "growing" else None,
+                      "when": time_words(r["ready_at"], t) if st == "growing" else ""})
+    extra = n_plots - PLOTS
+    animals = []
+    for kind, a in ANIMALS.items():
+        has = has_animal(db, student_id, kind)
+        r = _animal_row(db, student_id, kind) if has else None
+        st = animal_state(r, t) if has else "none"
+        animals.append({"kind": kind, "en": a["en"], "ru": a["ru"], "state": st, "product": a["product"],
+                        "yield": a["yield"], "minutes": a["minutes"], "pic": emoji_for(a["en"]),
+                        "left": _secs(r["ready_at"], t) if st == "busy" else None,
+                        "when": time_words(r["ready_at"], t) if st == "busy" else ""})
+    db.commit()
+    have = barn(db, student_id)
+    items = list(CROPS) + list(PRODUCTS)
+    return {
+        "drops": drops(db, student_id), "coins": get_garden(db, student_id)["coins"],
+        "water": WATER_COST, "feed": FEED_COST,
+        "plots": plots, "plot_cost": PLOT_COSTS[extra] if extra < len(PLOT_COSTS) else None,
+        "crops": [{"key": k, "en": c["en"], "ru": c["ru"], "pic": emoji_for(c["en"]), "yield": c["yield"],
+                   "grow": _grow_words(c["minutes"]), "open": done >= c["from"], "from": c["from"]} for k, c in CROPS.items()],
+        "animals": animals,
+        "cow": {"can": can_buy_cow(stats), "cost": COWSHED_COST},
+        "barn": [{"item": k, "en": item_info(k)["en"], "ru": item_info(k)["ru"], "qty": have[k],
+                  "pic": emoji_for(item_info(k)["en"])} for k in items if have.get(k)],
+        "orders": orders(db, student_id, done, stats),
+        "week": {"done": week_done(db, student_id), "goal": WEEK_GOAL, "coins": WEEK_COINS},
+        "slots_today": order_slots(db, student_id),
+    }
+
+
+def _grow_words(minutes):
+    if minutes < 60:
+        return f"{minutes} {_plural(minutes, 'минута', 'минуты', 'минут')}"
+    h = minutes // 60
+    return f"{h} {_plural(h, 'час', 'часа', 'часов')}"
