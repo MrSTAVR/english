@@ -9,6 +9,7 @@ from achievements import (ACHIEVEMENTS, CATEGORIES, public, tier_counts,
 import config
 import goals
 from routes.games import dialogs_for
+import farm
 import scenes
 from curriculum import ALL_LESSONS, LESSONS, LESSONS_BY_ID, pass_mark, unlocked_lesson_ids
 from data.course import ISLANDS
@@ -434,6 +435,10 @@ def submit_test(lesson_id):
          total, correct, json.dumps(mistakes, ensure_ascii=False),
          json.dumps({"results": results}, ensure_ascii=False), attempt_id))
     db.commit()
+    first_try = not db.execute(
+        "SELECT 1 FROM attempts WHERE student_id=? AND lesson_id=? AND finished_at IS NOT NULL AND id<>?",
+        (student["id"], lesson_id, attempt_id)).fetchone()
+    farm.on_test(db, student["id"], lesson_id, attempt_id, percent, passed, first_pass, bool(fixed), first_try)
     bricks_earned = 0
     if first_pass:
         feed_post(db, student["id"], "lesson", f"Урок пройден: «{lesson['title']}»")

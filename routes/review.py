@@ -5,6 +5,7 @@ from achievements import public, update_achievements
 from database import get_db
 from flask import Blueprint, abort, jsonify, redirect, render_template, request, session, url_for
 from mascot import build_mascot_ctx
+import farm
 import goals
 from review import MASTERED_BOX, build_hard_round, build_round, counts, hard_words, learned_pool, record, state
 from stats import compute_stats
@@ -59,7 +60,8 @@ def api_review():
         abort(400)                       # слово ещё не изучено — не записываем
     box = record(db, student["id"], key, ok)
     stats = compute_stats(db, student["id"])
-    _row, goal_coins, goal_done = goals.add(db, student["id"], stats, len(learned_pool(stats)), words=1)
+    row, goal_coins, goal_done = goals.add(db, student["id"], stats, len(learned_pool(stats)), words=1)
+    farm.on_review(db, student["id"], row["words"])
     stats = compute_stats(db, student["id"])             # цель дня могла дать ачивку
     new = update_achievements(db, stats, student["id"])
     if new:
