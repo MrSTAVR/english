@@ -57,7 +57,7 @@ function prep(obj, name) {
     for (const m of [].concat(o.material)) if (m && 'metalness' in m) { m.metalness = 0; m.roughness = Math.max(m.roughness ?? 1, .6);
       if (name === 'tomato' && m.color && m.color.r > m.color.g && m.color.r > m.color.b) { m.color.set('#ff4a36'); m.map = null; }
       if (name === 'tree3' && m.color && m.color.g > m.color.r) m.color.offsetHSL(.03, .08, .03);
-      if (name === 'chicken') { const c = { Chicken_Main: '#f6f3ec', Chicken_Red: '#e53935', Beak: '#ffa726' }[m.name]; if (c) m.color.set(c); }
+      if (name === 'chicken') { const c = { Chicken_Main: '#f6f3ec', Chicken_Red: '#e53935', Beak: '#ffa726', Eye_White: '#ffffff' }[m.name]; if (c) m.color.set(c); }
       if (name === 'cow' && m.name === 'White') m.color.set('#f4f2ee'); } } });
 }
 async function put(name, x, z, height, rot = 0, o = {}) {
