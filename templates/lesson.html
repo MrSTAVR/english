@@ -14,8 +14,7 @@
 </div>
 
 {# урок со сценой: теория → история (слова знакомятся в репликах); без сцены: теория → слова → тест #}
-{% set ls_steps = [('step-theory', 'Теория')] + ([] if lesson.scene else [('step-material', 'Слова')]) + [('step-test', 'История' if lesson.scene else 'Тест')] %}
-{% set after_theory = 'step-test' if lesson.scene else 'step-material' %}
+{% set ls_steps = [('step-theory', 'Теория'), ('step-material', 'Слова'), ('step-test', 'История' if lesson.scene else 'Тест')] %}
 <ol class="stepper ls-steps ls-steps-{{ ls_steps|length }}" id="stepper" aria-label="Шаги урока">
   {% for sid, sname in ls_steps %}<li data-s="{{ sid }}"{% if loop.first %} class="active"{% endif %}><i>{{ loop.index }}</i><span>{{ sname }}</span></li>
   {% endfor %}
@@ -45,16 +44,15 @@
       {% if lesson.theory.tip %}
       <div class="theory-tip"><svg class="th-chick" aria-hidden="true"><use href="#i-chick"/></svg><span><b>Совет Чик-чика</b>{{ lesson.theory.tip|noemoji }}</span></div>
       {% endif %}
-      <button class="btn ls-next" onclick="goStep('{{ after_theory }}')">{{ 'Понятно! К истории →' if lesson.scene else 'Понятно! К словам →' }}</button>
+      <button class="btn ls-next" onclick="goStep('step-material')">Понятно! К словам →</button>
     </aside>
   </div>
   {% else %}
-    <p class="theory-intro">Теории в этом уроке пока нет — переходи сразу {{ 'к истории' if lesson.scene else 'к словам' }}!</p>
-    <button class="btn ls-next" onclick="goStep('{{ after_theory }}')">{{ 'К истории →' if lesson.scene else 'К словам →' }}</button>
+    <p class="theory-intro">Теории в этом уроке пока нет — переходи сразу к словам!</p>
+    <button class="btn ls-next" onclick="goStep('step-material')">К словам →</button>
   {% endif %}
 </section>
 
-{% if not lesson.scene %}
 <!-- Шаг 2: новые слова — одна большая карточка, список всех слов, «Дальше» -->
 <section class="step hidden" id="step-material">
   <div class="wd-headrow">
@@ -99,8 +97,6 @@
   </div>
   <script type="application/json" id="wd-data">{{ lesson.material | tojson }}</script>
 </section>
-
-{% endif %}
 
 <!-- Последний шаг: тест или история -->
 <section class="step hidden" id="step-test">
@@ -210,7 +206,7 @@
 {% block scripts %}
 <script type="application/json" id="near-dict">{{ near_words|tojson }}</script>
 <script src="{{ url_for('static', filename='tiles.js') }}?v=8"></script>
-<script src="{{ url_for('static', filename='lesson.js') }}?v=14"></script>
+<script src="{{ url_for('static', filename='lesson.js') }}?v=15"></script>
 {% if lesson.scene %}<script src="{{ url_for('static', filename='scene.js') }}?v=3"></script>{% endif %}
 <script>
 var START_TS = {{ started_ts }};   // var — виден lesson.js (сохранение времени урока)

@@ -185,8 +185,8 @@ STEP_NAMES = {"step-theory": "Теория", "step-material": "Слова", "ste
 def _resume_sub(lesson, st):
     """Подпись карточки «Продолжи урок» по сохранённому месту (st — dict из lesson_progress)."""
     step = st.get("step") or "step-theory"
-    if step not in STEP_NAMES or (step == "step-material" and lesson.get("scene")):
-        step = "step-test"                               # старое сохранение: тренировки больше нет, у сцены нет «Слов»
+    if step not in STEP_NAMES:
+        step = "step-test"                               # старое сохранение: тренировки больше нет
     sub = "Ты на шаге «" + ("История" if step == "step-test" and lesson.get("scene") else STEP_NAMES[step]) + "»"
     if step == "step-material":
         words = st.get("words")
