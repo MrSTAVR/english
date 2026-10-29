@@ -2,12 +2,10 @@
 """Друзья: дуэли, рекорды, лента «Что нового», в гостях у друга (сад и замок)."""
 
 import castle
-import castle_art
 import friends
 from database import get_db
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
 from garden import garden_view, get_garden, refresh_garden
-from markupsafe import Markup
 from mascot import build_mascot_ctx
 from stats import compute_stats
 from wardrobe import outfit
@@ -78,24 +76,8 @@ def react():
 
 @bp.route("/student/friends/<int:fid>/castle/<room>")
 def visit_room(fid, room):
-    """Комната в замке друга: рисунок с предметами, слова, «Find the…!» без награды."""
-    ctx, err = _student()
-    if err:
-        return err
-    db, student = ctx
-    f = friends.friend(db, student["id"], fid)
-    if not f or room not in castle.ROOMS:
-        abort(404)
-    level = castle.levels(db, fid).get(room, 0)
-    if not level:
-        return redirect(url_for("friends.visit", fid=fid, what="house"))
-    art, pins = castle.scene(room, level)
-    mascot = build_mascot_ctx()
-    mascot["page"] = "friends"
-    r = castle.ROOMS[room]
-    return render_template("friend_room.html", mascot=mascot, friend=f, key=room, room=r, level=level, art=Markup(art), pins=pins,
-                           words=castle.room_words(room, level), who_ru=castle.RESIDENT_RU.get(r["who"]),
-                           who_x=round(castle_art.RESIDENT_X.get(room, 200) / 3, 2), outfit=outfit(db, fid), **art_helpers())
+    """Замок закрыт (его заменила ферма) — старые ссылки на комнаты друга ведут в его сад."""
+    return redirect(url_for("friends.visit", fid=fid, what="garden"))
 
 
 @bp.route("/student/friends/<int:fid>/<what>")
@@ -107,6 +89,8 @@ def visit(fid, what):
     f = friends.friend(db, student["id"], fid)
     if not f or what not in friends.LIKE_WHAT:
         abort(404)
+    if what == "house":                                  # замок закрыт (ферма) — в гостях показываем сад
+        return redirect(url_for("friends.visit", fid=fid, what="garden"))
     likes = friends.likes_of(db, fid, what)
     ctx = dict(friend=f, what=what, likes=likes, liked=student["display_name"] in likes)
     if what == "garden":

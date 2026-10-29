@@ -114,10 +114,9 @@ def test_visit_garden_and_house_with_like(make_student, parent):
     masha, anya = _two(make_student, parent)
     aid = _sid("anya")
     assert "garden-stage" in masha.get(f"/student/friends/{aid}/garden").get_data(as_text=True)
-    page = masha.get(f"/student/friends/{aid}/house").get_data(as_text=True)
-    assert "cs-castle" in page and "castle.js" in page
-    masha.post(f"/student/friends/{aid}/house/like")
-    assert "Нравится: Маша" in masha.get(f"/student/friends/{aid}/house").get_data(as_text=True)
+    assert masha.get(f"/student/friends/{aid}/house").headers["Location"].endswith(f"/student/friends/{aid}/garden")  # замок закрыт
+    masha.post(f"/student/friends/{aid}/garden/like")
+    assert "Нравится: Маша" in masha.get(f"/student/friends/{aid}/garden").get_data(as_text=True)
     assert masha.get(f"/student/friends/{aid}/kitchen").status_code == 404
     assert masha.get(f"/student/friends/{_sid('masha')}/garden").status_code == 404   # к себе «в гости» нельзя
 
@@ -149,23 +148,11 @@ def test_delete_student_cleans_friends(make_student, parent):
     assert r.status_code == 302
 
 
-def test_visit_friend_castle_rooms_and_feed(make_student, parent):
-    import castle
-    import sqlite3
-    import database
+def test_friend_castle_links_lead_to_garden(make_student, parent):
     masha, anya = _two(make_student, parent)
     aid = _sid("anya")
-    anya.get("/student/castle")
-    page = masha.get(f"/student/friends/{aid}/house").get_data(as_text=True)
-    assert f'href="/student/friends/{aid}/castle/bedroom"' in page
-    room = masha.get(f"/student/friends/{aid}/castle/bedroom").get_data(as_text=True)
-    assert "Замок: Аня" in room and 'class="cs-pin' in room and 'data-find-url=""' in room
-    assert masha.get(f"/student/friends/{aid}/castle/kitchen").status_code == 302     # не построена
-    assert masha.get(f"/student/friends/{aid}/castle/nope").status_code == 404
-    # постройка и 3-й уровень попадают в ленту друзей
-    cn = sqlite3.connect(database.DB_PATH); cn.row_factory = sqlite3.Row
-    cn.execute("UPDATE garden SET coins=500 WHERE student_id=?", (aid,)); cn.commit()
-    castle.earn(cn, aid, "test", 1, 100)
-    anya.post("/student/castle/bedroom/build"); anya.post("/student/castle/bedroom/build")
-    feed = masha.get("/student/friends").get_data(as_text=True)
-    assert "Комната замка на 3 уровне: «Спальня»" in feed
+    r = masha.get(f"/student/friends/{aid}/castle/bedroom")
+    assert r.status_code == 302 and r.headers["Location"].endswith(f"/student/friends/{aid}/garden")
+    assert "Замок" not in masha.get("/student/friends").get_data(as_text=True)
+
+

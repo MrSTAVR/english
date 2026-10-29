@@ -103,8 +103,8 @@ window.picHtml=function(p){p=String(p||'');if(/^@[a-z]+$/.test(p))return '<img c
       {% set tabs = [
         ('student.student_home', 'Главная', 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z', ep in ('student.student_home', 'student.lesson_page', 'student.submit_test')),
         ('student.course_map', 'Карта', 'M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14', ep == 'student.course_map'),
-        ('garden.garden_page', 'Сад', 'M12 21v-9M12 12c0-4-3-6-7-6 0 4 3 6 7 6zM12 14c0-4 3-6 7-6 0 4-3 6-7 6z', ep.startswith('garden.')),
-        ('castle.castle_page', 'Замок', 'M4 21V9l3 2V6l3 2V4h4v4l3-2v5l3-2v12zM10 21v-5h4v5', ep.startswith('castle.')),
+        ('farm.farm_page', 'Ферма', 'M3 10l9-6 9 6v11H3zM8 21v-7h8v7M8 14l8 7M16 14l-8 7', ep.startswith('farm.') or ep.startswith('garden.')),
+        ('games.games_hub', 'Игры', 'M2 12a5 5 0 0 1 5-5h10a5 5 0 0 1 0 10H7a5 5 0 0 1-5-5zM7 11v3M5.5 12.5h3', ep.startswith('games.')),
         ('student.achievements_page', 'Награды', 'M8 3l4 6 4-6M12 21a6 6 0 1 0 0-12 6 6 0 0 0 0 12z', ep == 'student.achievements_page')] %}
       <div class="tabbar">
       {% for endpoint, label, icon, on in tabs %}

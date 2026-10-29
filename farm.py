@@ -458,8 +458,45 @@ def _plural(n, one, few, many):
     return many
 
 
+BRICK_COINS = 2          # кирпичик замка при переезде — 2 монетки
+
+
+def move_from_castle(db, student_id):
+    """Переезд из замка (один раз): монетки за построенные уровни комнат — 100% назад
+    (первый уровень спальни был бесплатным), оставшиеся кирпичики — по BRICK_COINS. Данные замка не стираются.
+    Возвращает число монеток, если переезд случился сейчас, иначе None."""
+    if db.execute("SELECT 1 FROM farm_moves WHERE student_id=?", (student_id,)).fetchone():
+        return None
+    import castle
+    from garden import get_garden
+    if db.execute("SELECT 1 FROM castle WHERE student_id=?", (student_id,)).fetchone():
+        coins = sum(castle.COST[lv][1] for room, level in castle.levels(db, student_id).items()
+                    for lv in range(2 if room == "bedroom" else 1, level + 1))
+        coins += max(0, castle.bricks(db, student_id)) * BRICK_COINS
+        get_garden(db, student_id)
+        db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?", (coins, student_id))
+    else:                                       # замка не было: castle.ensure вернёт монетки за вещи старого домика
+        castle.ensure(db, student_id, ())
+        db.execute("UPDATE castle SET note_seen=1 WHERE student_id=?", (student_id,))
+        coins = db.execute("SELECT moved_coins FROM castle WHERE student_id=?", (student_id,)).fetchone()[0]
+    seen = 0 if (coins or castle.levels(db, student_id).get("bedroom", 0) > 1 or len(castle.levels(db, student_id)) > 1) else 1
+    db.execute("INSERT INTO farm_moves (student_id, coins, note_seen, at) VALUES (?, ?, ?, ?)", (student_id, coins, seen, _stamp()))
+    db.commit()
+    return coins
+
+
+def take_move_note(db, student_id):
+    """Сообщение о переезде на ферму — один раз: сколько монеток вернули (None — показывать нечего)."""
+    r = db.execute("SELECT coins, note_seen FROM farm_moves WHERE student_id=?", (student_id,)).fetchone()
+    if not r or r["note_seen"]:
+        return None
+    db.execute("UPDATE farm_moves SET note_seen=1 WHERE student_id=?", (student_id,))
+    db.commit()
+    return r["coins"]
+
+
 def forget_student(db, student_id):
-    for t in ("farm_drops", "farm_plots", "farm_barn", "farm_animals", "farm_orders"):
+    for t in ("farm_drops", "farm_plots", "farm_barn", "farm_animals", "farm_orders", "farm_moves"):
         db.execute(f"DELETE FROM {t} WHERE student_id=?", (student_id,))
 
 
@@ -517,7 +554,8 @@ def state(db, student_id, stats):
         "orders": orders(db, student_id, done, stats),
         "week": {"done": week_done(db, student_id), "goal": WEEK_GOAL, "coins": WEEK_COINS},
         "slots_today": order_slots(db, student_id),
-        "garden": {"days": g["streak_days"], "cap": STREAK_CAP, "stage": tree_stage(g["streak_days"])["name"]},
+        "garden": {"days": g["streak_days"], "grown": min(STREAK_CAP, max(g["streak_days"], g["best_streak"])), "cap": STREAK_CAP,
+                   "waits": bool(g["broken"]), "stage": tree_stage(g["streak_days"])["name"]},
     }
 
 

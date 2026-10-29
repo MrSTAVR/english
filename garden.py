@@ -289,8 +289,7 @@ def garden_view(db, student_id):
     """Всё нужное для рендера страницы сада."""
     g = get_garden(db, student_id)
     streak = cap_streak(g["streak_days"])
-    broken = bool(g["broken"])
-    day = 0 if broken else streak          # прерванная серия: дерево снова жёлудь, сад «уснул»
+    day = cap_streak(max(streak, g["best_streak"]))   # ферма: дерево не засыпает и не уменьшается — «ждёт тебя»
     stage = tree_stage(day)
     next_stage = next((s for s in TREE_STAGES if s["min"] > day), None)
     owned = db.execute(

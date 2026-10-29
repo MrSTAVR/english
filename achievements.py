@@ -9,6 +9,7 @@ from data.dialogs import DIALOGS
 from data.stories import STORIES
 from friends import post as feed_post
 
+ARCHIVED = {"castle"}     # замок закрыт (ферма): новые награды не выдаются, полученные — в «Архиве»
 CATEGORIES = [
     ("lessons", "Уроки", "📚"),
     ("tests", "Тесты", "📝"),
@@ -21,7 +22,7 @@ CATEGORIES = [
     ("goals", "Цели дня", "🎯"),
     ("games", "Игры и диалоги", "🎮"),
     ("garden", "Сад", "🌳"),
-    ("castle", "Замок", "🏰"),
+    ("castle", "Архив: замок", "🏰"),
     ("special", "Особые", "🎁"),
 ]
 CAT_NAMES = {k: (n, e) for k, n, e in CATEGORIES}
@@ -176,7 +177,7 @@ def update_achievements(db, stats, student_id):
     new_earned = []
     now = datetime.now().isoformat(timespec="seconds")
     for ach in ACHIEVEMENTS:
-        if ach["key"] not in existing and _done(ach, s):
+        if ach["key"] not in existing and ach["cat"] not in ARCHIVED and _done(ach, s):
             db.execute("INSERT INTO achievements (student_id, key, earned_at) VALUES (?, ?, ?)",
                        (student_id, ach["key"], now))
             new_earned.append(ach)
@@ -195,6 +196,8 @@ def views(db, stats, student_id):
         "SELECT key, earned_at FROM achievements WHERE student_id=?", (student_id,)).fetchall()}
     out = []
     for a in ACHIEVEMENTS:
+        if a["cat"] in ARCHIVED and a["key"] not in earned:
+            continue                                       # из архива — только полученные
         item = {k: v for k, v in a.items() if k != "check"}
         item["earned"] = a["key"] in earned
         item["earned_at"] = earned.get(a["key"])

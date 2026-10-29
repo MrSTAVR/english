@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Ферма бабушки — English Fun{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='farm.css') }}?v=2">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='farm.css') }}?v=3">{% endblock %}
 {% block content %}
 <section class="fm" id="fm" aria-label="Ферма бабушки Тома">
   <canvas id="fm-canvas"></canvas>
@@ -11,6 +11,13 @@
     <button type="button" class="fm-chip fm-chip-btn" data-open="seeds"><svg class="ico" aria-hidden="true"><use href="#o-sprout"/></svg>Семена</button>
   </div>
   <p class="fm-loading" id="fm-loading">Ферма загружается…</p>
+  {% if moved is not none %}
+  <div class="fm-moved" id="fm-moved" role="status">
+    <p><b>Чик-чик переехал на ферму бабушки Тома!</b>{% if moved %} За замок вернулось <b>+{{ moved }}</b> монеток.{% endif %}
+      Сажай, поливай и выполняй заказы — капли дают за уроки.</p>
+    <button type="button" class="btn btn-small btn-primary" onclick="this.parentNode.hidden = true">Ура!</button>
+  </div>
+  {% endif %}
   <div class="fm-bar">
     <button type="button" class="fm-btn" data-open="orders"><svg class="ico" aria-hidden="true"><use href="#o-list"/></svg><span>Заказы</span><b class="fm-badge" id="fm-orders-n" hidden></b></button>
     <button type="button" class="fm-btn fm-main" id="fm-main"></button>
@@ -30,5 +37,5 @@
 {% endblock %}
 {% block scripts %}
 <script type="importmap">{"imports": {"three": "{{ url_for('static', filename='vendor/three/three.module.min.js') }}", "three/addons/": "{{ url_for('static', filename='vendor/three/addons/') }}"}}</script>
-<script type="module" src="{{ url_for('static', filename='farm.js') }}?v=6"></script>
+<script type="module" src="{{ url_for('static', filename='farm.js') }}?v=7"></script>
 {% endblock %}

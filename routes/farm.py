@@ -22,8 +22,10 @@ def farm_page():
     if not student:
         session.clear()
         return redirect(url_for("auth.index"))
+    farm.move_from_castle(db, student["id"])
+    moved = farm.take_move_note(db, student["id"])
     stats = compute_stats(db, student["id"])
-    return render_template("farm.html", data=farm.state(db, student["id"], stats), mascot=build_mascot_ctx())
+    return render_template("farm.html", data=farm.state(db, student["id"], stats), moved=moved, mascot=build_mascot_ctx())
 
 
 def _api_student():
