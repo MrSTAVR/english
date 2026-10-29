@@ -115,7 +115,7 @@
       $('wd-tap').hidden = flipped;
       card.setAttribute('aria-label', flipped ? 'Спрятать перевод' : 'Показать перевод');
       $('wd-prev').disabled = i === 0;
-      $('wd-next').textContent = i === W.length - 1 ? 'К тесту →' : 'Дальше →';
+      $('wd-next').textContent = i === W.length - 1 ? ($('scene-data') ? 'К истории →' : 'К тесту →') : 'Дальше →';
       $('wd-dots').innerHTML = W.map(function (x, k) {
         return '<button type="button" class="wd-dot' + (k === i ? ' is-on' : seen[k] ? ' is-seen' : '') + '" data-k="' + k + '" aria-label="' + esc(x.en) + '"></button>';
       }).join('');

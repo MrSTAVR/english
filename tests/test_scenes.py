@@ -158,8 +158,9 @@ def test_validate_catches_bad_scene(monkeypatch):
 
 def test_lesson_steps_without_training(make_student, parent):
     c = make_student()
-    html = c.get(f"/lesson/{N(1)}").get_data(as_text=True)          # сцена: теория → история
-    assert 'id="step-exercises"' not in html and 'id="step-material"' not in html and "1/2" in html
+    html = c.get(f"/lesson/{N(1)}").get_data(as_text=True)          # сцена: теория → слова → история
+    assert 'id="step-exercises"' not in html and 'id="step-material"' in html and "1/3" in html
+    assert 'id="wd-data"' in html and "<span>История</span>" in html
     lid = next(l["id"] for l in LESSONS if not l.get("scene"))
     parent.post("/parent/students/1/credit", data={"upto": str(LESSONS.index(LESSONS_BY_ID[lid])), "action": "add"})
     html = c.get(f"/lesson/{lid}").get_data(as_text=True)            # обычный: теория → слова → тест
@@ -171,5 +172,5 @@ def test_old_saved_training_step_resumes_at_test(make_student):
     from routes.student import _resume_sub
     l = LESSONS_BY_ID[N(1)]
     assert "История" in _resume_sub(l, {"step": "step-exercises"})
-    assert "История" in _resume_sub(l, {"step": "step-material"})
+    assert "«Слова»" in _resume_sub(l, {"step": "step-material"})
     assert "сделано ходов: 2" in _resume_sub(l, {"step": "step-test", "scene": {"first": {"0": "1", "1": "x"}}})
