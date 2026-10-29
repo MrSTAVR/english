@@ -1,7 +1,10 @@
-/* Сцена истории вместо теста (scenes.py): реплики героев появляются по очереди, ученица отвечает за себя.
-   Ответ проверяется сразу (можно попробовать ещё раз, после двух ошибок показываем верный и идём дальше),
-   но на сервер уходит ПЕРВЫЙ ответ — скрытые поля q<i> / q<i>_order, сдача как у обычного теста.
-   window.LessonScene.get()/set() — место в сцене и первые ответы (для «продолжить урок с того же места»). */
+/* Сцена истории вместо теста (scenes.py): реплики героев появляются по очереди и озвучиваются,
+   ученица отвечает за себя. Новые слова урока — карточки под репликой (перевод по нажатию).
+   Ход проверяется сразу: герой реагирует на ответ (ok / no), можно попробовать ещё раз, после двух ошибок
+   показываем верный ответ и идём дальше. На сервер уходят первый ответ (q<i> / q<i>_order) и второй
+   (q<i>_2 / q<i>_order_2 — полбалла). pick — выбор без правильного ответа ({ключ} в следующих репликах),
+   speak — «скажи вслух» по желанию.
+   window.LessonScene.get()/set() — место в сцене и ответы (для «продолжить урок с того же места»). */
 (function () {
   'use strict';
   var root = document.getElementById('scene');
@@ -15,14 +18,24 @@
   var tilesOpen = root.dataset.tilesOpen === '1';
   var LT = window.LetterTiles;
 
-  var pos = 0, first = {}, tries = {}, touched = false, quiet = false;
+  var pos = 0, first = {}, second = {}, tries = {}, picks = {}, touched = false, quiet = false, run = 0;
 
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function say(t) { if (window.ttsSpeak) window.ttsSpeak(t); }
+  function say(t, slow) { if (window.ttsSpeak) window.ttsSpeak(t, slow ? 0.55 : null); }
   function changed() { document.dispatchEvent(new CustomEvent('lesson:changed')); }
   function ico(id) { return '<svg class="ico" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
   function show(node) { root.appendChild(node); if (!quiet) node.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  function pic(p) { return window.picHtml ? window.picHtml(p) : esc(p); }
+
+  /* {ключ} — выбор ученицы из pick (в английском — v, в переводе — v_ru) */
+  function fill(text, ru) {
+    return String(text || '').replace(/\{(\w+)\}/g, function (m, k) {
+      var st = STEPS.filter(function (x) { return x.t === 'pick' && x.key === k; })[0];
+      var o = st && picks[k] != null ? st.options[picks[k]] : null;
+      return o ? (ru ? o.v_ru : o.v) : m;
+    });
+  }
 
   function hidden(name, value) {
     var h = form.querySelector('input[type=hidden][name="' + name + '"]');
@@ -30,8 +43,19 @@
     h.value = value;
   }
 
-  function bubble(who, en, ru, mine) {
-    var row = el('div', 'dlg-row ' + (mine ? 'me' : 'them'));
+  /* слова урока в реплике — жирным (одним проходом, длинные фразы первыми) */
+  function highlight(text, hl) {
+    var h = esc(text);
+    if (!hl || !hl.length) return h;
+    var alts = hl.slice().sort(function (a, b) { return b.length - a.length; }).map(function (k) {
+      return esc(k).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    });
+    return h.replace(new RegExp("(^|[^A-Za-z'])(" + alts.join('|') + ")(?![A-Za-z'])", 'gi'), '$1<b class="sc-w">$2</b>');
+  }
+
+  function bubble(who, en, ru, mine, opt) {
+    opt = opt || {};
+    var row = el('div', 'dlg-row ' + (mine ? 'me' : 'them') + (opt.wrong ? ' sc-wrong' : ''));
     var ava;
     if (mine) ava = '<div class="dlg-ava" aria-hidden="true">' + esc(me.emoji) + '</div>';
     else if (who.chick) ava = '<div class="dlg-ava sc-chick" aria-hidden="true">' + ico('i-chick') + '</div>';
@@ -39,46 +63,82 @@
     var name = mine ? me.name : who.name;
     var role = !mine && who.role ? ' <span class="dlg-role">· ' + esc(who.role) + '</span>' : '';
     var speak = /[A-Za-z]/.test(en) ? '<button type="button" class="dlg-say" title="Послушать" aria-label="Послушать">' + ico('o-sound') + '</button>' : '';
+    var tr = ru ? '<button type="button" class="sc-tr" aria-expanded="false">перевод</button>' : '';
+    var body = (opt.pic ? '<span class="sc-bpic">' + pic(opt.pic) + '</span> ' : '') + (mine ? esc(en) : highlight(en, opt.hl));
     row.innerHTML = ava + '<div class="dlg-main"><div class="dlg-name">' + esc(name) + role + '</div><div class="dlg-bubble">' +
-      esc(en) + speak + (ru ? '<div class="dlg-ru" hidden>' + esc(ru) + '</div>' : '') + '</div></div>';
+      body + speak + tr + (ru ? '<div class="dlg-ru" hidden>' + esc(ru) + '</div>' : '') + '</div>' +
+      (opt.words && opt.words.length ? wordsHtml(opt.words) : '') + '</div>';
     var b = row.querySelector('.dlg-say');
     if (b) b.onclick = function (e) { e.stopPropagation(); say(en); };
-    var tr = row.querySelector('.dlg-ru');          // перевод — по нажатию на реплику (иначе подсказывал бы ответ)
-    if (tr) { row.querySelector('.dlg-bubble').classList.add('sc-tap'); row.querySelector('.dlg-bubble').onclick = function () { tr.hidden = !tr.hidden; }; }
+    var t = row.querySelector('.sc-tr');
+    if (t) t.onclick = function () {
+      var r = row.querySelector('.dlg-ru'); r.hidden = !r.hidden;
+      t.setAttribute('aria-expanded', String(!r.hidden));
+    };
+    row.querySelectorAll('.sc-word').forEach(function (w) {
+      w.onclick = function () { w.classList.add('is-open'); w.querySelector('.sc-word-ru').hidden = false; say(w.dataset.en); };
+    });
     show(row);
+  }
+
+  /* знакомство с новыми словами урока: карточки под репликой, перевод по нажатию */
+  function wordsHtml(words) {
+    return '<div class="sc-words"><span class="sc-words-h">Новое слово — нажми:</span>' + words.map(function (w) {
+      return '<button type="button" class="sc-word" data-en="' + esc(w.en) + '">' +
+        (w.pic ? '<span class="sc-word-pic" aria-hidden="true">' + pic(w.pic) + '</span>' : '') +
+        '<b lang="en">' + esc(w.en) + '</b><span class="sc-word-ru" hidden>' + esc(w.ru) + '</span></button>';
+    }).join('') + '</div>';
   }
 
   function noteRow(text) { show(el('div', 'sc-note', esc(text))); }
 
-  /* ход ученицы: вопрос в панели под чатом; ответ — пузырь справа */
-  function answerText(st) {
-    if (st.type === 'choice') {
-      for (var k = 0; k < st.options.length; k++) if (st.options[k][0] === st.answer) return st.options[k][1];
-    }
-    return String(st.answer);
+  function heroLine(ln) { if (ln) bubble(ln.who, fill(ln.en), fill(ln.ru, true), false, { hl: ln.hl, words: ln.new }); }
+
+  /* реплика прозвучала — идём дальше (без озвучки — пауза по длине) */
+  function after(en, cb) {
+    var token = run, done = false;
+    function go() { if (!done && token === run) { done = true; cb(); } }
+    if (touched && en && window.ttsSpeakSeq && window.ttsSpeakSeq([en], { onDone: function () { setTimeout(go, 200); } })) {
+      setTimeout(go, 1500 + en.length * 110);            // страховка: голос мог не ответить
+    } else setTimeout(go, Math.min(2200, 700 + (en || '').length * 25));
   }
+
+  /* ---------- ход ученицы ---------- */
+  function optText(st, k) {
+    for (var j = 0; j < st.options.length; j++) if (+st.options[j][0] === +k) return st.options[j][1];
+    return '';
+  }
+  function answerText(st) { return st.type === 'choice' ? optText(st, st.answer) : String(st.answer); }
+  function shownText(st, v) { return st.type === 'choice' ? optText(st, v) : String(v); }
+  function optPic(st, k) { return st.pics ? st.pics[String(k)] : ''; }
   function isRight(st, v) {
     if (st.type === 'choice') return +v === st.answer;
     if (!LT) return String(v).trim().toLowerCase() === String(st.answer).trim().toLowerCase();
     return LT.same(v, st.answer) || (st.type === 'type_in' && LT.near(v, st.answer));
   }
+  function field(st, n) { return (st.type === 'order' ? 'q' + st.i + '_order' : 'q' + st.i) + (n === 2 ? '_2' : ''); }
 
-  function record(st, v) {                       // первый ответ — на сервер
-    if (st.i in first) return;
-    first[st.i] = v;
-    hidden(st.type === 'order' ? 'q' + st.i + '_order' : 'q' + st.i, v);
+  function record(st, v) {                       // первый ответ — на балл, второй — на полбалла
+    if (!(st.i in first)) { first[st.i] = v; hidden(field(st, 1), v); }
+    else if (!(st.i in second)) { second[st.i] = v; hidden(field(st, 2), v); }
   }
 
+  function noReaction(st, v) {
+    if (!st.no) return null;
+    return st.no[String(v)] || st.no['*'] || null;
+  }
+
+  /* итог хода: ответ — пузырь справа, реакция героя, дальше по сюжету */
   function finishTurn(st, v, ok) {
     panel.innerHTML = '';
-    var shown = ok && st.type === 'type_in' ? v : answerText(st);
-    bubble(null, shown, '', true);
+    var k = ok ? v : st.answer;
+    bubble(null, ok && st.type !== 'choice' ? String(v) : answerText(st), '', true, { pic: st.type === 'choice' ? optPic(st, k) : '' });
     if (!ok) noteRow('Правильно так: ' + answerText(st) + (st.explain ? ' — ' + st.explain.replace(/^[^—]*—\s*/, '') : ''));
     else if (st.type === 'type_in' && LT && !LT.same(v, st.answer)) noteRow('Засчитано! Только пишется так: ' + st.answer);
     pos++;
     changed();
-    if (quiet) return;
-    setTimeout(next, 450);
+    if (quiet) { heroLine(st.ok); return; }
+    if (st.ok) { heroLine(st.ok); after(fill(st.ok.en), next); } else setTimeout(next, 450);
   }
 
   function attempt(st, v, fb, onWrong) {
@@ -87,30 +147,53 @@
     if (isRight(st, v)) { finishTurn(st, v, true); return; }
     changed();
     if (tries[st.i] >= 2) { finishTurn(st, v, false); return; }
-    fb.className = 'rv-fb bad';
-    fb.textContent = 'Почти! Попробуй ещё раз.';
+    var r = noReaction(st, v);
     if (onWrong) onWrong();
+    if (r) {                                       // герой слышит неверный ответ и отвечает на него
+      bubble(null, shownText(st, v), '', true, { wrong: true, pic: st.type === 'choice' ? optPic(st, v) : '' });
+      heroLine(r);
+      fb.className = 'rv-fb';
+      fb.textContent = 'Попробуй ещё раз!';
+      after(fill(r.en), function () { panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+    } else {
+      fb.className = 'rv-fb bad';
+      fb.textContent = 'Почти! Попробуй ещё раз.';
+    }
+  }
+
+  function turnBox(text) {
+    panel.innerHTML = '';
+    var box = el('div', 'sc-turn');
+    box.appendChild(el('p', 'sc-q', '<b>Твой ход.</b> ' + esc(text)));
+    return box;
+  }
+  function place(box) {
+    if (!box.parentNode) panel.appendChild(box);
+    if (!quiet) box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
   function ask(st) {
-    panel.innerHTML = '';
-    var box = el('div', 'sc-turn');
-    box.appendChild(el('p', 'sc-q', '<b>Твой ход.</b> ' + esc(st.q)));
+    var box = turnBox(st.q);
     if (st.audio) {
       var row = el('p', 'sc-audio');
       row.innerHTML = '<button type="button" class="btn btn-small say-btn">' + ico('o-sound') + ' Слушать</button> ' +
         '<button type="button" class="btn btn-small say-btn">' + ico('o-turtle') + ' Медленно</button>';
       var bs = row.querySelectorAll('button');
       bs[0].onclick = function () { say(st.audio); };
-      bs[1].onclick = function () { if (window.ttsSpeak) window.ttsSpeak(st.audio, { slow: true }); };
+      bs[1].onclick = function () { say(st.audio, true); };
       box.appendChild(row);
-      if (touched) say(st.audio);
+      if (touched && !quiet) setTimeout(function () { say(st.audio); }, 300);
     }
     var fb = el('div', 'rv-fb');
+    var wrongBefore = st.i in first && !(st.i in second) ? String(first[st.i]) : null;   // восстановление: одна ошибка уже была
     if (st.type === 'choice') {
-      var opts = el('div', 'rv-opts');
+      var opts = el('div', 'rv-opts' + (st.pics ? ' sc-pics' : ''));
       st.options.forEach(function (o) {
-        var b = el('button', 'rv-opt', esc(o[1])); b.type = 'button';
+        var p = optPic(st, o[0]);
+        var b = el('button', 'rv-opt' + (p ? ' sc-pic' : ''), p ? '<span aria-hidden="true">' + pic(p) + '</span>' : esc(o[1]));
+        b.type = 'button';
+        if (p) b.setAttribute('aria-label', 'Вариант');
+        if (wrongBefore === String(o[0])) { b.classList.add('is-wrong'); b.disabled = true; }
         b.onclick = function () {
           touched = true;
           attempt(st, String(o[0]), fb, function () { b.classList.add('is-wrong'); b.disabled = true; });
@@ -120,7 +203,8 @@
       box.appendChild(opts);
     } else if (st.type === 'order') {
       var bank = el('div', 'word-bank'), line = el('div', 'answer-line');
-      function sync() { ok.disabled = !!bank.querySelector('.word-chip:not([hidden])'); }
+      var ok = el('button', 'btn sc-ok', 'Ответить'); ok.type = 'button'; ok.disabled = true;
+      var sync = function () { ok.disabled = !!bank.querySelector('.word-chip:not([hidden])'); };
       st.words.forEach(function (w) {
         var c = el('button', 'word-chip', esc(w)); c.type = 'button';
         c.onclick = function () {
@@ -131,7 +215,6 @@
         };
         bank.appendChild(c);
       });
-      var ok = el('button', 'btn sc-ok', 'Ответить'); ok.type = 'button'; ok.disabled = true;
       ok.onclick = function () {
         touched = true;
         var v = [].map.call(line.querySelectorAll('.word-chip'), function (c) { return c.textContent; }).join(' ');
@@ -151,7 +234,7 @@
         if (!inp.value.trim()) { inp.focus(); return; }
         touched = true;
         var v = inp.value;
-        inp.removeAttribute('name');                     // первый ответ уже в скрытом поле
+        inp.removeAttribute('name');                     // ответ уже в скрытом поле
         attempt(st, v, fb, function () { inp.select(); });
       };
       inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); send.click(); } });
@@ -164,25 +247,76 @@
         LT.attach(host, inp, st.answer, tilesOpen);
       } else box.appendChild(send);
     }
+    if (wrongBefore !== null) { fb.className = 'rv-fb bad'; fb.textContent = 'Почти! Попробуй ещё раз.'; }
     box.appendChild(fb);
-    if (!box.parentNode) panel.appendChild(box);
-    if (!quiet) box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    place(box);
   }
 
+  /* выбор без правильного ответа — дальше герои говорят о том, что выбрала ученица */
+  function choose(st) {
+    var box = turnBox(st.q), opts = el('div', 'rv-opts');
+    st.options.forEach(function (o, k) {
+      var b = el('button', 'rv-opt', '<b lang="en">' + esc(o.en) + '</b><small class="sc-opt-ru">' + esc(o.ru) + '</small>');
+      b.type = 'button';
+      b.onclick = function () {
+        touched = true;
+        picks[st.key] = k;
+        panel.innerHTML = '';
+        bubble(null, o.en, '', true);
+        pos++;
+        changed();
+        after(o.en, next);
+      };
+      opts.appendChild(b);
+    });
+    box.appendChild(opts);
+    place(box);
+  }
+
+  /* «скажи вслух» — по желанию, без оценки */
+  function speakTurn(st) {
+    var box = turnBox('Скажи вслух — Чик-чик слушает! Можно сначала послушать.');
+    box.appendChild(el('p', 'sc-phrase', '<b lang="en">' + esc(st.en) + '</b><small>' + esc(st.ru) + '</small>'));
+    var row = el('div', 'sc-speak-btns');
+    row.innerHTML = '<button type="button" class="btn btn-small say-btn">' + ico('o-sound') + ' Послушать</button>' +
+      '<button type="button" class="btn btn-primary">Я сказал(а)!</button>' +
+      '<button type="button" class="btn btn-small btn-aux">Пропустить</button>';
+    var bs = row.querySelectorAll('button');
+    bs[0].onclick = function () { touched = true; say(st.en); };
+    function done(said) {
+      touched = true;
+      panel.innerHTML = '';
+      if (said) bubble(null, st.en, '', true);
+      pos++;
+      changed();
+      setTimeout(next, 350);
+    }
+    bs[1].onclick = function () { done(true); };
+    bs[2].onclick = function () { done(false); };
+    box.appendChild(row);
+    place(box);
+  }
+
+  /* ---------- ход истории ---------- */
   function next() {
+    run++;
     while (pos < STEPS.length) {
       var st = STEPS[pos];
-      if (st.t === 'say') { bubble(st.who, st.en, st.ru, false); if (touched && !quiet) say(st.en); pos++; continue; }
-      if (st.t === 'note') { noteRow(st.text); pos++; continue; }
-      if (st.done) { bubble(null, answerText(st), '', true); pos++; continue; }    // «Исправь ошибки»: уже засчитан
-      if (quiet && st.i in first) {                       // восстановление: ход уже сделан
-        var v = first[st.i], right = isRight(st, v);
-        if (right || (tries[st.i] || 0) >= 2) {
-          bubble(null, right && st.type === 'type_in' ? v : answerText(st), '', true);
-          if (!right) noteRow('Правильно так: ' + answerText(st));
-          pos++; continue;
-        }                                                 // ошибся раз и ушёл — вторая попытка ещё есть
+      if (st.t === 'say' || st.t === 'note') {
+        if (st.t === 'say') bubble(st.who, fill(st.en), fill(st.ru, true), false, { hl: st.hl, words: st.new });
+        else noteRow(fill(st.text, true));
+        pos++;
+        if (quiet) continue;
+        changed();
+        after(st.t === 'say' ? fill(st.en) : '', next);   // следующая реплика — когда прозвучит эта
+        return;
       }
+      if (st.t === 'pick') {
+        if (quiet && picks[st.key] != null) { bubble(null, st.options[picks[st.key]].en, '', true); pos++; continue; }
+        choose(st); return;
+      }
+      if (st.t === 'speak') { speakTurn(st); return; }
+      if (st.done) { bubble(null, answerText(st), '', true); heroLine(st.ok); pos++; continue; }   // «Исправь ошибки»: уже засчитан
       ask(st);
       return;
     }
@@ -191,21 +325,53 @@
     if (!quiet) endBox.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
+  /* восстановление: всё до сохранённого места показываем сразу, без озвучки */
+  function replay(upto) {
+    quiet = true;
+    while (pos < upto && pos < STEPS.length) {
+      var st = STEPS[pos];
+      if (st.t === 'say') { bubble(st.who, fill(st.en), fill(st.ru, true), false, { hl: st.hl, words: st.new }); pos++; }
+      else if (st.t === 'note') { noteRow(fill(st.text, true)); pos++; }
+      else if (st.t === 'speak') pos++;
+      else if (st.t === 'pick') {
+        if (picks[st.key] == null) break;
+        bubble(null, st.options[picks[st.key]].en, '', true); pos++;
+      } else if (st.done) { bubble(null, answerText(st), '', true); heroLine(st.ok); pos++; }
+      else {
+        if (!(st.i in first) || (!isRight(st, first[st.i]) && !(st.i in second))) break;   // ход ещё не закончен
+        var v = st.i in second ? second[st.i] : first[st.i];
+        finishTurn(st, v, isRight(st, v));
+      }
+    }
+    next();
+    quiet = false;
+  }
+
+  function start() {
+    panel.innerHTML = '';
+    var b = el('button', 'btn btn-primary btn-big sc-start', ico('o-sound') + ' Начать историю');
+    b.type = 'button';
+    b.onclick = function () { touched = true; next(); };
+    panel.appendChild(b);
+  }
+
   window.LessonScene = {
-    get: function () { return { pos: pos, first: first, tries: tries }; },
+    get: function () { return { pos: pos, first: first, second: second, tries: tries, picks: picks }; },
     set: function (s) {
       if (!s || typeof s !== 'object') return;
+      run++;
       root.innerHTML = ''; panel.innerHTML = ''; endBox.hidden = true;
-      pos = 0; first = {}; tries = s.tries || {};
-      quiet = true;
+      pos = 0; first = {}; second = {}; tries = s.tries || {}; picks = s.picks || {};
       Object.keys(s.first || {}).forEach(function (i) {
         var st = STEPS.filter(function (x) { return x.t === 'q' && String(x.i) === i; })[0];
-        if (st) record(st, s.first[i]);
+        if (!st) return;
+        record(st, s.first[i]);
+        if (s.second && i in s.second) record(st, s.second[i]);
       });
-      next();
-      quiet = false;
+      if (!(+s.pos) && !Object.keys(first).length) { start(); return; }   // историю ещё не начинали
+      replay(+s.pos || 0);
     }
   };
 
-  next();
+  start();
 })();

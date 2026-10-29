@@ -101,7 +101,7 @@ def test_soft_pass_mark_for_dry_lessons(parent, make_student):
     c = make_student()
     parent.post("/parent/students/1/credit", data={"upto": "1", "action": "add"})   # урок 1 — второй в курсе
     html = c.get("/lesson/1").get_data(as_text=True)
-    assert "минимум 60%" in html
+    assert "нужно 60%" in html                            # урок 1 — сцена-история
 
 
 def _partial(client, lid, n_right):
@@ -121,8 +121,11 @@ def test_score_between_60_and_70_passes_only_on_soft_lessons(parent, make_studen
     right = next(k for k in range(n + 1) if 60 <= 100 * k / n < 70)
     assert "fix=" not in _partial(c, 33, right)                    # нет кнопки «Исправь ошибки» (фраза бывает в подписи версии); алфавит: порог 60% — сдан
     assert db_scalar("SELECT passed FROM attempts ORDER BY id DESC LIMIT 1") == 1
-    n2 = len(LESSONS_BY_ID[10]["test"])                           # «Цифры» открылись после 33
-    html = _partial(c, 10, next(k for k in range(n2 + 1) if 60 <= 100 * k / n2 < 70))   # обычный урок: 60–70% — мало
+    from curriculum import LESSONS, SOFT_PASS_IDS
+    lid = next(l["id"] for l in LESSONS if not l.get("scene") and l["id"] not in SOFT_PASS_IDS)
+    parent.post("/parent/students/1/credit", data={"upto": str(LESSONS.index(LESSONS_BY_ID[lid])), "action": "add"})
+    n2 = len(LESSONS_BY_ID[lid]["test"])
+    html = _partial(c, lid, next(k for k in range(n2 + 1) if 60 <= 100 * k / n2 < 70))   # обычный урок: 60–70% — мало
     assert "Нужно 70%" in html
 
 

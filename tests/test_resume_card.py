@@ -11,14 +11,24 @@ def test_resume_card_shows_unfinished_lesson(make_student):
     l = LESSONS[0]
     assert CARD not in c.get("/student").get_data(as_text=True)
     c.get(f"/lesson/{l['id']}")
-    c.post(f"/api/lesson/{l['id']}/progress", json={"state": {"step": "step-test", "test": {"radio": {"q0": "1", "q1": "0"}, "text": ["", ""]}}})
-    html = c.get("/student").get_data(as_text=True)
-    assert CARD in html and f"отвечено 2 из {len(l['test'])}" in html and f'href="/lesson/{l["id"]}"' in html
+    c.post(f"/api/lesson/{l['id']}/progress", json={"state": {"step": "step-test", "scene": {"pos": 5, "first": {"0": "1", "1": "x"}}}})
+    html = c.get("/student").get_data(as_text=True)                # первый урок — сцена-история
+    assert CARD in html and f"сделано ходов: 2 из {len(l['test'])}" in html and f'href="/lesson/{l["id"]}"' in html
 
 
-def test_resume_card_steps_and_gone_after_pass(make_student):
+def test_resume_card_counts_test_answers(make_student, parent):
     c = make_student()
-    l = LESSONS[0]
+    l = next(x for x in LESSONS if not x.get("scene"))
+    parent.post("/parent/students/1/credit", data={"upto": str(LESSONS.index(l)), "action": "add"})
+    c.get(f"/lesson/{l['id']}")
+    c.post(f"/api/lesson/{l['id']}/progress", json={"state": {"step": "step-test", "test": {"radio": {"q0": "1", "q1": "0"}, "text": ["", ""]}}})
+    assert f"отвечено 2 из {len(l['test'])}" in c.get("/student").get_data(as_text=True)
+
+
+def test_resume_card_steps_and_gone_after_pass(make_student, parent):
+    c = make_student()
+    l = next(x for x in LESSONS if not x.get("scene"))           # у урока со сценой нет шага «Слова»
+    parent.post("/parent/students/1/credit", data={"upto": str(LESSONS.index(l)), "action": "add"})
     c.get(f"/lesson/{l['id']}")
     c.post(f"/api/lesson/{l['id']}/progress", json={"state": {"step": "step-material", "words": {"i": 2, "seen": [0, 1, 2]}}})
     assert f"3 из {len(l['material'])} слов" in c.get("/student").get_data(as_text=True)

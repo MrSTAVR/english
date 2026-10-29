@@ -14,6 +14,9 @@
   8 «Вчера и завтра» — ученица дома рассказывает о поездке и строит планы.
 
 Сцена: {"title", "intro" (что было раньше, по-русски), "lines", "outro" (крючок)}.
+В репликах {name} — имя ученицы (в английских — латиницей), {ключ} — её выбор из pick.
+Слова урока (material) при первом появлении в реплике показываются карточками под ней — так ученица
+с ними знакомится (шага «Слова» у урока со сценой нет).
 Строки: say(кто, en, ru) — реплика героя (только английский — её читает озвучка; перевод видно по нажатию,
 и всё равно в реплике прямо над вопросом не называем проверяемое слово); note(ru) — слова рассказчика;
 ask(вопрос) — ход ученицы: вопрос в формате теста (choice / type_in / order, можно "audio"; у type_in —
@@ -30,14 +33,36 @@ def note(ru):
     return {"note": ru}
 
 
-def ask(q):
-    return {"ask": q}
+def ask(q, ok=None, no=None):
+    """Ход ученицы. ok — реплика героя после верного ответа (say(...)); no — после неверного:
+    say(...) на любой неверный ответ или {номер варианта: say(...)} — на конкретный вариант."""
+    d = {"ask": q}
+    if ok:
+        d["ok"] = ok
+    if no:
+        d["no"] = no
+    return d
 
 
-def choice(q, options, answer, explain="", audio=None):
+def pick(key, q, options):
+    """Выбор без правильного ответа («Red or blue?»): дальше в репликах {key} → v, в переводе {key} → v_ru.
+    options — [(что говорит ученица en, ru, v, v_ru), …]."""
+    return {"pick": key, "q": q,
+            "options": [{"en": en, "ru": ru, "v": v, "v_ru": v_ru} for en, ru, v, v_ru in options]}
+
+
+def speak(en, ru):
+    """«Скажи вслух»: по желанию, без оценки (в тест не входит)."""
+    return {"speak": en, "ru": ru}
+
+
+def choice(q, options, answer, explain="", audio=None, pics=False):
+    """pics=True — варианты показываются картинками (options — английские слова с картинкой)."""
     d = {"type": "choice", "q": q, "options": options, "answer": answer, "explain": explain}
     if audio:
         d["audio"] = audio
+    if pics:
+        d["pics"] = True
     return d
 
 
@@ -129,19 +154,47 @@ SCENES = {
     10: {"title": "Такси номер семь",
          "intro": "У выхода из аэропорта — много такси. Чик-чика не видно, но к вам идёт папа Тома.",
          "lines": [
-             say("Dad", "Hello! I'm Tom's dad. Our taxi is number seven.", "Привет! Я папа Тома. Наше такси — номер семь."),
-             ask(choice("Какой номер у такси?", ["7", "5", "10"], 0, "Seven — семь (7).")),
-             say("Dad", "How many bags have you got? Two?", "Сколько у тебя сумок? Две?"),
-             ask(write("Ответь: у тебя одна сумка. Напиши число 1 словом", "one", "One — один.")),
-             say("Anna", "I can count to ten! One, two, three…", "Я умею считать до десяти! Один, два, три…"),
-             ask(choice("Что значит «Five»?", ["5", "9", "4"], 0, "Five — пять.")),
-             ask(choice("Как по-английски «десять»?", ["Ten", "Nine", "Two"], 0, "Ten — десять.")),
+             say("Dad", "Hello, {name}! I'm Tom's dad. Our taxi is number seven.",
+                 "Привет, {name}! Я папа Тома. Наше такси — номер семь."),
+             ask(choice("Какое такси ваше? Нажми на номер", ["7", "1", "11"], 0, "Seven — семь (7).",
+                        audio="Our taxi is number seven."),
+                 ok=say("Dad", "Yes! Number seven. Let's go!", "Да! Номер семь. Пошли!")),
+             say("Dad", "How many bags have you got?", "Сколько у тебя сумок?"),
+             note("У тебя рюкзак и чемодан — две сумки."),
+             ask(choice("Ответь папе Тома", ["Two!", "Ten!", "Tree!"], 0, "Two — два (2). Tree — это дерево!"),
+                 ok=say("Dad", "Two bags. OK!", "Две сумки. Хорошо!"),
+                 no={1: say("Dad", "Ten bags? Ha-ha! No, look — one, two.", "Десять сумок? Ха-ха! Нет, смотри — одна, две."),
+                     2: say("Dad", "A tree? Ha-ha! T-W-O, two!", "Дерево? Ха-ха! Т-W-O, два!")}),
+             say("Anna", "I can count! One, two, three…", "Я умею считать! Один, два, три…"),
+             ask(order("Помоги Анне считать дальше: собери «четыре, пять, шесть»", "four five six",
+                       "Four, five, six — четыре, пять, шесть."),
+                 ok=say("Anna", "Seven, eight, nine, ten! We can count!", "Семь, восемь, девять, десять! Мы умеем считать!")),
+             pick("lucky", "Анна спрашивает: «What's your lucky number?» — «Какое твоё счастливое число?» Выбери своё!",
+                  [("Seven!", "Семь!", "Seven", "Семь"), ("Three!", "Три!", "Three", "Три"),
+                   ("Ten!", "Десять!", "Ten", "Десять")]),
+             say("Anna", "{lucky}? Cool! My lucky number is five.", "{lucky}? Здорово! А моё счастливое число — пять."),
+             say("Driver", "Hello! Where to?", "Здравствуйте! Куда едем?"),
              say("Tom", "Our house is number eight.", "Наш дом — номер восемь."),
-             ask(write("Напиши словом номер дома Тома: 8", "eight", "Eight — восемь.")),
-             ask(choice("Послушай и выбери число", ["3", "4", "9", "2"], 0, "Three — три.", audio="Three")),
-             ask(choice("Как по-английски «шесть»?", ["Six", "Seven", "Four"], 0, "Six — шесть.")),
+             ask(choice("Скажи таксисту, куда ехать", ["Number eight, please!", "Number nine, please!", "Number three, please!"], 0,
+                        "Eight — восемь (8)."),
+                 ok=say("Driver", "Number eight. OK, let's go!", "Номер восемь. Хорошо, поехали!"),
+                 no={1: say("Tom", "Nine? No, no! Our house is number eight!", "Девять? Нет-нет! Наш дом — номер восемь!"),
+                     2: say("Tom", "Three? No! Our house is number eight!", "Три? Нет! Наш дом — номер восемь!")}),
+             note("Такси едет по улицам. Вдруг Том показывает в окно: на дороге жёлтые пёрышки — раз, два, три, четыре, пять!"),
+             say("Tom", "Look! Yellow feathers! How many?", "Смотри! Жёлтые пёрышки! Сколько их?"),
+             ask(write("Напиши Тому, сколько пёрышек: 5 словом", "five", "Five — пять."),
+                 ok=say("Tom", "Five feathers! Chick-chick was here!", "Пять пёрышек! Чик-чик был здесь!")),
+             speak("One, two, three, four, five!", "Один, два, три, четыре, пять!"),
+             note("Такси остановилось у дома. Из окна выглядывает бабушка Тома."),
+             say("Grandma", "Hello, {name}! Welcome!", "Здравствуй, {name}! Добро пожаловать!"),
+             ask(choice("Послушай бабушку и нажми на номер дома", ["eight", "three", "nine"], 0, "Eight — восемь (8).",
+                        audio="Our house is number eight.", pics=True),
+                 ok=say("Grandma", "Yes, number eight! Come in!", "Да, номер восемь! Заходи!")),
+             note("На двери записка с жёлтым пёрышком: «I'm in the garden!» — «Я в саду!». А под ней нарисованы палочки: IIIIIIIIII."),
+             ask(write("Сосчитай палочки — столько шагов до сада. Напиши число словом", "ten", "Ten — десять (10)."),
+                 ok=say("Tom", "Ten steps to the garden! Come on!", "Десять шагов до сада! Бежим!")),
          ],
-         "outro": "Такси остановилось у дома номер восемь. На двери приклеена записка… с жёлтым пёрышком!"},
+         "outro": "Раз, два, три… десять шагов — и вы у калитки в сад. За кустом что-то жёлтое шевелится…"},
 
     2: {"title": "Волшебная записка",
         "intro": "На двери дома Тома — новая записка от Чик-чика. Слова в ней с волшебной буквой E на конце.",

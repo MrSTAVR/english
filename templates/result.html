@@ -12,7 +12,7 @@
     {% endif %}
   </h1>
   <div class="score-ring">{{ percent }}%</div>
-  <p>Правильных ответов: <b>{{ correct }}</b> из <b>{{ total }}</b> · Время: <b>{{ seconds|human_time }}</b></p>
+  <p>Правильных ответов: <b>{{ correct }}</b> из <b>{{ total }}</b>{% if halves %} (и ещё <b>{{ halves }}</b> со второй попытки — по полбалла){% endif %} · Время: <b>{{ seconds|human_time }}</b></p>
   {% if not passed %}
     <p class="hint-text">{% if percent < 30 %}Ничего страшного — разберём ошибки, повторим слова, и всё получится.{% else %}Нужно {{ need }}%. Посмотри ошибки ниже и исправь их — правильные ответы уже засчитаны!{% endif %}</p>
     <div class="result-actions result-actions-top">
@@ -63,7 +63,9 @@
       {% if r.almost %}
         <div class="rev-detail">Засчитано! Только пишется так: <b>{{ r.correct_answer }}</b> (у тебя: <i>{{ r.given }}</i>)</div>
       {% endif %}
-      {% if not r.correct %}
+      {% if r.second %}
+        <div class="rev-detail">Получилось со второй попытки — полбалла. Это слово повторим.</div>
+      {% elif not r.correct %}
         <div class="rev-detail">{% if r.given or r.type not in ('match', 'sort') %}Твой ответ: <i>{{ r.given or '(пусто)' }}</i> → {% endif %}Правильно: <b>{{ r.correct_answer }}</b></div>
       {% endif %}
       {% if r.explain %}<div class="rev-explain">{{ r.explain|noemoji }}</div>{% endif %}
@@ -82,6 +84,9 @@
 <div class="result-actions">
   {% if not passed %}
     <a class="btn btn-primary" href="{{ url_for('student.lesson_page', lesson_id=lesson.id, step='test', fix=attempt_id) }}">Исправь ошибки</a>
+  {% endif %}
+  {% if passed %}
+    <a class="btn btn-primary" href="{{ url_for('games.games_hub', lesson=lesson.id) }}">Сыграй со словами урока</a>
   {% endif %}
   <a class="btn btn-secondary" href="{{ url_for('student.student_home') }}">На главную</a>
 </div>
