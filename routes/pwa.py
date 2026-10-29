@@ -46,6 +46,17 @@ def static_version(files, sw_path):
     return h.hexdigest()[:10]
 
 
+@bp.route("/.well-known/assetlinks.json")
+def assetlinks():
+    """Digital Asset Links для Android-приложения (TWA): сайт доверяет приложению с этим ключом подписи."""
+    import config
+    return Response(json.dumps([{
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {"namespace": "android_app", "package_name": config.TWA_PACKAGE,
+                   "sha256_cert_fingerprints": [config.TWA_SHA256]},
+    }]), mimetype="application/json")
+
+
 @bp.route("/manifest.webmanifest")
 def manifest():
     return Response(json.dumps(MANIFEST, ensure_ascii=False), mimetype="application/manifest+json",
