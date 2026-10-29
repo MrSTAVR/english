@@ -131,3 +131,12 @@ def test_lesson_uses_pointer_events_not_html5_drag(parent, make_student):
     html = student.get(f"/lesson/{N(3)}").get_data(as_text=True)
     assert "pointerdown" in html and "setPointerCapture" in html
     assert "addEventListener('dragstart', e => {\n      dragged" not in html
+
+
+def test_assetlinks_for_android_app(anon):
+    import config
+    r = anon.get("/.well-known/assetlinks.json")
+    assert r.status_code == 200 and r.mimetype == "application/json"
+    item = r.get_json()[0]
+    assert item["target"]["package_name"] == config.TWA_PACKAGE
+    assert item["target"]["sha256_cert_fingerprints"] == [config.TWA_SHA256]

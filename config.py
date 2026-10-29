@@ -69,3 +69,10 @@ def production_problems():
     if not COOKIE_SECURE:
         problems.append("ENGLISH_COOKIE_SECURE выключен — cookie уйдут без шифрования")
     return problems
+
+
+# Android-приложение (TWA, обёртка сайта; сборка — E:\Claude\EnglishFun-android, ключ там же, не в репозитории).
+# Отпечаток ключа подписи публичный: по нему Android проверяет, что приложение и сайт одного владельца
+# (/.well-known/assetlinks.json), и открывает сайт без адресной строки.
+TWA_PACKAGE = "org.mywire.stavr.englishfun"
+TWA_SHA256 = "93:F1:27:0D:44:C3:41:01:60:B1:14:B6:70:16:C0:1B:A3:D6:07:FF:5A:A6:D7:DC:17:F5:88:53:D0:ED:4D:BE"
