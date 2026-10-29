@@ -3,8 +3,9 @@
    Место в уроке (шаг, слово, ответы) сохраняется на сервере и восстанавливается при возврате. */
 (function () {
   'use strict';
-  var STEPS = { 'step-theory': ['Теория', 1], 'step-material': ['Слова', 2], 'step-exercises': ['Тренировка', 3], 'step-test': ['Тест', 4] };
-  if (document.getElementById('scene')) STEPS['step-test'][0] = 'История';
+  /* шаги урока — из шапки страницы: теория → слова → тест или (урок со сценой) теория → история */
+  var STEPS = {}, NSTEPS = 0;
+  document.querySelectorAll('#stepper li').forEach(function (li, k) { STEPS[li.dataset.s] = [li.textContent.replace(/^\d+/, '').trim(), k + 1]; NSTEPS = k + 1; });
   function say(text, slow) { if (window.ttsSpeak) window.ttsSpeak(text, slow ? 0.55 : null); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function ICO(name) { return '<svg class="ico" aria-hidden="true"><use href="#o-' + name + '"/></svg>'; }
@@ -19,7 +20,7 @@
   window.lessonStepChanged = function (id) {
     curStep = id;
     var s = STEPS[id];
-    if (now && s) now.textContent = s[0] + ' · ' + s[1] + '/4';
+    if (now && s) now.textContent = s[0] + ' · ' + s[1] + '/' + NSTEPS;
     if (id === 'step-material' && deck) deck.show();
     if (progress) progress.save();
   };
@@ -114,7 +115,7 @@
       $('wd-tap').hidden = flipped;
       card.setAttribute('aria-label', flipped ? 'Спрятать перевод' : 'Показать перевод');
       $('wd-prev').disabled = i === 0;
-      $('wd-next').textContent = i === W.length - 1 ? 'К тренировке →' : 'Дальше →';
+      $('wd-next').textContent = i === W.length - 1 ? 'К тесту →' : 'Дальше →';
       $('wd-dots').innerHTML = W.map(function (x, k) {
         return '<button type="button" class="wd-dot' + (k === i ? ' is-on' : seen[k] ? ' is-seen' : '') + '" data-k="' + k + '" aria-label="' + esc(x.en) + '"></button>';
       }).join('');
@@ -142,7 +143,7 @@
     $('wd-slow').addEventListener('click', function () { say(W[i].en, true); });
     $('wd-prev').addEventListener('click', function () { go(i - 1); });
     $('wd-next').addEventListener('click', function () {
-      if (i === W.length - 1) { seen[i] = true; changed(); if (window.goStep) window.goStep('step-exercises'); return; }
+      if (i === W.length - 1) { seen[i] = true; changed(); if (window.goStep) window.goStep('step-test'); return; }
       go(i + 1);
     });
     $('wd-all').addEventListener('click', function () { openSheet(true); });
@@ -185,21 +186,14 @@
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf() }, body: JSON.stringify(body)
       }).catch(function () { /* офлайн — сохраним в следующий раз */ });
     }
-    /* ответы в тренировке и тесте: выбранные варианты (по name) и введённые слова (по порядку) */
-    /* ответы на шаге: выбранные варианты (по name), введённые слова, проверенные задания,
+    /* ответы теста: выбранные варианты (по name), введённые слова,
        перетаскивания («Соедини пары», «Разложи по корзинам»), собранные слова и предложения */
     function chipsText(el) { return el ? [].map.call(el.querySelectorAll('.word-chip'), function (c) { return c.textContent; }) : []; }
     function answers(stepId) {
-      var box = $(stepId), out = { radio: {}, text: [], checked: [], match: [], sort: [], lines: {} };
+      var box = $(stepId), out = { radio: {}, text: [], match: [], sort: [], lines: {} };
       if (!box) return out;
       box.querySelectorAll('input[type=radio]:checked').forEach(function (r) { if (r.name) out.radio[r.name] = r.value; });
       box.querySelectorAll('input.typein').forEach(function (t) { out.text.push(t.value); });
-      box.querySelectorAll('.exercise').forEach(function (ex, k) {
-        var res = ex.querySelector('.ex-result'), exp = ex.querySelector('.explain');
-        if (res && /\b(ok|bad)\b/.test(res.className)) {
-          out.checked.push({ k: k, t: res.textContent, ok: /\bok\b/.test(res.className), exp: !!exp && !exp.classList.contains('hidden') });
-        }
-      });
       box.querySelectorAll('.dnd-match').forEach(function (root) { out.match.push(root._pairs || {}); });
       box.querySelectorAll('.dnd-sort').forEach(function (root) {
         var m = {};
@@ -246,17 +240,8 @@
         var bank = line.parentNode.querySelector('.word-bank');
         (a.lines[k] || []).forEach(function (t) {
           var chip = bank && [].filter.call(bank.querySelectorAll('.word-chip'), function (c) { return c.textContent === t && c.style.display !== 'none'; })[0];
-          if (chip) chip.click();                       // тест: pickWord; тренировка: буква переезжает в строку
+          if (chip) chip.click();                       // pickWord
         });
-      });
-      var exs = box.querySelectorAll('.exercise');
-      (a.checked || []).forEach(function (c) {
-        var ex = exs[c.k];
-        if (!ex) return;
-        var res = ex.querySelector('.ex-result'), exp = ex.querySelector('.explain');
-        if (res) { res.textContent = c.t; res.className = 'ex-result ' + (c.ok ? 'ok' : 'bad'); }
-        if (exp && c.exp) exp.classList.remove('hidden');
-        if (c.ok) ex.classList.add('done');
       });
     }
     function state() {
@@ -265,22 +250,17 @@
         step: curStep,
         scroll: Math.round(window.scrollY || 0),
         words: deck ? deck.get() : null,
-        ex: answers('step-exercises'),
         test: answers('step-test'),
-        dlg: window.LessonDialogs ? window.LessonDialogs.get() : null,
         scene: window.LessonScene ? window.LessonScene.get() : null,
-        speak: ($('speak-block') && $('speak-block')._speak) ? $('speak-block')._speak.get() : null,
         secs: start ? Math.max(0, Math.round(Date.now() / 1000 - start)) : 0
       };
     }
     function saveNow() { if (ready) post({ state: state() }); }
     function save() { if (!ready) return; clearTimeout(timer); timer = setTimeout(saveNow, 700); }
 
-    ['step-exercises', 'step-test'].forEach(function (id) {
-      var box = $(id);
-      if (box) ['change', 'input', 'click', 'pointerup'].forEach(function (ev) { box.addEventListener(ev, save); });
-    });
-    document.addEventListener('lesson:changed', save);   // диалоги и «Скажи вслух» сообщают сами
+    var testBox = $('step-test');
+    if (testBox) ['change', 'input', 'click', 'pointerup'].forEach(function (ev) { testBox.addEventListener(ev, save); });
+    document.addEventListener('lesson:changed', save);   // сцена сообщает сама
     var scrollT = null;                                  // место на странице — тоже часть «где остановились»
     window.addEventListener('scroll', function () { clearTimeout(scrollT); scrollT = setTimeout(save, 400); }, { passive: true });
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') { clearTimeout(timer); saveNow(); } });
@@ -298,15 +278,11 @@
       var useful = saved && (saved.step !== 'step-theory' || (saved.scroll | 0) > 200 || (saved.words && (saved.words.seen || []).length));
       if (useful) {
         if (deck && saved.words) deck.set(saved.words);
-        putAnswers('step-exercises', saved.ex);
         putAnswers('step-test', saved.test);
-        if (saved.step && saved.step !== 'step-theory' && window.goStep) window.goStep(saved.step);
-        setTimeout(function () {                         // диалоги и «Скажи вслух» строятся на DOMContentLoaded после нас
-          if (saved.dlg && window.LessonDialogs) window.LessonDialogs.set(saved.dlg);
-          if (saved.scene && window.LessonScene) window.LessonScene.set(saved.scene);
-          var sb = $('speak-block');
-          if (saved.speak && sb && sb._speak) sb._speak.set(saved.speak);
-        }, 0);
+        // шага из старого сохранения (тренировка, «Слова» у урока со сценой) больше нет — идём к тесту/истории
+        var step = STEPS[saved.step] ? saved.step : 'step-test';
+        if (step !== 'step-theory' && window.goStep) window.goStep(step);
+        if (saved.scene && window.LessonScene) window.LessonScene.set(saved.scene);
         var y = saved.scroll | 0;
         if (y > 0) setTimeout(function () { window.scrollTo({ top: y, behavior: 'auto' }); }, 80);   // goStep сначала поднимает наверх
         var form2 = $('test-form');

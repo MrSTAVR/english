@@ -868,10 +868,9 @@
 
   /* ---------- слежение за уроком ---------- */
   if (S.page === 'lesson') {
-    var steps = ['step-theory', 'step-material', 'step-exercises', 'step-test'];
+    var steps = ['step-theory', 'step-material', 'step-test'];
     var stepMsgs = {
       'step-material': function () { return pick(T.theoryDone); },
-      'step-exercises': function () { return pick(T.wordsDone); },
       'step-test': function () { return pick(document.getElementById('scene') ? T.sceneOpen : T.testOpen); }
     };
     var currentStep = function () {
@@ -916,14 +915,6 @@
         say(e.pointerType === 'mouse' ? T.dragHint : T.tapHint, { mood: 'think' });
       });
     });
-
-    var cheered = false;
-    setInterval(function () {
-      var box = document.getElementById('step-exercises');
-      if (!box || box.classList.contains('hidden') || cheered) return;
-      var ok = box.querySelectorAll('.ex-result.ok'), total = box.querySelectorAll('.exercise');
-      if (total.length && ok.length === total.length) { cheered = true; say(T.allExercises, { mood: 'party' }); }
-    }, 1200);
   }
 
   document.addEventListener('speak:result', function (e) {

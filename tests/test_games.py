@@ -41,7 +41,7 @@ def test_game_for_one_lesson_and_locked_lesson(make_student):
     assert c.get(f"/student/games?lesson={N(1)}").status_code == 200         # открытый урок
     assert c.get(f"/student/games/play/pairs?lesson={N(1)}").status_code == 200
     assert c.get(f"/student/games/play/pairs?lesson={N(30)}").status_code == 403   # закрытый
-    assert 'games?lesson=' in c.get(f"/lesson/{N(1)}").get_data(as_text=True)
+    assert 'games?lesson=' in submit_lesson(c, N(1))                          # после сданного урока — «Сыграй со словами»
 
 
 def test_game_api_and_achievements(make_student):
@@ -84,8 +84,9 @@ def test_dialogs_page_and_progress(parent, make_student):
 def test_lesson_page_embeds_its_dialog(make_student, parent):
     c = make_student()
     _credit(parent, 1)
-    html = c.get("/lesson/9").get_data(as_text=True)
-    assert "lesson-dialogs" in html and "greet-meet" in html and "dialogs.js" in html
+    html = c.get("/lesson/9").get_data(as_text=True)                  # тренировки (и диалога в ней) в уроке больше нет
+    assert "lesson-dialogs" not in html and "dialogs.js" not in html
+    assert "greet-meet" in c.get("/student/dialogs").get_data(as_text=True)
 
 
 def test_dialog_partners_have_portraits():

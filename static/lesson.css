@@ -288,3 +288,27 @@ html[data-theme="dark"] .lt-mask { color: #8FB4FF; }
 .sc-ok { margin-top: 10px; }
 .sc-turn .answer-line { min-height: 44px; }
 .sc-end .btn-big { margin-top: 6px; }
+
+/* сцена 2.0: новые слова под репликой, перевод, реакции, выбор, «скажи вслух» */
+.sc-w { font-weight: 900; text-decoration: underline; text-decoration-color: var(--yellow); text-decoration-thickness: 3px; text-underline-offset: 3px; }
+.sc-tr { border: 0; background: transparent; color: var(--primary); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; padding: 4px 6px; margin-left: 2px; text-decoration: underline dotted; }
+.sc-words { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
+.sc-words-h { font-size: .78rem; color: var(--muted); width: 100%; }
+.sc-word { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 2px solid var(--line); border-radius: 14px;
+  background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; box-shadow: 0 2px 0 var(--shade); max-width: 100%; }
+.sc-word.is-open { border-color: var(--yellow); }
+.sc-word-pic { font-size: 1.5rem; line-height: 1; }
+.sc-word-pic .pic-img { width: 28px; height: 28px; }
+.sc-word-ru { color: var(--muted); font-weight: 600; font-size: .85rem; }
+.dlg-row.me.sc-wrong .dlg-bubble { background: var(--oops-bg); color: var(--oops-ink); text-decoration: line-through; }
+.sc-bpic { font-size: 1.3rem; }
+.sc-bpic .pic-img { width: 26px; height: 26px; vertical-align: middle; }
+.sc-pics { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 8px; }
+.rv-opt.sc-pic { font-size: 2.6rem; line-height: 1.1; padding: 10px 6px; min-height: 76px; display: flex; align-items: center; justify-content: center; }
+.rv-opt.sc-pic .pic-img { width: 52px; height: 52px; }
+.sc-opt-ru { display: block; font-weight: 600; font-size: .8rem; color: var(--muted); }
+.sc-phrase { margin: 4px 0 10px; font-size: 1.15rem; display: grid; gap: 2px; }
+.sc-phrase small { font-size: .85rem; color: var(--muted); }
+.sc-speak-btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sc-start { margin: 8px auto 4px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.sc-start .ico { width: 22px; height: 22px; }

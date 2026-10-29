@@ -13,16 +13,17 @@
   </div>
 </div>
 
-<ol class="stepper ls-steps" id="stepper" aria-label="Шаги урока">
-  <li data-s="step-theory" class="active"><i>1</i><span>Теория</span></li>
-  <li data-s="step-material"><i>2</i><span>Слова</span></li>
-  <li data-s="step-exercises"><i>3</i><span>Тренировка</span></li>
-  <li data-s="step-test"><i>4</i><span>{{ 'История' if lesson.scene else 'Тест' }}</span></li>
+{# урок со сценой: теория → история (слова знакомятся в репликах); без сцены: теория → слова → тест #}
+{% set ls_steps = [('step-theory', 'Теория')] + ([] if lesson.scene else [('step-material', 'Слова')]) + [('step-test', 'История' if lesson.scene else 'Тест')] %}
+{% set after_theory = 'step-test' if lesson.scene else 'step-material' %}
+<ol class="stepper ls-steps ls-steps-{{ ls_steps|length }}" id="stepper" aria-label="Шаги урока">
+  {% for sid, sname in ls_steps %}<li data-s="{{ sid }}"{% if loop.first %} class="active"{% endif %}><i>{{ loop.index }}</i><span>{{ sname }}</span></li>
+  {% endfor %}
 </ol>
 </div>
 <div class="ls-resume" id="ls-resume" hidden><svg class="ico" aria-hidden="true"><use href="#o-repeat"/></svg><span>Продолжаем с того же места</span><button type="button" class="btn btn-small btn-aux" id="ls-restart">Начать заново</button></div>
 <script type="application/json" id="ls-state" data-lesson="{{ lesson.id }}">{{ saved_state | tojson }}</script>
-<div class="ls-now"><span>{% if lesson.num %}Урок {{ lesson.num }} · {% endif %}{{ ltitle }}</span><b id="ls-now">Теория · 1/4</b></div>
+<div class="ls-now"><span>{% if lesson.num %}Урок {{ lesson.num }} · {% endif %}{{ ltitle }}</span><b id="ls-now">Теория · 1/{{ ls_steps|length }}</b></div>
 
 <!-- Шаг 1: теория -->
 <section class="step" id="step-theory">
@@ -44,15 +45,16 @@
       {% if lesson.theory.tip %}
       <div class="theory-tip"><svg class="th-chick" aria-hidden="true"><use href="#i-chick"/></svg><span><b>Совет Чик-чика</b>{{ lesson.theory.tip|noemoji }}</span></div>
       {% endif %}
-      <button class="btn ls-next" onclick="goStep('step-material')">Понятно! К словам →</button>
+      <button class="btn ls-next" onclick="goStep('{{ after_theory }}')">{{ 'Понятно! К истории →' if lesson.scene else 'Понятно! К словам →' }}</button>
     </aside>
   </div>
   {% else %}
-    <p class="theory-intro">Теории в этом уроке пока нет — переходи сразу к словам!</p>
-    <button class="btn ls-next" onclick="goStep('step-material')">К словам →</button>
+    <p class="theory-intro">Теории в этом уроке пока нет — переходи сразу {{ 'к истории' if lesson.scene else 'к словам' }}!</p>
+    <button class="btn ls-next" onclick="goStep('{{ after_theory }}')">{{ 'К истории →' if lesson.scene else 'К словам →' }}</button>
   {% endif %}
 </section>
 
+{% if not lesson.scene %}
 <!-- Шаг 2: новые слова — одна большая карточка, список всех слов, «Дальше» -->
 <section class="step hidden" id="step-material">
   <div class="wd-headrow">
@@ -98,94 +100,9 @@
   <script type="application/json" id="wd-data">{{ lesson.material | tojson }}</script>
 </section>
 
-<!-- Шаг 3: упражнения -->
-<section class="step hidden" id="step-exercises">
-  <h2 class="ls-step-title">Потренируйся</h2>
-  <p class="ls-step-sub">Это тренировка — ошибки здесь не считаются. Проверяй себя кнопкой!</p>
-  {% for ex in lesson.exercises %}
-    {% set outer_loop = loop %}
-    <div class="exercise card-inner" data-answer="{{ ex.answer if ex.type in ('choice','type_in','order') else '' }}" data-type="{{ ex.type }}">
-      <p class="q"><b>Задание {{ loop.index }}.</b> {{ ex.q|noemoji }}</p>
-      {% if ex.type == 'choice' %}
-        <div class="options">
-          {% for oi, opt in ex|shuffle_options %}
-            <label class="opt"><input type="radio" name="ex{{ outer_loop.index0 }}" value="{{ oi }}"> {{ opt }}</label>
-          {% endfor %}
-        </div>
-      {% elif ex.type == 'match' %}
-        {# drag&drop: тянем левую карточку на правую слот-пару; эталон скрыт (data-answer) #}
-        <div class="dnd dnd-match" data-ex data-answer='{{ ex | match_expected }}'>
-          {% set mleft = ex.left if ex.left is defined and ex.left else (ex.pairs | map(attribute=0) | list) %}
-          <div class="match-cols">
-            <div class="match-col match-left">
-              {% for item in mleft %}
-                <div class="match-tile" draggable="true" data-left="{{ loop.index0 }}">{{ item }}</div>
-              {% endfor %}
-            </div>
-            <div class="match-col match-right">
-              {% for ri, text in ex | shuffle_match %}
-                <div class="match-slot" data-right="{{ ri }}"><span class="slot-hint">← сюда пару</span><span class="slot-text">{{ text }}</span></div>
-              {% endfor %}
-            </div>
-          </div>
-          <button type="button" class="btn btn-small btn-aux" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
-          <button type="button" class="btn btn-small btn-check" onclick="checkDndExercise(this)"><svg class="ico" aria-hidden="true"><use href="#o-check"/></svg> Проверить</button>
-          <span class="ex-result"></span>
-        </div>
-      {% elif ex.type == 'sort' %}
-        {# drag&drop: тянем слово в корзину-категорию; эталон скрыт (data-answer) #}
-        <div class="dnd dnd-sort" data-ex data-answer='{{ ex.words | tojson }}'>
-          <div class="sort-tray">
-            {% for w, c in ex | shuffle_sort %}
-              <div class="word-chip sort-word" draggable="true" data-word="{{ w }}">{{ w }}</div>
-            {% endfor %}
-          </div>
-          <div class="sort-bins">
-            {% for cat in ex.categories %}
-              <div class="bin" data-cat="{{ cat.id }}">
-                <div class="bin-head">{{ cat.emoji }} {{ cat.title }}</div>
-                <div class="bin-body"></div>
-              </div>
-            {% endfor %}
-          </div>
-          <button type="button" class="btn btn-small btn-aux" onclick="resetDnd(this.closest('.dnd'))">Сбросить</button>
-          <button type="button" class="btn btn-small btn-check" onclick="checkDndExercise(this)"><svg class="ico" aria-hidden="true"><use href="#o-check"/></svg> Проверить</button>
-          <span class="ex-result"></span>
-        </div>
-      {% else %}
-        {% if ex is russian_answer %}
-        <input type="text" class="typein" placeholder="Напиши перевод по-русски" lang="ru">
-        {% else %}
-        <input type="text" class="typein" placeholder="Напиши ответ по-английски" lang="en" autocomplete="off">
-        <button type="button" class="btn btn-small tts-listen" onclick="ttsSpeakInput(this)" title="Послушать, как звучит твой ответ"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg> Послушать</button>
-        <div class="lt" data-lt='{{ ex|tiles|tojson }}'{% if tiles_open %} data-open="1"{% endif %}></div>
-        {% endif %}
-      {% endif %}
-      {% if ex.type not in ('match', 'sort') %}
-        <button class="btn btn-small btn-check" onclick="checkExercise(this)"><svg class="ico" aria-hidden="true"><use href="#o-check"/></svg> Проверить</button>
-        <span class="ex-result"></span>
-      {% endif %}
-      <div class="explain hidden">{{ ex.explain }}</div>
-    </div>
-  {% endfor %}
-  {% if lesson.practice %}
-  <h3 class="pr-title">Ещё потренируемся</h3>
-  <div id="practice" data-items='{{ lesson.practice | tojson }}'{% if tiles_open %} data-tiles-open="1"{% endif %}></div>
-  {% endif %}
-  <h3 class="pr-title">Поиграй со словами урока</h3>
-  <p><a class="btn btn-secondary" href="{{ url_for('games.games_hub', lesson=lesson.id) }}">Открыть игры</a></p>
-  {% if lesson_dialogs %}
-  <h3 class="pr-title">Диалог</h3>
-  <div class="lesson-dialogs" data-dialogs='{{ lesson_dialogs | tojson }}' data-me-emoji="{{ me_emoji }}" data-me-name="{{ me_name }}"></div>
-  {% endif %}
-  {% if speaking and lesson.speak %}
-  <h3 class="pr-title">Скажи вслух</h3>
-  <div id="speak-block" class="speak-block" data-items='{{ lesson.speak | tojson }}' data-lesson="{{ lesson.id }}"></div>
-  {% endif %}
-  <button class="btn ls-next" onclick="goStep('step-test')">{% if lesson.scene %}Всё понятно! К истории →{% else %}Всё понятно! К тесту →{% endif %}</button>
-</section>
+{% endif %}
 
-<!-- Шаг 4: тест -->
+<!-- Последний шаг: тест или история -->
 <section class="step hidden" id="step-test">
   {% if lesson.scene %}{% include "_scene.html" %}{% else %}
   {% if fix_done %}
@@ -288,16 +205,13 @@
 </section>
 
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=12">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=13">{% endblock %}
 
 {% block scripts %}
 <script type="application/json" id="near-dict">{{ near_words|tojson }}</script>
 <script src="{{ url_for('static', filename='tiles.js') }}?v=8"></script>
-<script src="{{ url_for('static', filename='practice.js') }}?v=7"></script>
-<script src="{{ url_for('static', filename='lesson.js') }}?v=13"></script>
-{% if speaking %}<script src="{{ url_for('static', filename='speak.js') }}?v=4"></script>{% endif %}
-{% if lesson_dialogs %}<script src="{{ url_for('static', filename='dialogs.js') }}?v=6"></script>{% endif %}
-{% if lesson.scene %}<script src="{{ url_for('static', filename='scene.js') }}?v=1"></script>{% endif %}
+<script src="{{ url_for('static', filename='lesson.js') }}?v=14"></script>
+{% if lesson.scene %}<script src="{{ url_for('static', filename='scene.js') }}?v=2"></script>{% endif %}
 <script>
 var START_TS = {{ started_ts }};   // var — виден lesson.js (сохранение времени урока)
 
@@ -313,32 +227,6 @@ function goStep(id) {
   if (window.ttsStop) window.ttsStop();          // новый шаг — недосказанные слова прошлого шага не звучат
   if (window.lessonStepChanged) window.lessonStepChanged(id);
   window.scrollTo({top: 0, behavior: 'smooth'});
-}
-
-function checkExercise(btn) {
-  const box = btn.closest('.exercise');
-  const type = box.dataset.type;
-  // как grading.norm_answer, но и без знаков внутри фразы: «I'd like a pizza, please» = «i'd like a pizza please»
-  const norm = t => window.LetterTiles ? window.LetterTiles.norm(t)
-    : String(t || '').toLowerCase().replace(/’/g, "'").replace(/[.,!?;:]/g, ' ').replace(/\s+/g, ' ').trim();
-  const answer = norm(box.dataset.answer);
-  let given = '';
-  if (type === 'choice') {
-    const sel = box.querySelector('input:checked');
-    given = sel ? sel.value : '';
-    // для choice в упражнениях храним индекс, сравниваем с data-answer
-    if (given !== '' && parseInt(given) === parseInt(box.dataset.answer)) given = 'OK';
-  } else {
-    given = norm(box.querySelector('.typein').value);
-  }
-  const res = box.querySelector('.ex-result');
-  const exact = (type === 'choice') ? (given === 'OK')
-    : (window.LetterTiles ? window.LetterTiles.same(given, answer) : given === answer);
-  const almost = !exact && type !== 'choice' && window.LetterTiles && window.LetterTiles.near(given, answer);
-  const ok = exact || almost;
-  res.textContent = exact ? ' Правильно!' : almost ? ' Засчитано! Только пишется так: ' + box.dataset.answer : ' Пока нет, попробуй ещё!';
-  res.className = 'ex-result ' + (ok ? 'ok' : 'bad');
-  if (ok) box.querySelector('.explain').classList.remove('hidden');
 }
 
 // --- задания на порядок слов ---
@@ -634,42 +522,6 @@ function resetDnd(root) {
 }
 
 document.querySelectorAll('.dnd').forEach(wireDnd);
-
-// проверка упражнений с drag&drop (не на оценку); эталон — в data-answer
-function checkDndExercise(btn) {
-  const box = btn.closest('.exercise');
-  const root = box.querySelector('.dnd');
-  const res = box.querySelector('.ex-result');
-  let expected; try { expected = JSON.parse(root.dataset.answer); } catch (e) { return; }
-  if (root.classList.contains('dnd-match')) {
-    const tiles = root.querySelectorAll('.match-tile').length;
-    const st = dndState(root);
-    if (Object.keys(st).length < tiles) { res.textContent = ' Соедини все пары!'; res.className = 'ex-result bad'; return; }
-    let wrong = 0;
-    for (const [l, r] of Object.entries(st)) {
-      if (String(expected[l]) !== String(r)) wrong++;
-    }
-    const ok = wrong === 0;
-    res.textContent = ok ? ' Все пары правильные!' : ` Неправильных пар: ${wrong}. Попробуй ещё!`;
-    res.className = 'ex-result ' + (ok ? 'ok' : 'bad');
-    if (ok) box.querySelector('.explain').classList.remove('hidden');
-  } else {
-    const total = root.querySelectorAll('.sort-word').length;
-    const placed = root.querySelectorAll('.bin-body .sort-word').length;
-    if (placed < total) { res.textContent = ' Разложи все слова по корзинам!'; res.className = 'ex-result bad'; return; }
-    // expected: список "слово|категория"
-    const want = expected.map(s => s.toLowerCase());
-    const got = [];
-    root.querySelectorAll('.bin').forEach(bin => {
-      bin.querySelectorAll('.sort-word').forEach(w => got.push((w.dataset.word + '|' + bin.dataset.cat).toLowerCase()));
-    });
-    const wrong = got.filter(p => !want.includes(p)).length;
-    const ok = wrong === 0 && got.length === want.length;
-    res.textContent = ok ? ' Всё разложено верно!' : ` Ошибок: ${wrong}. Посмотри внимательно!`;
-    res.className = 'ex-result ' + (ok ? 'ok' : 'bad');
-    if (ok) box.querySelector('.explain').classList.remove('hidden');
-  }
-}
 
 // вопросы теста без ответа (номера с 1) — для проверки перед отправкой и для полоски «отвечено»
 function unansweredQuestions() {

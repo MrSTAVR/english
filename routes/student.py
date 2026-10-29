@@ -2,6 +2,7 @@
 """Режим ученика: список уроков, урок, сдача теста."""
 
 import json
+import math
 from badges import CAT_ICONS, TIERS
 from achievements import (ACHIEVEMENTS, CATEGORIES, public, tier_counts,
                           update_achievements, views as achievement_views)
@@ -178,13 +179,15 @@ def student_home():
                            tree_count=tree_count_for(garden["streak_days"]))
 
 
-STEP_NAMES = {"step-theory": "Теория", "step-material": "Слова", "step-exercises": "Тренировка", "step-test": "Тест"}
+STEP_NAMES = {"step-theory": "Теория", "step-material": "Слова", "step-test": "Тест"}
 
 
 def _resume_sub(lesson, st):
     """Подпись карточки «Продолжи урок» по сохранённому месту (st — dict из lesson_progress)."""
-    step = st.get("step") if st.get("step") in STEP_NAMES else "step-theory"
-    sub = "Ты на шаге «" + STEP_NAMES[step] + "»"
+    step = st.get("step") or "step-theory"
+    if step not in STEP_NAMES or (step == "step-material" and lesson.get("scene")):
+        step = "step-test"                               # старое сохранение: тренировки больше нет, у сцены нет «Слов»
+    sub = "Ты на шаге «" + ("История" if step == "step-test" and lesson.get("scene") else STEP_NAMES[step]) + "»"
     if step == "step-material":
         words = st.get("words")
         seen = words.get("seen") if isinstance(words, dict) else None
@@ -199,10 +202,14 @@ def _resume_sub(lesson, st):
                 return sum(1 for x in v if x and str(x).strip()) if isinstance(v, list) else 0
             return len(v) if isinstance(v, dict) else 0
         done = n("radio", False) + n("lines", False) + n("text", True) + n("match", True) + n("sort", True)
+        sc = st.get("scene")
+        if lesson.get("scene"):                          # сцена: сделанные ходы — первые ответы
+            done = len(sc["first"]) if isinstance(sc, dict) and isinstance(sc.get("first"), dict) else 0
         total = len(lesson["test"])
         if done:
             done = min(done, total)
-            sub = f"Ты на тесте · отвечено {done} из {total}"
+            sub = (f"Ты в истории · сделано ходов: {done} из {total}" if lesson.get("scene")
+                   else f"Ты на тесте · отвечено {done} из {total}")
             if done * 4 >= total * 3 or total - done <= 2:
                 sub += " — осталось совсем чуть-чуть!"
             elif done * 2 >= total:
@@ -282,13 +289,13 @@ def lesson_page(lesson_id):
                            lesson_dialogs=dialogs_for(db, student["id"], {lesson_id}),
                            me_emoji=student["emoji"] or "🎒", me_name=student["display_name"],
                            attempt_id=cur.lastrowid, fix_from=fix_from, fix_done=fix_done,
-                           scene_steps=scenes.steps(lesson, fix_done) if lesson.get("scene") else None,
+                           scene_steps=scenes.steps(lesson, fix_done, student["display_name"]) if lesson.get("scene") else None,
                            started_ts=started.timestamp() - (saved or {}).get("secs", 0),   # время урока копится
                            mascot=mascot)
 
 
 PROGRESS_MAX = 20000          # байт JSON на один урок
-PROGRESS_STEPS = ("step-theory", "step-material", "step-exercises", "step-test")
+PROGRESS_STEPS = ("step-theory", "step-material", "step-exercises", "step-test")   # step-exercises — из старых сохранений
 
 
 def load_progress(db, student_id, lesson_id):
@@ -364,7 +371,7 @@ def submit_test(lesson_id):
 
     test = lesson["test"]
     results, mistakes = [], []
-    correct = 0
+    correct = halves = 0
     fixed = fix_correct(db, student["id"], lesson, request.form.get("fix_from", type=int))
     for i, q in enumerate(test):
         if i in fixed:                                   # «Исправь ошибки»: верный ответ прошлой попытки засчитан
@@ -385,6 +392,13 @@ def submit_test(lesson_id):
         ok, correct_disp = grade_question(q, given)
         almost = not ok and q["type"] == "type_in" and near_miss(q, given)   # опечатку засчитываем
         ok = ok or almost
+        second = False
+        if not ok and lesson.get("scene"):              # сцена: вторая попытка хода — полбалла
+            raw2 = request.form.get(f"q{i}_order_2" if q["type"] == "order" else f"q{i}_2")
+            if raw2 is not None:
+                given2 = (int(raw2) if raw2.isdigit() else -1) if q["type"] == "choice" else raw2
+                second = grade_question(q, given2)[0] or (q["type"] == "type_in" and near_miss(q, given2))
+                halves += second
         if q["type"] == "choice":                        # в разборе — текст выбранного варианта, а не его номер
             shown = q["options"][given] if 0 <= given < len(q["options"]) else ""
         elif q["type"] in ("match", "sort"):             # служебная запись пар — ребёнку не показываем
@@ -401,11 +415,12 @@ def submit_test(lesson_id):
                         "given": shown,
                         "correct_answer": str(correct_disp),
                         "explain": q.get("explain", ""),
-                        "correct": bool(ok), "almost": almost,
+                        "correct": bool(ok), "almost": almost, "second": second,
                         "helped": bool(ok and request.form.get(f"q{i}_help"))})   # с подсказкой — слово в повторение
 
     total = len(test)
-    percent = round(100 * correct / total) if total else 0
+    score = correct + halves / 2
+    percent = round(100 * score / total) if total else 0
     need = pass_mark(lesson)
     passed = percent >= need
     first_pass = passed and not db.execute(
@@ -448,7 +463,7 @@ def submit_test(lesson_id):
     mascot["newAchievements"] = [public(a) for a in new_achievements]
     return render_template("result.html", mascot=mascot,
                            lesson=lesson, percent=percent, passed=passed, need=need,
-                           correct=correct, total=total, missing=max(0, -(-need * total // 100) - correct), attempt_id=attempt_id, fixed=bool(fixed), coins_why=coins_why,
+                           correct=correct, total=total, missing=max(0, math.ceil(need * total / 100 - score - 1e-9)), halves=halves, attempt_id=attempt_id, fixed=bool(fixed), coins_why=coins_why,
                            seconds=seconds, results=results, to_review=to_review,
                            coins_earned=coins_earned, bricks_earned=bricks_earned,
                            coins_total=garden["coins"],

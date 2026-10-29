@@ -67,3 +67,98 @@ def test_type_in_keeps_synonyms():
     l = LESSONS_BY_ID[1]
     dog = next(q for q in l["test"] if q.get("answer") == "собака")
     assert "пёс" in dog["accept"]
+
+
+def _second_try_form(lesson, aid, right_first):
+    """Первые right_first ходов верны сразу, остальные — со второй попытки (q<i>_2 / q<i>_order_2)."""
+    from tests.helpers import correct_fields, wrong_fields
+    data = {"attempt_id": aid, "seconds": 300}
+    for i, q in enumerate(lesson["test"]):
+        if i < right_first:
+            data.update(correct_fields(q, i))
+        else:
+            data.update(wrong_fields(q, i))
+            data.update({k + "_2": v for k, v in correct_fields(q, i).items()})
+    return data
+
+
+def test_second_try_gives_half_point(make_student):
+    from tests.helpers import open_lesson
+    c = make_student()
+    l = LESSONS_BY_ID[N(1)]
+    html = c.post(f"/lesson/{N(1)}/submit", data=_second_try_form(l, open_lesson(c, N(1)), 0)).get_data(as_text=True)
+    assert db_scalar("SELECT score_percent FROM attempts WHERE finished_at IS NOT NULL") == 50
+    assert db_scalar("SELECT passed FROM attempts WHERE finished_at IS NOT NULL") == 0     # нужно 60%
+    assert "со второй попытки" in html
+
+
+def test_half_points_can_pass(make_student):
+    from tests.helpers import open_lesson
+    c = make_student()
+    l = LESSONS_BY_ID[N(1)]
+    n = len(l["test"])
+    c.post(f"/lesson/{N(1)}/submit", data=_second_try_form(l, open_lesson(c, N(1)), (n + 1) // 2))
+    assert db_scalar("SELECT passed FROM attempts WHERE finished_at IS NOT NULL") == 1
+
+
+def test_second_try_ignored_without_scene(make_student, parent):
+    """У обычного теста второй попытки нет — поля _2 не дают баллов."""
+    from tests.helpers import open_lesson
+    lid = next(l["id"] for l in LESSONS if not l.get("scene"))
+    c = make_student()
+    parent.post("/parent/students/1/credit", data={"upto": str(LESSONS.index(LESSONS_BY_ID[lid])), "action": "add"})
+    c.post(f"/lesson/{lid}/submit", data=_second_try_form(LESSONS_BY_ID[lid], open_lesson(c, lid), 0))
+    assert db_scalar("SELECT score_percent FROM attempts WHERE finished_at IS NOT NULL AND lesson_id=?", (lid,)) == 0
+
+
+def test_name_in_lines_latin():
+    assert scenes.name_en("Маша") == "Masha" and scenes.name_en("Женя") == "Zhenya" and scenes.name_en("Kate") == "Kate"
+    steps = scenes.steps(LESSONS_BY_ID[10], name="Маша")
+    first = next(s for s in steps if s["t"] == "say")
+    assert "Masha" in first["en"] and "Маша" in first["ru"] and "{name}" not in first["en"]
+
+
+def test_new_words_shown_once():
+    steps = scenes.steps(LESSONS_BY_ID[10])
+    lines = [s for s in steps if s["t"] == "say"] + [s["ok"] for s in steps if s.get("ok")]
+    shown = [w["en"] for s in lines for w in s["new"]]
+    assert len(shown) == len(set(shown)) and "Seven" in shown
+    seven = next(s for s in lines if any(w["en"] == "Seven" for w in s["new"]))   # в реакции папы после хода «на слух»
+    assert "seven" in seven["hl"]
+
+
+def test_reactions_pick_and_speak_reach_page():
+    steps = scenes.steps(LESSONS_BY_ID[10])
+    bags = next(s for s in steps if s["t"] == "q" and s.get("no") and "1" in s["no"])
+    assert bags["ok"]["who"]["name"] == "Dad" and bags["no"]["2"]["en"].startswith("A tree")
+    assert any(s["t"] == "pick" and s["key"] == "lucky" for s in steps)
+    assert any(s["t"] == "speak" for s in steps)
+    pics = next(s for s in steps if s["t"] == "q" and s.get("pics"))
+    assert set(pics["pics"]) == {"0", "1", "2"} and all(pics["pics"].values())
+    assert len([s for s in steps if s["t"] == "q"]) == len(LESSONS_BY_ID[10]["test"])   # pick и speak — не вопросы теста
+
+
+def test_validate_catches_bad_scene(monkeypatch):
+    from data import story
+    bad = dict(SCENES[10], lines=SCENES[10]["lines"] + [story.say("Tom", "I like {colour}!", "Мне нравится {colour}!")])
+    monkeypatch.setitem(SCENES, 10, bad)
+    assert any("{colour}" in e for e in validate_scenes())
+
+
+def test_lesson_steps_without_training(make_student, parent):
+    c = make_student()
+    html = c.get(f"/lesson/{N(1)}").get_data(as_text=True)          # сцена: теория → история
+    assert 'id="step-exercises"' not in html and 'id="step-material"' not in html and "1/2" in html
+    lid = next(l["id"] for l in LESSONS if not l.get("scene"))
+    parent.post("/parent/students/1/credit", data={"upto": str(LESSONS.index(LESSONS_BY_ID[lid])), "action": "add"})
+    html = c.get(f"/lesson/{lid}").get_data(as_text=True)            # обычный: теория → слова → тест
+    assert 'id="step-exercises"' not in html and 'id="step-material"' in html and "1/3" in html
+    assert "practice.js" not in html
+
+
+def test_old_saved_training_step_resumes_at_test(make_student):
+    from routes.student import _resume_sub
+    l = LESSONS_BY_ID[N(1)]
+    assert "История" in _resume_sub(l, {"step": "step-exercises"})
+    assert "История" in _resume_sub(l, {"step": "step-material"})
+    assert "сделано ходов: 2" in _resume_sub(l, {"step": "step-test", "scene": {"first": {"0": "1", "1": "x"}}})

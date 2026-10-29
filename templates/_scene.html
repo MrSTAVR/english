@@ -1,6 +1,6 @@
-{# Сцена истории вместо теста (scenes.py, static/scene.js). Ответы — скрытые поля q<i>/q<i>_order, как у теста. #}
+{# Сцена истории вместо теста (scenes.py, static/scene.js). Ответы — скрытые поля q<i>/q<i>_order (+ _2 — вторая попытка). #}
 <h2 class="ls-step-title">{{ lesson.scene.title }}</h2>
-<p class="ls-step-sub">{% if fix_done %}Исправь ошибки: верные ответы уже засчитаны — история пойдёт дальше сама.{% else %}Отвечай за себя — и история пойдёт дальше. Чтобы урок засчитался, нужно минимум {{ need }}% верных ответов с первой попытки.{% endif %}</p>
+<p class="ls-step-sub">{% if fix_done %}Исправь ошибки: верные ответы уже засчитаны — история пойдёт дальше сама.{% else %}Отвечай за себя — и история пойдёт дальше. Новые слова — под репликами, нажимай на них! Для зачёта нужно {{ need }}% (ответ со второй попытки — полбалла).{% endif %}</p>
 <div class="card-inner sc-intro"><svg class="ico" aria-hidden="true"><use href="#o-book"/></svg> {{ lesson.scene.intro }}</div>
 <form method="post" action="{{ url_for('student.submit_test', lesson_id=lesson.id) }}" id="test-form" class="sc-form">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

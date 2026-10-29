@@ -5,7 +5,7 @@ import re
 from curriculum import LESSONS, LESSONS_BY_ID
 from grading import near_answer, near_miss
 from template_filters import TILES_UPTO, letter_tiles
-from tests.helpers import build_form, open_lesson
+from tests.helpers import N, build_form, open_lesson
 
 
 def test_near_miss():
@@ -47,12 +47,14 @@ def _english_typein_lesson(early, part="test"):
 def test_lesson_page_has_tiles(parent, make_student):
     c = make_student()
     parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
-    early, late = _english_typein_lesson(True, "exercises"), _english_typein_lesson(False)
+    early = next(l for l in LESSONS if l["num"] <= TILES_UPTO and not l.get("scene") and any(
+        q["type"] == "type_in" and not re.search("[а-яё]", str(q["answer"]), re.I) for q in l["test"]))
+    late = _english_typein_lesson(False)
     html = c.get(f"/lesson/{early['id']}").get_data(as_text=True)
-    train, test = html.split('id="test-form"', 1)
-    assert 'class="lt" data-lt=' in train and 'data-open="1"' in train and "tiles.js" in html   # тренировка: плитки сразу
-    form = test.split("</form>")[0]
-    assert form.count('class="lt"') == form.count('data-open="1"')                             # тест первых уроков: тоже сразу
+    form = html.split('id="test-form"', 1)[1].split("</form>")[0]
+    assert form.count('class="lt"') and form.count('class="lt"') == form.count('data-open="1"') and "tiles.js" in html   # тест первых уроков: плитки сразу
+    scene = c.get(f"/lesson/{N(1)}").get_data(as_text=True)
+    assert 'id="scene"' in scene and 'data-tiles-open="1"' in scene                         # сцена первых уроков: тоже сразу
     html = c.get(f"/lesson/{late['id']}").get_data(as_text=True)
     assert 'class="lt" data-lt=' in html and 'data-open="1"' not in html
 
@@ -60,11 +62,12 @@ def test_lesson_page_has_tiles(parent, make_student):
 def test_typo_counts_and_is_shown(parent, make_student):
     c = make_student()
     parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
-    lesson = LESSONS_BY_ID[10]                      # «Цифры от 1 до 10»
+    lesson, k, q = next((l, i, q) for l in LESSONS[:40] for i, q in enumerate(l["test"])
+                        if q["type"] == "type_in" and re.fullmatch("[a-z]{6,}", str(q["answer"])))
     aid = open_lesson(c, lesson["id"])
     form = build_form(lesson, aid, 300, False)
-    k, q = next((i, q) for i, q in enumerate(lesson["test"]) if q["type"] == "type_in" and q["answer"] == "eight")
-    form[f"q{k}"] = "eigth"   # одна опечатка — соседние буквы местами
+    w = q["answer"]
+    form[f"q{k}"] = w[:2] + w[3] + w[2] + w[4:]    # одна опечатка — соседние буквы местами
     body = c.post(f"/lesson/{lesson['id']}/submit", data=form).get_data(as_text=True)
     assert "Засчитано! Только пишется так" in body and "100%" in body
 
@@ -78,12 +81,3 @@ def test_punctuation_inside_phrase_does_not_matter():
     from grading import grade_question, norm_answer
     assert norm_answer("I'd like a pizza, please.") == norm_answer("i would like a pizza please") == "i would like a pizza please"
     assert grade_question({"type": "type_in", "answer": "Yes, I am."}, "yes i am")[0]
-
-
-def test_training_order_exercises_have_answer(parent, make_student):
-    """«Составь фразу» в тренировке: правильный ответ должен быть в странице, иначе любой ответ — «Пока нет»."""
-    c = make_student()
-    parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
-    lesson = next(l for l in LESSONS if any(e["type"] == "order" for e in l["exercises"]))
-    html = c.get(f"/lesson/{lesson['id']}").get_data(as_text=True)
-    assert 'data-answer="" data-type="order"' not in html and 'data-type="order"' in html

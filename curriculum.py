@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Каталог уроков: списки, проверка целостности, разблокировка."""
 
+import re
+
 from data.extra_lessons import EXTRA_LESSONS
 from data.course import ORDER
 from data.dialogs import DIALOGS
@@ -44,8 +46,11 @@ SOFT_PASS_IDS = set(range(1, 9)) | {33, 34, 35}     # фонетика и алф
 
 
 def pass_mark(lesson):
-    """Проходной балл: на «сухих» первых темах мягче (60%), дальше — стандартные 70%."""
-    from config import PASS_MARK, PASS_MARK_SOFT
+    """Проходной балл: на «сухих» первых темах мягче (60%), дальше — стандартные 70%.
+    У сцены-истории — PASS_MARK_SCENE: ход со второй попытки там приносит полбалла."""
+    from config import PASS_MARK, PASS_MARK_SCENE, PASS_MARK_SOFT
+    if lesson.get("scene"):
+        return PASS_MARK_SCENE
     return PASS_MARK_SOFT if lesson["id"] in SOFT_PASS_IDS else PASS_MARK
 
 
@@ -123,9 +128,30 @@ def validate_scenes():
         for q in asks:
             if q["type"] not in ("choice", "type_in", "order"):
                 errors.append(f"{ref} — в сцене не бывает заданий {q['type']!r}")
+        def bad_say(ln):
+            return not isinstance(ln, dict) or ln.get("say") not in CHARACTERS and ln.get("say") != CHICK                 or not ln.get("en") or not ln.get("ru")
+        picks = set()
         for ln in sc["lines"]:
-            if "say" in ln and (ln["say"] not in CHARACTERS and ln["say"] != CHICK or not ln.get("en") or not ln.get("ru")):
+            if "say" in ln and bad_say(ln):
                 errors.append(f"{ref} — реплика без героя/en/ru: {ln}")
+            if "pick" in ln:
+                picks.add(ln["pick"])
+                if not 2 <= len(ln["options"]) <= 4:
+                    errors.append(f"{ref} — в выборе {ln['pick']!r} нужно 2–4 варианта")
+            if "ask" in ln:
+                q = ln["ask"]
+                if ln.get("ok") and bad_say(ln["ok"]):
+                    errors.append(f"{ref} — реакция ok без героя/en/ru: {q['q']}")
+                no = ln.get("no")
+                for k, r in ((no.items() if "say" not in no else [("*", no)]) if no else []):
+                    if bad_say(r) or k != "*" and (q["type"] != "choice" or not 0 <= k < len(q["options"]) or k == q["answer"]):
+                        errors.append(f"{ref} — неверная реакция no ({k}): {q['q']}")
+                if q.get("pics") and q["type"] != "choice":
+                    errors.append(f"{ref} — картинки бывают только у «выбери»: {q['q']}")
+        for ln in sc["lines"]:                           # {ключ} в репликах — только после выбора с этим ключом
+            for m in re.findall(r"\{(\w+)\}", ln.get("en", "") + ln.get("ru", "")):
+                if m != "name" and m not in picks:
+                    errors.append(f"{ref} — нет выбора для {{{m}}}")
     return errors
 
 
