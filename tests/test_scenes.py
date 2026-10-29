@@ -123,7 +123,7 @@ def test_new_words_shown_once():
     lines = [s for s in steps if s["t"] == "say"] + [s["ok"] for s in steps if s.get("ok")]
     shown = [w["en"] for s in lines for w in s["new"]]
     assert len(shown) == len(set(shown)) and "Seven" in shown
-    seven = next(s for s in steps if s["t"] == "say" and any(w["en"] == "Seven" for w in s["new"]))
+    seven = next(s for s in lines if any(w["en"] == "Seven" for w in s["new"]))   # в реакции папы после хода «на слух»
     assert "seven" in seven["hl"]
 
 
