@@ -103,7 +103,7 @@ function bed(i) {
   return { g, crop, key: '' };
 }
 const leafGeo = new THREE.IcosahedronGeometry(.16, 0);
-const COOP = [-3.9, -3.7], PEN = [3.9, -3.9], GARDEN = [7.6, 9];   // курятник, загон — над грядками, сад — справа внизу (экранные u, v)             // курятник и загон — над грядками (экранные u, v)
+const COOP = [-3.9, -3.7], PEN = [5.4, -4], GARDEN = [7.6, 9];   // курятник, загон — над грядками, сад — справа внизу (экранные u, v)             // курятник и загон — над грядками (экранные u, v)
 function potato(parent, x, z, stage, seed) {
   let s = seed; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
   const g = new THREE.Group(); g.position.set(x, .3, z);
@@ -351,10 +351,10 @@ async function build() {
     m.position.set(x, .035, z); m.rotation.y = st; m.scale.z = .8; m.receiveShadow = true; scene.add(m);
   }
   await Promise.all([
-    at('barn', 0, -10.5, 4, Math.PI * .25), at('silo', -5.2, -12, 5.2), at('windmill', 8.4, -8.6, 5, -.6).then(spinBlades),
-    at('well', -8.8, -.6, 1.8, .4), at('hay', 3.4, -8.6, .9), at('hay', 4.3, -8, .9, .6),
-    at('tree4', -10.4, 2.6, 3.2), at('tree2', 9.6, 2.4, 3.4), at('tree4', -3.4, 12.2, 3), at('tree2', 11.5, -5.2, 3.2, 1),
-    at('bush1', -2.4, -6.4, .8), at('bush3', 2.4, -6.2, .8), at('flowers2', -9.6, 7.4, .5), at('flowers2', 2.4, 11.6, .5),
+    at('barn', 0, -10.5, 4, Math.PI * .25), at('silo', -5.2, -12, 5.2), at('windmill', 9.4, -9.6, 5, -.6).then(spinBlades),
+    at('well', -8.8, -.6, 1.8, .4), at('hay', 2.4, -9.6, .9), at('hay', 3.2, -9.1, .9, .6),
+    at('tree4', -10.4, 2.6, 3.2), at('tree2', 9.6, 2.4, 3.4), at('tree4', -3.4, 12.2, 3), at('tree2', 12.4, -9.4, 3.2, 1),
+    at('bush1', -2.4, -6.4, .8), at('bush3', 1.6, -8.4, .8), at('flowers2', -9.6, 7.4, .5), at('flowers2', 2.4, 11.6, .5),
     at('coop', COOP[0] - .6, COOP[1] - .6, 2.3, Math.PI * .25),
   ]);
   const [yx, yz] = W(COOP[0] + 1.3, COOP[1] + .6);                   // дворик у курятника
