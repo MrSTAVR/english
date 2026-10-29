@@ -74,6 +74,7 @@ async function put(name, x, z, height, rot = 0, o = {}) {
     const mx = new THREE.AnimationMixer(obj);
     const clip = g.animations.find(a => (o.clip || /idle/i).test(a.name)) || g.animations[0];
     const act = mx.clipAction(clip); act.time = Math.random() * clip.duration; act.timeScale = o.speed || 1; act.play(); mixers.push(mx);
+    obj.userData.mx = mx; obj.userData.clips = g.animations; obj.userData.act = act;
   }
   return obj;
 }
@@ -226,6 +227,84 @@ function fit() {
   placeLabels();
 }
 
+// ── жизнь сцены: животные бродят, облака плывут, мельница крутится ──
+const walkers = [], clouds = [];
+let blades = null;
+const rnd = (a, b) => a + Math.random() * (b - a);
+class Walker {                       // подолгу стоит, иногда клюёт/жуёт, потом спокойно идёт в новое место
+  constructor(obj, area, o) {
+    Object.assign(this, { obj, area, o, state: 'idle', t: rnd(1, o.rest[1]) });
+    const find = re => obj.userData.clips.find(c => re.test(c.name));
+    this.acts = {};
+    for (const k of ['walk', 'idle', 'extra']) if (o[k] && find(o[k])) this.acts[k] = obj.userData.mx.clipAction(find(o[k]));
+    this.cur = obj.userData.act;
+  }
+  play(k, once) {
+    const a = this.acts[k]; if (!a || a === this.cur) return;
+    a.reset(); a.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = !!once;
+    a.timeScale = k === 'walk' ? this.o.walkScale : .7;
+    a.play(); if (this.cur) this.cur.crossFadeTo(a, .35, false); this.cur = a;
+  }
+  pick() {
+    const A = this.area, p = this.obj.position;
+    for (let i = 0; i < 12; i++) {
+      const x = A.half ? A.cx + rnd(-A.half, A.half) : A.cx + Math.cos(i * 2.4 + Math.random()) * rnd(.3, A.r);
+      const z = A.half ? A.cz + rnd(-A.half, A.half) : A.cz + Math.sin(i * 2.4 + Math.random()) * rnd(.3, A.r);
+      if (Math.hypot(x - p.x, z - p.z) > .7) return new THREE.Vector2(x, z);
+    }
+    return null;
+  }
+  update(dt) {
+    this.t -= dt;
+    if (this.state === 'walk') {
+      const p = this.obj.position, dx = this.goal.x - p.x, dz = this.goal.y - p.z, d = Math.hypot(dx, dz);
+      const want = Math.atan2(dx, dz); let turn = want - this.obj.rotation.y;
+      turn = Math.atan2(Math.sin(turn), Math.cos(turn));                 // кратчайший поворот
+      this.obj.rotation.y += Math.sign(turn) * Math.min(Math.abs(turn), dt * 2.2);
+      if (Math.abs(turn) < .5) { const step = Math.min(d, this.o.speed * dt); p.x += dx / d * step; p.z += dz / d * step; }
+      if (d < .06 || this.t <= 0) { this.state = 'idle'; this.t = rnd(...this.o.rest); this.play('idle'); }
+    } else if (this.t <= 0) {
+      if (this.state === 'idle' && this.acts.extra && Math.random() < .4) {
+        this.state = 'extra'; this.play('extra', true); this.t = this.acts.extra.getClip().duration / .7;
+      } else if ((this.goal = this.pick())) { this.state = 'walk'; this.t = 12; this.play('walk'); }
+      else { this.state = 'idle'; this.t = rnd(...this.o.rest); this.play('idle'); }
+    }
+  }
+}
+function cloud(seed) {                                                 // пухлое облачко из нескольких «камушков»
+  let s = seed; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const g = new THREE.Group(), mat = new THREE.MeshStandardMaterial({ color: '#f4f8ff', roughness: 1, metalness: 0, flatShading: true, emissive: '#c9d8ee', emissiveIntensity: .12, transparent: true, opacity: .93 });
+  const n = 4 + Math.floor(r() * 3);
+  for (let i = 0; i < n; i++) {
+    const m = new THREE.Mesh(new THREE.IcosahedronGeometry(.55 + r() * .45, 0), mat);
+    m.position.set((i - n / 2) * .62 + r() * .2, r() * .35, (r() - .5) * .7); m.scale.y = .72; m.castShadow = true; g.add(m);
+  }
+  g.scale.setScalar(.8);
+  return g;
+}
+function addClouds() {
+  // облака плывут поверху (над амбаром и курятником) — грядки не закрывают; тени скользят по двору
+  for (const [k, v, u0, speed] of [[1, -.6, -6, .2], [2, 1.4, 9, .16], [3, -2.2, 15, .18]]) {
+    const g = cloud(k * 977 + 13); scene.add(g);
+    const c = { g, u: u0, update(dt) {
+      this.u += speed * dt; if (this.u > 17) this.u = -17;
+      const [x, z] = W(this.u, v); g.position.set(x, 5, z);
+    } };
+    c.update(0); clouds.push(c);
+  }
+}
+function spinBlades(mill) {
+  mill.traverse(o => {
+    if (!o.isMesh || !/Blades/i.test(o.name)) return;
+    o.geometry.computeBoundingBox();
+    const bb = o.geometry.boundingBox, c = bb.getCenter(new THREE.Vector3()), size = bb.getSize(new THREE.Vector3());
+    o.geometry.translate(-c.x, -c.y, -c.z); o.position.add(c.clone().multiply(o.scale).applyQuaternion(o.quaternion));
+    const axis = size.x < size.y && size.x < size.z ? new THREE.Vector3(1, 0, 0) : size.y < size.z ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(0, 0, 1);
+    o.userData.axis = axis; blades = o;
+  });
+  return mill;
+}
+
 // ── декорации и постройки ──
 async function build() {
   let st = 3;                                                         // камушки-дорожка к амбару
@@ -235,13 +314,17 @@ async function build() {
     m.position.set(x, .035, z); m.rotation.y = st; m.scale.z = .8; m.receiveShadow = true; scene.add(m);
   }
   await Promise.all([
-    at('barn', 0, -10.5, 4, Math.PI * .25), at('silo', -5.2, -12, 5.2), at('windmill', 5.8, -12.5, 5.6, -.6),
+    at('barn', 0, -10.5, 4, Math.PI * .25), at('silo', -5.2, -12, 5.2), at('windmill', 5.8, -12.5, 5.6, -.6).then(spinBlades),
     at('well', 6.6, 8.6, 1.8, .4), at('hay', 3.4, -8.6, .9), at('hay', 4.3, -8, .9, .6),
     at('tree4', -7.6, 4, 3.2), at('tree2', 8, 3.6, 3.4), at('tree4', -6.8, 10.5, 3), at('tree2', 7.4, -6.5, 3.2, 1),
     at('bush1', -2.4, -6.4, .8), at('bush3', 2.4, -6.2, .8), at('flowers2', -5.8, 8, .5), at('flowers2', 4.6, 10, .5),
     at('coop', COOP[0] - .6, COOP[1] - .6, 2.3, Math.PI * .25),
   ]);
-  for (const [u, v, r] of [[.9, .5, .4], [1.6, -.4, 2], [.2, 1.2, -1]]) await at('chicken', COOP[0] + u, COOP[1] + v, .85, r, { anim: true, clip: /\|Idle$/, speed: .7 });
+  const [yx, yz] = W(COOP[0] + 1.3, COOP[1] + .6);                   // дворик у курятника
+  for (const [u, v, r] of [[.9, .5, .4], [1.6, -.4, 2], [.2, 1.2, -1]]) {
+    const c = await at('chicken', COOP[0] + u, COOP[1] + v, .85, r, { anim: true, clip: /\|Idle$/, speed: .7 });
+    walkers.push(new Walker(c, { cx: yx, cz: yz, r: 1.5 }, { walk: /\|Walk$/, idle: /\|Idle$/, extra: /Bite_Front/, speed: .42, rest: [3, 8], walkScale: .8 }));
+  }
   const [cx, cz] = W(COOP[0] + .4, COOP[1] + .2); hitBox(3.6, 3, 3.6, cx, 1.5, cz, { kind: 'animal', animal: 'chicken' });
   // загон коровы
   const [px, pz] = W(PEN[0], PEN[1]), half = 1.9, seg = .95;
@@ -251,6 +334,7 @@ async function build() {
   }
   hitBox(half * 2, 2.5, half * 2, px, 1.2, pz, { kind: 'animal', animal: 'cow' });
   for (let i = 0; i < 9; i++) beds.push(bed(i));
+  addClouds();
 
 }
 let cow = null;
@@ -260,7 +344,11 @@ async function sync() {
   beds.forEach((b, i) => { b.g.visible = i < S.plots.length; if (i >= S.plots.length) { b.crop.clear(); b.key = ''; } });
   await Promise.all(S.plots.map((p, i) => drawPlot(i, p)));
   const hasCow = S.animals.find(a => a.kind === 'cow').state !== 'none';
-  if (hasCow && !cow) cow = await at('cow', PEN[0], PEN[1], 1.4, 2.1, { anim: true, clip: /\|Idle$/, speed: .8 });       // боком к зрителю
+  if (hasCow && !cow) {
+    cow = await at('cow', PEN[0], PEN[1], 1.4, 2.1, { anim: true, clip: /\|Idle$/, speed: .8 });   // сначала боком к зрителю
+    const [px, pz] = W(PEN[0], PEN[1]);
+    walkers.push(new Walker(cow, { cx: px, cz: pz, half: 1.2 }, { walk: /\|WalkSlow$/, idle: /\|Idle$/, speed: .28, rest: [7, 16], walkScale: .8 }));
+  }
   drawLabels(); mainButton(); fit();
 }
 
@@ -463,7 +551,8 @@ const clock = new THREE.Clock();
 let alive = true;
 function frame() {
   if (!alive) return;
-  const dt = clock.getDelta(); mixers.forEach(m => m.update(dt));
+  const dt = Math.min(clock.getDelta(), .05); mixers.forEach(m => m.update(dt));
+  walkers.forEach(w => w.update(dt)); clouds.forEach(c => c.update(dt)); if (blades) blades.rotateOnAxis(blades.userData.axis, dt * .5);
   renderer.render(scene, cam);
   requestAnimationFrame(frame);
 }
