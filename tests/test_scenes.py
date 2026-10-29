@@ -75,9 +75,9 @@ def test_fix_mode_marks_done_questions(make_student):
 
 
 def test_type_in_keeps_synonyms():
-    l = LESSONS_BY_ID[1]
-    dog = next(q for q in l["test"] if q.get("answer") == "собака")
-    assert "пёс" in dog["accept"]
+    l = LESSONS_BY_ID[9]
+    hi = next(q for q in l["test"] if q.get("answer") == "hi")
+    assert "hello" in hi["accept"]
 
 
 def _second_try_form(lesson, aid, right_first):

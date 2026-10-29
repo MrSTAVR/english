@@ -63,7 +63,7 @@ def test_typo_counts_and_is_shown(parent, make_student):
     c = make_student()
     parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
     lesson, k, q = next((l, i, q) for l in LESSONS[:40] for i, q in enumerate(l["test"])
-                        if q["type"] == "type_in" and re.fullmatch("[a-z]{6,}", str(q["answer"])))
+                        if q["type"] == "type_in" and re.fullmatch("[a-z]{6,}", str(q["answer"])) and q["answer"][2] != q["answer"][3])
     aid = open_lesson(c, lesson["id"])
     form = build_form(lesson, aid, 300, False)
     w = q["answer"]
