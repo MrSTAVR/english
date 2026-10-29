@@ -172,42 +172,46 @@ async function drawPlot(i, p) {
   await Promise.all(jobs);
 }
 
-// ── подписи над объектами ──
+// ── значки над объектами (иконка; подпись — в aria-label и шторке) ──
 const labels = [];
-function tag(x, y, z, cls, html, onClick) {
-  const el = document.createElement('button'); el.type = 'button'; el.className = 'fm-tag ' + cls; el.innerHTML = html;
+function tag(x, y, z, cls, icon, label, onClick, num) {
+  const el = document.createElement('button'); el.type = 'button'; el.className = 'fm-tag ' + cls;
+  el.innerHTML = ico(icon) + (num != null ? `<b class="fm-tag-n">${esc(num)}</b>` : '');
+  el.setAttribute('aria-label', label); el.title = label;
   el.addEventListener('click', onClick); $('fm-labels').appendChild(el);
   labels.push({ el, p: new THREE.Vector3(x, y, z) });
 }
 function placeLabels() {
   const w = canvas.clientWidth, h = canvas.clientHeight;
-  for (const l of labels) {                                          // подпись не уходит за край экрана
-    const v = l.p.clone().project(cam), half = l.el.offsetWidth / 2 + 6;
-    l.el.style.left = Math.max(half, Math.min(w - half, (v.x + 1) / 2 * w)) + 'px'; l.el.style.top = ((1 - v.y) / 2 * h) + 'px';
+  for (const l of labels) {                                          // значок за краем экрана прячем
+    const v = l.p.clone().project(cam), x = (v.x + 1) / 2 * w, y = (1 - v.y) / 2 * h;
+    l.el.hidden = x < 14 || x > w - 14 || y < 70 || y > h - 70;
+    l.el.style.left = x + 'px'; l.el.style.top = y + 'px';
   }
 }
 function mins(left) { const m = Math.ceil(left / 60); return m <= 1 ? 'через минутку' : m < 60 ? `через ${m} мин` : null; }
-const short = (left, when) => { const m = Math.ceil(left / 60); return m < 60 ? `${Math.max(1, m)} мин` : when.replace(/^через /, ''); };
 function drawLabels() {
   $('fm-labels').innerHTML = ''; labels.length = 0;
   S.plots.forEach((p, i) => {
-    const [x, z] = PLOT_POS[i], top = .7;
-    if (p.state === 'planted') tag(x, top, z, 'water', ico('o-drop') + 'Полей', () => openPlot(i));
-    else if (p.state === 'growing') tag(x, top, z, '', ico('o-clock') + esc(short(p.left, p.when)), () => openPlot(i));
-    else if (p.state === 'ready') tag(x, top, z, 'ready', ico('o-check') + 'Собери!', () => openPlot(i));
+    const [x, z] = PLOT_POS[i], y = .35;                             // значок — в центре грядки
+    if (p.state === 'empty') tag(x, y, z, 'plant', 'o-sprout', 'Посади', () => openSeeds(i));
+    else if (p.state === 'planted') tag(x, y, z, 'water', 'o-drop', 'Полей', () => openPlot(i));
+    else if (p.state === 'growing') tag(x, y, z, '', 'o-clock', 'Растёт: ' + (mins(p.left) || p.when), () => openPlot(i));
+    else tag(x, y, z, 'ready', 'o-check', 'Собери урожай', () => openPlot(i));
   });
-  if (S.plot_cost) { const [x, z] = PLOT_POS[S.plots.length]; tag(x, .3, z, 'lock', '+ грядка', openBuyPlot); }
-  const ch = S.animals.find(a => a.kind === 'chicken'), [cx, cz] = W(COOP[0], COOP[1]);
-  if (ch.state === 'hungry') tag(cx, 3.4, cz, 'water', 'Покорми', () => openAnimal('chicken'));
-  else if (ch.state === 'busy') tag(cx, 3.4, cz, '', ico('o-clock') + esc(short(ch.left, ch.when)), () => openAnimal('chicken'));
-  else tag(cx, 3.4, cz, 'ready', ico('o-check') + 'Яйца!', () => openAnimal('chicken'));
-  const cow = S.animals.find(a => a.kind === 'cow'), [kx, kz] = W(PEN[0], PEN[1]);
-  if (cow.state === 'none') tag(kx, 1.6, kz, 'lock', ico('o-lock') + 'Коровник', () => openAnimal('cow'));
-  else if (cow.state === 'hungry') tag(kx, 2.6, kz, 'water', 'Покорми', () => openAnimal('cow'));
-  else if (cow.state === 'busy') tag(kx, 2.6, kz, '', ico('o-clock') + esc(short(cow.left, cow.when)), () => openAnimal('cow'));
-  else tag(kx, 2.6, kz, 'ready', ico('o-check') + 'Молоко!', () => openAnimal('cow'));
-  const [gx, gz] = W(GARDEN[0] - 1.2, GARDEN[1] + 2.2), gd = S.garden.days;
-  tag(gx, .1, gz, gd ? 'ready' : '', ico('o-sprout') + (S.garden.waits && !gd ? 'Сад ждёт тебя' : `Сад · ${gd} ${gd % 10 === 1 && gd % 100 !== 11 ? 'день' : gd % 10 >= 2 && gd % 10 <= 4 && (gd % 100 < 12 || gd % 100 > 14) ? 'дня' : 'дней'}`), () => { location.href = '/student/garden'; });
+  if (S.plot_cost) { const [x, z] = PLOT_POS[S.plots.length]; tag(x, .3, z, 'lock', 'o-lock', `Новая грядка — ${S.plot_cost} монеток`, openBuyPlot, S.plot_cost); }
+  const animal = (a, x, z, y) => {
+    if (a.state === 'none') tag(x, 1.4, z, 'lock', 'o-lock', 'Коровник', () => openAnimal(a.kind));
+    else if (a.state === 'hungry') tag(x, y, z, 'water', 'o-grain', 'Покорми', () => openAnimal(a.kind));
+    else if (a.state === 'busy') tag(x, y, z, '', 'o-clock', 'Скоро: ' + (mins(a.left) || a.when), () => openAnimal(a.kind));
+    else tag(x, y, z, 'ready', 'o-check', 'Собери', () => openAnimal(a.kind));
+  };
+  const [cx, cz] = W(COOP[0], COOP[1]), [kx, kz] = W(PEN[0], PEN[1]);
+  animal(S.animals.find(a => a.kind === 'chicken'), cx, cz, 3.2);
+  animal(S.animals.find(a => a.kind === 'cow'), kx, kz, 2.4);
+  const [gx, gz] = W(GARDEN[0], GARDEN[1]), gd = S.garden.days;
+  tag(gx, gardenH() + .5, gz, gd ? 'ready' : '', 'o-sprout', S.garden.waits && !gd ? 'Сад ждёт тебя' : `Сад: серия ${gd} дн.`,
+      () => { location.href = '/student/garden'; }, gd || null);
   placeLabels();
 }
 
@@ -239,6 +243,7 @@ function applyView() {
   view.zoom = Math.max(.75, Math.min(2.2, view.zoom));
   const cx = base.cx + view.x, cy = base.cy + view.y;
   Object.assign(cam, { left: cx - base.cw / 2, right: cx + base.cw / 2, top: cy + base.ch / 2, bottom: cy - base.ch / 2, zoom: view.zoom });
+  $('fm-home').hidden = Math.abs(view.x) < .6 && Math.abs(view.y) < .6 && Math.abs(view.zoom - 1) < .06;
   cam.updateProjectionMatrix();
   placeLabels();
 }
@@ -394,7 +399,7 @@ async function sync() {
 // ── шторка ──
 function sheet(title, html) {
   $('fm-sheet-title').textContent = title; $('fm-sheet-body').innerHTML = html; $('fm-sheet').hidden = false;
-  const first = $('fm-sheet-body').querySelector('button, a'); if (first) first.focus({ preventScroll: true });
+  $('fm-sheet-title').focus({ preventScroll: true });
 }
 function closeSheet() { $('fm-sheet').hidden = true; }
 $('fm-sheet').addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSheet(); });
@@ -408,7 +413,9 @@ async function api(action, body) {
 }
 async function refresh() { const r = await fetch('/api/farm'); if (r.ok) { S = await r.json(); await sync(); } }
 
-const noDrops = need => `<p class="fm-msg bad">Нужно ${need} капли, а у тебя ${S.drops}. Капли дают за уроки и цель дня!</p>
+const plural = (n, a, b, c) => n % 10 === 1 && n % 100 !== 11 ? a : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? b : c;
+const dropsW = n => `${n} ${plural(n, 'капля', 'капли', 'капель')}`;
+const noDrops = need => `<p class="fm-msg bad">Нужно ${dropsW(need)}, а у тебя ${S.drops}. Капли дают за уроки и цель дня!</p>
   <div class="fm-actions"><a class="btn btn-primary" href="/student">К урокам</a></div>`;
 
 function openSeeds(slot) {
@@ -429,7 +436,7 @@ function openPlot(i) {
   const head = `<div class="fm-row"><span class="fm-pic">${pic(c.pic)}</span><span class="fm-row-text"><b lang="en">${esc(c.en)}</b><small>${esc(c.ru)}</small></span>
     <button type="button" class="fm-say" data-say="${esc(c.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>`;
   if (p.state === 'planted') sheet('Грядка', head + (S.drops >= S.water
-    ? `<div class="fm-actions"><button type="button" class="btn btn-primary" data-act="water" data-slot="${i}">${ico('o-drop')} Полить — ${S.water} капли</button></div>`
+    ? `<div class="fm-actions"><button type="button" class="btn btn-primary" data-act="water" data-slot="${i}">${ico('o-drop')} Полить — ${dropsW(S.water)}</button></div>`
     : noDrops(S.water)));
   else if (p.state === 'growing') sheet('Грядка', head + `<p class="fm-note">Растёт! Поспеет ${esc(mins(p.left) || p.when)}. Урожай не испортится — он подождёт тебя.</p>`);
   else sheet('Грядка', head + `<div class="fm-actions"><button type="button" class="btn btn-primary" data-act="harvest" data-slot="${i}">${ico('o-check')} Собрать урожай</button></div>`);
@@ -448,7 +455,7 @@ function openAnimal(kind) {
       : '<p class="fm-note">Коровник откроется после урока «Домашние животные».</p>'));
   }
   if (a.state === 'hungry') sheet(a.ru[0].toUpperCase() + a.ru.slice(1), head + (S.drops >= S.feed
-    ? `<p class="fm-note">Покорми — и через ${a.minutes < 60 ? a.minutes + ' минут' : a.minutes / 60 + ' часа'} будут ${prod}.</p><div class="fm-actions"><button type="button" class="btn btn-primary" data-act="feed" data-kind="${kind}">Покормить — ${S.feed} капли</button></div>`
+    ? `<p class="fm-note">Покорми — и через ${a.minutes < 60 ? a.minutes + ' минут' : a.minutes / 60 + ' часа'} будут ${prod}.</p><div class="fm-actions"><button type="button" class="btn btn-primary" data-act="feed" data-kind="${kind}">Покормить — ${dropsW(S.feed)}</button></div>`
     : noDrops(S.feed)));
   else if (a.state === 'busy') sheet(a.ru[0].toUpperCase() + a.ru.slice(1), head + `<p class="fm-note">Сыта и довольна! ${prod[0].toUpperCase() + prod.slice(1)} будут ${esc(mins(a.left) || a.when)}.</p>`);
   else sheet(a.ru[0].toUpperCase() + a.ru.slice(1), head + `<div class="fm-actions"><button type="button" class="btn btn-primary" data-act="collect" data-kind="${kind}">Собрать ${prod}</button></div>`);
@@ -475,13 +482,13 @@ function openOrders() {
   html += S.orders.map(o => `<div class="fm-order" data-order="${o.id}">
     <span class="fm-order-who">${esc(WHO[o.giver] || o.giver)}</span>
     <div class="fm-order-en"><span lang="en">${esc(o.en)}</span><button type="button" class="fm-say" data-say="${esc(o.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>
-    ${o.names ? '' : '<div class="fm-order-pics">' + Object.entries(o.items).map(([k, n]) => `<span>${pic(itemPic(k))} ${n}</span>`).join('') + '</div>'}
+    ${o.names ? '' : '<div class="fm-order-pics">' + Object.entries(o.items).map(([k, n]) => `<span>${pic(itemPic(k))}${S.numbers ? '' : ' ' + n}</span>`).join('') + '</div>'}
     <div class="fm-order-ru" hidden>${esc(o.ru)}</div>
     <div class="fm-order-foot"><button type="button" class="fm-link" data-tr>перевод</button><span>${ico('i-coin')} ${o.coins}</span>
       <button type="button" class="btn btn-small btn-primary" data-pick="${o.id}">Собрать заказ</button></div></div>`).join('');
   sheet('Заказы', '<div class="fm-list">' + html + '</div>');
 }
-const itemPic = k => (S.crops.find(c => c.key === k) || {}).pic || { egg: '🥚', milk: '🥛' }[k] || '';
+const itemPic = k => S.pics[k] || '';
 let picked = {};
 function openPick(id) {
   const o = S.orders.find(x => x.id === id); if (!o) return;
@@ -558,7 +565,7 @@ function mainButton() {
   const planted = S.plots.findIndex(p => p.state === 'planted'), empty = S.plots.findIndex(p => p.state === 'empty');
   const canOrder = S.orders.some(o => Object.entries(o.items).every(([k, n]) => (S.barn.find(x => x.item === k) || {}).qty >= n));
   let label, run;
-  if (ready >= 0) { label = 'Собрать урожай'; run = () => api('harvest', { slot: ready }).then(r => r && r.ok && toast(`+${r.got} в амбар!`)); }
+  if (ready >= 0) { label = 'Собрать урожай'; run = () => api('harvest', { slot: 'all' }).then(r => r && r.ok && toast(`+${r.got} в амбар!`)); }
   else if (ch.state === 'ready') { label = 'Собрать яйца'; run = () => api('collect', { kind: 'chicken' }).then(r => r && r.ok && toast(`+${r.got} в амбар!`)); }
   else if (cow.state === 'ready') { label = 'Собрать молоко'; run = () => api('collect', { kind: 'cow' }).then(r => r && r.ok && toast(`+${r.got} в амбар!`)); }
   else if (canOrder) { label = 'Выполнить заказ'; run = openOrders; }
@@ -638,3 +645,6 @@ try {
   console.error(err);
 }
 window.FARM_READY = true;
+
+$('fm-home').addEventListener('click', () => { view.x = 0; view.y = 0; view.zoom = 1; applyView(); });
+const movedBtn = $('fm-moved-ok'); if (movedBtn) movedBtn.addEventListener('click', () => { $('fm-moved').hidden = true; });

@@ -1,27 +1,19 @@
 {% extends "base.html" %}
-{% from "_castle.html" import castle_view with context %}
 {% block title %}В гостях: {{ friend.name }} — English Fun{% endblock %}
 {% block content %}
 <div class="dict-head">
   <a class="btn btn-small" href="{{ url_for('friends.friends_page') }}#list">← Друзья</a>
-  <h1><span class="fr-ava" aria-hidden="true">{{ friend.emoji }}</span> {{ 'Сад' if what == 'garden' else 'Замок' }}: {{ friend.name }}</h1>
+  <h1><span class="fr-ava" aria-hidden="true">{{ friend.emoji }}</span> Сад: {{ friend.name }}</h1>
 </div>
-{% if what == 'garden' %}
 <section class="card glass tree-panel">
   <div class="garden-stage">{{ scene }}</div>
   <p class="hint">Серия дней: <b>{{ streak }}</b> · деревьев в саду: <b>{{ trees }}</b></p>
 </section>
-{% else %}
-<section class="cs-visit">{{ castle_view(view, false, none, outfit) }}</section>
-{% endif %}
 <section class="card fr-like">
   <form method="post" action="{{ url_for('friends.like', fid=friend.id, what=what) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button class="btn {{ 'btn-primary' if not liked }}" type="submit"><svg class="ico" aria-hidden="true"><use href="#o-heart"/></svg> {{ 'Нравится!' if not liked else 'Убрать «нравится»' }}</button>
   </form>
   {% if likes %}<p class="hint">Нравится: {{ likes|join(', ') }}</p>{% endif %}
-  <p><a class="btn btn-small" href="{{ url_for('friends.visit', fid=friend.id, what='house' if what == 'garden' else 'garden') }}">{{ 'Заглянуть в замок' if what == 'garden' else 'Заглянуть в сад' }}</a></p>
 </section>
 {% endblock %}
-{% block head %}{% if what == 'house' %}<link rel="stylesheet" href="{{ url_for('static', filename='castle.css') }}?v=6">{% endif %}{% endblock %}
-{% block scripts %}{% if what == 'house' %}<script src="{{ url_for('static', filename='castle.js') }}?v=4"></script>{% endif %}{% endblock %}

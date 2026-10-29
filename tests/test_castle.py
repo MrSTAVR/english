@@ -91,15 +91,6 @@ def test_level_decorations_differ():
     assert a1 != a2 != a3 and "#E8618C" in a2 and 'fill="#FFF3B0"' in a3 and 'fill="#FFF3B0"' not in a2
 
 
-def test_admin_sets_bricks(parent, make_student):
-    c = make_student(); sid = sid_of(); c.get("/student/castle"); give(sid, 0, 7)
-    assert "кирпичиков <b>7</b>" in parent.get(f"/parent/students/{sid}").get_data(as_text=True)
-    parent.post(f"/parent/students/{sid}/garden", data={"bricks": "25"})
-    assert castle.bricks(conn(), sid) == 25
-    parent.post(f"/parent/students/{sid}/garden", data={"bricks": "3"})
-    assert castle.bricks(conn(), sid) == 3
-
-
 def test_drawn_things_appear_with_their_words():
     import castle_art
     for key in castle.ROOMS:

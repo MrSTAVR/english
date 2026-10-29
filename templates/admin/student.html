@@ -85,14 +85,14 @@
   </section>
 
   <section class="card">
-    <h3>Сад и замок</h3>
-    <p>серия <b>{{ garden.streak_days }}</b> дн. · <svg class="icon icon-coin"><use href="#i-coin"/></svg> <b>{{ garden.coins }}</b> · кирпичиков <b>{{ bricks }}</b>
+    <h3>Сад и ферма</h3>
+    <p>серия <b>{{ garden.streak_days }}</b> дн. · <svg class="icon icon-coin"><use href="#i-coin"/></svg> <b>{{ garden.coins }}</b> · капель <b>{{ drops }}</b>
       · {{ tree_count }} дер. · украшений {{ deco_count }}{% if garden.broken %} <span class="pill pill-warn">прервана</span>{% endif %}</p>
     <form method="post" action="{{ url_for('parent.parent_update_garden', sid=st.id) }}" class="sp-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>Дней серии <input type="number" name="streak_days" min="0" max="999" placeholder="{{ garden.streak_days }}"></label>
       <label>Монетки <input type="number" name="coins" min="0" max="9999" placeholder="{{ garden.coins }}"></label>
-      <label>Кирпичики <input type="number" name="bricks" min="0" max="9999" placeholder="{{ bricks }}"></label>
+      <label>Капли <input type="number" name="drops" min="0" max="9999" placeholder="{{ drops }}"></label>
       <button class="btn btn-small sp-wide" type="submit">Обновить</button>
     </form>
   </section>

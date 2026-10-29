@@ -320,11 +320,12 @@ def garden_view(db, student_id):
             to_next = max(0, nxt_day - day)
     active_keys = [key for _, key in sorted(active.items()) if key in DECOS_BY_KEY]
     album = [{"day": x["day"], "title": x["title"],
-              "state": "today" if x["day"] == day else ("done" if x["day"] < day else "locked")}
+              "state": "today" if x["day"] == day and streak >= day else ("done" if x["day"] < day else "locked")}
              for x in FINDS]
     return {
         "garden": dict(zip(g.keys(), g)),
         "stage": stage,
+        "fresh": streak >= day,                            # серия дошла до этого дня — «сегодня в саду новое» — правда
         "next_stage": next_stage,
         "active": active,
         "by_cat": by_cat,

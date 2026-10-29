@@ -160,7 +160,7 @@ def test_orders_daily_and_fulfil(make_student, db, clock, monkeypatch):
         farm._add_barn(db, sid, k, n + 1)
     db.commit()
     res = farm.fulfil(db, sid, o["id"], o["items"])
-    assert res["ok"] and res["coins"] == farm.ORDER_BASE + sum(o["items"].values())
+    assert res["ok"] and res["coins"] == farm.order_coins(o["items"])
     assert all(farm.barn(db, sid).get(k) == 1 for k in o["items"])
     assert len(farm.orders(db, sid, done=0, stats=stats)) == 2         # сегодня уже было три — новых нет
     clock["now"] = T0 + timedelta(days=1)
@@ -309,3 +309,76 @@ def test_castle_awards_archived(make_student, db):
 def _stats(db, sid):
     from stats import compute_stats
     return compute_stats(db, sid)
+
+
+def test_admin_sets_drops(parent, make_student, db):
+    make_student(); sid = sid_of()
+    farm.give(db, sid, "lesson", 1, 7)
+    assert "капель <b>7</b>" in parent.get(f"/parent/students/{sid}").get_data(as_text=True)
+    parent.post(f"/parent/students/{sid}/garden", data={"drops": "25"})
+    assert farm.drops(db, sid) == 25
+    parent.post(f"/parent/students/{sid}/garden", data={"drops": "3"})
+    assert farm.drops(db, sid) == 3
+
+
+def test_repeated_taps_do_not_pay_twice(make_student, db, clock, monkeypatch):
+    make_student(); sid = sid_of()
+    monkeypatch.setattr(farm, "order_slots", lambda *a, **k: 3)
+    assert not farm.water(db, sid, 0)[0]
+    farm.plant(db, sid, 0, "carrot", done=0)
+    assert not farm.water(db, sid, 0)[0] and farm.drops(db, sid) == 0         # капель нет — в минус не уходим
+    farm.give(db, sid, "lesson", 1, 3)
+    assert farm.water(db, sid, 0)[0] and not farm.water(db, sid, 0)[0] and farm.drops(db, sid) == 1
+    assert not farm.feed(db, sid, "chicken")[0] and farm.drops(db, sid) == 1  # 1 капли не хватает
+    clock["now"] = T0 + timedelta(days=1)
+    assert farm.harvest(db, sid, 0) == (True, 3) and farm.harvest(db, sid, 0) == (False, 0)
+    o = farm.orders(db, sid, done=0, stats={"completed_ids": set()})[0]
+    for k, n in o["items"].items():
+        farm._add_barn(db, sid, k, n)
+    db.commit()
+    assert farm.fulfil(db, sid, o["id"], o["items"])["ok"]
+    assert farm.fulfil(db, sid, o["id"], o["items"]) == {"ok": False, "why": "gone"}
+
+
+def test_harvest_all(make_student, db, clock):
+    c = make_student(); sid = sid_of()
+    farm.give(db, sid, "lesson", 1, 12)
+    for slot, crop in ((0, "carrot"), (1, "tomato")):
+        farm.plant(db, sid, slot, crop, done=0); farm.water(db, sid, slot)
+    clock["now"] = T0 + timedelta(days=1)
+    assert farm.harvest_all(db, sid) == {"carrot": 3, "tomato": 3}
+    assert farm.harvest_all(db, sid) == {}
+
+
+def test_order_coins_less_than_lesson():
+    from garden import COIN_PASS
+    assert farm.order_coins({"carrot": 3}) == 3 and farm.order_coins({"milk": 2}) == 3
+    assert farm.order_coins({"carrot": 1}) <= COIN_PASS
+
+
+def test_move_without_castle_returns_house_items(make_student, db):
+    c = make_student(); sid = sid_of()
+    from garden import get_garden
+    get_garden(db, sid)
+    db.execute("UPDATE garden SET coins=5 WHERE student_id=?", (sid,))
+    db.execute("INSERT INTO house_items (student_id, item_key) VALUES (?, 'wall-blue')", (sid,)); db.commit()   # 15 монеток
+    html = c.get("/student/farm").get_data(as_text=True)
+    assert "переехал на ферму" in html and "+15" in html
+    assert db.execute("SELECT coins FROM garden WHERE student_id=?", (sid,)).fetchone()[0] == 20
+
+
+def test_old_castle_addresses(make_student, parent):
+    c = make_student()
+    for url in ("/student/castle", "/student/castle/kitchen", "/student/house"):
+        assert c.get(url).status_code == 302
+    assert c.post("/student/castle/kitchen/build").headers["Location"].endswith("/student/farm")
+    assert c.post("/api/castle/kitchen/find").status_code == 410
+
+
+def test_garden_waits_by_best_streak(make_student, db):
+    make_student(); sid = sid_of()
+    from garden import garden_view, get_garden
+    get_garden(db, sid)
+    db.execute("UPDATE garden SET streak_days=0, best_streak=12, broken=1 WHERE student_id=?", (sid,)); db.commit()
+    v = garden_view(db, sid)
+    assert v["stage"]["min"] > 0                                         # дерево не уменьшилось

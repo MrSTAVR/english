@@ -30,9 +30,7 @@ FEED_COST = 2
 PLOTS = 6                # грядок с начала
 PLOT_COSTS = [40, 70, 100]   # грядки 7–9 — за монетки (сток монеток вместо замка)
 ORDERS_PER_DAY = 3       # новые заказы открывает учёба дня: занятие / сданный урок / цель дня (order_slots)
-ORDER_BASE = 1           # монеток за заказ + по ORDER_PER_ITEM за каждую вещь (молоко — MILK_COINS)
-ORDER_PER_ITEM = 1
-MILK_COINS = 2
+ORDER_BASE = 1           # монеток за заказ: 1 + половина «веса» вещей (молоко весит 2), чтобы заказ не стоил больше урока
 WEEK_GOAL = 12           # заказов за неделю (пн–вс)
 WEEK_COINS = 10
 WORDS_LESSON = 19        # названия культур — после урока «Фрукты и овощи» (до него в заказе картинка и число)
@@ -99,11 +97,22 @@ def give(db, student_id, reason, ref, amount):
 
 
 def _spend(db, student_id, reason, ref, amount):
-    if drops(db, student_id) < amount:
-        return False
-    db.execute("INSERT INTO farm_drops (student_id, day, reason, ref, amount, at) VALUES (?, ?, ?, ?, ?, ?)",
-               (student_id, _today().isoformat(), reason, f"{ref}@{_stamp()}#{random.random():.6f}", -amount, _stamp()))
-    return True
+    """Списать капли, только если их хватает — одной командой (без «проверил, потом записал»)."""
+    cur = db.execute(
+        "INSERT INTO farm_drops (student_id, day, reason, ref, amount, at) SELECT ?, ?, ?, ?, ?, ? "
+        "WHERE (SELECT COALESCE(SUM(amount), 0) FROM farm_drops WHERE student_id=?) >= ?",
+        (student_id, _today().isoformat(), reason, f"{ref}@{_stamp()}#{random.random():.6f}", -amount, _stamp(),
+         student_id, amount))
+    return cur.rowcount == 1
+
+
+def set_drops(db, student_id, value):
+    """Администратор выставляет число капель (поправка reason='admin')."""
+    delta = max(0, int(value)) - drops(db, student_id)
+    if delta:
+        db.execute("INSERT INTO farm_drops (student_id, day, reason, ref, amount, at) VALUES (?, ?, 'admin', ?, ?, ?)",
+                   (student_id, _today().isoformat(), f"{_stamp()}#{random.random():.6f}", delta, _stamp()))
+        db.commit()
 
 
 def on_test(db, student_id, lesson_id, attempt_id, percent, passed, first_pass, fixed, first_try):
@@ -173,10 +182,12 @@ def buy_plot(db, student_id):
     if n >= len(PLOT_COSTS):
         return False, "Больше грядок не поместится."
     cost = PLOT_COSTS[n]
-    if get_garden(db, student_id)["coins"] < cost:
+    get_garden(db, student_id)
+    if db.execute("UPDATE garden SET coins=coins-? WHERE student_id=? AND coins>=?", (cost, student_id, cost)).rowcount != 1:
         return False, f"Нужно {cost} монеток."
-    db.execute("UPDATE garden SET coins=coins-? WHERE student_id=?", (cost, student_id))
-    db.execute("INSERT INTO farm_plots (student_id, slot) VALUES (?, ?)", (student_id, PLOTS + n))
+    if db.execute("INSERT OR IGNORE INTO farm_plots (student_id, slot) VALUES (?, ?)", (student_id, PLOTS + n)).rowcount != 1:
+        db.rollback()                                      # второе нажатие — грядка уже куплена
+        return False, "Грядка уже куплена."
     db.commit()
     return True, ""
 
@@ -187,23 +198,26 @@ def plant(db, student_id, slot, crop, done=None):
     done = lessons_done(db, student_id) if done is None else done
     if crop not in open_crops(done):
         return False, "Эти семена откроются позже — проходи уроки!"
-    if plot_state(_plot_rows(db, student_id).get(slot)) != "empty":
-        return False, "Грядка занята."
-    db.execute("INSERT INTO farm_plots (student_id, slot, crop, planted_at, ready_at) VALUES (?, ?, ?, ?, NULL) "
-               "ON CONFLICT(student_id, slot) DO UPDATE SET crop=excluded.crop, planted_at=excluded.planted_at, ready_at=NULL",
-               (student_id, slot, crop, _stamp()))
+    cur = db.execute("INSERT INTO farm_plots (student_id, slot, crop, planted_at, ready_at) VALUES (?, ?, ?, ?, NULL) "
+                     "ON CONFLICT(student_id, slot) DO UPDATE SET crop=excluded.crop, planted_at=excluded.planted_at, ready_at=NULL "
+                     "WHERE farm_plots.crop IS NULL", (student_id, slot, crop, _stamp()))
     db.commit()
-    return True, ""
+    return (True, "") if cur.rowcount == 1 else (False, "Грядка занята.")
 
 
 def water(db, student_id, slot):
     row = _plot_rows(db, student_id).get(slot)
     if plot_state(row) != "planted":
         return False, "Здесь нечего поливать."
-    if not _spend(db, student_id, "water", slot, WATER_COST):
-        return False, f"Нужно {WATER_COST} капли. Капли дают за уроки!"
     ready = now() + timedelta(minutes=CROPS[row["crop"]]["minutes"])
-    db.execute("UPDATE farm_plots SET ready_at=? WHERE student_id=? AND slot=?", (_stamp(ready), student_id, slot))
+    cur = db.execute("UPDATE farm_plots SET ready_at=? WHERE student_id=? AND slot=? AND crop IS NOT NULL AND ready_at IS NULL",
+                     (_stamp(ready), student_id, slot))
+    if cur.rowcount != 1:                                  # уже полито (второе нажатие)
+        db.rollback()
+        return False, "Здесь нечего поливать."
+    if not _spend(db, student_id, "water", slot, WATER_COST):
+        db.rollback()
+        return False, f"Нужно {drops_words(WATER_COST)}. Капли дают за уроки!"
     db.commit()
     return True, ""
 
@@ -217,12 +231,27 @@ def harvest(db, student_id, slot):
     row = _plot_rows(db, student_id).get(slot)
     if plot_state(row) != "ready":
         return False, 0
+    cur = db.execute("UPDATE farm_plots SET crop=NULL, planted_at=NULL, ready_at=NULL "
+                     "WHERE student_id=? AND slot=? AND crop=? AND ready_at IS NOT NULL AND ready_at<=?",
+                     (student_id, slot, row["crop"], _stamp()))
+    if cur.rowcount != 1:                                  # уже собрано (второе нажатие)
+        db.rollback()
+        return False, 0
     n = CROPS[row["crop"]]["yield"]
     _add_barn(db, student_id, row["crop"], n)
-    db.execute("UPDATE farm_plots SET crop=NULL, planted_at=NULL, ready_at=NULL WHERE student_id=? AND slot=?",
-               (student_id, slot))
     db.commit()
     return True, n
+
+
+def harvest_all(db, student_id):
+    """Собрать все поспевшие грядки сразу. Возвращает {культура: сколько}."""
+    got = {}
+    for slot, row in _plot_rows(db, student_id).items():
+        if plot_state(row) == "ready":
+            ok, n = harvest(db, student_id, slot)
+            if ok:
+                got[row["crop"]] = got.get(row["crop"], 0) + n
+    return got
 
 
 # ── животные ──
@@ -243,10 +272,13 @@ def buy_cow(db, student_id, stats):
         return False, "Корова уже есть."
     if not can_buy_cow(stats):
         return False, "Коровник откроется после урока «Домашние животные»."
-    if get_garden(db, student_id)["coins"] < COWSHED_COST:
+    get_garden(db, student_id)
+    paid = db.execute("UPDATE garden SET coins=coins-? WHERE student_id=? AND coins>=?", (COWSHED_COST, student_id, COWSHED_COST))
+    if paid.rowcount != 1:
         return False, f"Нужно {COWSHED_COST} монеток."
-    db.execute("UPDATE garden SET coins=coins-? WHERE student_id=?", (COWSHED_COST, student_id))
-    db.execute("INSERT INTO farm_animals (student_id, kind, fed_at, ready_at) VALUES (?, 'cow', NULL, NULL)", (student_id,))
+    if db.execute("INSERT OR IGNORE INTO farm_animals (student_id, kind) VALUES (?, 'cow')", (student_id,)).rowcount != 1:
+        db.rollback()
+        return False, "Корова уже есть."
     db.commit()
     return True, ""
 
@@ -272,11 +304,15 @@ def feed(db, student_id, kind):
     row = _animal_row(db, student_id, kind)
     if animal_state(row) != "hungry":
         return False, "Уже сыта!"
-    if not _spend(db, student_id, "feed", kind, FEED_COST):
-        return False, f"Нужно {FEED_COST} капли. Капли дают за уроки!"
     ready = now() + timedelta(minutes=ANIMALS[kind]["minutes"])
-    db.execute("UPDATE farm_animals SET fed_at=?, ready_at=? WHERE student_id=? AND kind=?",
-               (_stamp(), _stamp(ready), student_id, kind))
+    cur = db.execute("UPDATE farm_animals SET fed_at=?, ready_at=? WHERE student_id=? AND kind=? AND ready_at IS NULL",
+                     (_stamp(), _stamp(ready), student_id, kind))
+    if cur.rowcount != 1:
+        db.rollback()
+        return False, "Уже сыта!"
+    if not _spend(db, student_id, "feed", kind, FEED_COST):
+        db.rollback()
+        return False, f"Нужно {drops_words(FEED_COST)}. Капли дают за уроки!"
     db.commit()
     return True, ""
 
@@ -286,8 +322,12 @@ def collect(db, student_id, kind):
     if animal_state(row) != "ready":
         return False, 0
     a = ANIMALS[kind]
+    cur = db.execute("UPDATE farm_animals SET fed_at=NULL, ready_at=NULL WHERE student_id=? AND kind=? "
+                     "AND ready_at IS NOT NULL AND ready_at<=?", (student_id, kind, _stamp()))
+    if cur.rowcount != 1:
+        db.rollback()
+        return False, 0
     _add_barn(db, student_id, a["product"], a["yield"])
-    db.execute("UPDATE farm_animals SET fed_at=NULL, ready_at=NULL WHERE student_id=? AND kind=?", (student_id, kind))
     db.commit()
     return True, a["yield"]
 
@@ -337,7 +377,7 @@ def _new_order(db, student_id, day, k, done):
     kinds = rng.sample(pool, min(len(pool), 1 if rng.random() < 0.6 or done < 5 else 2))
     items = {it: rng.randint(1, 2 if it == "milk" else 3 if done < 10 else 5) for it in kinds}
     giver = GIVERS[(k + day.toordinal()) % len(GIVERS)]
-    coins = ORDER_BASE + sum((MILK_COINS if it == "milk" else ORDER_PER_ITEM) * n for it, n in items.items())
+    coins = order_coins(items)
     db.execute("INSERT OR IGNORE INTO farm_orders (student_id, day, k, giver, items_json, coins, created_at) "
                "VALUES (?, ?, ?, ?, ?, ?, ?)",
                (student_id, day.isoformat(), k, giver, json.dumps(items), coins, _stamp()))
@@ -352,6 +392,11 @@ def order_slots(db, student_id, day=None):
                         (student_id, d)).fetchone()
     goal = db.execute("SELECT 1 FROM daily_goal WHERE student_id=? AND day=? AND done=1", (student_id, d)).fetchone()
     return int(studied) + int(bool(lesson)) + int(bool(goal))
+
+
+def order_coins(items):
+    weight = sum((2 if it == "milk" else 1) * n for it, n in items.items())
+    return ORDER_BASE + math.ceil(weight / 2)
 
 
 def orders(db, student_id, done=None, stats=None):
@@ -408,12 +453,16 @@ def fulfil(db, student_id, order_id, given):
         return {"ok": False, "why": "short"}
     from garden import get_garden
     get_garden(db, student_id)
+    if db.execute("UPDATE farm_orders SET done_at=? WHERE id=? AND done_at IS NULL", (_stamp(), order_id)).rowcount != 1:
+        return {"ok": False, "why": "gone"}                # второе нажатие «Отдать»
     for k, n in need.items():
-        db.execute("UPDATE farm_barn SET qty=qty-? WHERE student_id=? AND item=?", (n, student_id, k))
-    db.execute("UPDATE farm_orders SET done_at=? WHERE id=?", (_stamp(), order_id))
+        if db.execute("UPDATE farm_barn SET qty=qty-? WHERE student_id=? AND item=? AND qty>=?",
+                      (n, student_id, k, n)).rowcount != 1:
+            db.rollback()
+            return {"ok": False, "why": "short"}
     coins = r["coins"]
     week = week_done(db, student_id)
-    bonus = WEEK_COINS if week == WEEK_GOAL else 0         # ровно на пятом заказе недели — один раз
+    bonus = WEEK_COINS if week == WEEK_GOAL else 0         # ровно на WEEK_GOAL-м заказе недели — один раз
     db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?", (coins + bonus, student_id))
     db.commit()
     return {"ok": True, "coins": coins, "bonus": bonus, "week": week}
@@ -450,6 +499,10 @@ def time_words(ready_at, t=None):
     return "через пару дней"
 
 
+def drops_words(n):
+    return f"{n} {_plural(n, 'капля', 'капли', 'капель')}"
+
+
 def _plural(n, one, few, many):
     if n % 10 == 1 and n % 100 != 11:
         return one
@@ -465,11 +518,13 @@ def move_from_castle(db, student_id):
     """Переезд из замка (один раз): монетки за построенные уровни комнат — 100% назад
     (первый уровень спальни был бесплатным), оставшиеся кирпичики — по BRICK_COINS. Данные замка не стираются.
     Возвращает число монеток, если переезд случился сейчас, иначе None."""
-    if db.execute("SELECT 1 FROM farm_moves WHERE student_id=?", (student_id,)).fetchone():
-        return None
     import castle
     from garden import get_garden
-    if db.execute("SELECT 1 FROM castle WHERE student_id=?", (student_id,)).fetchone():
+    had = db.execute("SELECT 1 FROM castle WHERE student_id=?", (student_id,)).fetchone()
+    if db.execute("INSERT OR IGNORE INTO farm_moves (student_id, coins, note_seen, at) VALUES (?, 0, 1, ?)",
+                  (student_id, _stamp())).rowcount != 1:
+        return None                                        # уже переехали (или переезжаем во втором запросе)
+    if had:
         coins = sum(castle.COST[lv][1] for room, level in castle.levels(db, student_id).items()
                     for lv in range(2 if room == "bedroom" else 1, level + 1))
         coins += max(0, castle.bricks(db, student_id)) * BRICK_COINS
@@ -479,8 +534,9 @@ def move_from_castle(db, student_id):
         castle.ensure(db, student_id, ())
         db.execute("UPDATE castle SET note_seen=1 WHERE student_id=?", (student_id,))
         coins = db.execute("SELECT moved_coins FROM castle WHERE student_id=?", (student_id,)).fetchone()[0]
-    seen = 0 if (coins or castle.levels(db, student_id).get("bedroom", 0) > 1 or len(castle.levels(db, student_id)) > 1) else 1
-    db.execute("INSERT INTO farm_moves (student_id, coins, note_seen, at) VALUES (?, ?, ?, ?)", (student_id, coins, seen, _stamp()))
+    levels = castle.levels(db, student_id)
+    seen = 0 if (coins or levels.get("bedroom", 0) > 1 or len(levels) > 1) else 1
+    db.execute("UPDATE farm_moves SET coins=?, note_seen=? WHERE student_id=?", (coins, seen, student_id))
     db.commit()
     return coins
 
@@ -554,8 +610,10 @@ def state(db, student_id, stats):
         "orders": orders(db, student_id, done, stats),
         "week": {"done": week_done(db, student_id), "goal": WEEK_GOAL, "coins": WEEK_COINS},
         "slots_today": order_slots(db, student_id),
+        "numbers": _numbers_known(db, student_id, stats),
+        "pics": {k: emoji_for(item_info(k)["en"]) for k in items},
         "garden": {"days": g["streak_days"], "grown": min(STREAK_CAP, max(g["streak_days"], g["best_streak"])), "cap": STREAK_CAP,
-                   "waits": bool(g["broken"]), "stage": tree_stage(g["streak_days"])["name"]},
+                   "waits": bool(g["broken"]), "stage": tree_stage(min(STREAK_CAP, max(g["streak_days"], g["best_streak"])))["name"]},
     }
 
 
