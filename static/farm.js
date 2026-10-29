@@ -45,10 +45,6 @@ function grass() {
 const gtex = grass();
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshLambertMaterial({ map: gtex, emissive: '#ffffff', emissiveMap: gtex, emissiveIntensity: .32 }));
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
-function strip(x, z, w, l, rot) {
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshLambertMaterial({ color: '#e2bd7f', emissive: '#e2bd7f', emissiveIntensity: .3 }));
-  m.rotation.x = -Math.PI / 2; m.rotation.z = rot; m.position.set(x, .02, z); m.receiveShadow = true; scene.add(m);
-}
 
 // экран → мир: u — вправо, v — вниз по экрану
 const W = (u, v) => { u *= .72; return [(v + u) / 1.4142, (v - u) / 1.4142]; };
@@ -60,7 +56,9 @@ function prep(obj, name) {
     if (name === 'tomato' || name === 'tree3') o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
     for (const m of [].concat(o.material)) if (m && 'metalness' in m) { m.metalness = 0; m.roughness = Math.max(m.roughness ?? 1, .6);
       if (name === 'tomato' && m.color && m.color.r > m.color.g && m.color.r > m.color.b) { m.color.set('#ff4a36'); m.map = null; }
-      if (name === 'tree3' && m.color && m.color.g > m.color.r) m.color.offsetHSL(.03, .08, .03); } } });
+      if (name === 'tree3' && m.color && m.color.g > m.color.r) m.color.offsetHSL(.03, .08, .03);
+      if (name === 'chicken') { const c = { Chicken_Main: '#f6f3ec', Chicken_Red: '#e53935', Beak: '#ffa726', Eye_White: '#ffffff' }[m.name]; if (c) m.color.set(c); }
+      if (name === 'cow' && m.name === 'White') m.color.set('#f4f2ee'); } } });
 }
 async function put(name, x, z, height, rot = 0, o = {}) {
   const g = await load(name);
@@ -75,7 +73,7 @@ async function put(name, x, z, height, rot = 0, o = {}) {
   if (o.anim && g.animations.length) {
     const mx = new THREE.AnimationMixer(obj);
     const clip = g.animations.find(a => (o.clip || /idle/i).test(a.name)) || g.animations[0];
-    const act = mx.clipAction(clip); act.time = Math.random() * clip.duration; act.play(); mixers.push(mx);
+    const act = mx.clipAction(clip); act.time = Math.random() * clip.duration; act.timeScale = o.speed || 1; act.play(); mixers.push(mx);
   }
   return obj;
 }
@@ -230,7 +228,12 @@ function fit() {
 
 // ── декорации и постройки ──
 async function build() {
-  strip(...W(0, -5), 1.4, 9, Math.PI / 4);
+  let st = 3;                                                         // камушки-дорожка к амбару
+  for (let v = -8.4; v <= -1.6; v += .8) {
+    const [x, z] = W(((st = st * 7 % 11) / 11 - .5) * .7, v), r = .27 + (st % 3) * .04;
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.05, .07, 9), lam('#c9c1ae'));
+    m.position.set(x, .035, z); m.rotation.y = st; m.scale.z = .8; m.receiveShadow = true; scene.add(m);
+  }
   await Promise.all([
     at('barn', 0, -10.5, 4, Math.PI * .25), at('silo', -5.2, -12, 5.2), at('windmill', 5.8, -12.5, 5.6, -.6),
     at('well', 6.6, 8.6, 1.8, .4), at('hay', 3.4, -8.6, .9), at('hay', 4.3, -8, .9, .6),
@@ -238,7 +241,7 @@ async function build() {
     at('bush1', -2.4, -6.4, .8), at('bush3', 2.4, -6.2, .8), at('flowers2', -5.8, 8, .5), at('flowers2', 4.6, 10, .5),
     at('coop', COOP[0] - .6, COOP[1] - .6, 2.3, Math.PI * .25),
   ]);
-  for (const [u, v, r] of [[.9, .5, .4], [1.6, -.4, 2], [.2, 1.2, -1]]) await at('chicken', COOP[0] + u, COOP[1] + v, .85, r, { anim: true, clip: /Idle|Bite/ });
+  for (const [u, v, r] of [[.9, .5, .4], [1.6, -.4, 2], [.2, 1.2, -1]]) await at('chicken', COOP[0] + u, COOP[1] + v, .85, r, { anim: true, clip: /\|Idle$/, speed: .7 });
   const [cx, cz] = W(COOP[0] + .4, COOP[1] + .2); hitBox(3.6, 3, 3.6, cx, 1.5, cz, { kind: 'animal', animal: 'chicken' });
   // загон коровы
   const [px, pz] = W(PEN[0], PEN[1]), half = 1.9, seg = .95;
@@ -257,7 +260,7 @@ async function sync() {
   beds.forEach((b, i) => { b.g.visible = i < S.plots.length; if (i >= S.plots.length) { b.crop.clear(); b.key = ''; } });
   await Promise.all(S.plots.map((p, i) => drawPlot(i, p)));
   const hasCow = S.animals.find(a => a.kind === 'cow').state !== 'none';
-  if (hasCow && !cow) cow = await at('cow', PEN[0], PEN[1], 1.4, -2.4, { anim: true, clip: /WalkSlow|Idle/ });
+  if (hasCow && !cow) cow = await at('cow', PEN[0], PEN[1], 1.4, 2.1, { anim: true, clip: /\|Idle$/, speed: .8 });       // боком к зрителю
   drawLabels(); mainButton(); fit();
 }
 
