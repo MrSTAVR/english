@@ -33,10 +33,13 @@ def note(ru):
     return {"note": ru}
 
 
-def ask(q, ok=None, no=None):
+def ask(q, ok=None, no=None, review=False):
     """Ход ученицы. ok — реплика героя после верного ответа (say(...)); no — после неверного:
-    say(...) на любой неверный ответ или {номер варианта: say(...)} — на конкретный вариант."""
+    say(...) на любой неверный ответ или {номер варианта: say(...)} — на конкретный вариант.
+    review=True — ход-повторение: верный ответ — слово/фраза из прошлых уроков курса (вплетено в сюжет)."""
     d = {"ask": q}
+    if review:
+        d["review"] = True
     if ok:
         d["ok"] = ok
     if no:
@@ -154,8 +157,13 @@ SCENES = {
     10: {"title": "Такси номер семь",
          "intro": "У выхода из аэропорта — много такси. Чик-чика не видно, но к вам идёт папа Тома.",
          "lines": [
-             say("Dad", "Hello, {name}! I'm Tom's dad. Our taxi is over there!",
-                 "Привет, {name}! Я папа Тома. Наше такси вон там!"),
+             say("Dad", "Hello, {name}! I'm Tom's dad.", "Привет, {name}! Я папа Тома."),
+             ask(choice("Ответь папе Тома", ["Nice to meet you!", "Goodbye!", "My name is Tom."], 0,
+                        "Nice to meet you! — Приятно познакомиться!"),
+                 ok=say("Dad", "Nice to meet you too! Our taxi is over there!",
+                        "Мне тоже приятно! Наше такси вон там!"),
+                 no={1: say("Dad", "Goodbye? But you've just arrived! Ha-ha!", "До свидания? Ты же только приехал(а)! Ха-ха!")},
+                 review=True),
              ask(choice("Послушай папу Тома: какой номер у вашего такси?", ["7", "1", "4"], 0, "Seven — семь (7).",
                         audio="Our taxi is number seven."),
                  ok=say("Dad", "Yes! Number seven. Let's go!", "Да! Номер семь. Пошли!")),
@@ -186,7 +194,11 @@ SCENES = {
                  ok=say("Tom", "Five feathers! Chick-chick was here!", "Пять пёрышек! Чик-чик был здесь!")),
              speak("One, two, three, four, five!", "Один, два, три, четыре, пять!"),
              note("Такси остановилось у дома. Из окна выглядывает бабушка Тома."),
-             say("Grandma", "Hello, {name}! Welcome!", "Здравствуй, {name}! Добро пожаловать!"),
+             say("Grandma", "Hello, {name}! Welcome! How are you?", "Здравствуй, {name}! Добро пожаловать! Как дела?"),
+             ask(choice("Ответь бабушке", ["I'm fine, thank you.", "I'm seven.", "Bye!"], 0,
+                        "I'm fine, thank you. — У меня всё хорошо, спасибо."),
+                 ok=say("Grandma", "Lovely! Listen — can you hear my cats?", "Чудесно! Послушай — слышишь моих котов?"),
+                 review=True),
              ask(choice("Послушай бабушку: сколько у неё котов? Нажми на число", ["three", "nine", "six"], 0, "Three — три (3).",
                         audio="I've got three cats.", pics=True),
                  ok=say("Grandma", "Yes, three cats! Come in!", "Да, три кота! Заходи!")),

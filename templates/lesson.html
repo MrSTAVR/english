@@ -205,13 +205,13 @@
 </section>
 
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=13">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='lesson.css') }}?v=14">{% endblock %}
 
 {% block scripts %}
 <script type="application/json" id="near-dict">{{ near_words|tojson }}</script>
 <script src="{{ url_for('static', filename='tiles.js') }}?v=8"></script>
 <script src="{{ url_for('static', filename='lesson.js') }}?v=14"></script>
-{% if lesson.scene %}<script src="{{ url_for('static', filename='scene.js') }}?v=2"></script>{% endif %}
+{% if lesson.scene %}<script src="{{ url_for('static', filename='scene.js') }}?v=3"></script>{% endif %}
 <script>
 var START_TS = {{ started_ts }};   // var — виден lesson.js (сохранение времени урока)
 

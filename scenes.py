@@ -5,7 +5,7 @@
 монетки и повторение работают как у обычного теста. Здесь — только данные для показа в чате
 (static/scene.js): реплики героев (с новыми словами урока — карточки под репликой), реакции героев
 на ответ, ходы ученицы с вариантами и плитками, выбор без правильного ответа (pick), «скажи вслух»
-(speak), вопросы «Повторение» после сцены (их задаёт Чик-чик).
+(speak). Повторение прошлых уроков — обычные ходы сцены с review=True (метка «Вспомни!»).
 """
 import re
 
@@ -98,6 +98,8 @@ def _question(i, q, done, ask=None, words=None, me=("", "")):
         if not d["ru"]:
             d["tiles"] = letter_tiles(q)
     if ask:
+        if ask.get("review"):
+            d["review"] = True
         if ask.get("ok"):
             d["ok"] = _line(ask["ok"], *me)
             d["ok"]["new"], d["ok"]["hl"] = words.mark(d["ok"]["en"])
@@ -130,8 +132,4 @@ def steps(lesson, fix_done=(), name=""):
         else:
             out.append(_question(i, lesson["test"][i], i in fix_done, ln, words, me))
             i += 1
-    if i < len(lesson["test"]):                          # «Повторение» из прошлых уроков — от Чик-чика
-        out.append({"t": "note", "text": "И ещё вопрос на повторение — из прошлых уроков."})
-        for k in range(i, len(lesson["test"])):
-            out.append(_question(k, lesson["test"][k], k in fix_done))
     return out

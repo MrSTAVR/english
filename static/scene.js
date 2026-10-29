@@ -161,9 +161,10 @@
     }
   }
 
-  function turnBox(text) {
+  function turnBox(text, review) {
     panel.innerHTML = '';
     var box = el('div', 'sc-turn');
+    if (review) box.appendChild(el('p', 'sc-rev', ico('o-repeat') + ' Вспомни! Это из прошлых уроков'));
     box.appendChild(el('p', 'sc-q', '<b>Твой ход.</b> ' + esc(text)));
     return box;
   }
@@ -173,7 +174,7 @@
   }
 
   function ask(st) {
-    var box = turnBox(st.q);
+    var box = turnBox(st.q, st.review);
     if (st.audio) {
       var row = el('p', 'sc-audio');
       row.innerHTML = '<button type="button" class="btn btn-small say-btn">' + ico('o-sound') + ' Слушать</button> ' +
