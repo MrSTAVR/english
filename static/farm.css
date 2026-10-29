@@ -2,7 +2,7 @@
 .fm { position: relative; height: calc(100dvh - 170px); min-height: 440px; border-radius: var(--radius);
   overflow: hidden; border: 2px solid var(--line); box-shadow: var(--shadow); background: #9bd967; touch-action: manipulation; }
 .fm [hidden] { display: none !important; }
-.fm canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.fm canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
 .fm .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .fm-loading { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font-weight: 800; color: #2f5a17; }
 
