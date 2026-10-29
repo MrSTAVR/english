@@ -103,7 +103,7 @@ function bed(i) {
   return { g, crop, key: '' };
 }
 const leafGeo = new THREE.IcosahedronGeometry(.16, 0);
-const COOP = [-3.9, -3.7], PEN = [3.9, -3.9];             // курятник и загон — над грядками (экранные u, v)
+const COOP = [-3.9, -3.7], PEN = [3.9, -3.9], GARDEN = [7.6, 9];   // курятник, загон — над грядками, сад — справа внизу (экранные u, v)             // курятник и загон — над грядками (экранные u, v)
 function potato(parent, x, z, stage, seed) {
   let s = seed; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
   const g = new THREE.Group(); g.position.set(x, .3, z);
@@ -181,7 +181,10 @@ function tag(x, y, z, cls, html, onClick) {
 }
 function placeLabels() {
   const w = canvas.clientWidth, h = canvas.clientHeight;
-  for (const l of labels) { const v = l.p.clone().project(cam); l.el.style.left = ((v.x + 1) / 2 * w) + 'px'; l.el.style.top = ((1 - v.y) / 2 * h) + 'px'; }
+  for (const l of labels) {                                          // подпись не уходит за край экрана
+    const v = l.p.clone().project(cam), half = l.el.offsetWidth / 2 + 6;
+    l.el.style.left = Math.max(half, Math.min(w - half, (v.x + 1) / 2 * w)) + 'px'; l.el.style.top = ((1 - v.y) / 2 * h) + 'px';
+  }
 }
 function mins(left) { const m = Math.ceil(left / 60); return m <= 1 ? 'через минутку' : m < 60 ? `через ${m} мин` : null; }
 const short = (left, when) => { const m = Math.ceil(left / 60); return m < 60 ? `${Math.max(1, m)} мин` : when.replace(/^через /, ''); };
@@ -203,6 +206,8 @@ function drawLabels() {
   else if (cow.state === 'hungry') tag(kx, 2.6, kz, 'water', 'Покорми', () => openAnimal('cow'));
   else if (cow.state === 'busy') tag(kx, 2.6, kz, '', ico('o-clock') + esc(short(cow.left, cow.when)), () => openAnimal('cow'));
   else tag(kx, 2.6, kz, 'ready', ico('o-check') + 'Молоко!', () => openAnimal('cow'));
+  const [gx, gz] = W(GARDEN[0] - 1.2, GARDEN[1] + 2.2), gd = S.garden.days;
+  tag(gx, .1, gz, gd ? 'ready' : '', ico('o-sprout') + `Сад · ${gd} ${gd % 10 === 1 && gd % 100 !== 11 ? 'день' : gd % 10 >= 2 && gd % 10 <= 4 && (gd % 100 < 12 || gd % 100 > 14) ? 'дня' : 'дней'}`, () => { location.href = '/student/garden'; });
   placeLabels();
 }
 
@@ -212,7 +217,7 @@ function fit() {
   const w = box.clientWidth, h = box.clientHeight;
   focus.length = 0;                                                  // грядки, что есть (и место под следующую), курятник, загон
   for (const [x, z] of PLOT_POS.slice(0, S.plots.length + (S.plot_cost ? 1 : 0))) for (const dx of [-1, 1]) for (const dz of [-1, 1]) focus.push(new THREE.Vector3(x + dx * BED / 2, 0, z + dz * BED / 2));
-  for (const [u, v, y] of [[COOP[0] - 1.4, COOP[1] - .6, 2.8], [PEN[0] + 2.4, PEN[1], 1.2], [PEN[0], PEN[1] - 2, 1.2]]) { const [x, z] = W(u, v); focus.push(new THREE.Vector3(x, y, z)); }
+  for (const [u, v, y] of [[COOP[0] - 1.4, COOP[1] - .6, 2.8], [PEN[0] + 2.4, PEN[1], 1.2], [PEN[0], PEN[1] - 2, 1.2], [GARDEN[0] + 1.4, GARDEN[1] + 2.4, 0], [GARDEN[0], GARDEN[1] - 1.6, 2]]) { const [x, z] = W(u, v); focus.push(new THREE.Vector3(x, y, z)); }
   renderer.setSize(w, h, false);
   cam.updateMatrixWorld(true);
   const inv = cam.matrixWorldInverse, pts = focus.map(p => p.clone().applyMatrix4(inv));
@@ -222,7 +227,18 @@ function fit() {
   t += padTop; b -= padBot;
   let cw = r - l, ch = t - b; const cx = (l + r) / 2, cy = (t + b) / 2, aspect = w / h;
   if (cw / ch > aspect) ch = cw / aspect; else cw = ch * aspect;
-  Object.assign(cam, { left: cx - cw / 2, right: cx + cw / 2, top: cy + ch / 2, bottom: cy - ch / 2 });
+  base = { cx, cy, cw, ch };
+  applyView();
+}
+let base = null;
+const view = window.farmView = { x: 0, y: 0, zoom: 1 };
+function applyView() {
+  if (!base) return;
+  const lim = Math.max(base.cw, base.ch) * .45;                      // далеко не уехать
+  view.x = Math.max(-lim, Math.min(lim, view.x)); view.y = Math.max(-lim, Math.min(lim, view.y));
+  view.zoom = Math.max(.75, Math.min(2.2, view.zoom));
+  const cx = base.cx + view.x, cy = base.cy + view.y;
+  Object.assign(cam, { left: cx - base.cw / 2, right: cx + base.cw / 2, top: cy + base.ch / 2, bottom: cy - base.ch / 2, zoom: view.zoom });
   cam.updateProjectionMatrix();
   placeLabels();
 }
@@ -305,6 +321,27 @@ function spinBlades(mill) {
   return mill;
 }
 
+function tall(obj, h) {                                               // растянуть по высоте (забор под размер коровы)
+  let b = new THREE.Box3().setFromObject(obj); obj.scale.y *= h / (b.max.y - b.min.y); obj.updateMatrixWorld(true);
+  b = new THREE.Box3().setFromObject(obj); obj.position.y -= b.min.y;
+}
+// сад (серия дней): живая изгородь, дерево растёт вместе с серией; нажатие — страница сада
+const gardenH = () => 1 + 2.4 * Math.min(S.garden.days, S.garden.cap) / S.garden.cap;
+async function buildGarden() {
+  const [gx, gz] = W(GARDEN[0], GARDEN[1]);
+  const jobs = [];
+  for (let i = 0; i < 9; i++) {
+    const a = i / 9 * Math.PI * 2;
+    if (Math.abs(a - Math.PI * 1.25) < .4) continue;                   // проход в сад — со стороны грядок
+    jobs.push(put('bush3', gx + Math.cos(a) * 2, gz + Math.sin(a) * 2, .7, a));
+  }
+  jobs.push(put('flowers2', gx + .9, gz - .6, .45), put('flowers2', gx - .8, gz + .7, .45, 2));
+  const tree = await put('tree3', gx, gz, gardenH(), .6);
+  await Promise.all(jobs);
+  if (S.garden.days >= 5) fruits(scene, tree, '#e53935', '#5a0d06', Math.min(9, 2 + Math.floor(S.garden.days / 4)), 77);
+  hitBox(4.2, 3, 4.2, gx, 1.5, gz, { kind: 'garden' });
+}
+
 // ── декорации и постройки ──
 async function build() {
   let st = 3;                                                         // камушки-дорожка к амбару
@@ -314,10 +351,10 @@ async function build() {
     m.position.set(x, .035, z); m.rotation.y = st; m.scale.z = .8; m.receiveShadow = true; scene.add(m);
   }
   await Promise.all([
-    at('barn', 0, -10.5, 4, Math.PI * .25), at('silo', -5.2, -12, 5.2), at('windmill', 5.8, -12.5, 5.6, -.6).then(spinBlades),
-    at('well', 6.6, 8.6, 1.8, .4), at('hay', 3.4, -8.6, .9), at('hay', 4.3, -8, .9, .6),
-    at('tree4', -7.6, 4, 3.2), at('tree2', 8, 3.6, 3.4), at('tree4', -6.8, 10.5, 3), at('tree2', 7.4, -6.5, 3.2, 1),
-    at('bush1', -2.4, -6.4, .8), at('bush3', 2.4, -6.2, .8), at('flowers2', -5.8, 8, .5), at('flowers2', 4.6, 10, .5),
+    at('barn', 0, -10.5, 4, Math.PI * .25), at('silo', -5.2, -12, 5.2), at('windmill', 8.4, -8.6, 5, -.6).then(spinBlades),
+    at('well', -8.8, -.6, 1.8, .4), at('hay', 3.4, -8.6, .9), at('hay', 4.3, -8, .9, .6),
+    at('tree4', -10.4, 2.6, 3.2), at('tree2', 9.6, 2.4, 3.4), at('tree4', -3.4, 12.2, 3), at('tree2', 11.5, -5.2, 3.2, 1),
+    at('bush1', -2.4, -6.4, .8), at('bush3', 2.4, -6.2, .8), at('flowers2', -9.6, 7.4, .5), at('flowers2', 2.4, 11.6, .5),
     at('coop', COOP[0] - .6, COOP[1] - .6, 2.3, Math.PI * .25),
   ]);
   const [yx, yz] = W(COOP[0] + 1.3, COOP[1] + .6);                   // дворик у курятника
@@ -327,14 +364,16 @@ async function build() {
   }
   const [cx, cz] = W(COOP[0] + .4, COOP[1] + .2); hitBox(3.6, 3, 3.6, cx, 1.5, cz, { kind: 'animal', animal: 'chicken' });
   // загон коровы
-  const [px, pz] = W(PEN[0], PEN[1]), half = 1.9, seg = .95;
+  const [px, pz] = W(PEN[0], PEN[1]), half = 2.3, seg = 1.15;
   for (let t = -half; t < half - .01; t += seg) {
-    await put('fence', px + t + seg / 2, pz - half, .7, 0, { fitW: seg }); await put('fence', px + t + seg / 2, pz + half, .7, 0, { fitW: seg });
-    await put('fence', px - half, pz + t + seg / 2, .7, Math.PI / 2, { fitW: seg }); await put('fence', px + half, pz + t + seg / 2, .7, Math.PI / 2, { fitW: seg });
+    const parts = await Promise.all([put('fence', px + t + seg / 2, pz - half, 0, 0, { fitW: seg }), put('fence', px + t + seg / 2, pz + half, 0, 0, { fitW: seg }),
+      put('fence', px - half, pz + t + seg / 2, 0, Math.PI / 2, { fitW: seg }), put('fence', px + half, pz + t + seg / 2, 0, Math.PI / 2, { fitW: seg })]);
+    parts.forEach(f => tall(f, .8));                                   // забор — чуть ниже спины коровы
   }
   hitBox(half * 2, 2.5, half * 2, px, 1.2, pz, { kind: 'animal', animal: 'cow' });
   for (let i = 0; i < 9; i++) beds.push(bed(i));
   addClouds();
+  await buildGarden();
 
 }
 let cow = null;
@@ -347,7 +386,7 @@ async function sync() {
   if (hasCow && !cow) {
     cow = await at('cow', PEN[0], PEN[1], 1.4, 2.1, { anim: true, clip: /\|Idle$/, speed: .8 });   // сначала боком к зрителю
     const [px, pz] = W(PEN[0], PEN[1]);
-    walkers.push(new Walker(cow, { cx: px, cz: pz, half: 1.2 }, { walk: /\|WalkSlow$/, idle: /\|Idle$/, speed: .28, rest: [7, 16], walkScale: .8 }));
+    walkers.push(new Walker(cow, { cx: px, cz: pz, half: 1.5 }, { walk: /\|WalkSlow$/, idle: /\|Idle$/, speed: .28, rest: [7, 16], walkScale: .8 }));
   }
   drawLabels(); mainButton(); fit();
 }
@@ -533,17 +572,40 @@ function mainButton() {
 
 // нажатие на объект в 3D
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
-let down = null;
-canvas.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+let down = null, moved = false;
+const ptrs = new Map();
+const perPx = () => (cam.right - cam.left) / cam.zoom / canvas.clientWidth;
+canvas.addEventListener('pointerdown', e => {
+  canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+  if (ptrs.size === 1) { down = [e.clientX, e.clientY]; moved = false; }
+});
+canvas.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const [ox, oy] = ptrs.get(e.pointerId);
+  if (ptrs.size === 2) {                                               // щипок
+    const [a, b] = [...ptrs.values()], d0 = Math.hypot(a[0] - b[0], a[1] - b[1]);
+    ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+    const [c, d] = [...ptrs.values()], d1 = Math.hypot(c[0] - d[0], c[1] - d[1]);
+    if (d0 > 0) { view.zoom *= d1 / d0; applyView(); }
+    moved = true; return;
+  }
+  ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+  if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 8) moved = true;
+  if (moved) { const k = perPx(); view.x -= (e.clientX - ox) * k; view.y += (e.clientY - oy) * k; applyView(); }
+});
+const lift = e => { ptrs.delete(e.pointerId); };
+canvas.addEventListener('pointercancel', lift);
+canvas.addEventListener('wheel', e => { e.preventDefault(); view.zoom *= e.deltaY < 0 ? 1.1 : 1 / 1.1; applyView(); }, { passive: false });
 canvas.addEventListener('pointerup', e => {
-  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 10) return;
+  const was = ptrs.size; lift(e);
+  if (!down || moved || was > 1) return;
   const r = canvas.getBoundingClientRect();
   ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
   ray.setFromCamera(ptr, cam);
   const hit = ray.intersectObjects(hits.filter(h => h.userData.kind !== 'plot' || h.userData.slot < S.plots.length), false)[0];
   if (!hit) return;
   const u = hit.object.userData;
-  if (u.kind === 'plot') openPlot(u.slot); else openAnimal(u.animal);
+  if (u.kind === 'plot') openPlot(u.slot); else if (u.kind === 'garden') location.href = '/student/garden'; else openAnimal(u.animal);
 });
 
 // ── запуск ──
@@ -551,7 +613,8 @@ const clock = new THREE.Clock();
 let alive = true;
 function frame() {
   if (!alive) return;
-  const dt = Math.min(clock.getDelta(), .05); mixers.forEach(m => m.update(dt));
+  const dt = Math.min(clock.getDelta(), .05);
+  placeLabels(); mixers.forEach(m => m.update(dt));
   walkers.forEach(w => w.update(dt)); clouds.forEach(c => c.update(dt)); if (blades) blades.rotateOnAxis(blades.userData.axis, dt * .5);
   renderer.render(scene, cam);
   requestAnimationFrame(frame);

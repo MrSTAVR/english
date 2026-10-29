@@ -478,8 +478,9 @@ def _secs(ready_at, t):
 def state(db, student_id, stats):
     """Всё, что нужно экрану /student/farm (JSON)."""
     from data.emoji import emoji_for
-    from garden import get_garden
+    from garden import STREAK_CAP, get_garden, refresh_garden, tree_stage
     t = now()
+    g = refresh_garden(db, student_id)                                 # сад (серия дней) — уголок фермы
     done = stats["lessons_completed"]
     rows = _plot_rows(db, student_id)
     n_plots = plots_count(db, student_id)
@@ -516,6 +517,7 @@ def state(db, student_id, stats):
         "orders": orders(db, student_id, done, stats),
         "week": {"done": week_done(db, student_id), "goal": WEEK_GOAL, "coins": WEEK_COINS},
         "slots_today": order_slots(db, student_id),
+        "garden": {"days": g["streak_days"], "cap": STREAK_CAP, "stage": tree_stage(g["streak_days"])["name"]},
     }
 
 

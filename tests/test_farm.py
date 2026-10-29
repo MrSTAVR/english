@@ -231,6 +231,7 @@ def test_farm_page_and_api(make_student, db, anon):
     assert anon.get("/api/farm").status_code == 403
     st = c.get("/api/farm").get_json()
     assert st["drops"] == 0 and len(st["plots"]) == farm.PLOTS and st["orders"] == []
+    assert st["garden"]["days"] == 0 and st["garden"]["cap"] > 0                # сад (серия) — уголок фермы
     assert any(x["key"] == "carrot" and x["open"] for x in st["crops"])
     r = c.post("/api/farm/plant", json={"slot": 0, "crop": "carrot"}).get_json()
     assert r["ok"] and r["state"]["plots"][0]["state"] == "planted"
