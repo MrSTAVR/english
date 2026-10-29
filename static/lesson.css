@@ -310,5 +310,8 @@ html[data-theme="dark"] .lt-mask { color: #8FB4FF; }
 .sc-phrase { margin: 4px 0 10px; font-size: 1.15rem; display: grid; gap: 2px; }
 .sc-phrase small { font-size: .85rem; color: var(--muted); }
 .sc-speak-btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sc-rev { margin: 0 0 6px; display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px;
+  background: var(--tint); color: var(--primary); font-size: .85rem; font-weight: 700; }
+.sc-rev .ico { width: 16px; height: 16px; }
 .sc-start { margin: 8px auto 4px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .sc-start .ico { width: 22px; height: 22px; }

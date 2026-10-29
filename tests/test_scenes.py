@@ -31,11 +31,22 @@ def test_scene_questions_are_the_test():
         assert [s["i"] for s in steps if s["t"] == "q"] == list(range(len(l["test"])))
 
 
-def test_review_question_comes_after_scene():
-    l = LESSONS[1]                                       # второй урок курса: есть «Повторение»
+def test_review_is_part_of_the_story():
+    l = LESSONS_BY_ID[10]                                # повторение — ходы сюжета, а не случайный вопрос после сцены
+    asks = [ln["ask"] for ln in SCENES[10]["lines"] if "ask" in ln]
+    assert l["test"] == asks and not any("Повторение" in q["q"] for q in l["test"])
     steps = scenes.steps(l)
-    assert steps[-1]["t"] == "q" and "Повторение" in steps[-1]["q"]
-    assert any(s["t"] == "note" and "повторение" in s["text"] for s in steps)
+    rev = [s for s in steps if s["t"] == "q" and s.get("review")]
+    assert rev and any(s["options"] and "Nice to meet you!" in [o[1] for o in s["options"]] for s in rev)
+    assert not any(s["t"] == "note" and "повторение" in s["text"] for s in steps)
+
+
+def test_review_move_needs_earlier_word(monkeypatch):
+    from data import story
+    bad = dict(SCENES[10], lines=SCENES[10]["lines"] + [
+        story.ask(story.choice("Ответь", ["Red!", "Blue!"], 0), review=True)])      # цвета — позже урока 10
+    monkeypatch.setitem(SCENES, 10, bad)
+    assert any("ход-повторение «Red!»" in e for e in validate_scenes())
 
 
 def test_lesson_page_shows_scene(make_student):
@@ -129,7 +140,7 @@ def test_new_words_shown_once():
 
 def test_reactions_pick_and_speak_reach_page():
     steps = scenes.steps(LESSONS_BY_ID[10])
-    bags = next(s for s in steps if s["t"] == "q" and s.get("no") and "1" in s["no"])
+    bags = next(s for s in steps if s["t"] == "q" and s.get("no") and "2" in s["no"])
     assert bags["ok"]["who"]["name"] == "Dad" and bags["no"]["2"]["en"].startswith("A tree")
     assert any(s["t"] == "pick" and s["key"] == "lucky" for s in steps)
     assert any(s["t"] == "speak" for s in steps)

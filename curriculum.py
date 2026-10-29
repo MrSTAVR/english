@@ -108,7 +108,25 @@ def validate_lessons():
     return errors
 
 
-SCENE_MAX = 9      # ходов в сцене: +1 «Повторение» — и тест не длиннее 10 вопросов
+SCENE_MAX = 10     # ходов в сцене (вместе с ходами-повторениями review=True) — тест не длиннее 10 вопросов
+
+
+def _phrase(text):
+    return " ".join(re.sub(r"[^a-z' ]+", " ", str(text).lower().replace("’", "'")).split())
+
+
+def _right_answer(q):
+    return q["options"][q["answer"]] if q["type"] == "choice" else q["answer"]
+
+
+def _earlier_phrases(lid):
+    """Слова и фразы из материала уроков, которые идут в курсе раньше урока lid."""
+    out = set()
+    for l in LESSONS:
+        if l["id"] == lid:
+            break
+        out.update(_phrase(v) for w in l.get("material", []) for v in w["en"].split("/"))
+    return out
 
 
 def validate_scenes():
@@ -128,6 +146,10 @@ def validate_scenes():
         for q in asks:
             if q["type"] not in ("choice", "type_in", "order"):
                 errors.append(f"{ref} — в сцене не бывает заданий {q['type']!r}")
+        known = _earlier_phrases(lid)
+        for ln in sc["lines"]:
+            if ln.get("review") and _phrase(_right_answer(ln["ask"])) not in known:
+                errors.append(f"{ref} — ход-повторение «{_right_answer(ln['ask'])}»: нет в материале прошлых уроков курса")
         def bad_say(ln):
             return not isinstance(ln, dict) or ln.get("say") not in CHARACTERS and ln.get("say") != CHICK                 or not ln.get("en") or not ln.get("ru")
         picks = set()

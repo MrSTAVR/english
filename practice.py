@@ -293,6 +293,6 @@ def augment(lessons):
 def add_review_questions(course):
     """В тест каждого урока — вопрос из ранее пройденных (по порядку курса, без фонетики)."""
     for i, l in enumerate(course):
-        if i and not l.get("_review_added"):
+        if i and not l.get("_review_added") and not l.get("scene"):   # в сцене повторение — свои ходы (review=True)
             l["test"] = list(l["test"]) + review_extras(l, course[:i])
             l["_review_added"] = True
