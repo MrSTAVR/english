@@ -207,7 +207,7 @@ function drawLabels() {
   else if (cow.state === 'busy') tag(kx, 2.6, kz, '', ico('o-clock') + esc(short(cow.left, cow.when)), () => openAnimal('cow'));
   else tag(kx, 2.6, kz, 'ready', ico('o-check') + 'Молоко!', () => openAnimal('cow'));
   const [gx, gz] = W(GARDEN[0] - 1.2, GARDEN[1] + 2.2), gd = S.garden.days;
-  tag(gx, .1, gz, gd ? 'ready' : '', ico('o-sprout') + `Сад · ${gd} ${gd % 10 === 1 && gd % 100 !== 11 ? 'день' : gd % 10 >= 2 && gd % 10 <= 4 && (gd % 100 < 12 || gd % 100 > 14) ? 'дня' : 'дней'}`, () => { location.href = '/student/garden'; });
+  tag(gx, .1, gz, gd ? 'ready' : '', ico('o-sprout') + (S.garden.waits && !gd ? 'Сад ждёт тебя' : `Сад · ${gd} ${gd % 10 === 1 && gd % 100 !== 11 ? 'день' : gd % 10 >= 2 && gd % 10 <= 4 && (gd % 100 < 12 || gd % 100 > 14) ? 'дня' : 'дней'}`), () => { location.href = '/student/garden'; });
   placeLabels();
 }
 
@@ -326,7 +326,7 @@ function tall(obj, h) {                                               // рас�
   b = new THREE.Box3().setFromObject(obj); obj.position.y -= b.min.y;
 }
 // сад (серия дней): живая изгородь, дерево растёт вместе с серией; нажатие — страница сада
-const gardenH = () => 1 + 2.4 * Math.min(S.garden.days, S.garden.cap) / S.garden.cap;
+const gardenH = () => 1 + 2.4 * Math.min(S.garden.grown, S.garden.cap) / S.garden.cap;   // дерево не уменьшается
 async function buildGarden() {
   const [gx, gz] = W(GARDEN[0], GARDEN[1]);
   const jobs = [];
@@ -338,7 +338,7 @@ async function buildGarden() {
   jobs.push(put('flowers2', gx + .9, gz - .6, .45), put('flowers2', gx - .8, gz + .7, .45, 2));
   const tree = await put('tree3', gx, gz, gardenH(), .6);
   await Promise.all(jobs);
-  if (S.garden.days >= 5) fruits(scene, tree, '#e53935', '#5a0d06', Math.min(9, 2 + Math.floor(S.garden.days / 4)), 77);
+  if (S.garden.grown >= 5) fruits(scene, tree, '#e53935', '#5a0d06', Math.min(9, 2 + Math.floor(S.garden.days / 4)), 77);
   hitBox(4.2, 3, 4.2, gx, 1.5, gz, { kind: 'garden' });
 }
 

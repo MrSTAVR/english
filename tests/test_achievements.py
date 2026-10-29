@@ -62,7 +62,8 @@ def test_collection_page(make_student):
     c = make_student()
     html = c.get("/student/achievements").get_data(as_text=True)
     assert "Мои награды" in html and "0</b>" in html
-    assert html.count("ach-card ") >= len(ACHIEVEMENTS)
+    assert html.count("ach-card ") >= len([a for a in ACHIEVEMENTS if a["cat"] != "castle"])   # замок — только архив полученных
+    assert "Архив" not in html
     assert '"page": "achievements"' in html
     submit_lesson(c, N(1))
     html = c.get("/student/achievements").get_data(as_text=True)

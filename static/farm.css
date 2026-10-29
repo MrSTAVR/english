@@ -80,6 +80,9 @@ button.fm-row:disabled { cursor: default; opacity: .6; }
 .fm-week-bar { flex: 1; height: 10px; border-radius: 999px; background: var(--tint); overflow: hidden; }
 .fm-week-bar i { display: block; height: 100%; background: var(--green); }
 
+.fm-moved { position: absolute; z-index: 4; left: 10px; right: 10px; top: 62px; display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 18px; background: var(--surface); color: var(--ink); border: 2px solid var(--line); box-shadow: var(--shadow); }
+.fm-moved p { margin: 0; flex: 1; min-width: 0; font-size: .92rem; }
 .fm-toast { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); z-index: 6; padding: 8px 16px; border-radius: 999px;
   background: var(--surface); color: var(--ink); border: 2px solid var(--line); box-shadow: var(--shadow); font-weight: 800; white-space: nowrap; }
 

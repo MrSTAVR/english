@@ -257,3 +257,55 @@ def test_farm_static_files_exist():
     import re
     for name in set(re.findall(r"(?:at|put)\('([a-z0-9]+)'", src)) | {"carrot", "tomato", "corn", "pumpkin"}:
         assert os.path.exists(os.path.join("static", "farm", name + ".glb")), name
+
+
+def test_move_from_castle_refunds_once(make_student, db):
+    import castle
+    c = make_student(); sid = sid_of()
+    castle.ensure(db, sid, ())
+    from garden import get_garden
+    get_garden(db, sid)
+    db.execute("UPDATE garden SET coins=0 WHERE student_id=?", (sid,))
+    db.execute("UPDATE castle_rooms SET level=3 WHERE student_id=? AND room='bedroom'", (sid,))   # спальня 1→3: 40 + 60
+    db.execute("INSERT INTO castle_rooms (student_id, room, level, at) VALUES (?, 'kitchen', 1, 'x')", (sid,))  # кухня: 20
+    castle.earn(db, sid, "test", 7, 7)                                  # 7 кирпичиков → 14 монеток
+    db.commit()
+    html = c.get("/student/farm").get_data(as_text=True)
+    want = castle.COST[2][1] + castle.COST[3][1] + castle.COST[1][1] + 7 * farm.BRICK_COINS
+    assert db.execute("SELECT coins FROM garden WHERE student_id=?", (sid,)).fetchone()[0] == want
+    assert "переехал на ферму" in html and f"+{want}" in html
+    html = c.get("/student/farm").get_data(as_text=True)                # второй раз — без возврата и плашки
+    assert "переехал на ферму" not in html
+    assert db.execute("SELECT coins FROM garden WHERE student_id=?", (sid,)).fetchone()[0] == want
+
+
+def test_new_student_has_no_move_note(make_student, db):
+    c = make_student(); sid = sid_of()
+    assert "переехал на ферму" not in c.get("/student/farm").get_data(as_text=True)
+    assert db.execute("SELECT coins FROM farm_moves WHERE student_id=?", (sid,)).fetchone()[0] == 0
+
+
+def test_lesson_shows_drops_not_bricks(make_student, db):
+    c = make_student()
+    l = LESSONS[0]
+    aid = open_lesson(c, l["id"])
+    form = {"attempt_id": aid, "seconds": 300}
+    for i, q in enumerate(l["test"]):
+        form.update(correct_fields(q, i))
+    html = c.post(f"/lesson/{l['id']}/submit", data=form).get_data(as_text=True)
+    assert "Капли для фермы" in html and "Кирпичики" not in html
+
+
+def test_castle_awards_archived(make_student, db):
+    from achievements import ACHIEVEMENTS, views
+    c = make_student(); sid = sid_of()
+    assert not any(v["cat"] == "castle" for v in views(db, _stats(db, sid), sid))
+    db.execute("INSERT INTO achievements (student_id, key, earned_at) VALUES (?, 'house_1', '2026-01-01')", (sid,)); db.commit()
+    html = c.get("/student/achievements").get_data(as_text=True)
+    assert "Архив" in html and "Новоселье" in html
+    assert any(a["cat"] == "castle" for a in ACHIEVEMENTS)
+
+
+def _stats(db, sid):
+    from stats import compute_stats
+    return compute_stats(db, sid)

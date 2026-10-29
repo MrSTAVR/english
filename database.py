@@ -412,6 +412,12 @@ CREATE TABLE IF NOT EXISTS farm_animals (             -- животные: ready
     ready_at   TEXT,
     PRIMARY KEY (student_id, kind)
 );
+CREATE TABLE IF NOT EXISTS farm_moves (               -- переезд из замка на ферму (один раз): сколько монеток вернули
+    student_id INTEGER PRIMARY KEY,
+    coins      INTEGER NOT NULL,
+    note_seen  INTEGER NOT NULL DEFAULT 0,
+    at         TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS farm_orders (              -- заказы героев: k — номер заказа за день, done_at — выполнен
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL,

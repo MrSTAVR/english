@@ -1,19 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Замок Чик-чика: этажи с комнатами, комната-словарь, постройка и улучшение."""
+"""Замок Чик-чика закрыт: его заменила ферма бабушки Тома (farm.py, шаг 3 переезда — farm.move_from_castle).
+Старые адреса ведут на ферму, действия замка (доход, поручения, постройка, «Find the…!») больше ничего не дают.
+Данные замка в базе не стираются (откат кода не ломает базу); рисунки остаются для архивных страниц."""
 
 import castle
-import friends
 import castle_art
-from achievements import update_achievements
-from database import get_db
-from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
-from garden import get_garden
+from flask import Blueprint, jsonify, redirect, url_for
 from markupsafe import Markup
-from mascot import build_mascot_ctx
-from stats import compute_stats
-from wardrobe import outfit
-
-from routes.common import get_student_or_none, require_role
 
 bp = Blueprint("castle", __name__)
 
@@ -30,156 +23,19 @@ def art_helpers():
     }
 
 
-def _student():
-    err = require_role("student")
-    if err:
-        return None, err
-    db = get_db()
-    student = get_student_or_none(db)
-    if not student:
-        session.clear()
-        return None, redirect(url_for("auth.index"))
-    return (db, student), None
-
-
-def _state(db, student):
-    stats = compute_stats(db, student["id"])
-    castle.ensure(db, student["id"], stats["completed_ids"])
-    return stats, get_garden(db, student["id"])
-
-
 @bp.route("/student/castle")
-def castle_page():
-    ctx, err = _student()
-    if err:
-        return err
-    db, student = ctx
-    stats, g = _state(db, student)
-    view = castle.view(db, student["id"], stats, g)
-    moved = castle.take_move_note(db, student["id"])
-    mascot = build_mascot_ctx()
-    mascot["page"] = "castle"
-    built = [r for fl in view["floors"] for r in fl if r["state"] == "built" and r["key"] != "bedroom"]
-    selected = (built[0] if built else view["rooms"]["bedroom"])["key"]
-    return render_template("castle.html", mascot=mascot, view=view, moved=moved, selected=selected,
-                           income=castle.income(db, student["id"]), tasks=_tasks(db, student["id"]),
-                           outfit=outfit(db, student["id"]), cost=castle.COST, earn_rules=EARN_RULES, **art_helpers())
-
-
-def _awards(db, sid):
-    """Проверить награды (замок мог дать новые) и показать их при следующей странице."""
-    new = update_achievements(db, compute_stats(db, sid), sid)
-    if new:
-        session["new_achievements"] = (session.get("new_achievements") or []) + [a["key"] for a in new]
-
-
-def _tasks(db, sid):
-    out = castle.tasks(db, sid)
-    for t in out:
-        t["url"] = url_for(t["endpoint"]) if t["endpoint"] else url_for("castle.room_page", room=t["room"])
-    return out
+@bp.route("/student/castle/<room>")
+def castle_page(room=None):
+    return redirect(url_for("farm.farm_page"))
 
 
 @bp.route("/student/castle/income", methods=["POST"])
-def collect():
-    ctx, err = _student()
-    if err:
-        return err
-    db, student = ctx
-    _state(db, student)
-    ok, msg = castle.collect_income(db, student["id"])
-    flash(msg, "ok" if ok else "error")
-    if ok:
-        _awards(db, student["id"])
-    return redirect(url_for("castle.castle_page") + "#cs-neighbours")
-
-
 @bp.route("/student/castle/task/<room>", methods=["POST"])
-def claim(room):
-    ctx, err = _student()
-    if err:
-        return err
-    db, student = ctx
-    _state(db, student)
-    ok, msg = castle.claim_task(db, student["id"], room)
-    flash(msg, "ok" if ok else "error")
-    if ok:
-        _awards(db, student["id"])
-    back = request.form.get("back")
-    return redirect(url_for("castle.room_page", room=room) if back == "room" else url_for("castle.castle_page") + "#cs-neighbours")
-
-
-EARN_RULES = [("book", "Пройти урок (первый раз)", castle.BRICKS_LESSON),
-              ("castle", "Урок замка — открывает комнату", castle.BRICKS_CASTLE_LESSON),
-              ("target", "Выполнить цель дня", castle.BRICKS_GOAL)]
-
-
-@bp.route("/student/castle/<room>")
-def room_page(room):
-    if room not in castle.ROOMS:
-        abort(404)
-    ctx, err = _student()
-    if err:
-        return err
-    db, student = ctx
-    stats, g = _state(db, student)
-    level = castle.levels(db, student["id"]).get(room, 0)
-    if not level:
-        return redirect(url_for("castle.castle_page"))
-    r = castle.ROOMS[room]
-    nxt = castle.COST.get(level + 1)
-    art, pins = castle.scene(room, level)
-    up = request.args.get("up") == "1"
-    if up:   # только что построили или улучшили: новые предметы мигают
-        old = {w["en"] for w in castle.room_words(room, level - 1)} if level > 1 else set()
-        for p in pins:
-            p["new"] = p["en"] not in old
-    mascot = build_mascot_ctx()
-    mascot["page"] = "castle"
-    return render_template("castle_room.html", mascot=mascot, key=room, room=r, level=level, words=castle.room_words(room, level),
-                           next_words=[w for w in castle.room_words(room, level + 1) if w not in castle.room_words(room, level)] if nxt else [],
-                           next_cost=nxt, bricks=castle.bricks(db, student["id"]), coins=g["coins"], who_ru=castle.RESIDENT_RU.get(r["who"]),
-                           outfit=outfit(db, student["id"]), art=Markup(art), pins=pins,
-                           up=up, new_words=[p["en"] for p in pins if p.get("new")],
-                           task=next((t for t in _tasks(db, student["id"]) if t["room"] == room), None),
-                           income_per_day=castle.INCOME[level] if r["who"] else 0,
-                           who_x=round(castle_art.RESIDENT_X.get(room, 200) / 3, 2), **art_helpers())
+@bp.route("/student/castle/<room>/build", methods=["POST"])
+def closed(room=None):
+    return redirect(url_for("farm.farm_page"))
 
 
 @bp.route("/api/castle/<room>/find", methods=["POST"])
 def find_done(room):
-    """Игра «Find the…!» пройдена: кирпичик раз в день за комнату."""
-    if room not in castle.ROOMS:
-        abort(404)
-    ctx, err = _student()
-    if err:
-        return jsonify({"ok": False}), 403
-    db, student = ctx
-    if not castle.levels(db, student["id"]).get(room):
-        abort(404)
-    n = castle.on_find_done(db, student["id"], room)
-    if n:
-        _awards(db, student["id"])
-    task = any(t["room"] == room and t["kind"] == "find" and not t["taken"] for t in castle.tasks(db, student["id"]))
-    return jsonify({"ok": True, "bricks": n, "total": castle.bricks(db, student["id"]), "task": task})
-
-
-@bp.route("/student/castle/<room>/build", methods=["POST"])
-def build(room):
-    ctx, err = _student()
-    if err:
-        return err
-    db, student = ctx
-    stats, g = _state(db, student)
-    ok, msg = castle.build(db, student["id"], room, stats, g)
-    flash(msg, "ok" if ok else "error")
-    if ok:
-        level = castle.levels(db, student["id"])[room]
-        name = castle.ROOMS[room]["name"]
-        if level == 1:
-            friends.post(db, student["id"], "castle", f"Новая комната в замке: «{name}»")
-        elif level == castle.LEVEL_MAX:
-            friends.post(db, student["id"], "castle", f"Комната замка на {level} уровне: «{name}»")
-        _awards(db, student["id"])
-        return redirect(url_for("castle.room_page", room=room, up=1))
-    return redirect(url_for("castle.castle_page"))
+    return jsonify(ok=False, closed=True), 410

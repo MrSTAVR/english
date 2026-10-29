@@ -18,7 +18,6 @@ from database import get_db
 from datetime import datetime
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
 import activity
-import castle
 import weekly
 import seasons
 from seasons import active_season, advent_open, content
@@ -438,11 +437,9 @@ def submit_test(lesson_id):
     first_try = not db.execute(
         "SELECT 1 FROM attempts WHERE student_id=? AND lesson_id=? AND finished_at IS NOT NULL AND id<>?",
         (student["id"], lesson_id, attempt_id)).fetchone()
-    farm.on_test(db, student["id"], lesson_id, attempt_id, percent, passed, first_pass, bool(fixed), first_try)
-    bricks_earned = 0
+    drops_earned = farm.on_test(db, student["id"], lesson_id, attempt_id, percent, passed, first_pass, bool(fixed), first_try)
     if first_pass:
         feed_post(db, student["id"], "lesson", f"Урок пройден: «{lesson['title']}»")
-        bricks_earned = castle.on_lesson_passed(db, student["id"], lesson)
     db.execute("DELETE FROM lesson_progress WHERE student_id=? AND lesson_id=?", (student["id"], lesson_id))   # урок сдан
     to_review = send_mistakes(db, student["id"], results, lesson_id)     # ошибки — в повторение слов
 
@@ -470,7 +467,7 @@ def submit_test(lesson_id):
                            lesson=lesson, percent=percent, passed=passed, need=need,
                            correct=correct, total=total, missing=max(0, math.ceil(need * total / 100 - score - 1e-9)), halves=halves, attempt_id=attempt_id, fixed=bool(fixed), coins_why=coins_why,
                            seconds=seconds, results=results, to_review=to_review,
-                           coins_earned=coins_earned, bricks_earned=bricks_earned,
+                           coins_earned=coins_earned, drops_earned=drops_earned,
                            coins_total=garden["coins"],
                            streak_days=garden["streak_days"],
                            tier_names={k: v["name"] for k, v in TIERS.items()},
@@ -532,6 +529,7 @@ def achievements_page():
     items = achievement_views(db, compute_stats(db, student["id"]), student["id"])
     groups = [{"key": k, "name": n, "icon": CAT_ICONS.get(k, "medal"), "items": [i for i in items if i["cat"] == k]}
               for k, n, _e in CATEGORIES]
+    groups = [g for g in groups if g["items"]]                # пустой архив замка не показываем
     soon = sorted((i for i in items if not i["earned"] and i["progress"] and i["progress"][2] > 0),
                   key=lambda i: -i["progress"][2])[:3]
     mascot = build_mascot_ctx()

@@ -47,11 +47,11 @@ def test_student_tabbar(make_student):
     c = make_student()
     body = c.get("/student").get_data(as_text=True)
     assert 'class="has-tabbar"' in body and 'class="tabbar"' in body
-    for label in ("Главная", "Карта", "Сад", "Замок", "Награды"):
+    for label in ("Главная", "Карта", "Ферма", "Игры", "Награды"):
         assert f"<span>{label}</span>" in body
     assert 'class="tab on" aria-current="page"' in body
     garden = c.get("/student/garden").get_data(as_text=True)
-    assert 'href="/student/garden" class="tab on"' in garden
+    assert 'href="/student/farm" class="tab on"' in garden            # сад — уголок фермы
     lesson = c.get(f"/lesson/{N(1)}").get_data(as_text=True)          # в уроке нижнего меню нет
     assert 'class="has-tabbar"' not in lesson
 
@@ -65,9 +65,11 @@ def test_lesson_test_has_progress_bar(parent, make_student):
     assert html.count("unansweredQuestions()") >= 3          # и полоска, и проверка перед отправкой
 
 
-def test_castle_tab_active(make_student):
-    html = make_student().get("/student/castle").get_data(as_text=True)
-    assert 'href="/student/castle" class="tab on"' in html and "cs-castle" in html
+def test_castle_moved_to_farm(make_student):
+    c = make_student()
+    assert c.get("/student/castle").headers["Location"].endswith("/student/farm")      # замок закрыт — ферма
+    html = c.get("/student/farm").get_data(as_text=True)
+    assert 'href="/student/farm" class="tab on"' in html and "Замок" not in html.split("<main")[0]
 
 
 

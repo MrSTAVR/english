@@ -3,7 +3,7 @@
 {% block content %}
 
 <h1>Мой сад</h1>
-<p><a class="btn btn-secondary btn-small" href="{{ url_for('wardrobe.wardrobe_page') }}">Гардероб Чик-чика</a> <a class="btn btn-secondary btn-small" href="{{ url_for('castle.castle_page') }}">Замок Чик-чика</a></p>
+<p><a class="btn btn-secondary btn-small" href="{{ url_for('wardrobe.wardrobe_page') }}">Гардероб Чик-чика</a> <a class="btn btn-secondary btn-small" href="{{ url_for('farm.farm_page') }}">Ферма</a></p>
 <p class="welcome-sub">Каждый день занятий приносит в сад что-то новое, а монетками можно украсить ВЕСЬ сад! (серия — до {{ streak_cap }} дней)</p>
 
 {% if flash_msg %}<div class="flash flash-success garden-flash">{{ flash_msg }}</div>{% endif %}
@@ -12,12 +12,11 @@
   <!-- Сад -->
   <section class="card glass tree-panel">
     {% if garden.broken %}
-      <div class="tree-wilt"></div>
-      <p class="tree-broken-note">Сад уснул и ждёт тебя! Украшения на месте.<br>
-        Позанимайся сегодня — и сад проснётся, а дерево снова начнёт расти.</p>
+      <p class="tree-broken-note">Дерево ждёт тебя! Всё, что выросло, на месте.<br>
+        Позанимайся сегодня — и серия дней начнётся снова.</p>
     {% endif %}
 
-    <div class="garden-stage {{ 'is-broken' if garden.broken }}">{{ scene }}</div>
+    <div class="garden-stage">{{ scene }}</div>
 
     <div class="tree-info">
       <h2>{{ stage.name|noemoji }}</h2>

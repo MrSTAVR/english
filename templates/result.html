@@ -31,10 +31,10 @@
 </section>
 {% endif %}
 
-{% if bricks_earned %}
+{% if drops_earned %}
 <section class="card coins-card">
-  <h2><svg class="ico" aria-hidden="true"><use href="#o-castle"/></svg> Кирпичики для замка!</h2>
-  <p>Получено <b>+{{ bricks_earned }}</b> кирпичиков. <a href="{{ url_for('castle.castle_page') }}">Построй новую комнату</a> в замке Чик-чика!</p>
+  <h2><svg class="ico" aria-hidden="true"><use href="#o-drop"/></svg> Капли для фермы!</h2>
+  <p>Получено <b>+{{ drops_earned }}</b> капель. <a href="{{ url_for('farm.farm_page') }}">Полей грядки на ферме</a>!</p>
 </section>
 {% endif %}
 
