@@ -85,7 +85,7 @@ def _question(i, q, done, ask=None, words=None, me=("", "")):
     if q.get("audio"):
         d["audio"] = q["audio"]
     if q["type"] == "choice":
-        d["options"] = shuffle_options(q)
+        d["options"] = [(k, o.replace("{name}", me[0])) for k, o in shuffle_options(q)]
         d["answer"] = q["answer"]
         if q.get("pics") and words:
             d["pics"] = {str(k): words.pic(o) for k, o in enumerate(q["options"])}

@@ -112,7 +112,8 @@ SCENE_MAX = 10     # ходов в сцене (вместе с ходами-по
 
 
 def _phrase(text):
-    return " ".join(re.sub(r"[^a-z' ]+", " ", str(text).lower().replace("’", "'")).split())
+    text = re.sub(r"\{\w+\}", " ", str(text))                      # {name} — имя ученицы
+    return " ".join(re.sub(r"[^a-z' ]+", " ", text.lower().replace("’", "'")).split())
 
 
 def _right_answer(q):
@@ -126,7 +127,7 @@ def _earlier_phrases(lid):
         if l["id"] == lid:
             break
         out.update(_phrase(v) for w in l.get("material", []) for v in w["en"].split("/"))
-    return out
+    return {k for k in out if len(k) > 1}                              # буквы алфавита (A, I) — не фразы
 
 
 def validate_scenes():
@@ -148,7 +149,7 @@ def validate_scenes():
                 errors.append(f"{ref} — в сцене не бывает заданий {q['type']!r}")
         known = _earlier_phrases(lid)
         for ln in sc["lines"]:
-            if ln.get("review") and _phrase(_right_answer(ln["ask"])) not in known:
+            if ln.get("review") and not any(f" {k} " in f" {_phrase(_right_answer(ln['ask']))} " for k in known):
                 errors.append(f"{ref} — ход-повторение «{_right_answer(ln['ask'])}»: нет в материале прошлых уроков курса")
         def bad_say(ln):
             return not isinstance(ln, dict) or ln.get("say") not in CHARACTERS and ln.get("say") != CHICK                 or not ln.get("en") or not ln.get("ru")

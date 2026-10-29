@@ -113,10 +113,9 @@ def test_speaking_can_be_disabled(make_student, monkeypatch):
 
 
 def test_russian_answer_placeholder(parent, make_student):
-    c = make_student()
-    parent.post("/parent/students/1/credit", data={"upto": "1", "action": "add"})   # урок 1 (фонетика) — второй в курсе
-    html = c.get("/lesson/1").get_data(as_text=True)                  # сцена: ход «напиши по-русски» помечен ru
-    assert '"ru": true' in html and "Напиши по-русски" in open("static/scene.js", encoding="utf-8").read()
+    import scenes
+    q = {"type": "type_in", "q": "?", "answer": "кот"}                 # в новых сценах «по-русски» нет, но движок умеет
+    assert scenes._question(0, q, False)["ru"] is True and "Напиши по-русски" in open("static/scene.js", encoding="utf-8").read()
     # у русскоязычных вопросов нет кнопки «Послушать» для вписанного ответа
     from template_filters import is_russian_answer
     assert is_russian_answer({"answer": "кот"}) and not is_russian_answer({"answer": "cat"})
