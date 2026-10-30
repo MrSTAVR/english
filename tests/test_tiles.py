@@ -47,16 +47,15 @@ def _english_typein_lesson(early, part="test"):
 def test_lesson_page_has_tiles(parent, make_student):
     c = make_student()
     parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
-    early = next(l for l in LESSONS if l["num"] <= TILES_UPTO and not l.get("scene") and any(
+    # первые уроки курса идут со сценой (с 31.10.2026 урок 16 тоже) — плитки в вопросах сцены открыты сразу
+    early = next(l for l in LESSONS if l["num"] <= TILES_UPTO and l.get("scene") and any(
         q["type"] == "type_in" and not re.search("[а-яё]", str(q["answer"]), re.I) for q in l["test"]))
     late = _english_typein_lesson(False)
-    html = c.get(f"/lesson/{early['id']}").get_data(as_text=True)
-    form = html.split('id="test-form"', 1)[1].split("</form>")[0]
-    assert form.count('class="lt"') and form.count('class="lt"') == form.count('data-open="1"') and "tiles.js" in html   # тест первых уроков: плитки сразу
-    scene = c.get(f"/lesson/{N(1)}").get_data(as_text=True)
-    assert 'id="scene"' in scene and 'data-tiles-open="1"' in scene                         # сцена первых уроков: тоже сразу
+    scene = c.get(f"/lesson/{early['id']}").get_data(as_text=True)
+    assert "tiles.js" in scene and 'data-tiles-open="1"' in scene                          # сцена первых уроков: плитки сразу
+    assert c.get(f"/lesson/{N(1)}").get_data(as_text=True).count('id="scene"') == 1
     html = c.get(f"/lesson/{late['id']}").get_data(as_text=True)
-    assert 'class="lt" data-lt=' in html and 'data-open="1"' not in html
+    assert 'class="lt" data-lt=' in html and 'data-open="1"' not in html                    # поздние уроки: плитки закрыты
 
 
 def test_typo_counts_and_is_shown(parent, make_student):
