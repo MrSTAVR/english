@@ -255,6 +255,7 @@ def test_farm_static_files_exist():
         assert os.path.exists(os.path.join("static", f)), f
     src = open("static/farm.js", encoding="utf-8").read()
     import re
+    assert "?v=${MODELS}" in src                                        # модели грузятся с версией: иначе кэш SW отдаст старые
     for name in set(re.findall(r"(?:at|put)\('([a-z0-9]+)'", src)) | {"carrot", "tomato", "corn", "pumpkin"}:
         assert os.path.exists(os.path.join("static", "farm", name + ".glb")), name
 
@@ -266,11 +267,13 @@ def test_farm_models_and_credits():
     lic = open(os.path.join(folder, "LICENSE.txt"), encoding="utf-8").read()
     assert "Quaternius" in lic and "CC0" in lic
     assert "David O'Reilly" in lic and "CC BY 4.0" in lic               # атрибуция обязательна
-    for name in ("chicken", "oak1", "birch1", "tree3", "rock1", "rock2", "rock3", "grass1", "grass2", "wheat1", "stump1", "log1", "bush4", "berries1", "pine1"):
+    for name in ("hen", "oak1", "birch1", "fruittree", "rock1", "rock2", "rock3", "grass1", "grass2", "wheat1", "stump1", "log1", "bush4", "berries1", "pine1"):
         assert os.path.getsize(os.path.join(folder, name + ".glb")) > 5000, name
     assert not os.path.exists(os.path.join(folder, "tree2.glb"))        # старые «круглые» деревья удалены
     assert not os.path.exists(os.path.join(folder, "tree4.glb"))
-    data = open(os.path.join(folder, "chicken.glb"), "rb").read()
+    assert not os.path.exists(os.path.join(folder, "chicken.glb"))      # курица переехала на новый адрес: старый держит кэш SW
+    assert not os.path.exists(os.path.join(folder, "tree3.glb"))
+    data = open(os.path.join(folder, "hen.glb"), "rb").read()
     assert b"COLOR_0" in data                                          # цвет в вершинах, не в материале
     assert b'"animations"' not in data                                 # скелета нет: ходит покачиванием (farm.js)
 

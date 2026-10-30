@@ -56,11 +56,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Статика: сначала кэш, в фоне обновляем.
+  // Статика: сначала кэш, в фоне обновляем. Строку запроса учитываем: ?v=N — это новая версия файла,
+  // иначе подменённый js/css/модель остаются старыми в кэше телефона после выкатки.
   if (url.pathname.startsWith("/static/")) {
     event.respondWith((async () => {
       const cache = await caches.open(CACHE);
-      const cached = await cache.match(req, { ignoreSearch: true });
+      const cached = await cache.match(req);
       const network = fetch(req).then((resp) => {
         if (resp && resp.ok) cache.put(req, resp.clone());
         return resp;

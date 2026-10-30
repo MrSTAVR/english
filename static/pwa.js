@@ -3,7 +3,11 @@
   "use strict";
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
-      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {});
+      // update(): проверять новую версию при каждом заходе — выкатка раз в 5 минут,
+      // иначе телефон может держать старую сборку до суток
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).then(function (reg) {
+        return reg.update();
+      }).catch(function () {});
     });
   }
 

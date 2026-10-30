@@ -71,6 +71,13 @@ def test_service_worker_never_touches_forms_or_pages():
     assert "cache.put" not in nav
 
 
+def test_static_cache_respects_version_query():
+    """?v=N — это новый файл: иначе после выкатки телефон держит старые js/css/модели."""
+    src = (STATIC / "sw.js").read_text(encoding="utf-8")
+    assert "ignoreSearch" not in src
+    assert "cache.match(req)" in src
+
+
 def test_offline_page_is_standalone(anon):
     r = anon.get("/offline")
     body = r.get_data(as_text=True)
