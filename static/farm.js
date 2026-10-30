@@ -52,14 +52,16 @@ const loader = new GLTFLoader(), cache = {};
 const load = n => cache[n] ||= loader.loadAsync(`/static/farm/${n}.glb`);
 const mixers = [];
 function prep(obj, name) {
+  // у деревьев из Nature Pack материалы очень тёмные (Kd ~0.07) — светлим под палитру фермы
+  const NATURE_TREE = name === 'oak1' || name === 'birch1' || name === 'tree3';
   obj.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true;
-    if (name === 'tomato' || name === 'tree3') o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
+    if (name === 'tomato' || NATURE_TREE) o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
     // цвет модели задан в вершинах (COLOR_0), а материал из конвертера остался красным — красим материал в белый
     if (o.geometry.attributes.color) { o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
       for (const m of [].concat(o.material)) { m.vertexColors = true; if (m.color) m.color.setRGB(1, 1, 1); m.needsUpdate = true; } }
     for (const m of [].concat(o.material)) if (m && 'metalness' in m) { m.metalness = 0; m.roughness = Math.max(m.roughness ?? 1, .6);
       if (name === 'tomato' && m.color && m.color.r > m.color.g && m.color.r > m.color.b) { m.color.set('#ff4a36'); m.map = null; }
-      if (name === 'tree3' && m.color && m.color.g > m.color.r) m.color.offsetHSL(.03, .08, .03);
+      if (NATURE_TREE && m.color) m.color.offsetHSL(0, .04, .16);
       if (name === 'cow' && m.name === 'White') m.color.set('#f4f2ee'); } } });
 }
 async function put(name, x, z, height, rot = 0, o = {}) {
@@ -372,7 +374,7 @@ async function build() {
   await Promise.all([
     at('barn', 0, -10.5, 4, Math.PI * .25), at('silo', -5.2, -12, 5.2), at('windmill', 9.4, -9.6, 5, -.6).then(spinBlades),
     at('well', -8.8, -.6, 1.8, .4), at('hay', 2.4, -9.6, .9), at('hay', 3.2, -9.1, .9, .6),
-    at('tree4', -10.4, 2.6, 3.2), at('tree2', 9.6, 2.4, 3.4), at('tree4', -3.4, 12.2, 3), at('tree2', 12.4, -9.4, 3.2, 1),
+    at('oak1', -11.2, 3.4, 3.2), at('oak1', 9.6, 2.4, 3.4), at('birch1', -3.4, 12.2, 3), at('birch1', 11.8, -3.4, 3.2, 1),
     at('bush1', -2.4, -6.4, .8), at('bush3', 1.6, -8.4, .8), at('flowers2', -9.6, 7.4, .5), at('flowers2', 2.4, 11.6, .5),
     at('coop', COOP[0] - .6, COOP[1] - .6, 2.3, Math.PI * .25),
   ]);
