@@ -186,7 +186,7 @@ def test_order_text_numbers_and_words(make_student, db, clock, monkeypatch):
     assert o["en"] == "" and not o["names"]                  # до урока 19 — только картинки и число
     assert farm.order_text("Grandma", {"carrot": 3, "egg": 1}, True) == "Grandma needs three carrots and an egg."
     assert farm.order_text("Grandma", {"carrot": 3}, False) == "Grandma needs 3 carrots."
-    assert farm.order_text("Tom", {"milk": 2}, True) == "Tom needs two glasses of milk."
+    assert farm.order_text("Tom", {"milk": 2}, True) == "Tom needs milk."      # неисчисляемое, без числа
 
 
 def test_week_bonus(make_student, db, clock, monkeypatch):
@@ -270,12 +270,27 @@ def test_words_appear_only_after_their_lesson(make_student, db):
     assert not st["animals"][0]["known"]                                   # курица: слово из урока 17
     assert not any(st["known"].values())                                    # в амбаре и заказах тоже молчим
 
-    done = {"lessons_completed": 30, "completed_ids": {farm.WORDS_LESSON, farm.ANIMALS_LESSON}}
+    done = {"lessons_completed": 40, "completed_ids": {farm.WORDS_LESSON, farm.ANIMALS_LESSON}}
     st = farm.state(db, sid, done)
     crops = {c["key"]: c for c in st["crops"]}
     assert all(c["known"] and c["open"] for c in crops.values())
     assert all(a["known"] for a in st["animals"])
+    assert st["known"]["milk"] is False                                     # молоко — слово из урока 67
+    st = farm.state(db, sid, {"lessons_completed": 70, "completed_ids": {farm.WORDS_LESSON, farm.ANIMALS_LESSON, 67}})
     assert all(st["known"].values())
+
+
+def test_milk_is_uncountable_and_waits_for_its_lesson(make_student, db):
+    """milk неисчисляемое: в заказе «needs milk» без числа (количество — значком ×N),
+    а пока слово из урока 67 не пройдено, молоко в заказы не попадает вовсе."""
+    make_student(); sid = sid_of()
+    db.execute("INSERT INTO farm_animals (student_id, kind) VALUES (?, 'cow')", (sid,)); db.commit()
+    assert farm.order_text("Tom", {"milk": 2}, True) == "Tom needs milk."   # ни числа, ни «glasses of»
+    assert farm.order_text("Grandma", {"egg": 1, "milk": 2}, True) == "Grandma needs an egg and milk."
+    assert "×2" in farm.order_ru("Tom", {"milk": 2})
+    pool = farm.producible(db, sid, {"completed_ids": {farm.WORDS_LESSON, farm.ANIMALS_LESSON}})
+    assert "milk" not in pool                                               # до урока 67 — только по-русски
+    assert "milk" in farm.producible(db, sid, {"completed_ids": {67}})
 
 
 def test_retired_crops_do_not_break_old_data(make_student, db):

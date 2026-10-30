@@ -541,7 +541,7 @@ function openOrders() {
   html += S.orders.map(o => `<div class="fm-order" data-order="${o.id}">
     <span class="fm-order-who">${esc(WHO[o.giver] || o.giver)}</span>
     ${o.names
-    ? `<div class="fm-order-en"><span lang="en">${esc(o.en)}</span><button type="button" class="fm-say" data-say="${esc(o.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>`
+    ? `<div class="fm-order-en"><span lang="en">${esc(o.en)}</span><button type="button" class="fm-say" data-say="${esc(o.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>${uncLine(o.items)}`
     : `<div class="fm-order-en"><span>Просит вот это:</span></div><div class="fm-order-pics">${Object.entries(o.items).map(([k, n]) => `<span>${pic(itemPic(k))}${S.numbers ? '' : ' ' + n}</span>`).join('')}</div>`}
     <div class="fm-order-ru" hidden>${esc(o.ru)}</div>
     <div class="fm-order-foot"><button type="button" class="fm-link" data-tr>перевод</button><span>${ico('i-coin')} ${o.coins}</span>
@@ -549,6 +549,9 @@ function openOrders() {
   sheet('Заказы', '<div class="fm-list">' + html + '</div>');
 }
 const itemPic = k => S.pics[k] || '';
+// Неисчисляемые товары (молоко): в английской фразе числа нет, поэтому количество показываем значком ×N
+const uncLine = items => Object.entries(items).filter(([k]) => (S.uncountable || []).includes(k))
+  .map(([k, n]) => `<div class="fm-order-pics"><span>${pic(itemPic(k))} ×${n}</span></div>`).join('');
 let picked = {};
 function openPick(id) {
   const o = S.orders.find(x => x.id === id); if (!o) return;
@@ -558,7 +561,7 @@ function openPick(id) {
       <button type="button" data-inc="${b.item}" data-max="${b.qty}" aria-label="Больше">+</button><small>из ${b.qty}</small></span></div>`).join('') + '</div>'
     : '<p class="fm-note">В амбаре пока пусто — сначала вырасти урожай.</p>';
   sheet('Собери заказ', `<div class="fm-order"><span class="fm-order-who">${esc(WHO[o.giver] || o.giver)}</span>
-    ${o.names ? `<div class="fm-order-en"><span lang="en">${esc(o.en)}</span><button type="button" class="fm-say" data-say="${esc(o.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>`
+    ${o.names ? `<div class="fm-order-en"><span lang="en">${esc(o.en)}</span><button type="button" class="fm-say" data-say="${esc(o.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>${uncLine(o.items)}`
     : `<div class="fm-order-pics">${Object.entries(o.items).map(([k, n]) => `<span>${pic(itemPic(k))}${S.numbers ? '' : ' ' + n}</span>`).join('')}</div>`}
     <div class="fm-order-ru"${(tries[id] || 0) >= 2 ? '' : ' hidden'}>${esc(o.ru)}</div></div>
     <p class="fm-note">Выбери из амбара то, что просят, — и сколько.</p>${items}<div id="fm-pick-msg"></div>
