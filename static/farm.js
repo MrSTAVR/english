@@ -168,7 +168,7 @@ function fruits(parent, tree, color, blush, n, seed) {
   }
 }
 const FRUIT = { apple: ['#e53935', '#5a0d06'], peach: ['#ffa36c', '#ff5a5f'] };
-const HEIGHT = { carrot: .75, tomato: .55, corn: 1.4, pumpkin: .6 };   // на телефоне видно даже помидор
+const HEIGHT = { carrot: .75, tomato: .55 };   // на телефоне видно даже помидор
 async function drawPlot(i, p) {
   const b = beds[i], key = `${p.state}:${p.crop || ''}`;
   if (b.key === key) return;
@@ -478,18 +478,21 @@ function openSeeds(slot) {
   if (slot < 0) { sheet('Семена', '<p class="fm-note">Все грядки заняты. Собери урожай — и сажай снова!</p>' + seedList(null)); return; }
   sheet('Что посадим?', '<p class="fm-note">Посадить — бесплатно. Потом полей грядку — и она начнёт расти.</p>' + seedList(slot));
 }
+// английское слово и озвучку показываем только после урока, где слово вводится (farm.known)
+const enName = (known, en) => known ? `<b lang="en">${esc(en)}</b>` : '';
+const sayBtn = (known, en) => known ? `<button type="button" class="fm-say" data-say="${esc(en)}" aria-label="Послушать">${ico('o-sound')}</button>` : '';
 function seedList(slot) {
   return '<div class="fm-list">' + S.crops.map(c => c.open
-    ? `<div class="fm-row"><span class="fm-pic">${pic(c.pic)}</span><span class="fm-row-text"><b lang="en">${esc(c.en)}</b><small>${esc(c.ru)} · растёт ${esc(c.grow)} · урожай ${c.yield}</small></span>
-       <button type="button" class="fm-say" data-say="${esc(c.en)}" aria-label="Послушать">${ico('o-sound')}</button>
+    ? `<div class="fm-row"><span class="fm-pic">${pic(c.pic)}</span><span class="fm-row-text">${enName(c.known, c.en)}<small>${esc(c.ru)} · растёт ${esc(c.grow)} · урожай ${c.yield}</small></span>
+       ${sayBtn(c.known, c.en)}
        ${slot != null ? `<button type="button" class="btn btn-small btn-primary" data-plant="${c.key}" data-slot="${slot}">Посадить</button>` : ''}</div>`
-    : `<div class="fm-row" aria-disabled="true"><span class="fm-pic">${ico('o-lock')}</span><span class="fm-row-text"><b>???</b><small>откроется после ${c.from} уроков</small></span></div>`).join('') + '</div>';
+    : `<div class="fm-row" aria-disabled="true"><span class="fm-pic">${ico('o-lock')}</span><span class="fm-row-text"><b>???</b><small>откроется после урока «Фрукты и овощи»</small></span></div>`).join('') + '</div>';
 }
 function openPlot(i) {
   const p = S.plots[i], c = p.crop && CROP(p.crop);
   if (p.state === 'empty') return openSeeds(i);
-  const head = `<div class="fm-row"><span class="fm-pic">${pic(c.pic)}</span><span class="fm-row-text"><b lang="en">${esc(c.en)}</b><small>${esc(c.ru)}</small></span>
-    <button type="button" class="fm-say" data-say="${esc(c.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>`;
+  const head = `<div class="fm-row"><span class="fm-pic">${pic(c.pic)}</span><span class="fm-row-text">${enName(c.known, c.en)}<small>${esc(c.ru)}</small></span>
+    ${sayBtn(c.known, c.en)}</div>`;
   if (p.state === 'planted') sheet('Грядка', head + (S.drops >= S.water
     ? `<div class="fm-actions"><button type="button" class="btn btn-primary" data-act="water" data-slot="${i}">${ico('o-drop')} Полить — ${dropsW(S.water)}</button></div>`
     : noDrops(S.water)));
@@ -499,8 +502,8 @@ function openPlot(i) {
 function openAnimal(kind) {
   const a = S.animals.find(x => x.kind === kind);
   const prod = kind === 'chicken' ? 'яйца' : 'молоко';
-  const head = `<div class="fm-row"><span class="fm-pic">${pic(a.pic)}</span><span class="fm-row-text"><b lang="en">${esc(a.en)}</b><small>${esc(a.ru)}</small></span>
-    <button type="button" class="fm-say" data-say="${esc(a.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>`;
+  const head = `<div class="fm-row"><span class="fm-pic">${pic(a.pic)}</span><span class="fm-row-text">${enName(a.known, a.en)}<small>${esc(a.ru)}</small></span>
+    ${sayBtn(a.known, a.en)}</div>`;
   if (a.state === 'none') {
     const can = S.cow.can, enough = S.coins >= S.cow.cost;
     return sheet('Коровник', head + (can
@@ -523,8 +526,8 @@ function openBuyPlot() {
 function openBarn() {
   if (!S.barn.length) return sheet('Амбар', '<p class="fm-note">Пока пусто. Собери урожай или яйца — и они появятся здесь.</p>');
   sheet('Амбар', '<div class="fm-list">' + S.barn.map(b => `<div class="fm-row"><span class="fm-pic">${pic(b.pic)}</span>
-    <span class="fm-row-text"><b lang="en">${esc(b.en)}</b><small>${esc(b.ru)}</small></span><b>×${b.qty}</b>
-    <button type="button" class="fm-say" data-say="${esc(b.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>`).join('') + '</div>');
+    <span class="fm-row-text">${enName(S.known[b.item], b.en)}<small>${esc(b.ru)}</small></span><b>×${b.qty}</b>
+    ${sayBtn(S.known[b.item], b.en)}</div>`).join('') + '</div>');
 }
 const WHO = { Grandma: 'Бабушка', Tom: 'Том', Anna: 'Анна' };
 const tries = {};
@@ -536,8 +539,9 @@ function openOrders() {
     : '<p class="fm-note">Все заказы на сегодня выполнены. Завтра будут новые!</p>';
   html += S.orders.map(o => `<div class="fm-order" data-order="${o.id}">
     <span class="fm-order-who">${esc(WHO[o.giver] || o.giver)}</span>
-    <div class="fm-order-en"><span lang="en">${esc(o.en)}</span><button type="button" class="fm-say" data-say="${esc(o.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>
-    ${o.names ? '' : '<div class="fm-order-pics">' + Object.entries(o.items).map(([k, n]) => `<span>${pic(itemPic(k))}${S.numbers ? '' : ' ' + n}</span>`).join('') + '</div>'}
+    ${o.names
+    ? `<div class="fm-order-en"><span lang="en">${esc(o.en)}</span><button type="button" class="fm-say" data-say="${esc(o.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>`
+    : `<div class="fm-order-en"><span>Просит вот это:</span></div><div class="fm-order-pics">${Object.entries(o.items).map(([k, n]) => `<span>${pic(itemPic(k))}${S.numbers ? '' : ' ' + n}</span>`).join('')}</div>`}
     <div class="fm-order-ru" hidden>${esc(o.ru)}</div>
     <div class="fm-order-foot"><button type="button" class="fm-link" data-tr>перевод</button><span>${ico('i-coin')} ${o.coins}</span>
       <button type="button" class="btn btn-small btn-primary" data-pick="${o.id}">Собрать заказ</button></div></div>`).join('');
@@ -549,11 +553,12 @@ function openPick(id) {
   const o = S.orders.find(x => x.id === id); if (!o) return;
   picked = {};
   const items = S.barn.length ? '<div class="fm-pick">' + S.barn.map(b => `<div class="fm-pick-item" data-item="${b.item}"><span class="fm-pic">${pic(b.pic)}</span>
-      <b lang="en">${esc(b.en)}</b><span class="fm-step"><button type="button" data-dec="${b.item}" aria-label="Меньше">−</button><b data-n="${b.item}">0</b>
+      ${enName(S.known[b.item], b.en)}<span class="fm-step"><button type="button" data-dec="${b.item}" aria-label="Меньше">−</button><b data-n="${b.item}">0</b>
       <button type="button" data-inc="${b.item}" data-max="${b.qty}" aria-label="Больше">+</button><small>из ${b.qty}</small></span></div>`).join('') + '</div>'
     : '<p class="fm-note">В амбаре пока пусто — сначала вырасти урожай.</p>';
   sheet('Собери заказ', `<div class="fm-order"><span class="fm-order-who">${esc(WHO[o.giver] || o.giver)}</span>
-    <div class="fm-order-en"><span lang="en">${esc(o.en)}</span><button type="button" class="fm-say" data-say="${esc(o.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>
+    ${o.names ? `<div class="fm-order-en"><span lang="en">${esc(o.en)}</span><button type="button" class="fm-say" data-say="${esc(o.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>`
+    : `<div class="fm-order-pics">${Object.entries(o.items).map(([k, n]) => `<span>${pic(itemPic(k))}${S.numbers ? '' : ' ' + n}</span>`).join('')}</div>`}
     <div class="fm-order-ru"${(tries[id] || 0) >= 2 ? '' : ' hidden'}>${esc(o.ru)}</div></div>
     <p class="fm-note">Выбери из амбара то, что просят, — и сколько.</p>${items}<div id="fm-pick-msg"></div>
     <div class="fm-actions"><button type="button" class="btn" data-open="orders">Назад</button>

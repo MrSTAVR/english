@@ -99,8 +99,8 @@ def test_review_every_ten_words(make_student, db):
 
 def test_plot_cycle(make_student, db, clock):
     make_student(); sid = sid_of()
-    ok, _ = farm.plant(db, sid, 0, "carrot", done=0)
-    assert ok and not farm.plant(db, sid, 0, "tomato", done=0)[0]      # грядка занята
+    ok, _ = farm.plant(db, sid, 0, "carrot", stats={"completed_ids": set()})
+    assert ok and not farm.plant(db, sid, 0, "tomato", stats={"completed_ids": set()})[0]      # грядка занята
     assert not farm.water(db, sid, 0)[0]                      # капель нет — полить нечем
     farm.give(db, sid, "lesson", 1, 12)
     assert farm.water(db, sid, 0)[0] and farm.drops(db, sid) == 12 - farm.WATER_COST
@@ -109,14 +109,14 @@ def test_plot_cycle(make_student, db, clock):
     clock["now"] = T0 + timedelta(days=30)                    # урожай не вянет
     assert farm.harvest(db, sid, 0) == (True, 3)
     assert farm.barn(db, sid) == {"carrot": 3}
-    assert farm.plant(db, sid, 0, "tomato", done=0)[0]        # грядка снова свободна
+    assert farm.plant(db, sid, 0, "tomato", stats={"completed_ids": set()})[0]        # грядка снова свободна
 
 
 def test_seeds_open_with_lessons(make_student, db):
     make_student(); sid = sid_of()
-    assert not farm.plant(db, sid, 1, "potato", done=0)[0]
-    assert farm.plant(db, sid, 1, "potato", done=5)[0]
-    assert not farm.plant(db, sid, 9, "carrot", done=0)[0]    # грядок шесть
+    assert not farm.plant(db, sid, 1, "potato", stats={"completed_ids": set()})[0]
+    assert farm.plant(db, sid, 1, "potato", stats={"completed_ids": {farm.WORDS_LESSON}})[0]
+    assert not farm.plant(db, sid, 9, "carrot", stats={"completed_ids": set()})[0]    # грядок шесть
 
 
 def test_chicken_eggs(make_student, db, clock):
@@ -159,7 +159,7 @@ def test_orders_open_only_by_study(make_student, db, clock):
 def test_orders_daily_and_fulfil(make_student, db, clock, monkeypatch):
     make_student(); sid = sid_of()
     monkeypatch.setattr(farm, "order_slots", lambda *a, **k: 3)
-    stats = {"completed_ids": {farm.NUMBERS_LESSON}}
+    stats = {"completed_ids": {farm.NUMBERS_LESSON, farm.WORDS_LESSON, farm.ANIMALS_LESSON}}
     first = farm.orders(db, sid, done=0, stats=stats)
     assert len(first) == farm.ORDERS_PER_DAY
     assert farm.orders(db, sid, done=0, stats=stats) == first          # в тот же день новых нет
@@ -179,14 +179,14 @@ def test_orders_daily_and_fulfil(make_student, db, clock, monkeypatch):
     assert len(farm.orders(db, sid, done=0, stats=stats)) == 3         # назавтра — до трёх открытых
 
 
-def test_order_numbers_digits_before_lesson(make_student, db, clock, monkeypatch):
+def test_order_text_numbers_and_words(make_student, db, clock, monkeypatch):
     make_student(); sid = sid_of()
     monkeypatch.setattr(farm, "order_slots", lambda *a, **k: 3)
     o = farm.orders(db, sid, done=0, stats={"completed_ids": set()})[0]
-    assert any(ch.isdigit() for ch in o["en"])
+    assert o["en"] == "" and not o["names"]                  # до урока 19 — только картинки и число
     assert farm.order_text("Grandma", {"carrot": 3, "egg": 1}, True) == "Grandma needs three carrots and an egg."
-    assert farm.order_text("Tom", {"milk": 2}, True) == "Tom needs two bottles of milk."
-    assert farm.order_text("Anna", {"corn": 1}, True) == "Anna needs a corn cob."
+    assert farm.order_text("Grandma", {"carrot": 3}, False) == "Grandma needs 3 carrots."
+    assert farm.order_text("Tom", {"milk": 2}, True) == "Tom needs two glasses of milk."
 
 
 def test_week_bonus(make_student, db, clock, monkeypatch):
@@ -217,7 +217,7 @@ def test_buy_extra_plots(make_student, db):
     assert not farm.buy_plot(db, sid)[0]
     assert farm.plots_count(db, sid) == farm.PLOTS + len(farm.PLOT_COSTS)
     assert db.execute("SELECT coins FROM garden WHERE student_id=?", (sid,)).fetchone()[0] == 1000 - sum(farm.PLOT_COSTS)
-    assert farm.plant(db, sid, farm.PLOTS + 2, "carrot", done=0)[0]
+    assert farm.plant(db, sid, farm.PLOTS + 2, "carrot", stats={"completed_ids": set()})[0]
 
 
 def test_time_words():
@@ -230,7 +230,7 @@ def test_time_words():
 def test_delete_student_clears_farm(make_student, parent, db):
     make_student(); sid = sid_of()
     farm.give(db, sid, "lesson", 1, 12)
-    farm.plant(db, sid, 0, "carrot", done=0)
+    farm.plant(db, sid, 0, "carrot", stats={"completed_ids": set()})
     parent.post(f"/parent/students/{sid}/delete")
     for t in ("farm_drops", "farm_plots", "farm_barn", "farm_animals", "farm_orders"):
         assert db.execute(f"SELECT COUNT(*) FROM {t} WHERE student_id=?", (sid,)).fetchone()[0] == 0
@@ -257,6 +257,37 @@ def test_farm_page_and_api(make_student, db, anon):
     assert c.post("/api/farm/order", json={"id": 1, "items": "x"}).status_code == 400
     r = c.post("/api/farm/order", json={"id": 999, "items": {}}).get_json()
     assert not r["ok"] and r["why"] == "gone"
+
+
+def test_words_appear_only_after_their_lesson(make_student, db):
+    """Названия культур и животных — только после урока, где слово вводится:
+    до «Фруктов и овощей» ребёнок видит картинку и русское слово, а не незнакомое английское."""
+    make_student(); sid = sid_of()
+    st = farm.state(db, sid, {"lessons_completed": 0, "completed_ids": set()})
+    crops = {c["key"]: c for c in st["crops"]}
+    assert crops["carrot"]["open"] and not crops["carrot"]["known"]        # посадить можно, слово — нет
+    assert not crops["potato"]["open"]                                     # картофель ждёт урок 19
+    assert not st["animals"][0]["known"]                                   # курица: слово из урока 17
+    assert not any(st["known"].values())                                    # в амбаре и заказах тоже молчим
+
+    done = {"lessons_completed": 30, "completed_ids": {farm.WORDS_LESSON, farm.ANIMALS_LESSON}}
+    st = farm.state(db, sid, done)
+    crops = {c["key"]: c for c in st["crops"]}
+    assert all(c["known"] and c["open"] for c in crops.values())
+    assert all(a["known"] for a in st["animals"])
+    assert all(st["known"].values())
+
+
+def test_order_is_pictures_before_words_lesson(make_student, db, clock):
+    """До урока 19 заказ без английского текста: картинка + число (слово ребёнок ещё не проходил)."""
+    make_student(); sid = sid_of()
+    db.execute("INSERT INTO activity (student_id, day, kind) VALUES (?, ?, 'game')", (sid, farm._today().isoformat()))
+    db.commit()
+    early = farm.orders(db, sid, stats={"completed_ids": set(), "lessons_completed": 0})
+    assert early and not early[0]["en"] and early[0]["names"] is False
+    assert early[0]["ru"]                                              # перевод для взрослого остаётся
+    late = farm.orders(db, sid, stats={"completed_ids": {farm.WORDS_LESSON, farm.ANIMALS_LESSON}, "lessons_completed": 30})
+    assert late[0]["en"] and late[0]["names"] is True
 
 
 def test_farm_static_files_exist():
@@ -382,7 +413,7 @@ def test_repeated_taps_do_not_pay_twice(make_student, db, clock, monkeypatch):
     make_student(); sid = sid_of()
     monkeypatch.setattr(farm, "order_slots", lambda *a, **k: 3)
     assert not farm.water(db, sid, 0)[0]
-    farm.plant(db, sid, 0, "carrot", done=0)
+    farm.plant(db, sid, 0, "carrot", stats={"completed_ids": set()})
     assert not farm.water(db, sid, 0)[0] and farm.drops(db, sid) == 0         # капель нет — в минус не уходим
     farm.give(db, sid, "lesson", 1, 3)
     assert farm.water(db, sid, 0)[0] and not farm.water(db, sid, 0)[0] and farm.drops(db, sid) == 1
@@ -401,7 +432,7 @@ def test_harvest_all(make_student, db, clock):
     c = make_student(); sid = sid_of()
     farm.give(db, sid, "lesson", 1, 12)
     for slot, crop in ((0, "carrot"), (1, "tomato")):
-        farm.plant(db, sid, slot, crop, done=0); farm.water(db, sid, slot)
+        farm.plant(db, sid, slot, crop, stats={"completed_ids": set()}); farm.water(db, sid, slot)
     clock["now"] = T0 + timedelta(days=1)
     assert farm.harvest_all(db, sid) == {"carrot": 3, "tomato": 3}
     assert farm.harvest_all(db, sid) == {}

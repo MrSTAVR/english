@@ -33,26 +33,28 @@ ORDERS_PER_DAY = 3       # новые заказы открывает учёба
 ORDER_BASE = 1           # монеток за заказ: 1 + половина «веса» вещей (молоко весит 2), чтобы заказ не стоил больше урока
 WEEK_GOAL = 12           # заказов за неделю (пн–вс)
 WEEK_COINS = 10
-WORDS_LESSON = 19        # названия культур — после урока «Фрукты и овощи» (до него в заказе картинка и число)
+WORDS_LESSON = 19        # «Фрукты и овощи»: названия культур и продукты
+ANIMALS_LESSON = 17      # «Домашние животные»: курица, корова, яйцо, молоко
 COWSHED_COST = 120       # коровник — монетки, после урока «Домашние животные»
-COW_LESSON = 17
+COW_LESSON = ANIMALS_LESSON
 
-# культуры: время роста (мин), сколько собираем, с какого числа пройденных уроков открыты
+# культуры: время роста (мин), сколько собираем и в каком уроке слово.
+# early — посадить можно раньше урока, но английское название и озвучка появятся только после него.
+# Слов, которых нет в курсе (кукуруза, тыква), на ферме нет: ребёнок должен видеть только знакомые слова.
 CROPS = {
-    "carrot": {"en": "carrot", "plural": "carrots", "ru": "морковка", "minutes": 3, "yield": 3, "from": 0},
-    "tomato": {"en": "tomato", "plural": "tomatoes", "ru": "помидор", "minutes": 10, "yield": 3, "from": 0},
-    "potato": {"en": "potato", "plural": "potatoes", "ru": "картошка", "minutes": 180, "yield": 4, "from": 5},
-    "apple": {"en": "apple", "plural": "apples", "ru": "яблоко", "minutes": 360, "yield": 5, "from": 10},
-    "peach": {"en": "peach", "plural": "peaches", "ru": "персик", "minutes": 720, "yield": 5, "from": 20},
-    "corn": {"en": "corn", "plural": "corn cobs", "one": "corn cob", "ru": "кукуруза", "minutes": 240, "yield": 4, "from": 30},
-    "pumpkin": {"en": "pumpkin", "plural": "pumpkins", "ru": "тыква", "minutes": 600, "yield": 2, "from": 40},
+    "carrot": {"en": "carrot", "plural": "carrots", "ru": "морковь", "minutes": 3, "yield": 3, "lesson": WORDS_LESSON, "early": True},
+    "tomato": {"en": "tomato", "plural": "tomatoes", "ru": "помидор", "minutes": 10, "yield": 3, "lesson": WORDS_LESSON, "early": True},
+    "potato": {"en": "potato", "plural": "potatoes", "ru": "картофель", "minutes": 180, "yield": 4, "lesson": WORDS_LESSON},
+    "apple": {"en": "apple", "plural": "apples", "ru": "яблоко", "minutes": 360, "yield": 5, "lesson": WORDS_LESSON},
+    "peach": {"en": "peach", "plural": "peaches", "ru": "персик", "minutes": 720, "yield": 5, "lesson": WORDS_LESSON},
 }
 ANIMALS = {
-    "chicken": {"en": "chicken", "ru": "курица", "product": "egg", "minutes": 20, "yield": 3},
-    "cow": {"en": "cow", "ru": "корова", "product": "milk", "minutes": 120, "yield": 2},
+    "chicken": {"en": "chicken", "ru": "курица", "product": "egg", "minutes": 20, "yield": 3, "lesson": ANIMALS_LESSON},
+    "cow": {"en": "cow", "ru": "корова", "product": "milk", "minutes": 120, "yield": 2, "lesson": ANIMALS_LESSON},
 }
-PRODUCTS = {"egg": {"en": "egg", "plural": "eggs", "ru": "яйцо"}, "milk": {"en": "milk", "plural": "bottles of milk",
-                                                                         "ru": "бутылка молока", "one": "bottle of milk"}}
+PRODUCTS = {"egg": {"en": "egg", "plural": "eggs", "ru": "яйцо", "lesson": ANIMALS_LESSON},
+            "milk": {"en": "milk", "plural": "glasses of milk", "one": "glass of milk", "ru": "стакан молока",
+                     "lesson": ANIMALS_LESSON}}
 GIVERS = ["Grandma", "Tom", "Anna"]
 NUMBERS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
 NUMBERS_LESSON = 10      # числа словом — после урока «Цифры 1–10», до него — цифрами
@@ -153,8 +155,26 @@ def lessons_done(db, student_id):
     return compute_stats(db, student_id)["lessons_completed"]
 
 
-def open_crops(done):
-    return [k for k, c in CROPS.items() if done >= c["from"]]
+def completed_ids(db, student_id, stats=None):
+    """Сданные уроки: по ним решаем, знакомо ли ребёнку слово (а не по числу уроков)."""
+    if stats is None:
+        from stats import compute_stats
+        stats = compute_stats(db, student_id)
+    return stats["completed_ids"]
+
+
+def crop_open(c, ids):
+    """Семена доступны: ранние культуры — с первого дня, остальные — после урока со словом."""
+    return bool(c.get("early")) or c["lesson"] in ids
+
+
+def crop_known(c, ids):
+    """Английское название и озвучка — только после урока, где это слово вводится."""
+    return c["lesson"] in ids
+
+
+def open_crops(ids):
+    return [k for k, c in CROPS.items() if crop_open(c, ids)]
 
 
 def _plot_rows(db, student_id):
@@ -192,11 +212,10 @@ def buy_plot(db, student_id):
     return True, ""
 
 
-def plant(db, student_id, slot, crop, done=None):
+def plant(db, student_id, slot, crop, stats=None):
     if not 0 <= slot < plots_count(db, student_id) or crop not in CROPS:
         return False, "Такой грядки или семян нет."
-    done = lessons_done(db, student_id) if done is None else done
-    if crop not in open_crops(done):
+    if not crop_open(CROPS[crop], completed_ids(db, student_id, stats)):
         return False, "Эти семена откроются позже — проходи уроки!"
     cur = db.execute("INSERT INTO farm_plots (student_id, slot, crop, planted_at, ready_at) VALUES (?, ?, ?, ?, NULL) "
                      "ON CONFLICT(student_id, slot) DO UPDATE SET crop=excluded.crop, planted_at=excluded.planted_at, ready_at=NULL "
@@ -343,6 +362,12 @@ def item_info(item):
     return CROPS.get(item) or PRODUCTS[item]
 
 
+def known_item(item, ids):
+    """Слово предмета уже проходили — можно писать по-английски и озвучивать."""
+    info = CROPS.get(item) or PRODUCTS.get(item) or ANIMALS[item]
+    return info["lesson"] in ids
+
+
 def _phrase(item, n, words):
     info = item_info(item)
     num = NUMBERS[n] if words else str(n)
@@ -364,16 +389,16 @@ def order_ru(giver, items):
     return who + " нужно: " + ", ".join(f"{item_info(k)['ru']} — {n}" for k, n in items.items()) + "."
 
 
-def producible(db, student_id, done):
-    out = open_crops(done) + ["egg"]
+def producible(db, student_id, stats=None):
+    out = open_crops(completed_ids(db, student_id, stats)) + ["egg"]
     if has_animal(db, student_id, "cow"):
         out.append("milk")
     return out
 
 
-def _new_order(db, student_id, day, k, done):
+def _new_order(db, student_id, day, k, done, stats=None):
     rng = random.Random(f"{student_id}:{day.isoformat()}:{k}")
-    pool = producible(db, student_id, done)
+    pool = producible(db, student_id, stats)
     kinds = rng.sample(pool, min(len(pool), 1 if rng.random() < 0.6 or done < 5 else 2))
     items = {it: rng.randint(1, 2 if it == "milk" else 3 if done < 10 else 5) for it in kinds}
     giver = GIVERS[(k + day.toordinal()) % len(GIVERS)]
@@ -410,26 +435,20 @@ def orders(db, student_id, done=None, stats=None):
     k = made
     allowed = min(ORDERS_PER_DAY, order_slots(db, student_id, day))
     while open_n < ORDERS_PER_DAY and k < allowed:
-        _new_order(db, student_id, day, k, done)
+        _new_order(db, student_id, day, k, done, stats)
         k += 1
         open_n += 1
     db.commit()
     words = _numbers_known(db, student_id, stats)
-    names = _names_known(db, student_id, stats)
+    ids = completed_ids(db, student_id, stats)
     out = []
     for r in db.execute("SELECT * FROM farm_orders WHERE student_id=? AND done_at IS NULL ORDER BY id", (student_id,)):
         items = json.loads(r["items_json"])
-        out.append({"id": r["id"], "giver": r["giver"], "items": items, "coins": r["coins"], "names": names,
-                    "en": order_text(r["giver"], items, words), "ru": order_ru(r["giver"], items)})
+        known = {k: known_item(k, ids) for k in items}
+        names = all(known.values())                                   # все слова пройдены — заказ читаем по-английски
+        out.append({"id": r["id"], "giver": r["giver"], "items": items, "coins": r["coins"], "names": names, "known": known,
+                    "en": order_text(r["giver"], items, words) if names else "", "ru": order_ru(r["giver"], items)})
     return out
-
-
-def _names_known(db, student_id, stats=None):
-    """Названия культур уже пройдены — в заказе можно без картинки (иначе картинка + число)."""
-    if stats is None:
-        from stats import compute_stats
-        stats = compute_stats(db, student_id)
-    return WORDS_LESSON in stats["completed_ids"]
 
 
 def _numbers_known(db, student_id, stats=None):
@@ -575,6 +594,7 @@ def state(db, student_id, stats):
     t = now()
     g = refresh_garden(db, student_id)                                 # сад (серия дней) — уголок фермы
     done = stats["lessons_completed"]
+    ids = completed_ids(db, student_id, stats)
     rows = _plot_rows(db, student_id)
     n_plots = plots_count(db, student_id)
     plots = []
@@ -591,6 +611,7 @@ def state(db, student_id, stats):
         r = _animal_row(db, student_id, kind) if has else None
         st = animal_state(r, t) if has else "none"
         animals.append({"kind": kind, "en": a["en"], "ru": a["ru"], "state": st, "product": a["product"],
+                        "known": known_item(kind, ids),
                         "yield": a["yield"], "minutes": a["minutes"], "pic": emoji_for(a["en"]),
                         "left": _secs(r["ready_at"], t) if st == "busy" else None,
                         "when": time_words(r["ready_at"], t) if st == "busy" else ""})
@@ -602,7 +623,8 @@ def state(db, student_id, stats):
         "water": WATER_COST, "feed": FEED_COST,
         "plots": plots, "plot_cost": PLOT_COSTS[extra] if extra < len(PLOT_COSTS) else None,
         "crops": [{"key": k, "en": c["en"], "ru": c["ru"], "pic": emoji_for(c["en"]), "yield": c["yield"],
-                   "grow": _grow_words(c["minutes"]), "open": done >= c["from"], "from": c["from"]} for k, c in CROPS.items()],
+                   "grow": _grow_words(c["minutes"]), "open": crop_open(c, ids), "known": crop_known(c, ids)} for k, c in CROPS.items()],
+        "known": {k: known_item(k, ids) for k in items},
         "animals": animals,
         "cow": {"can": can_buy_cow(stats), "cost": COWSHED_COST},
         "barn": [{"item": k, "en": item_info(k)["en"], "ru": item_info(k)["ru"], "qty": have[k],
