@@ -12,7 +12,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const ico = id => `<svg class="ico" aria-hidden="true"><use href="#${id}"/></svg>`;
 const pic = p => window.picHtml ? window.picHtml(p) : esc(p);
 const say = t => { if (window.ttsSpeak) window.ttsSpeak(t); };
-const CROP = k => S.crops.find(c => c.key === k);
+const CROP = k => S.crops.find(c => c.key === k) || (S.retired || {})[k];   // снятые культуры — только для старых грядок
 const csrf = () => (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
 
 // ── сцена ──
@@ -178,6 +178,7 @@ async function drawPlot(i, p) {
   b.crop.clear();
   const [x, z] = PLOT_POS[i];
   if (p.state === 'empty') return;
+  if (p.crop && !CROP(p.crop)) return;                                // культура снята с фермы (кукуруза, тыква) — грядка пустая
   if (p.state === 'planted') {                                        // посажено, ждёт полива: бугорки семян
     for (let a = -1; a <= 1; a++) for (let c = -1; c <= 1; c++) {
       const m = new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 5, 0, 6.3, 0, 1.6), lam('#5e3a1f'));

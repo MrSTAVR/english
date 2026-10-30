@@ -278,6 +278,27 @@ def test_words_appear_only_after_their_lesson(make_student, db):
     assert all(st["known"].values())
 
 
+def test_retired_crops_do_not_break_old_data(make_student, db):
+    """Кукуруза и тыква сняты с фермы, но в базах учеников остались старые заказы, грядки и амбар:
+    экран не должен падать (был KeyError 31.10.2026), а старую грядку можно полить и собрать."""
+    make_student(); sid = sid_of()
+    farm._add_barn(db, sid, "corn", 2)
+    db.execute("INSERT INTO farm_plots (student_id, slot, crop, planted_at, ready_at) VALUES (?, 0, 'corn', ?, NULL)",
+               (sid, farm._stamp()))
+    db.execute("INSERT INTO farm_orders (student_id, day, k, giver, items_json, coins, created_at) VALUES (?, ?, 0, 'Grandma', ?, 3, ?)",
+               (sid, farm._today().isoformat(), json.dumps({"corn": 2, "pumpkin": 1}), farm._stamp()))
+    db.commit()
+    farm.give(db, sid, "lesson", 1, 20)
+    st = farm.state(db, sid, {"lessons_completed": 0, "completed_ids": set()})
+    assert [b["item"] for b in st["barn"]] == ["corn"]                  # старый запас виден, не выбрасываем
+    assert st["orders"][0]["en"] == "" and st["orders"][0]["known"] == {"corn": False, "pumpkin": False}
+    assert farm.water(db, sid, 0)[0]
+    db.execute("UPDATE farm_plots SET ready_at=? WHERE student_id=? AND slot=0",
+               ((farm.now() - timedelta(minutes=1)).isoformat(), sid)); db.commit()
+    ok, n = farm.harvest(db, sid, 0)
+    assert ok and n == 4 and farm.barn(db, sid)["corn"] == 6
+
+
 def test_order_is_pictures_before_words_lesson(make_student, db, clock):
     """До урока 19 заказ без английского текста: картинка + число (слово ребёнок ещё не проходил)."""
     make_student(); sid = sid_of()

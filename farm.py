@@ -55,6 +55,12 @@ ANIMALS = {
 PRODUCTS = {"egg": {"en": "egg", "plural": "eggs", "ru": "яйцо", "lesson": ANIMALS_LESSON},
             "milk": {"en": "milk", "plural": "glasses of milk", "one": "glass of milk", "ru": "стакан молока",
                      "lesson": ANIMALS_LESSON}}
+# Кукуруза и тыква сняты с фермы (их слов нет в курсе), но в базах учеников остались старые заказы и грядки:
+# показываем и досчитываем их по-старому, чтобы не ронять экран. В посадку они больше не попадают.
+RETIRED = {
+    "corn": {"en": "corn", "plural": "corn cobs", "one": "corn cob", "ru": "кукуруза", "minutes": 240, "yield": 4, "lesson": 999},
+    "pumpkin": {"en": "pumpkin", "plural": "pumpkins", "ru": "тыква", "minutes": 600, "yield": 2, "lesson": 999},
+}
 GIVERS = ["Grandma", "Tom", "Anna"]
 NUMBERS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
 NUMBERS_LESSON = 10      # числа словом — после урока «Цифры 1–10», до него — цифрами
@@ -228,7 +234,7 @@ def water(db, student_id, slot):
     row = _plot_rows(db, student_id).get(slot)
     if plot_state(row) != "planted":
         return False, "Здесь нечего поливать."
-    ready = now() + timedelta(minutes=CROPS[row["crop"]]["minutes"])
+    ready = now() + timedelta(minutes=item_info(row["crop"])["minutes"])   # item_info — и для снятых культур
     cur = db.execute("UPDATE farm_plots SET ready_at=? WHERE student_id=? AND slot=? AND crop IS NOT NULL AND ready_at IS NULL",
                      (_stamp(ready), student_id, slot))
     if cur.rowcount != 1:                                  # уже полито (второе нажатие)
@@ -256,7 +262,7 @@ def harvest(db, student_id, slot):
     if cur.rowcount != 1:                                  # уже собрано (второе нажатие)
         db.rollback()
         return False, 0
-    n = CROPS[row["crop"]]["yield"]
+    n = item_info(row["crop"])["yield"]
     _add_barn(db, student_id, row["crop"], n)
     db.commit()
     return True, n
@@ -359,13 +365,13 @@ def barn(db, student_id):
 # ── заказы ──
 
 def item_info(item):
-    return CROPS.get(item) or PRODUCTS[item]
+    return CROPS.get(item) or RETIRED.get(item) or PRODUCTS[item]
 
 
 def known_item(item, ids):
     """Слово предмета уже проходили — можно писать по-английски и озвучивать."""
-    info = CROPS.get(item) or PRODUCTS.get(item) or ANIMALS[item]
-    return info["lesson"] in ids
+    info = CROPS.get(item) or PRODUCTS.get(item) or ANIMALS.get(item) or RETIRED.get(item)
+    return bool(info) and info["lesson"] in ids
 
 
 def _phrase(item, n, words):
@@ -617,7 +623,7 @@ def state(db, student_id, stats):
                         "when": time_words(r["ready_at"], t) if st == "busy" else ""})
     db.commit()
     have = barn(db, student_id)
-    items = list(CROPS) + list(PRODUCTS)
+    items = list(CROPS) + list(PRODUCTS) + [k for k in RETIRED if have.get(k)]   # старые запасы видим, не выбрасываем
     return {
         "drops": drops(db, student_id), "coins": get_garden(db, student_id)["coins"],
         "water": WATER_COST, "feed": FEED_COST,
@@ -625,6 +631,7 @@ def state(db, student_id, stats):
         "crops": [{"key": k, "en": c["en"], "ru": c["ru"], "pic": emoji_for(c["en"]), "yield": c["yield"],
                    "grow": _grow_words(c["minutes"]), "open": crop_open(c, ids), "known": crop_known(c, ids)} for k, c in CROPS.items()],
         "known": {k: known_item(k, ids) for k in items},
+        "retired": {k: {"key": k, "en": c["en"], "ru": c["ru"], "pic": emoji_for(c["en"])} for k, c in RETIRED.items()},
         "animals": animals,
         "cow": {"can": can_buy_cow(stats), "cost": COWSHED_COST},
         "barn": [{"item": k, "en": item_info(k)["en"], "ru": item_info(k)["ru"], "qty": have[k],
