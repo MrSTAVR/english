@@ -278,6 +278,16 @@ def test_farm_models_and_credits():
     assert b'"animations"' not in data                                 # скелета нет: ходит покачиванием (farm.js)
 
 
+def test_vertex_colors_only_for_converter_red():
+    """COLOR_0 есть и у коровы, но её цвета (белый, чёрный, розовый) заданы материалами:
+    в белый красим только «красные» материалы конвертера, иначе корова становится белой."""
+    import os
+    src = open("static/farm.js", encoding="utf-8").read()
+    assert "m.color.r > .95 && m.color.g < .05 && m.color.b < .05" in src
+    cow = open(os.path.join("static", "farm", "cow.glb"), "rb").read()
+    assert b"COLOR_0" in cow and b"Pink" in cow
+
+
 def test_move_from_castle_refunds_once(make_student, db):
     import castle
     c = make_student(); sid = sid_of()
