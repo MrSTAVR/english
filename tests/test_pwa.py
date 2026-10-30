@@ -78,6 +78,14 @@ def test_static_cache_respects_version_query():
     assert "cache.match(req)" in src
 
 
+def test_sw_update_check_lives_in_html(anon):
+    """Регистрация service worker — в HTML: pwa.js сам может быть отдан старым worker'ом из кэша,
+    и reg.update() тогда до телефона не дойдёт (так телефон сутки жил со старой сборкой)."""
+    body = anon.get("/").get_data(as_text=True)
+    assert 'serviceWorker.register("/sw.js"' in body and "r.update()" in body
+    assert "serviceWorker.register" not in (STATIC / "pwa.js").read_text(encoding="utf-8")
+
+
 def test_offline_page_is_standalone(anon):
     r = anon.get("/offline")
     body = r.get_data(as_text=True)

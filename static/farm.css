@@ -20,7 +20,7 @@
   font: inherit; font-weight: 800; font-size: .95rem; cursor: pointer; }
 .fm-btn .ico { width: 22px; height: 22px; flex: none; }
 .fm-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--shade); }
-.fm-main { background: var(--yellow); border-color: var(--yellow-deep); box-shadow: 0 4px 0 var(--yellow-deep); color: var(--ink); line-height: 1.15; }
+.fm-main { background: var(--yellow); border-color: var(--yellow-deep); box-shadow: 0 4px 0 var(--yellow-deep); color: var(--on-yellow); line-height: 1.15; }
 .fm-main[disabled] { opacity: .75; cursor: default; }
 .fm-badge { position: absolute; top: -8px; right: -6px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px;
   background: var(--primary); color: var(--on-primary); font-size: .8rem; display: grid; place-items: center; }
@@ -31,8 +31,12 @@
   pointer-events: auto; cursor: pointer; }
 .fm-tag::after { content: ""; position: absolute; inset: -4px; }       /* зона нажатия 48px */
 .fm-tag .ico { width: 22px; height: 22px; }
+@media (max-width: 480px) {                                             /* на телефоне значки мельче — не закрывают грядку */
+  .fm-tag { width: 34px; height: 34px; } .fm-tag .ico { width: 18px; height: 18px; }
+  .fm-tag-n { height: 18px; min-width: 18px; padding: 0 4px; font-size: .64rem; top: -7px; right: -9px; }
+}
 .fm-tag-n { position: absolute; top: -8px; right: -12px; min-width: 22px; height: 20px; padding: 0 5px; border-radius: 999px;
-  background: var(--yellow); color: var(--ink); font-size: .72rem; display: grid; place-items: center; }
+  background: var(--yellow); color: var(--on-yellow); font-size: .72rem; display: grid; place-items: center; }
 .fm-tag.water, .fm-tag.plant { color: var(--primary); }
 .fm-tag.plant { color: var(--green); }
 .fm-tag.ready { background: var(--ok-bg); color: var(--ok-ink); border-color: var(--ok-ink); }
@@ -95,7 +99,7 @@ button.fm-row:disabled { cursor: default; opacity: .6; }
   padding: 6px 14px; border-radius: 999px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); box-shadow: var(--shadow);
   font: inherit; font-weight: 800; cursor: pointer; }
 .fm-home .ico { width: 20px; height: 20px; }
-html[data-theme="dark"] .fm canvas { filter: brightness(.72) saturate(.85); }   /* вечер на ферме */
+html[data-theme="dark"] .fm canvas { filter: brightness(.85) saturate(.85); }    /* вечер на ферме: свет гасит farm.js, тут — чуть мягче */
 html[data-theme="dark"] .fm { --farm-grass: #4d6e33; --farm-grass-ink: #e6f2d5; }
 
 @media (min-width: 900px) {
