@@ -24,7 +24,7 @@ const scene = new THREE.Scene(); scene.background = new THREE.Color('#9bd967');
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 const cam = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.1, 200);
 cam.position.set(30, 32, 30); cam.lookAt(0, 0, 0);
-scene.add(new THREE.HemisphereLight('#ffffff', '#9cc66a', 0.6));
+const hemi = new THREE.HemisphereLight('#ffffff', '#9cc66a', 0.6); scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff6e0', 1.7);
 sun.position.set(-18, 30, 10); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22, near: 1, far: 100 });
@@ -46,25 +46,41 @@ const gtex = grass();
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshLambertMaterial({ map: gtex, emissive: '#ffffff', emissiveMap: gtex, emissiveIntensity: .32 }));
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 
+// тёмная тема — вечер на ферме: гасим небо сцены и солнце, а не только CSS-фильтром
+const isDark = () => document.documentElement.dataset.theme === 'dark';
+function evening() {
+  const d = isDark();
+  scene.background.set(d ? '#3f5a2c' : '#9bd967');
+  sun.intensity = d ? .75 : 1.7; hemi.intensity = d ? .3 : .6;
+  ground.material.emissiveIntensity = d ? .1 : .32;
+}
+new MutationObserver(evening).observe(document.documentElement, { attributeFilter: ['data-theme'] });
+evening();
+
 // экран → мир: u — вправо, v — вниз по экрану
 const W = (u, v) => { u *= .72; return [(v + u) / 1.4142, (v - u) / 1.4142]; };
 const loader = new GLTFLoader(), cache = {};
 const MODELS = 2;                                                   // версия моделей: подменённая модель = новый адрес, иначе её держит кэш service worker
 const load = n => cache[n] ||= loader.loadAsync(`/static/farm/${n}.glb?v=${MODELS}`);
 const mixers = [];
+const LEAF = { Green: '#6faf45', DarkGreen: '#4e8b36' };   // листва деревьев и кустов Nature Pack — в палитру фермы
+const BARK = '#8a6244';
+const NATURE = /^(oak1|birch1|fruittree|pine1|bush1|bush3|bush4)$/;
 function prep(obj, name) {
-  // у деревьев из Nature Pack материалы очень тёмные (Kd ~0.07) — светлим под палитру фермы
-  const NATURE_TREE = name === 'oak1' || name === 'birch1' || name === 'fruittree';
+  // у деревьев из Nature Pack материалы очень тёмные (Kd ~0.07) — светлим листву, кору красим в тёплый коричневый
+  const NATURE_TREE = NATURE.test(name);
   obj.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true;
-    if (name === 'tomato' || NATURE_TREE) o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
+    let own = false;                                                   // свои материалы помечаем: их можно освобождать, общие — нет
+    if (name === 'tomato' || NATURE_TREE) { o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone(); own = true; }
     // цвет модели задан в вершинах (COLOR_0), а материал из конвертера остался красным [1,0,0] — красим его в белый.
     // Признак именно красный материал: у коровы тоже есть COLOR_0, но её цвета (белый, чёрный, розовый) заданы материалами
     if (o.geometry.attributes.color && [].concat(o.material).some(m => m.color && m.color.r > .95 && m.color.g < .05 && m.color.b < .05)) {
-      o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
+      o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone(); own = true;
       for (const m of [].concat(o.material)) if (m.color && m.color.r > .95 && m.color.g < .05 && m.color.b < .05) { m.vertexColors = true; m.color.setRGB(1, 1, 1); m.needsUpdate = true; } }
+    if (own) for (const m of [].concat(o.material)) m.userData.own = true;
     for (const m of [].concat(o.material)) if (m && 'metalness' in m) { m.metalness = 0; m.roughness = Math.max(m.roughness ?? 1, .6);
       if (name === 'tomato' && m.color && m.color.r > m.color.g && m.color.r > m.color.b) { m.color.set('#ff4a36'); m.map = null; }
-      if (NATURE_TREE && m.color) m.color.offsetHSL(0, .04, .16);
+      if (NATURE_TREE && m.color) { if (LEAF[m.name]) m.color.set(LEAF[m.name]); else if (/wood/i.test(m.name)) m.color.set(BARK); }
       if (name === 'cow' && m.name === 'White') m.color.set('#f4f2ee'); } } });
 }
 async function put(name, x, z, height, rot = 0, o = {}) {
@@ -139,6 +155,7 @@ function fruits(parent, tree, color, blush, n, seed) {
   const ray = new THREE.Raycaster(), meshes = [], spots = []; tree.traverse(o => o.isMesh && meshes.push(o));
   const mat = new THREE.MeshStandardMaterial({ color, roughness: .5, metalness: 0, emissive: blush, emissiveIntensity: .25 });
   const geo = new THREE.SphereGeometry(.09, 12, 10);
+  mat.userData.own = true; geo.userData.own = true;                    // созданы для этого дерева — освобождаем при перерисовке
   for (let i = 0; i < 500 && spots.length < n; i++) {
     const a = r() * 6.28, el = -.35 + r() * 1.5;
     const dir = new THREE.Vector3(Math.cos(a) * Math.cos(el), Math.sin(el), Math.sin(a) * Math.cos(el));
@@ -151,11 +168,13 @@ function fruits(parent, tree, color, blush, n, seed) {
   }
 }
 const FRUIT = { apple: ['#e53935', '#5a0d06'], peach: ['#ffa36c', '#ff5a5f'] };
-const HEIGHT = { carrot: .5, tomato: .34, corn: 1.1, pumpkin: .38 };
+const HEIGHT = { carrot: .75, tomato: .55, corn: 1.4, pumpkin: .6 };   // на телефоне видно даже помидор
 async function drawPlot(i, p) {
   const b = beds[i], key = `${p.state}:${p.crop || ''}`;
   if (b.key === key) return;
   b.key = key;
+  b.crop.traverse(o => { if (!o.isMesh) return; for (const m of [].concat(o.material)) if (m && m.userData.own) m.dispose();
+    if (o.geometry.userData && o.geometry.userData.own) o.geometry.dispose(); });           // геометрия моделей общая с кэшем — её не трогаем
   b.crop.clear();
   const [x, z] = PLOT_POS[i];
   if (p.state === 'empty') return;
@@ -173,7 +192,7 @@ async function drawPlot(i, p) {
     if (ready) fruits(b.crop, t, FRUIT[p.crop][0], FRUIT[p.crop][1], 9, 5 + i);
     return;
   }
-  const h = HEIGHT[p.crop] * (ready ? 1 : .5);
+  const h = HEIGHT[p.crop] * (ready ? 1 : .7);
   const jobs = [];
   for (let a = -1; a <= 1; a++) for (let c = -1; c <= 1; c++) jobs.push(put(p.crop, x + a * .6, z + c * .62, h, (a * 3 + c) * .7, { parent: b.crop, y0: .3 }));
   await Promise.all(jobs);
@@ -183,7 +202,7 @@ async function drawPlot(i, p) {
 const labels = [];
 function tag(x, y, z, cls, icon, label, onClick, num) {
   const el = document.createElement('button'); el.type = 'button'; el.className = 'fm-tag ' + cls;
-  el.innerHTML = ico(icon) + (num != null ? `<b class="fm-tag-n">${esc(num)}</b>` : '');
+  el.innerHTML = (icon[0] === '<' ? icon : ico(icon)) + (num != null ? `<b class="fm-tag-n">${esc(num)}</b>` : '');
   el.setAttribute('aria-label', label); el.title = label;
   el.addEventListener('click', onClick); $('fm-labels').appendChild(el);
   labels.push({ el, p: new THREE.Vector3(x, y, z) });
@@ -203,19 +222,23 @@ function drawLabels() {
     const [x, z] = PLOT_POS[i], y = .35;                             // значок — в центре грядки
     if (p.state === 'empty') tag(x, y, z, 'plant', 'o-sprout', 'Посади', () => openSeeds(i));
     else if (p.state === 'planted') tag(x, y, z, 'water', 'o-drop', 'Полей', () => openPlot(i));
-    else if (p.state === 'growing') tag(x, y, z, '', 'o-clock', 'Растёт: ' + (mins(p.left) || p.when), () => openPlot(i));
+    else if (p.state === 'growing') {                                // сколько осталось — числом на значке, не только словами в подписи
+      const c = CROP(p.crop), mm = Math.ceil(p.left / 60);
+      tag(x, y, z, '', 'o-clock', `Растёт: ${c ? c.ru + ', ' : ''}${mins(p.left) || p.when}`, () => openPlot(i),
+          mm < 60 ? mm : Math.round(mm / 60) + ' ч');
+    }
     else tag(x, y, z, 'ready', 'o-check', 'Собери урожай', () => openPlot(i));
   });
   if (S.plot_cost) { const [x, z] = PLOT_POS[S.plots.length]; tag(x, .3, z, 'lock', 'o-lock', `Новая грядка — ${S.plot_cost} монеток`, openBuyPlot, S.plot_cost); }
-  const animal = (a, x, z, y) => {
-    if (a.state === 'none') tag(x, 1.4, z, 'lock', 'o-lock', 'Коровник', () => openAnimal(a.kind));
+  const animal = (a, x, z, y, lx = x, lz = z) => {                     // lx, lz — где висит замок «ещё не построено»
+    if (a.state === 'none') tag(lx, 1.4, lz, 'lock', 'o-lock', a.kind === 'cow' ? 'Коровник' : 'Курятник', () => openAnimal(a.kind));
     else if (a.state === 'hungry') tag(x, y, z, 'water', 'o-grain', 'Покорми', () => openAnimal(a.kind));
     else if (a.state === 'busy') tag(x, y, z, '', 'o-clock', 'Скоро: ' + (mins(a.left) || a.when), () => openAnimal(a.kind));
     else tag(x, y, z, 'ready', 'o-check', 'Собери', () => openAnimal(a.kind));
   };
-  const [cx, cz] = W(COOP[0], COOP[1]), [kx, kz] = W(PEN[0], PEN[1]);
+  const [cx, cz] = W(COOP[0], COOP[1]), [kx, kz] = W(PEN[0], PEN[1]), [lx, lz] = W(PEN[0] - 1.5, PEN[1] - 1.5);
   animal(S.animals.find(a => a.kind === 'chicken'), cx, cz, 3.2);
-  animal(S.animals.find(a => a.kind === 'cow'), kx, kz, 2.4);
+  animal(S.animals.find(a => a.kind === 'cow'), kx, kz, 2.4, lx, lz);  // без коровы замок — у угла загона, а не в центре
   const [gx, gz] = W(GARDEN[0], GARDEN[1]), gd = S.garden.days;
   tag(gx, gardenH() + .5, gz, gd ? 'ready' : '', 'o-sprout', S.garden.waits && !gd ? 'Сад ждёт тебя' : `Сад: серия ${gd} дн.`,
       () => { location.href = '/student/garden'; }, gd || null);
@@ -229,12 +252,14 @@ function fit() {
   focus.length = 0;                                                  // грядки, что есть (и место под следующую), курятник, загон
   for (const [x, z] of PLOT_POS.slice(0, S.plots.length + (S.plot_cost ? 1 : 0))) for (const dx of [-1, 1]) for (const dz of [-1, 1]) focus.push(new THREE.Vector3(x + dx * BED / 2, 0, z + dz * BED / 2));
   for (const [u, v, y] of [[COOP[0] - 1.4, COOP[1] - .6, 2.8], [PEN[0] + 2.4, PEN[1], 1.2], [PEN[0], PEN[1] - 2, 1.2], [GARDEN[0] + 1.4, GARDEN[1] + 2.4, 0], [GARDEN[0], GARDEN[1] - 1.6, 2]]) { const [x, z] = W(u, v); focus.push(new THREE.Vector3(x, y, z)); }
+  if (w >= 700) for (const [u, v, y] of [[0, -10.5, 4], [-5.2, -12, 5.2], [9.4, -9.6, 5]]) {                 // на широком экране — ещё амбар, силос и мельница
+    const [x, z] = W(u, v); focus.push(new THREE.Vector3(x, y, z)); }
   renderer.setSize(w, h, false);
   cam.updateMatrixWorld(true);
   const inv = cam.matrixWorldInverse, pts = focus.map(p => p.clone().applyMatrix4(inv));
   let l = Infinity, r = -Infinity, t = -Infinity, b = Infinity;
   for (const p of pts) { l = Math.min(l, p.x); r = Math.max(r, p.x); t = Math.max(t, p.y); b = Math.min(b, p.y); }
-  const padTop = 1.2, padBot = 2.2;                                  // место под верхние кнопки и нижнюю панель
+  const padTop = w >= 700 ? 2 : 1.4, padBot = 2.2;                   // место под верхние кнопки и нижнюю панель
   t += padTop; b -= padBot;
   let cw = r - l, ch = t - b; const cx = (l + r) / 2, cy = (t + b) / 2, aspect = w / h;
   if (cw / ch > aspect) ch = cw / aspect; else cw = ch * aspect;
@@ -257,11 +282,11 @@ function applyView() {
 
 // ── жизнь сцены: животные бродят, облака плывут, мельница крутится ──
 const walkers = [], clouds = [];
-let blades = null;
+let blades = null, pen = null;
 const rnd = (a, b) => a + Math.random() * (b - a);
 class Walker {                       // подолгу стоит, иногда клюёт/жуёт, потом спокойно идёт в новое место
   constructor(obj, area, o) {
-    Object.assign(this, { obj, area, o, state: 'idle', t: rnd(1, o.rest[1]), baseY: obj.position.y, ph: Math.random() * 6.28 });
+    Object.assign(this, { obj, area, o, state: 'idle', t: rnd(1, o.rest[1]), baseY: obj.position.y, ph: Math.random() * 6.28, peck: rnd(.35, .55) });
     const clips = obj.userData.clips || [];                            // у статичной модели клипов нет — оживляем кодом
     this.proc = !clips.length;
     const find = re => clips.find(c => re.test(c.name));
@@ -279,8 +304,8 @@ class Walker {                       // подолгу стоит, иногда 
     const p = this.obj.position, r = this.obj.rotation;
     this.ph += dt * (this.state === 'walk' ? 7 : 2);
     if (this.state === 'walk') { p.y = this.baseY + Math.abs(Math.sin(this.ph)) * .05; r.z = Math.sin(this.ph) * .07; r.x *= .85; }
-    else if (this.state === 'extra') { const k = 1 - this.t / .7; p.y = this.baseY; r.z *= .8; r.x = Math.max(0, Math.sin(k * Math.PI)) * .55; }
-    else { p.y = this.baseY + Math.sin(this.ph) * .012; r.z *= .8; r.x *= .85; }
+    else if (this.state === 'extra') { const k = 1 - this.t / this.peck; p.y = this.baseY; r.z *= .8; r.x = Math.max(0, Math.sin(k * Math.PI)) * .3; }
+    else { p.y += (this.baseY - p.y) * .2; r.z *= .8; r.x *= .7; }
   }
   pick() {
     const A = this.area, p = this.obj.position;
@@ -298,12 +323,13 @@ class Walker {                       // подолгу стоит, иногда 
       const want = Math.atan2(dx, dz); let turn = want - this.obj.rotation.y;
       turn = Math.atan2(Math.sin(turn), Math.cos(turn));                 // кратчайший поворот
       this.obj.rotation.y += Math.sign(turn) * Math.min(Math.abs(turn), dt * 2.2);
-      if (Math.abs(turn) < .5) { const step = Math.min(d, this.o.speed * dt); p.x += dx / d * step; p.z += dz / d * step; }
+      const sp = this.o.speed * (this.proc ? .45 + .55 * Math.abs(Math.sin(this.ph)) : 1);   // шаг толчками, а не скольжение
+      if (Math.abs(turn) < .5) { const step = Math.min(d, sp * dt); p.x += dx / d * step; p.z += dz / d * step; }
       if (d < .06 || this.t <= 0) { this.state = 'idle'; this.t = rnd(...this.o.rest); this.play('idle'); }
     } else if (this.t <= 0) {
       if (this.state === 'idle' && (this.acts.extra || this.proc) && Math.random() < .4) {
         this.state = 'extra'; this.play('extra', true);
-        this.t = this.acts.extra ? this.acts.extra.getClip().duration / .7 : .7;
+        this.t = this.acts.extra ? this.acts.extra.getClip().duration / .7 : this.peck;   // без скелета — короткий клевок
         if (!this.acts.extra) this.obj.rotation.x = 0;
       } else if ((this.goal = this.pick())) { this.state = 'walk'; this.t = 12; this.play('walk'); }
       else { this.state = 'idle'; this.t = rnd(...this.o.rest); this.play('idle'); }
@@ -313,13 +339,13 @@ class Walker {                       // подолгу стоит, иногда 
 }
 function cloud(seed) {                                                 // пухлое облачко из нескольких «камушков»
   let s = seed; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  const g = new THREE.Group(), mat = new THREE.MeshStandardMaterial({ color: '#f4f8ff', roughness: 1, metalness: 0, flatShading: true, emissive: '#c9d8ee', emissiveIntensity: .12, transparent: true, opacity: .93 });
-  const n = 4 + Math.floor(r() * 3);
+  const g = new THREE.Group(), mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, metalness: 0, emissive: '#dbe6f7', emissiveIntensity: .35, transparent: true, opacity: .82 });
+  const n = 6 + Math.floor(r() * 3);
   for (let i = 0; i < n; i++) {
-    const m = new THREE.Mesh(new THREE.IcosahedronGeometry(.55 + r() * .45, 0), mat);
+    const m = new THREE.Mesh(new THREE.IcosahedronGeometry(.5 + r() * .4, 1), mat);   // гладкое облако, а не «сугроб»
     m.position.set((i - n / 2) * .62 + r() * .2, r() * .35, (r() - .5) * .7); m.scale.y = .72; m.castShadow = true; g.add(m);
   }
-  g.scale.setScalar(.8);
+  g.scale.setScalar(.95);
   return g;
 }
 function addClouds() {
@@ -328,7 +354,7 @@ function addClouds() {
     const g = cloud(k * 977 + 13); scene.add(g);
     const c = { g, u: u0, update(dt) {
       this.u += speed * dt; if (this.u > 17) this.u = -17;
-      const [x, z] = W(this.u, v); g.position.set(x, 5, z);
+      const [x, z] = W(this.u, v); g.position.set(x, 9, z);          // выше крыш — иначе облако читается сугробом
     } };
     c.update(0); clouds.push(c);
   }
@@ -383,8 +409,8 @@ async function build() {
   ]);
   // ── декор двора: камни, трава, снопы, пни, ягодный куст, ёлки (Ultimate Nature Pack, CC0) ──
   await Promise.all([
-    at('rock2', -6.2, 4.2, .8, 1.1), at('rock1', -5.4, 8.8, .55, .4), at('rock3', 9.0, 6.4, .5, 2.2), at('rock1', 4.4, 1.2, .4, 1.9),
-    at('grass1', -4.6, 1.0, .5, .8), at('grass2', -4.8, 5.4, .55, 2.4), at('grass1', 4.9, 8.6, .45, 1.6), at('grass2', .6, 8.6, .5, .2),
+    at('rock2', -6.1, -.1, .8, 1.1), at('rock1', -5.4, 8.8, .55, .4), at('rock3', 9.0, 6.4, .5, 2.2), at('rock1', 4.4, 1.2, .4, 1.9),
+    at('grass1', -5.6, .2, .5, .8), at('grass2', -3.5, -1.1, .55, 2.4), at('grass1', 4.9, 8.6, .45, 1.6), at('grass2', .6, 8.6, .5, .2),
     at('wheat1', -6.4, -6.8, .9, .3), at('wheat1', -7.2, -6.0, .8, 1.9),
     at('stump1', -1.6, -5.2, .55, .9), at('log1', 2.6, -6.0, .4, .7), at('bush4', -5.8, 10.4, .9, 1.3), at('berries1', 11.4, 4.6, .9, .5),
     at('pine1', -7.6, 11.8, 3.2, .2), at('pine1', 12.2, 9.6, 3.0, 1.4),
@@ -395,13 +421,15 @@ async function build() {
     walkers.push(new Walker(c, { cx: yx, cz: yz, r: 1.5 }, { speed: .42, rest: [3, 8] }));
   }
   const [cx, cz] = W(COOP[0] + .4, COOP[1] + .2); hitBox(3.6, 3, 3.6, cx, 1.5, cz, { kind: 'animal', animal: 'chicken' });
-  // загон коровы
+  // загон коровы: пустой забор до покупки коровника выглядел клеткой — прячем, пока коровы нет
   const [px, pz] = W(PEN[0], PEN[1]), half = 2.3, seg = 1.15;
+  pen = new THREE.Group(); scene.add(pen);
   for (let t = -half; t < half - .01; t += seg) {
-    const parts = await Promise.all([put('fence', px + t + seg / 2, pz - half, 0, 0, { fitW: seg }), put('fence', px + t + seg / 2, pz + half, 0, 0, { fitW: seg }),
-      put('fence', px - half, pz + t + seg / 2, 0, Math.PI / 2, { fitW: seg }), put('fence', px + half, pz + t + seg / 2, 0, Math.PI / 2, { fitW: seg })]);
+    const parts = await Promise.all([put('fence', px + t + seg / 2, pz - half, 0, 0, { fitW: seg, parent: pen }), put('fence', px + t + seg / 2, pz + half, 0, 0, { fitW: seg, parent: pen }),
+      put('fence', px - half, pz + t + seg / 2, 0, Math.PI / 2, { fitW: seg, parent: pen }), put('fence', px + half, pz + t + seg / 2, 0, Math.PI / 2, { fitW: seg, parent: pen })]);
     parts.forEach(f => tall(f, .8));                                   // забор — чуть ниже спины коровы
   }
+  await at('hay', PEN[0] + 1.3, PEN[1] - 1.4, .5, .6);                 // сено в загоне: до покупки коровы загон не пустой
   hitBox(half * 2, 2.5, half * 2, px, 1.2, pz, { kind: 'animal', animal: 'cow' });
   for (let i = 0; i < 9; i++) beds.push(bed(i));
   addClouds();

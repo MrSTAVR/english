@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """Ферма: капли только за учёбу, грядки и животные по времени, амбар, заказы героев (farm.py)."""
+import json
+import pathlib
+import re
 import sqlite3
 from datetime import datetime, timedelta
 
@@ -12,6 +15,15 @@ from tests.helpers import correct_fields, open_lesson, wrong_fields
 from tests.test_vacation import sid_of
 
 T0 = datetime(2026, 11, 2, 10, 0)      # понедельник
+ROOT = pathlib.Path(__file__).resolve().parent.parent      # тесты не зависят от текущего каталога
+FARM = ROOT / "static" / "farm"
+
+
+def glb_json(name):
+    """JSON-чанк файла GLB: материалы и атрибуты мешей без three.js."""
+    data = (FARM / f"{name}.glb").read_bytes()
+    length = int.from_bytes(data[12:16], "little")
+    return json.loads(data[20:20 + length])
 
 
 @pytest.fixture
@@ -248,44 +260,60 @@ def test_farm_page_and_api(make_student, db, anon):
 
 
 def test_farm_static_files_exist():
-    import os
     for f in ("farm.js", "farm.css", "vendor/three/three.module.min.js", "vendor/three/addons/loaders/GLTFLoader.js",
               "vendor/three/addons/environments/RoomEnvironment.js", "vendor/three/addons/utils/SkeletonUtils.js",
               "vendor/three/addons/utils/BufferGeometryUtils.js"):
-        assert os.path.exists(os.path.join("static", f)), f
-    src = open("static/farm.js", encoding="utf-8").read()
-    import re
+        assert (ROOT / "static" / f).exists(), f
+    src = (ROOT / "static" / "farm.js").read_text(encoding="utf-8")
     assert "?v=${MODELS}" in src                                        # модели грузятся с версией: иначе кэш SW отдаст старые
-    for name in set(re.findall(r"(?:at|put)\('([a-z0-9]+)'", src)) | {"carrot", "tomato", "corn", "pumpkin"}:
-        assert os.path.exists(os.path.join("static", "farm", name + ".glb")), name
+    names = set(re.findall(r"""(?:at|put)\(\s*['"]([a-z0-9]+)['"]""", src))      # и одинарные, и двойные кавычки
+    assert len(names) > 10, names                                      # разбор не «поплыл» и не вернул пустоту
+    for name in names | {"carrot", "tomato", "corn", "pumpkin"}:
+        assert (FARM / f"{name}.glb").exists(), name
 
 
 def test_farm_models_and_credits():
     """Модели фермы: курица из Everything Library (CC BY 4.0, статичная), декор из Nature Pack (CC0)."""
-    import os
-    folder = os.path.join("static", "farm")
-    lic = open(os.path.join(folder, "LICENSE.txt"), encoding="utf-8").read()
+    lic = (FARM / "LICENSE.txt").read_text(encoding="utf-8")
     assert "Quaternius" in lic and "CC0" in lic
     assert "David O'Reilly" in lic and "CC BY 4.0" in lic               # атрибуция обязательна
     for name in ("hen", "oak1", "birch1", "fruittree", "rock1", "rock2", "rock3", "grass1", "grass2", "wheat1", "stump1", "log1", "bush4", "berries1", "pine1"):
-        assert os.path.getsize(os.path.join(folder, name + ".glb")) > 5000, name
-    assert not os.path.exists(os.path.join(folder, "tree2.glb"))        # старые «круглые» деревья удалены
-    assert not os.path.exists(os.path.join(folder, "tree4.glb"))
-    assert not os.path.exists(os.path.join(folder, "chicken.glb"))      # курица переехала на новый адрес: старый держит кэш SW
-    assert not os.path.exists(os.path.join(folder, "tree3.glb"))
-    data = open(os.path.join(folder, "hen.glb"), "rb").read()
-    assert b"COLOR_0" in data                                          # цвет в вершинах, не в материале
-    assert b'"animations"' not in data                                 # скелета нет: ходит покачиванием (farm.js)
+        assert (FARM / f"{name}.glb").stat().st_size > 5000, name
+    for gone in ("tree2", "tree3", "tree4", "chicken"):
+        assert not (FARM / f"{gone}.glb").exists(), gone                # подменённые модели живут по новому адресу (кэш SW)
+    hen = glb_json("hen")
+    assert any("COLOR_0" in p["attributes"] for m in hen["meshes"] for p in m["primitives"])
+    assert "animations" not in hen                                     # скелета нет: ходит покачиванием (farm.js)
 
 
 def test_vertex_colors_only_for_converter_red():
-    """COLOR_0 есть и у коровы, но её цвета (белый, чёрный, розовый) заданы материалами:
-    в белый красим только «красные» материалы конвертера, иначе корова становится белой."""
-    import os
-    src = open("static/farm.js", encoding="utf-8").read()
-    assert "m.color.r > .95 && m.color.g < .05 && m.color.b < .05" in src
-    cow = open(os.path.join("static", "farm", "cow.glb"), "rb").read()
-    assert b"COLOR_0" in cow and b"Pink" in cow
+    """Цвет курицы лежит в вершинах, а материал конвертер оставил красным [1,0,0];
+    у коровы COLOR_0 тоже есть, но цвета (белый, чёрный, розовый) заданы материалами —
+    поэтому в белый красим только «красные» материалы, иначе корова становится белой."""
+    red = lambda m: [round(c, 2) for c in (m.get("pbrMetallicRoughness", {}).get("baseColorFactor") or [0, 0, 0, 1])[:3]] == [1.0, 0.0, 0.0]
+    hen, cow = glb_json("hen"), glb_json("cow")
+    assert hen["materials"] and all(red(m) for m in hen["materials"])
+    assert cow["materials"] and not any(red(m) for m in cow["materials"])
+    assert any("COLOR_0" in p["attributes"] for m in cow["meshes"] for p in m["primitives"])
+    src = (ROOT / "static" / "farm.js").read_text(encoding="utf-8")
+    assert "vertexColors" in src and "COLOR_0" in src
+
+
+def test_decor_does_not_stand_on_plots():
+    """Грядки 7–9 покупаются позже, а декор ставится сразу: камень или трава посреди будущей грядки
+    вырастали бы из земли вместе с урожаем (найдено критиками 30.10.2026)."""
+    src = (ROOT / "static" / "farm.js").read_text(encoding="utf-8")
+    bed = float(re.search(r"const BED = ([\d.]+)", src).group(1))
+    bx, bz = 3.2 / 2 ** .5, 3.2 / 2 ** .5                              # W(0, 3.2) — центр сетки грядок
+    step = bed + .35
+    plots = [(bx + (i % 3 - 1) * step, bz + (i // 3 - .5) * step) for i in range(9)]
+    decor = re.findall(r"""at\(\s*['"](rock\d|grass\d|stump1|log1|wheat1|berries1|bush4|hay)['"],\s*(-?[\d.]+),\s*(-?[\d.]+)""", src)
+    assert len(decor) > 8, decor
+    for name, u, v in decor:
+        u, v = float(u) * .72, float(v)
+        x, z = (v + u) / 2 ** .5, (v - u) / 2 ** .5
+        for px, pz in plots:
+            assert ((x - px) ** 2 + (z - pz) ** 2) ** .5 > bed / 2 + .4, f"{name} стоит на грядке {plots.index((px, pz)) + 1}"
 
 
 def test_move_from_castle_refunds_once(make_student, db):

@@ -1,15 +1,7 @@
-/* PWA: регистрация service worker и подсказка «Установить на телефон». */
+/* PWA: подсказка «Установить на телефон». Регистрация service worker — в base.html:
+   этот файл сам может быть отдан старым worker'ом из кэша, а HTML — нет. */
 (function () {
   "use strict";
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      // update(): проверять новую версию при каждом заходе — выкатка раз в 5 минут,
-      // иначе телефон может держать старую сборку до суток
-      navigator.serviceWorker.register("/sw.js", { scope: "/" }).then(function (reg) {
-        return reg.update();
-      }).catch(function () {});
-    });
-  }
 
   // Выход из аккаунта: забываем сохранённые страницы
   document.addEventListener("click", function (e) {

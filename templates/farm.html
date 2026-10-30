@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Ферма бабушки — English Fun{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='farm.css') }}?v=4">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='farm.css') }}?v=5">{% endblock %}
 {% block content %}
 <section class="fm" id="fm" aria-label="Ферма бабушки Тома">
   <canvas id="fm-canvas"></canvas>
@@ -38,5 +38,5 @@
 {% endblock %}
 {% block scripts %}
 <script type="importmap">{"imports": {"three": "{{ url_for('static', filename='vendor/three/three.module.min.js') }}", "three/addons/": "{{ url_for('static', filename='vendor/three/addons/') }}"}}</script>
-<script type="module" src="{{ url_for('static', filename='farm.js') }}?v=13"></script>
+<script type="module" src="{{ url_for('static', filename='farm.js') }}?v=14"></script>
 {% endblock %}

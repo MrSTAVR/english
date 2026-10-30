@@ -30,6 +30,7 @@
   --shadow-lg: 0 6px 0 var(--line-deep), 0 14px 26px rgba(30, 42, 69, .08);
   --ok-bg: #DDF5E7; --ok-ink: #146C3E;
   --on-primary: #FFFFFF;        /* текст на синем акценте */
+  --on-yellow: #1E2A45;         /* текст на жёлтом — жёлтый не темнеет в тёмной теме */
   --scrim: rgba(30, 42, 69, .35); /* затемнение под шторкой */
   --oops-bg: #FFE9D6; --oops-ink: #9A3B00;
 }
