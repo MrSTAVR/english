@@ -59,7 +59,7 @@ def api_action(action):
     stats = compute_stats(db, sid)
     extra = {}
     if action == "plant":
-        ok, msg = farm.plant(db, sid, _int(data, "slot"), str(data.get("crop", "")), stats["lessons_completed"])
+        ok, msg = farm.plant(db, sid, _int(data, "slot"), str(data.get("crop", "")), stats)
     elif action == "water":
         ok, msg = farm.water(db, sid, _int(data, "slot"))
     elif action == "harvest" and data.get("slot") == "all":
