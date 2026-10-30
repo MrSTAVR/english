@@ -53,8 +53,9 @@ ANIMALS = {
     "cow": {"en": "cow", "ru": "корова", "product": "milk", "minutes": 120, "yield": 2, "lesson": ANIMALS_LESSON},
 }
 PRODUCTS = {"egg": {"en": "egg", "plural": "eggs", "ru": "яйцо", "lesson": ANIMALS_LESSON},
-            "milk": {"en": "milk", "plural": "glasses of milk", "one": "glass of milk", "ru": "стакан молока",
-                     "lesson": ANIMALS_LESSON}}
+            # milk неисчисляемое: в заказе пишем «needs milk» без числа, количество — значком ×N.
+            # Слово вводится в уроке 67 «Еда и напитки», поэтому до него молоко в заказы не попадает.
+            "milk": {"en": "milk", "ru": "молоко", "lesson": 67, "uncountable": True}}
 # Кукуруза и тыква сняты с фермы (их слов нет в курсе), но в базах учеников остались старые заказы и грядки:
 # показываем и досчитываем их по-старому, чтобы не ронять экран. В посадку они больше не попадают.
 RETIRED = {
@@ -376,6 +377,8 @@ def known_item(item, ids):
 
 def _phrase(item, n, words):
     info = item_info(item)
+    if info.get("uncountable"):
+        return info["en"]                                  # «needs milk», количество — значком в интерфейсе
     num = NUMBERS[n] if words else str(n)
     name = info["plural"] if n > 1 else info.get("one", info["en"])
     if n == 1 and words:
@@ -392,13 +395,17 @@ def order_text(giver, items, words):
 
 def order_ru(giver, items):
     who = {"Grandma": "Бабушке", "Tom": "Тому", "Anna": "Анне"}[giver]
-    return who + " нужно: " + ", ".join(f"{item_info(k)['ru']} — {n}" for k, n in items.items()) + "."
+    def part(k, n):
+        info = item_info(k)
+        return f"{info['ru']} ×{n}" if info.get("uncountable") else f"{info['ru']} — {n}"
+    return who + " нужно: " + ", ".join(part(k, n) for k, n in items.items()) + "."
 
 
 def producible(db, student_id, stats=None):
-    out = open_crops(completed_ids(db, student_id, stats)) + ["egg"]
-    if has_animal(db, student_id, "cow"):
-        out.append("milk")
+    ids = completed_ids(db, student_id, stats)
+    out = open_crops(ids) + ["egg"]
+    if has_animal(db, student_id, "cow") and known_item("milk", ids):
+        out.append("milk")                                 # слово молока — только после урока 67
     return out
 
 
@@ -640,6 +647,7 @@ def state(db, student_id, stats):
         "week": {"done": week_done(db, student_id), "goal": WEEK_GOAL, "coins": WEEK_COINS},
         "slots_today": order_slots(db, student_id),
         "numbers": _numbers_known(db, student_id, stats),
+        "uncountable": [k for k in items if item_info(k).get("uncountable")],   # молоко: количество значком ×N
         "pics": {k: emoji_for(item_info(k)["en"]) for k in items},
         "garden": {"days": g["streak_days"], "grown": min(STREAK_CAP, max(g["streak_days"], g["best_streak"])), "cap": STREAK_CAP,
                    "waits": bool(g["broken"]), "stage": tree_stage(min(STREAK_CAP, max(g["streak_days"], g["best_streak"])))["name"]},
