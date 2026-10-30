@@ -54,10 +54,12 @@ const mixers = [];
 function prep(obj, name) {
   obj.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true;
     if (name === 'tomato' || name === 'tree3') o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
+    // цвет модели задан в вершинах (COLOR_0), а материал из конвертера остался красным — красим материал в белый
+    if (o.geometry.attributes.color) { o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
+      for (const m of [].concat(o.material)) { m.vertexColors = true; if (m.color) m.color.setRGB(1, 1, 1); m.needsUpdate = true; } }
     for (const m of [].concat(o.material)) if (m && 'metalness' in m) { m.metalness = 0; m.roughness = Math.max(m.roughness ?? 1, .6);
       if (name === 'tomato' && m.color && m.color.r > m.color.g && m.color.r > m.color.b) { m.color.set('#ff4a36'); m.map = null; }
       if (name === 'tree3' && m.color && m.color.g > m.color.r) m.color.offsetHSL(.03, .08, .03);
-      if (name === 'chicken') { const c = { Chicken_Main: '#f6f3ec', Chicken_Red: '#e53935', Beak: '#ffa726', Eye_White: '#ffffff' }[m.name]; if (c) m.color.set(c); }
       if (name === 'cow' && m.name === 'White') m.color.set('#f4f2ee'); } } });
 }
 async function put(name, x, z, height, rot = 0, o = {}) {
@@ -254,8 +256,10 @@ let blades = null;
 const rnd = (a, b) => a + Math.random() * (b - a);
 class Walker {                       // подолгу стоит, иногда клюёт/жуёт, потом спокойно идёт в новое место
   constructor(obj, area, o) {
-    Object.assign(this, { obj, area, o, state: 'idle', t: rnd(1, o.rest[1]) });
-    const find = re => obj.userData.clips.find(c => re.test(c.name));
+    Object.assign(this, { obj, area, o, state: 'idle', t: rnd(1, o.rest[1]), baseY: obj.position.y, ph: Math.random() * 6.28 });
+    const clips = obj.userData.clips || [];                            // у статичной модели клипов нет — оживляем кодом
+    this.proc = !clips.length;
+    const find = re => clips.find(c => re.test(c.name));
     this.acts = {};
     for (const k of ['walk', 'idle', 'extra']) if (o[k] && find(o[k])) this.acts[k] = obj.userData.mx.clipAction(find(o[k]));
     this.cur = obj.userData.act;
@@ -265,6 +269,13 @@ class Walker {                       // подолгу стоит, иногда 
     a.reset(); a.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = !!once;
     a.timeScale = k === 'walk' ? this.o.walkScale : .7;
     a.play(); if (this.cur) this.cur.crossFadeTo(a, .35, false); this.cur = a;
+  }
+  animate(dt) {                                                       // покачивание при ходьбе и «клевок» без скелета
+    const p = this.obj.position, r = this.obj.rotation;
+    this.ph += dt * (this.state === 'walk' ? 7 : 2);
+    if (this.state === 'walk') { p.y = this.baseY + Math.abs(Math.sin(this.ph)) * .05; r.z = Math.sin(this.ph) * .07; r.x *= .85; }
+    else if (this.state === 'extra') { const k = 1 - this.t / .7; p.y = this.baseY; r.z *= .8; r.x = Math.max(0, Math.sin(k * Math.PI)) * .55; }
+    else { p.y = this.baseY + Math.sin(this.ph) * .012; r.z *= .8; r.x *= .85; }
   }
   pick() {
     const A = this.area, p = this.obj.position;
@@ -285,11 +296,14 @@ class Walker {                       // подолгу стоит, иногда 
       if (Math.abs(turn) < .5) { const step = Math.min(d, this.o.speed * dt); p.x += dx / d * step; p.z += dz / d * step; }
       if (d < .06 || this.t <= 0) { this.state = 'idle'; this.t = rnd(...this.o.rest); this.play('idle'); }
     } else if (this.t <= 0) {
-      if (this.state === 'idle' && this.acts.extra && Math.random() < .4) {
-        this.state = 'extra'; this.play('extra', true); this.t = this.acts.extra.getClip().duration / .7;
+      if (this.state === 'idle' && (this.acts.extra || this.proc) && Math.random() < .4) {
+        this.state = 'extra'; this.play('extra', true);
+        this.t = this.acts.extra ? this.acts.extra.getClip().duration / .7 : .7;
+        if (!this.acts.extra) this.obj.rotation.x = 0;
       } else if ((this.goal = this.pick())) { this.state = 'walk'; this.t = 12; this.play('walk'); }
       else { this.state = 'idle'; this.t = rnd(...this.o.rest); this.play('idle'); }
     }
+    if (this.proc) this.animate(dt);
   }
 }
 function cloud(seed) {                                                 // пухлое облачко из нескольких «камушков»
@@ -362,10 +376,18 @@ async function build() {
     at('bush1', -2.4, -6.4, .8), at('bush3', 1.6, -8.4, .8), at('flowers2', -9.6, 7.4, .5), at('flowers2', 2.4, 11.6, .5),
     at('coop', COOP[0] - .6, COOP[1] - .6, 2.3, Math.PI * .25),
   ]);
+  // ── декор двора: камни, трава, снопы, пни, ягодный куст, ёлки (Ultimate Nature Pack, CC0) ──
+  await Promise.all([
+    at('rock2', -6.2, 4.2, .8, 1.1), at('rock1', -5.4, 8.8, .55, .4), at('rock3', 9.0, 6.4, .5, 2.2), at('rock1', 4.4, 1.2, .4, 1.9),
+    at('grass1', -4.6, 1.0, .5, .8), at('grass2', -4.8, 5.4, .55, 2.4), at('grass1', 4.9, 8.6, .45, 1.6), at('grass2', .6, 8.6, .5, .2),
+    at('wheat1', -6.4, -6.8, .9, .3), at('wheat1', -7.2, -6.0, .8, 1.9),
+    at('stump1', .2, -5.6, .55, .9), at('log1', 2.6, -6.0, .4, .7), at('bush4', -5.8, 10.4, .9, 1.3), at('berries1', 11.4, 4.6, .9, .5),
+    at('pine1', -7.6, 11.8, 3.2, .2), at('pine1', 12.2, 9.6, 3.0, 1.4),
+  ]);
   const [yx, yz] = W(COOP[0] + 1.3, COOP[1] + .6);                   // дворик у курятника
   for (const [u, v, r] of [[.9, .5, .4], [1.6, -.4, 2], [.2, 1.2, -1]]) {
-    const c = await at('chicken', COOP[0] + u, COOP[1] + v, .85, r, { anim: true, clip: /\|Idle$/, speed: .7 });
-    walkers.push(new Walker(c, { cx: yx, cz: yz, r: 1.5 }, { walk: /\|Walk$/, idle: /\|Idle$/, extra: /Bite_Front/, speed: .42, rest: [3, 8], walkScale: .8 }));
+    const c = await at('chicken', COOP[0] + u, COOP[1] + v, 1.0, r);   // модель статичная (Everything Library), ходит с покачиванием
+    walkers.push(new Walker(c, { cx: yx, cz: yz, r: 1.5 }, { speed: .42, rest: [3, 8] }));
   }
   const [cx, cz] = W(COOP[0] + .4, COOP[1] + .2); hitBox(3.6, 3, 3.6, cx, 1.5, cz, { kind: 'animal', animal: 'chicken' });
   // загон коровы

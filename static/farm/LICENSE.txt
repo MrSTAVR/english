@@ -1,2 +1,13 @@
-Farm 3D models: Quaternius (https://quaternius.com), CC0 1.0 Public Domain.
-Source packs via poly.pizza / OpenGameArt. Files: barn, coop, chicken, cow, carrot, tomato, corn, pumpkin, tree2-4, fence, well, hay, silo, windmill, bush1, bush3, flowers2.
+Farm 3D models.
+
+Quaternius (https://quaternius.com), CC0 1.0 Public Domain.
+  Из паков Quaternius (в т.ч. «Ultimate Nature Pack»): barn, coop, cow, carrot, tomato,
+  corn, pumpkin, tree2-4, fence, well, hay, silo, windmill, bush1, bush3, bush4, flowers2,
+  grass1, grass2, wheat1, stump1, log1, rock1-3, berries1, pine1.
+
+Everything Library 01 — ANIMALS by David O'Reilly (https://davidoreilly.itch.io/everything-library-animals),
+Creative Commons Attribution 4.0 International (CC BY 4.0).
+  chicken — модель статичная (без скелета), цвет в вершинах; ходит за счёт покачивания в farm.js.
+  Атрибуция обязательна: «3D-модель курицы — David O'Reilly, Everything Library (CC BY 4.0)».
+
+Модели из .fbx/.obj пересобраны в .glb конвертером assimpjs (WASM), без Blender.
