@@ -57,9 +57,11 @@ function prep(obj, name) {
   const NATURE_TREE = name === 'oak1' || name === 'birch1' || name === 'fruittree';
   obj.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true;
     if (name === 'tomato' || NATURE_TREE) o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
-    // цвет модели задан в вершинах (COLOR_0), а материал из конвертера остался красным — красим материал в белый
-    if (o.geometry.attributes.color) { o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
-      for (const m of [].concat(o.material)) { m.vertexColors = true; if (m.color) m.color.setRGB(1, 1, 1); m.needsUpdate = true; } }
+    // цвет модели задан в вершинах (COLOR_0), а материал из конвертера остался красным [1,0,0] — красим его в белый.
+    // Признак именно красный материал: у коровы тоже есть COLOR_0, но её цвета (белый, чёрный, розовый) заданы материалами
+    if (o.geometry.attributes.color && [].concat(o.material).some(m => m.color && m.color.r > .95 && m.color.g < .05 && m.color.b < .05)) {
+      o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
+      for (const m of [].concat(o.material)) if (m.color && m.color.r > .95 && m.color.g < .05 && m.color.b < .05) { m.vertexColors = true; m.color.setRGB(1, 1, 1); m.needsUpdate = true; } }
     for (const m of [].concat(o.material)) if (m && 'metalness' in m) { m.metalness = 0; m.roughness = Math.max(m.roughness ?? 1, .6);
       if (name === 'tomato' && m.color && m.color.r > m.color.g && m.color.r > m.color.b) { m.color.set('#ff4a36'); m.map = null; }
       if (NATURE_TREE && m.color) m.color.offsetHSL(0, .04, .16);
