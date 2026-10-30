@@ -96,7 +96,7 @@ templates/, static/ HTML, CSS (style.css — база, theme.css — дизай�
 tests/              pytest-тесты
 AGENTS.md           правила проекта для ИИ-ассистента: команды, структура, ловушки
 BACKLOG.md          что отложено: English Fun и кабинет логопеда + «уже сделано»
-agents/             брифы критиков (methodist, kid-ux, design-critic, game-balance, code-critic, qa)
+agents/             брифы критиков (methodist, kid-ux, design-critic, game-balance, code-critic, qa, farm-scene)
 deploy/             выкатка, автобновление, systemd-юниты
 ```
 
