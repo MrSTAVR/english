@@ -2,7 +2,8 @@ Farm 3D models.
 
 Quaternius (https://quaternius.com), CC0 1.0 Public Domain.
   Из паков Quaternius (в т.ч. «Ultimate Nature Pack»): barn, coop, cow, carrot, tomato,
-  corn, pumpkin, tree2-4, fence, well, hay, silo, windmill, bush1, bush3, bush4, flowers2,
+  corn, pumpkin, oak1 (дуб), birch1 (берёза), tree3 (садовое дерево и фруктовые на грядках),
+  fence, well, hay, silo, windmill, bush1, bush3, bush4, flowers2,
   grass1, grass2, wheat1, stump1, log1, rock1-3, berries1, pine1.
 
 Everything Library 01 — ANIMALS by David O'Reilly (https://davidoreilly.itch.io/everything-library-animals),

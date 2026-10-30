@@ -266,8 +266,10 @@ def test_farm_models_and_credits():
     lic = open(os.path.join(folder, "LICENSE.txt"), encoding="utf-8").read()
     assert "Quaternius" in lic and "CC0" in lic
     assert "David O'Reilly" in lic and "CC BY 4.0" in lic               # атрибуция обязательна
-    for name in ("chicken", "rock1", "rock2", "rock3", "grass1", "grass2", "wheat1", "stump1", "log1", "bush4", "berries1", "pine1"):
+    for name in ("chicken", "oak1", "birch1", "tree3", "rock1", "rock2", "rock3", "grass1", "grass2", "wheat1", "stump1", "log1", "bush4", "berries1", "pine1"):
         assert os.path.getsize(os.path.join(folder, name + ".glb")) > 5000, name
+    assert not os.path.exists(os.path.join(folder, "tree2.glb"))        # старые «круглые» деревья удалены
+    assert not os.path.exists(os.path.join(folder, "tree4.glb"))
     data = open(os.path.join(folder, "chicken.glb"), "rb").read()
     assert b"COLOR_0" in data                                          # цвет в вершинах, не в материале
     assert b'"animations"' not in data                                 # скелета нет: ходит покачиванием (farm.js)
