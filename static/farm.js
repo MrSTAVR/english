@@ -49,11 +49,12 @@ ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground)
 // экран → мир: u — вправо, v — вниз по экрану
 const W = (u, v) => { u *= .72; return [(v + u) / 1.4142, (v - u) / 1.4142]; };
 const loader = new GLTFLoader(), cache = {};
-const load = n => cache[n] ||= loader.loadAsync(`/static/farm/${n}.glb`);
+const MODELS = 2;                                                   // версия моделей: подменённая модель = новый адрес, иначе её держит кэш service worker
+const load = n => cache[n] ||= loader.loadAsync(`/static/farm/${n}.glb?v=${MODELS}`);
 const mixers = [];
 function prep(obj, name) {
   // у деревьев из Nature Pack материалы очень тёмные (Kd ~0.07) — светлим под палитру фермы
-  const NATURE_TREE = name === 'oak1' || name === 'birch1' || name === 'tree3';
+  const NATURE_TREE = name === 'oak1' || name === 'birch1' || name === 'fruittree';
   obj.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true;
     if (name === 'tomato' || NATURE_TREE) o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
     // цвет модели задан в вершинах (COLOR_0), а материал из конвертера остался красным — красим материал в белый
@@ -166,7 +167,7 @@ async function drawPlot(i, p) {
   const ready = p.state === 'ready';
   if (p.crop === 'potato') { let s = 11 + i * 97; for (let a = -1; a <= 1; a++) for (let c = -1; c <= 1; c++) potato(b.crop, x + a * .6, z + c * .62, p.state, s += 7); return; }
   if (FRUIT[p.crop]) {
-    const t = await put('tree3', x, z, ready ? 2.4 : 1.1, i, { parent: b.crop, y0: .22 });
+    const t = await put('fruittree', x, z, ready ? 2.4 : 1.1, i, { parent: b.crop, y0: .22 });
     if (ready) fruits(b.crop, t, FRUIT[p.crop][0], FRUIT[p.crop][1], 9, 5 + i);
     return;
   }
@@ -357,7 +358,7 @@ async function buildGarden() {
     jobs.push(put('bush3', gx + Math.cos(a) * 2, gz + Math.sin(a) * 2, .7, a));
   }
   jobs.push(put('flowers2', gx + .9, gz - .6, .45), put('flowers2', gx - .8, gz + .7, .45, 2));
-  const tree = await put('tree3', gx, gz, gardenH(), .6);
+  const tree = await put('fruittree', gx, gz, gardenH(), .6);
   await Promise.all(jobs);
   if (S.garden.grown >= 5) fruits(scene, tree, '#e53935', '#5a0d06', Math.min(9, 2 + Math.floor(S.garden.days / 4)), 77);
   hitBox(4.2, 3, 4.2, gx, 1.5, gz, { kind: 'garden' });
@@ -388,7 +389,7 @@ async function build() {
   ]);
   const [yx, yz] = W(COOP[0] + 1.3, COOP[1] + .6);                   // дворик у курятника
   for (const [u, v, r] of [[.9, .5, .4], [1.6, -.4, 2], [.2, 1.2, -1]]) {
-    const c = await at('chicken', COOP[0] + u, COOP[1] + v, 1.0, r);   // модель статичная (Everything Library), ходит с покачиванием
+    const c = await at('hen', COOP[0] + u, COOP[1] + v, 1.0, r);   // модель статичная (Everything Library), ходит с покачиванием
     walkers.push(new Walker(c, { cx: yx, cz: yz, r: 1.5 }, { speed: .42, rest: [3, 8] }));
   }
   const [cx, cz] = W(COOP[0] + .4, COOP[1] + .2); hitBox(3.6, 3, 3.6, cx, 1.5, cz, { kind: 'animal', animal: 'chicken' });
