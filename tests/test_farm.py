@@ -259,6 +259,20 @@ def test_farm_static_files_exist():
         assert os.path.exists(os.path.join("static", "farm", name + ".glb")), name
 
 
+def test_farm_models_and_credits():
+    """Модели фермы: курица из Everything Library (CC BY 4.0, статичная), декор из Nature Pack (CC0)."""
+    import os
+    folder = os.path.join("static", "farm")
+    lic = open(os.path.join(folder, "LICENSE.txt"), encoding="utf-8").read()
+    assert "Quaternius" in lic and "CC0" in lic
+    assert "David O'Reilly" in lic and "CC BY 4.0" in lic               # атрибуция обязательна
+    for name in ("chicken", "rock1", "rock2", "rock3", "grass1", "grass2", "wheat1", "stump1", "log1", "bush4", "berries1", "pine1"):
+        assert os.path.getsize(os.path.join(folder, name + ".glb")) > 5000, name
+    data = open(os.path.join(folder, "chicken.glb"), "rb").read()
+    assert b"COLOR_0" in data                                          # цвет в вершинах, не в материале
+    assert b'"animations"' not in data                                 # скелета нет: ходит покачиванием (farm.js)
+
+
 def test_move_from_castle_refunds_once(make_student, db):
     import castle
     c = make_student(); sid = sid_of()
