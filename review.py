@@ -99,18 +99,45 @@ def review_stats(db, student_id=None):
             "review_mastered": sum(1 for r in rows if r["box"] >= MASTERED_BOX)}
 
 
+_ORDER_POS = None
+
+
+def _lesson_pos(lid):
+    """Место урока в порядке прохождения — соседние уроки ближе по теме."""
+    global _ORDER_POS
+    if _ORDER_POS is None:
+        from data.course import ORDER
+        _ORDER_POS = {l: i for i, l in enumerate(ORDER)}
+    return _ORDER_POS.get(lid, len(_ORDER_POS))
+
+
 def _distractors(rng, word, pool, field, n=3):
+    """Неправильные варианты — из той же темы: сначала слова того же урока, потом соседних уроков,
+    и только если не хватило — из всего курса. Слишком далёкие по смыслу варианты ребёнок отбрасывает не читая."""
     cand, seen = [], {word[field]}
-    for src in (pool, all_words()):
-        size = len(word[field].split())
-        items = [w for w in src if w["key"] != word["key"] and abs(len(w[field].split()) - size) <= 1]
+    size = len(word[field].split())
+
+    def take(items):
+        items = [w for w in items if w["key"] != word["key"] and w[field] not in seen
+                 and abs(len(w[field].split()) - size) <= 1]
         rng.shuffle(items)
         for w in items:
-            if w[field] not in seen:
-                seen.add(w[field])
-                cand.append(w[field])
+            if w[field] in seen:
+                continue
+            seen.add(w[field])
+            cand.append(w[field])
             if len(cand) >= n:
-                return cand
+                return True
+        return False
+
+    pos = _lesson_pos(word["lesson"])
+    if take([w for w in pool if w["lesson"] == word["lesson"]]):
+        return cand
+    near = sorted((w for w in pool if w["lesson"] != word["lesson"]),
+                  key=lambda w: abs(_lesson_pos(w["lesson"]) - pos))
+    if take(near):
+        return cand
+    take(all_words())
     return cand
 
 
@@ -135,29 +162,32 @@ def _choice(rng, word, pool, mode):
     return d
 
 
+def _scramble(rng, word):
+    letters = list(word["en"].lower())
+    for _ in range(10):
+        rng.shuffle(letters)
+        if "".join(letters) != word["en"].lower():
+            break
+    return {"type": "scramble", "q": f"Собери слово: {word['ru']}", "letters": letters,
+            "answer": word["en"].lower(), "explain": f"{word['en']} — {word['ru']}"}
+
+
 def make_question(word, pool, box, rng):
-    """Задание зависит от «взрослости» слова: чем выше коробка, тем труднее."""
+    """Задание растёт вместе со словом: выбор → собери слово → напиши сам.
+    box 0–1 — узнать (услышать/перевести), 2–3 — собрать из букв, 4+ — написать по-английски."""
     typed_ok = "/" not in word["en"] and len(word["en"].split()) <= 3
     scr_ok = word["en"].isalpha() and 4 <= len(word["en"]) <= 9
     if box <= 1:
         q = _choice(rng, word, pool, rng.choice(["listen", "en_ru"]))
-    elif box <= 3:
-        q = _choice(rng, word, pool, rng.choice(["ru_en", "listen", "ru_en"]))
+    elif box <= 3 and scr_ok and rng.random() < .6:
+        q = _scramble(rng, word)
+    elif box >= 4 and typed_ok and rng.random() < .5:
+        q = {"type": "type_in", "q": "🔊 Послушай и напиши по-английски", "audio": word["en"],
+             "answer": word["en"], "explain": f"{word['en']} — {word['ru']}"}
+    elif box >= 4 and scr_ok:
+        q = _scramble(rng, word)
     else:
-        kind = rng.choice(["dict", "scramble", "ru_en"])
-        if kind == "dict" and typed_ok:
-            q = {"type": "type_in", "q": "🔊 Послушай и напиши по-английски", "audio": word["en"],
-                 "answer": word["en"], "explain": f"{word['en']} — {word['ru']}"}
-        elif kind == "scramble" and scr_ok:
-            letters = list(word["en"].lower())
-            for _ in range(10):
-                rng.shuffle(letters)
-                if "".join(letters) != word["en"].lower():
-                    break
-            q = {"type": "scramble", "q": f"Собери слово: {word['ru']}", "letters": letters,
-                 "answer": word["en"].lower(), "explain": f"{word['en']} — {word['ru']}"}
-        else:
-            q = _choice(rng, word, pool, "ru_en")
+        q = _choice(rng, word, pool, rng.choice(["ru_en", "listen", "ru_en"]))
     q["key"] = word["key"]
     q["en"] = word["en"]
     q["ru"] = word["ru"]
