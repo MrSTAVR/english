@@ -66,6 +66,31 @@ def test_questions_are_valid_for_every_box():
                 assert sorted(q["letters"]) == sorted(q["answer"])
 
 
+def test_distractors_come_from_the_same_topic():
+    """Неправильные варианты — из того же урока, а не случайные слова курса: иначе их видно не читая."""
+    pool = review._pool_from(LESSONS)
+    rng = random.Random(3)
+    w = next(x for x in pool if sum(1 for y in pool if y["lesson"] == x["lesson"]) >= 5)
+    q = review._choice(rng, w, pool, "ru_en")
+    same = {y["en"] for y in pool if y["lesson"] == w["lesson"]}
+    assert q["options"][q["answer"]] in same
+    assert sum(1 for o in q["options"] if o in same) >= 2
+
+
+def test_questions_grow_with_boxes():
+    """Лесенка сложности: узнавание → собери слово → напиши самому."""
+    pool = review._pool_from(LESSONS)
+    word = next(w for w in pool if w["en"].isalpha() and 4 <= len(w["en"]) <= 9)
+    seen = {}
+    for seed in range(40):
+        rng = random.Random(seed)
+        for box in (0, 2, 5):
+            seen.setdefault(box, set()).add(review.make_question(word, pool, box, rng)["type"])
+    assert seen[0] == {"choice"}                       # в начале — только выбор
+    assert "scramble" in seen[2]                       # на 2–3 слово уже собираем из букв
+    assert "type_in" in seen[5]                        # на 4+ пишем по-английски сами
+
+
 def test_word_of_day_is_stable_per_day():
     pool = review._pool_from(LESSONS[:8])
     a = review.word_of_day(pool, {}, 1, date(2026, 5, 5))
