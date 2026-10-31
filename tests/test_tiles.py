@@ -39,8 +39,10 @@ def test_letter_tiles_word_and_phrase():
 
 
 def _english_typein_lesson(early, part="test"):
+    # поздний урок без сцены: у сцены разметка плиток другая (data-tiles-open), это проверяется отдельно
     for l in LESSONS:
-        if (l["num"] <= TILES_UPTO) == early and any(q["type"] == "type_in" and not re.search("[а-яё]", str(q["answer"]), re.I) for q in l[part]):
+        if (l["num"] <= TILES_UPTO) == early and not l.get("scene") and any(
+                q["type"] == "type_in" and not re.search("[а-яё]", str(q["answer"]), re.I) for q in l[part]):
             return l
 
 

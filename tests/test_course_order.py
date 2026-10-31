@@ -97,7 +97,8 @@ def test_grammar_comes_after_its_vocabulary():
 def test_soft_pass_mark_for_dry_lessons(parent, make_student):
     from curriculum import pass_mark
     assert pass_mark(LESSONS_BY_ID[1]) == 60 and pass_mark(LESSONS_BY_ID[33]) == 60
-    plain = next(l for l in LESSONS if not l.get("scene") and l["id"] not in (1, 33))   # обычный урок без сцены
+    from curriculum import SOFT_PASS_IDS
+    plain = next(l for l in LESSONS if not l.get("scene") and l["id"] not in SOFT_PASS_IDS)  # обычный урок без сцены
     assert pass_mark(plain) == 70 and pass_mark(LESSONS_BY_ID[10001]) == 70
     c = make_student()
     parent.post("/parent/students/1/credit", data={"upto": "1", "action": "add"})   # урок 1 — второй в курсе
