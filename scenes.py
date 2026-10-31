@@ -83,7 +83,7 @@ def _line(ln, me_en, me_ru):
 def _question(i, q, done, ask=None, words=None, me=("", "")):
     d = {"t": "q", "i": i, "type": q["type"], "q": q["q"], "explain": q.get("explain", ""), "done": done}
     if q.get("audio"):
-        d["audio"] = q["audio"]
+        d["audio"] = q["audio"].replace("{name}", me[0])       # имя ученицы — латиницей (озвучка)
     if q["type"] == "choice":
         d["options"] = [(k, o.replace("{name}", me[0])) for k, o in shuffle_options(q)]
         d["answer"] = q["answer"]
