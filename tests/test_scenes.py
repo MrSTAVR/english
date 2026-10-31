@@ -21,28 +21,32 @@ def test_first_island_is_story():
     assert all(l["id"] in SCENES for l in LESSONS[:9])
 
 
+def _hero_text(sc):
+    """Все английские реплики героев, включая ответы на верный и неверный ход."""
+    out = []
+    for ln in sc["lines"]:
+        if "say" in ln:
+            out.append(ln["en"])
+        for key in ("ok", "no"):
+            val = ln.get(key)
+            if isinstance(val, dict):
+                for v in ([val] if "say" in val else val.values()):
+                    if isinstance(v, dict) and "say" in v:
+                        out.append(v["en"])
+    return " ".join(out).lower()
+
+
 def test_island3_starts_with_story():
-    """Остров 3 «Вокруг меня» открывается историей «Первый день на ферме»: все слова урока 16
-    звучат в репликах героев (иначе не появятся карточки слов), вопросов не больше десяти."""
-    sc = SCENES[16]
-    assert sc["title"] == "Первый день на ферме"
-
-    def replies(lines):
-        for ln in lines:
-            if "say" in ln:
-                yield ln["en"]
-            for key in ("ok", "no"):
-                val = ln.get(key)
-                if isinstance(val, dict):
-                    for v in ([val] if "say" in val else val.values()):
-                        if isinstance(v, dict) and "say" in v:
-                            yield v["en"]
-
-    hero = " ".join(replies(sc["lines"])).lower()
-    for w in LESSONS_BY_ID[16]["material"]:
-        assert w["en"].rstrip("!").lower() in hero, w["en"]
-    assert sum(1 for ln in sc["lines"] if "ask" in ln) <= 10
-    assert any(ln.get("review") for ln in sc["lines"])          # «Вспомни!» в сюжете
+    """Остров 3 «Вокруг меня»: все слова урока звучат в репликах героев (иначе не появятся
+    карточки слов), вопросов не больше десяти, есть ход-повторение."""
+    assert SCENES[16]["title"] == "Первый день на ферме"
+    for lid in (16, 42):
+        sc = SCENES[lid]
+        hero = _hero_text(sc)
+        for w in LESSONS_BY_ID[lid]["material"]:
+            assert w["en"].rstrip("!.").lower() in hero, (lid, w["en"])
+        assert 6 <= sum(1 for ln in sc["lines"] if "ask" in ln) <= 10
+        assert any(ln.get("review") for ln in sc["lines"])          # «Вспомни!» в сюжете
 
 
 def test_scene_questions_are_the_test():

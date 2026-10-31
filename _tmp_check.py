@@ -1,0 +1,1 @@
+﻿import sys; sys.path.insert(0,"."); from curriculum import LESSONS_BY_ID; [print(lid, LESSONS_BY_ID[lid]["title"], "|", "; ".join(w["en"] for w in LESSONS_BY_ID[lid]["material"])) for lid in (11,16,41,42,45)]
