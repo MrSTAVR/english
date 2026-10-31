@@ -49,10 +49,10 @@ def _scene_text(sc):
 
 
 def test_island3_starts_with_story():
-    """Остров 3 «Вокруг меня»: все слова урока звучат в тексте сцены (реплики или варианты —
+    """Острова 3–4: все слова урока звучат в тексте сцены (реплики или варианты —
     иначе карточки слов не появятся), вопросов не больше десяти, есть ход-повторение."""
     assert SCENES[16]["title"] == "Первый день на ферме"
-    for lid in (16, 42, 5, 18, 6, 69, 70):
+    for lid in (16, 42, 5, 18, 6, 69, 70, 19, 67, 20, 46, 51):
         sc = SCENES[lid]
         text = _scene_text(sc)
         for w in LESSONS_BY_ID[lid]["material"]:
@@ -167,6 +167,13 @@ def test_name_in_lines_latin():
     steps = scenes.steps(LESSONS_BY_ID[10], name="Маша")
     first = next(s for s in steps if s["t"] == "say")
     assert "Masha" in first["en"] and "Маша" in first["ru"] and "{name}" not in first["en"]
+
+
+def test_name_in_audio_is_spoken():
+    """Озвучка вопроса тоже подставляет имя — иначе диктор говорит «for name» (урок 20)."""
+    steps = scenes.steps(LESSONS_BY_ID[20], name="Маша")
+    audio = next(s for s in steps if s["t"] == "q" and s.get("audio"))
+    assert "Masha" in audio["audio"] and "{name}" not in audio["audio"]
 
 
 def test_new_words_shown_once():
