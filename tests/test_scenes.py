@@ -52,7 +52,7 @@ def test_island3_starts_with_story():
     """Остров 3 «Вокруг меня»: все слова урока звучат в тексте сцены (реплики или варианты —
     иначе карточки слов не появятся), вопросов не больше десяти, есть ход-повторение."""
     assert SCENES[16]["title"] == "Первый день на ферме"
-    for lid in (16, 42, 5, 18, 6):
+    for lid in (16, 42, 5, 18, 6, 69, 70):
         sc = SCENES[lid]
         text = _scene_text(sc)
         for w in LESSONS_BY_ID[lid]["material"]:
