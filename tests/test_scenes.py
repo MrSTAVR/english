@@ -21,8 +21,13 @@ def test_first_island_is_story():
     assert all(l["id"] in SCENES for l in LESSONS[:9])
 
 
-def _hero_text(sc):
-    """Все английские реплики героев, включая ответы на верный и неверный ход."""
+def _norm(text):
+    """Нижний регистр, знаки препинания — в пробелы (фразы урока бывают с «!» и «?»)."""
+    return re.sub(r"[^a-z' ]+", " ", text.lower()).replace("  ", " ").strip()
+
+
+def _scene_text(sc):
+    """Английский текст сцены: реплики героев (включая ok/no) и варианты ответов."""
     out = []
     for ln in sc["lines"]:
         if "say" in ln:
@@ -33,18 +38,25 @@ def _hero_text(sc):
                 for v in ([val] if "say" in val else val.values()):
                     if isinstance(v, dict) and "say" in v:
                         out.append(v["en"])
-    return " ".join(out).lower()
+        ask = ln.get("ask")
+        if isinstance(ask, dict):
+            out += [str(o) for o in ask.get("options", [])]
+        if isinstance(ln.get("pick"), str):                      # выбор без правильного ответа: его варианты тоже текст сцены
+            out += [str(o.get("en", "")) for o in ln.get("options", [])]
+        if isinstance(ln.get("speak"), str):
+            out.append(ln["speak"])
+    return _norm(" ".join(out))
 
 
 def test_island3_starts_with_story():
-    """Остров 3 «Вокруг меня»: все слова урока звучат в репликах героев (иначе не появятся
-    карточки слов), вопросов не больше десяти, есть ход-повторение."""
+    """Остров 3 «Вокруг меня»: все слова урока звучат в тексте сцены (реплики или варианты —
+    иначе карточки слов не появятся), вопросов не больше десяти, есть ход-повторение."""
     assert SCENES[16]["title"] == "Первый день на ферме"
-    for lid in (16, 42):
+    for lid in (16, 42, 5, 18, 6):
         sc = SCENES[lid]
-        hero = _hero_text(sc)
+        text = _scene_text(sc)
         for w in LESSONS_BY_ID[lid]["material"]:
-            assert w["en"].rstrip("!.").lower() in hero, (lid, w["en"])
+            assert _norm(w["en"]) in text, (lid, w["en"])
         assert 6 <= sum(1 for ln in sc["lines"] if "ask" in ln) <= 10
         assert any(ln.get("review") for ln in sc["lines"])          # «Вспомни!» в сюжете
 
