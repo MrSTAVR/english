@@ -28,6 +28,7 @@ EFFORT_MIN = 40
 SMALL = ("effort", "fix", "review", "game")
 
 WATER_COST = 2
+WELL_WATER = 5          # колодец: сколько воды даёт раз в день
 FEED_COST = 2
 PLOTS = 6                # грядок с начала
 PLOT_COSTS = [40, 70, 100]   # грядки 7–9 — за монетки (сток монеток вместо замка)
@@ -61,6 +62,7 @@ PRODUCTS = {"egg": {"en": "egg", "plural": "eggs", "ru": "яйцо", "lesson": A
 # Пиццерия: новые культуры и продукты переработки (см. pizza_farm.py).
 CROPS.update(pizza_farm.CROPS)
 PRODUCTS.update(pizza_farm.PRODUCTS)
+PRODUCTS["water"] = {"en": "water", "ru": "вода", "lesson": 0}   # из колодца, для теста
 # Кукуруза и тыква сняты с фермы (их слов нет в курсе), но в базах учеников остались старые заказы и грядки:
 # показываем и досчитываем их по-старому, чтобы не ронять экран. В посадку они больше не попадают.
 RETIRED = {
@@ -256,6 +258,17 @@ def water(db, student_id, slot):
 def _add_barn(db, student_id, item, qty):
     db.execute("INSERT INTO farm_barn (student_id, item, qty) VALUES (?, ?, ?) "
                "ON CONFLICT(student_id, item) DO UPDATE SET qty=qty+excluded.qty", (student_id, item, qty))
+
+
+def well(db, student_id):
+    """Наконец-то колодец: даёт WELL_WATER воды раз в день (вода нужна для теста)."""
+    cur = db.execute("INSERT OR IGNORE INTO farm_well (student_id, day, qty) VALUES (?, ?, ?)",
+                     (student_id, _today().isoformat(), WELL_WATER))
+    if cur.rowcount != 1:
+        return False, 0
+    _add_barn(db, student_id, "water", WELL_WATER)
+    db.commit()
+    return True, WELL_WATER
 
 
 def harvest(db, student_id, slot):
@@ -639,6 +652,8 @@ def state(db, student_id, stats):
     return {
         "drops": drops(db, student_id), "coins": get_garden(db, student_id)["coins"],
         "water": WATER_COST, "feed": FEED_COST,
+        "well": {"max": WELL_WATER, "can": db.execute(
+            "SELECT 1 FROM farm_well WHERE student_id=? AND day=?", (student_id, _today().isoformat())).fetchone() is None},
         "plots": plots, "plot_cost": PLOT_COSTS[extra] if extra < len(PLOT_COSTS) else None,
         "crops": [{"key": k, "en": c["en"], "ru": c["ru"], "pic": emoji_for(c["en"]), "yield": c["yield"],
                    "grow": _grow_words(c["minutes"]), "open": crop_open(c, ids), "known": crop_known(c, ids)} for k, c in CROPS.items()],

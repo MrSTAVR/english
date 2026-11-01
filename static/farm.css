@@ -115,3 +115,16 @@ html[data-theme="dark"] .fm { --farm-grass: #4d6e33; --farm-grass-ink: #e6f2d5; 
 }
 
 .fm-row .fm-process-btn { flex: 0 0 auto; width: auto; max-width: 42%; padding: 7px 9px; font-size: .82rem; white-space: nowrap; }
+
+.fm-cook { display: grid; gap: 12px; }
+.fm-pot { width: 150px; margin: 0 auto; filter: drop-shadow(0 8px 6px rgba(80, 50, 20, .2)); }
+.fm-pot svg { display: block; width: 100%; height: auto; }
+.fm-pot.on { animation: fm-pot-shake .7s ease-in-out infinite; }
+@keyframes fm-pot-shake { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
+.fm-cook-ingredients { display: flex; flex-wrap: wrap; gap: 8px; }
+.fm-cook-ing { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 10px; border: 2px solid var(--line); border-radius: 999px; background: var(--surface); }
+.fm-cook-ing b { font-weight: 800; }
+.fm-cook-ing small { color: var(--muted); font-weight: 800; }
+.fm-cook-progress { height: 12px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.fm-cook-progress span { display: block; width: 0; height: 100%; background: var(--primary); animation: fm-cook-fill 1.8s linear forwards; }
+@keyframes fm-cook-fill { to { width: 100%; } }

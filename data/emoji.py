@@ -45,8 +45,9 @@ for _chunk in _PAIRS.replace("\n", "|").split("|"):
 # Для этих слов подходящего эмодзи нет (стул вместо стола, лампочка вместо лампы…) — свой рисунок
 # static/pics/<слово>.svg; в данных пишется «@слово», выводится фильтром |pic и window.picHtml.
 DRAWN = ("table", "desk", "wardrobe", "carpet", "rug", "curtains", "armchair", "fireplace", "rubber", "glue",
-         "sink", "shelf", "cooker", "oven", "lamp", "blanket", "pillow")
+         "sink", "shelf", "cooker", "oven", "lamp", "blanket", "pillow", "cherrytomato")
 EMOJI.update({_w: "@" + _w for _w in DRAWN})
+EMOJI["cherry tomato"] = "@cherrytomato"     # это помидор черри, не вишня
 
 
 def emoji_for(en):

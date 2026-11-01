@@ -126,7 +126,7 @@ function bed(i) {
   return { g, crop, key: '' };
 }
 const leafGeo = new THREE.IcosahedronGeometry(.16, 0);
-const COOP = [-3.9, -3.7], PEN = [5.4, -4], GARDEN = [7.6, 9];   // курятник, загон — над грядками, сад — справа внизу (экранные u, v)             // курятник и загон — над грядками (экранные u, v)
+const COOP = [-3.9, -3.7], PEN = [5.4, -4], GARDEN = [7.6, 9], KITCHEN = [-6.8, 5.4];   // курятник, загон, сад, кухня (экранные u, v)
 function potato(parent, x, z, stage, seed) {
   let s = seed; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
   const g = new THREE.Group(); g.position.set(x, .3, z);
@@ -297,7 +297,7 @@ function fit() {
   const w = box.clientWidth, h = box.clientHeight;
   focus.length = 0;                                                  // грядки, что есть (и место под следующую), курятник, загон
   for (const [x, z] of PLOT_POS.slice(0, S.plots.length + (S.plot_cost ? 1 : 0))) for (const dx of [-1, 1]) for (const dz of [-1, 1]) focus.push(new THREE.Vector3(x + dx * BED / 2, 0, z + dz * BED / 2));
-  for (const [u, v, y] of [[COOP[0] - 1.4, COOP[1] - .6, 2.8], [PEN[0] + 2.4, PEN[1], 1.2], [PEN[0], PEN[1] - 2, 1.2], [GARDEN[0] + 1.4, GARDEN[1] + 2.4, 0], [GARDEN[0], GARDEN[1] - 1.6, 2]]) { const [x, z] = W(u, v); focus.push(new THREE.Vector3(x, y, z)); }
+  for (const [u, v, y] of [[COOP[0] - 1.4, COOP[1] - .6, 2.8], [PEN[0] + 2.4, PEN[1], 1.2], [PEN[0], PEN[1] - 2, 1.2], [GARDEN[0] + 1.4, GARDEN[1] + 2.4, 0], [GARDEN[0], GARDEN[1] - 1.6, 2], [KITCHEN[0], KITCHEN[1], 2.2], [-8.8, -.6, 1.2], [9.4, -9.6, 4]]) { const [x, z] = W(u, v); focus.push(new THREE.Vector3(x, y, z)); }
   if (w >= 700) for (const [u, v, y] of [[0, -10.5, 4], [-5.2, -12, 5.2], [9.4, -9.6, 5]]) {                 // на широком экране — ещё амбар, силос и мельница
     const [x, z] = W(u, v); focus.push(new THREE.Vector3(x, y, z)); }
   renderer.setSize(w, h, false);
@@ -423,6 +423,36 @@ function tall(obj, h) {                                               // рас�
 }
 // сад (серия дней): живая изгородь, дерево растёт вместе с серией; нажатие — страница сада
 const gardenH = () => 1 + 2.4 * Math.min(S.garden.grown, S.garden.cap) / S.garden.cap;   // дерево не уменьшается
+// ── кухня: домик во дворе, внутри — готовка сыра и соусов ──
+async function buildKitchen() {
+  const [x, z] = W(KITCHEN[0], KITCHEN[1]);
+  const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g);
+  const box = (w, h, d, c, px, py, pz, ry = 0) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), lam(c));
+    m.position.set(px, py, pz); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; g.add(m); return m;
+  };
+  box(3.2, 2.2, 2.8, '#f1dfbc', 0, 1.1, 0);                         // стены
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(2.5, 1.35, 4), lam('#b85b4a'));
+  roof.position.set(0, 2.85, 0); roof.rotation.y = Math.PI / 4; roof.castShadow = true; g.add(roof);
+  box(.45, 1.0, .45, '#a9a49a', 1.0, 2.9, -.4);                     // труба
+  box(.85, 1.25, .12, '#7b522f', 0, .63, 1.42);                     // дверь
+  box(.75, .55, .08, '#c6e9f4', -1.05, 1.35, 1.41);                 // окно
+  box(.75, .55, .08, '#c6e9f4', 1.05, 1.35, 1.41);
+  box(2.6, .16, 1.5, '#8b5a35', 0, 1.25, 1.9);                      // стол у дома
+  box(.5, .35, .45, '#7b522f', -.6, 1.47, 1.9);                     // кастрюля-декор
+  hitBox(4.2, 3.4, 4.2, x, 1.7, z, { kind: 'kitchen' });
+  tag(x, 3.6, z, '', 'o-drop', 'Кухня', openKitchen);
+}
+
+function buildUtilityPoints() {
+  const [wx, wz] = W(-8.8, -.6);
+  hitBox(1.9, 2.2, 1.9, wx, 1.1, wz, { kind: 'well' });
+  tag(wx, 2.1, wz, '', 'o-drop', 'Колодец', openWell);
+  const [mx, mz] = W(9.4, -9.6);
+  hitBox(3.2, 4.5, 3.2, mx, 2.2, mz, { kind: 'mill' });
+  tag(mx, 5.0, mz, '', 'o-check', 'Мельница', openMill);
+}
+
 async function buildGarden() {
   const [gx, gz] = W(GARDEN[0], GARDEN[1]);
   const jobs = [];
@@ -575,16 +605,66 @@ function openBarn() {
     <span class="fm-row-text">${enName(S.known[b.item], b.en)}<small>${esc(b.ru)}</small></span><b>×${b.qty}</b>
     ${sayBtn(S.known[b.item], b.en)}</div>`).join('') + '</div>');
 }
-function openKitchen() {
-  const rows = (S.process || []).map(p => {
+function processRows(station) {
+  const rows = (S.process || []).filter(p => p.station === station).map(p => {
     const need = p.need.map(n => `${esc(n.ru)} ×${n.qty}`).join(' + ');
     const give = p.give.map(n => `${esc(n.ru)} ×${n.qty}`).join(', ');
-    return `<div class="fm-row"><span class="fm-pic">${ico('o-drop')}</span>
+    return `<div class="fm-row"><span class="fm-pic">${ico(station === 'mill' ? 'o-sprout' : 'o-drop')}</span>
       <span class="fm-row-text"><b>${esc(p.ru)}</b><small>${need} → ${give}</small></span>
-      <button type="button" class="btn btn-small fm-process-btn ${p.can ? 'btn-primary' : ''}" data-process="${p.key}" ${p.can ? '' : 'disabled'}>${p.can ? 'Сделать' : 'Нет'}</button></div>`;
+      ${station === 'kitchen'
+        ? `<button type="button" class="btn btn-small fm-process-btn ${p.can ? 'btn-primary' : ''}" data-cook="${p.key}" ${p.can ? '' : 'disabled'}>${p.can ? 'Готовить' : 'Нет'}</button>`
+        : `<button type="button" class="btn btn-small fm-process-btn ${p.can ? 'btn-primary' : ''}" data-process="${p.key}" data-station="${p.station}" ${p.can ? '' : 'disabled'}>${p.can ? 'Смолоть' : 'Нет'}</button>`}</div>`;
   }).join('');
-  sheet('Кухня', '<p class="fm-note">Переработай урожай в продукты для пиццы. Что не растёт на ферме — лежит в кладовой бесплатно.</p>' +
-    (rows ? '<div class="fm-list">' + rows + '</div>' : '<p class="fm-note">Пока нечего готовить.</p>'));
+  return rows ? '<div class="fm-list">' + rows + '</div>' : '<p class="fm-note">Пока нечего готовить.</p>';
+}
+function openYard() {
+  const water = (S.barn.find(b => b.item === 'water') || {}).qty || 0;
+  const row = (title, sub, open) => `<button type="button" class="fm-row" data-open="${open}"><span class="fm-pic">${ico('o-drop')}</span><span class="fm-row-text"><b>${title}</b><small>${sub}</small></span><span aria-hidden="true">›</span></button>`;
+  sheet('Двор', '<p class="fm-note">Постройки бабушкиной фермы. Кухня — сыр и соусы, мельница — мука, колодец — вода для теста.</p><div class="fm-list">' +
+    row('Кухня', 'сыр, соусы, тесто', 'kitchen') +
+    row('Мельница', 'смелить пшеницу в муку', 'mill') +
+    row('Колодец', `вода для теста · в амбаре ×${water}`, 'well') + '</div>');
+}
+function openCook(key) {
+  const p = (S.process || []).find(x => x.key === key);
+  if (!p) return;
+  const ing = p.need.map(n => `<span class="fm-cook-ing"><b>${esc(n.ru)}</b><small>×${n.qty}</small></span>`).join('');
+  sheet('Плита', `<div class="fm-cook">
+    <div class="fm-pot" aria-hidden="true">
+      <svg viewBox="0 0 120 90"><path d="M18 34h84v24a30 30 0 0 1-30 30H48a30 30 0 0 1-30-30z" fill="#8E9BAF"/><rect x="8" y="27" width="104" height="12" rx="6" fill="#6E7C91"/><path d="M35 22c0-8 7-10 7-18M52 22c0-8 7-10 7-18M69 22c0-8 7-10 7-18M86 22c0-8 7-10 7-18" stroke="#E7EEF7" stroke-width="4" fill="none" stroke-linecap="round" opacity=".85"/><circle cx="40" cy="48" r="4" fill="#DDE7F3"/><circle cx="62" cy="43" r="3" fill="#DDE7F3"/><circle cx="79" cy="51" r="4" fill="#DDE7F3"/></svg>
+    </div>
+    <p class="fm-note">${esc(p.ru)}. Положи продукты и нажми «Поставить на огонь».</p>
+    <div class="fm-cook-ingredients">${ing}</div>
+    <div class="fm-cook-progress" hidden><span></span></div>
+    <div class="fm-actions"><button type="button" class="btn btn-primary" data-cook-start="${p.key}">Поставить на огонь</button></div>
+  </div>`);
+}
+async function startCook(key) {
+  const btn = document.querySelector('[data-cook-start]');
+  const bar = document.querySelector('.fm-cook-progress');
+  const pot = document.querySelector('.fm-pot');
+  if (btn) { btn.disabled = true; btn.textContent = 'Варится…'; }
+  if (bar) bar.hidden = false;
+  if (pot) pot.classList.add('on');
+  await new Promise(r => setTimeout(r, 1800));
+  const r = await api('process', { key });
+  if (!r) return;
+  if (!r.ok) { toast(r.msg); openKitchen(); return; }
+  toast('Готово!');
+  openKitchen();
+}
+function openKitchen() {
+  sheet('Кухня', '<p class="fm-note">Сыр, соусы и тесто готовятся здесь. Нажми «Сделать» — и продукты из амбара превратятся в пиццевые ингредиенты.</p>' + processRows('kitchen'));
+}
+function openMill() {
+  sheet('Мельница', '<p class="fm-note">Смели пшеницу в муку — она понадобится для теста.</p>' + processRows('mill'));
+}
+function openWell() {
+  const w = S.well || {};
+  const water = (S.barn.find(b => b.item === 'water') || {}).qty || 0;
+  sheet('Колодец', `<p class="fm-note">В колодце чистая вода. Раз в день можно набрать ${w.max || 5} вёдер — вода нужна для теста.</p>
+    <p class="fm-note">Сейчас в амбаре: <b>вода ×${water}</b>.</p>
+    <div class="fm-actions"><button type="button" class="btn btn-primary" data-act="well" ${w.can ? '' : 'disabled'}>${w.can ? `Набрать воду (+${w.max || 5})` : 'Сегодня уже набрана'}</button></div>`);
 }
 const WHO = { Grandma: 'Бабушка', Tom: 'Том', Anna: 'Анна' };
 const tries = {};
@@ -651,10 +731,16 @@ document.addEventListener('click', async e => {
   if (d.say) return say(d.say);
   if (d.open === 'seeds') return openSeeds();
   if (d.open === 'orders') return openOrders();
+  if (d.open === 'yard') return openYard();
   if (d.open === 'kitchen') return openKitchen();
+  if (d.open === 'mill') return openMill();
+  if (d.open === 'well') return openWell();
   if (d.open === 'barn') return openBarn();
   if (d.plant) { closeSheet(); const r = await api('plant', { slot: +d.slot, crop: d.plant }); if (r && !r.ok) toast(r.msg); else if (r) { say(CROP(d.plant).en); openPlot(+d.slot); } return; }
-  if (d.process) { const r = await api('process', { key: d.process }); if (!r) return; if (!r.ok) return toast(r.msg); toast(r.msg); openKitchen(); return; }
+  if (d.process) { const r = await api('process', { key: d.process }); if (!r) return; if (!r.ok) return toast(r.msg); toast(r.msg); if (d.station === 'mill') openMill(); else openKitchen(); return; }
+  if (d.cook) return openCook(d.cook);
+  if (d.cookStart) return startCook(d.cookStart);
+  if (d.act === 'well') { const r = await api('well', {}); if (!r) return; if (!r.ok) return toast(r.msg); toast(`+${r.got} воды`); openWell(); return; }
   if (d.act) {
     const body = d.slot != null ? { slot: +d.slot } : d.kind ? { kind: d.kind } : {};
     const r = await api(d.act, body); if (!r) return;
@@ -734,7 +820,9 @@ canvas.addEventListener('pointerup', e => {
   const hit = ray.intersectObjects(hits.filter(h => h.userData.kind !== 'plot' || h.userData.slot < S.plots.length), false)[0];
   if (!hit) return;
   const u = hit.object.userData;
-  if (u.kind === 'plot') openPlot(u.slot); else if (u.kind === 'garden') location.href = '/student/garden'; else openAnimal(u.animal);
+  if (u.kind === 'plot') openPlot(u.slot); else if (u.kind === 'garden') location.href = '/student/garden';
+      else if (u.kind === 'kitchen') openKitchen(); else if (u.kind === 'mill') openMill(); else if (u.kind === 'well') openWell();
+      else openAnimal(u.animal);
 });
 
 // ── запуск ──
@@ -758,6 +846,8 @@ setInterval(() => {                                                   // обр�
 
 try {
   await build();
+  await buildKitchen();
+  buildUtilityPoints();
   await sync();
   fit();
   $('fm-loading').hidden = true;
