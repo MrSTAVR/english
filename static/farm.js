@@ -126,7 +126,7 @@ function bed(i) {
   return { g, crop, key: '' };
 }
 const leafGeo = new THREE.IcosahedronGeometry(.16, 0);
-const COOP = [-3.9, -3.7], PEN = [5.4, -4], GARDEN = [7.6, 9], KITCHEN = [-6.8, 5.4];   // курятник, загон, сад, кухня (экранные u, v)
+const COOP = [-3.9, -3.7], PEN = [5.4, -4], GARDEN = [7.6, 9], KITCHEN = [3.2, 11.8];   // курятник, загон, сад, кухня (экранные u, v)
 function potato(parent, x, z, stage, seed) {
   let s = seed; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
   const g = new THREE.Group(); g.position.set(x, .3, z);
@@ -288,6 +288,9 @@ function drawLabels() {
   const [gx, gz] = W(GARDEN[0], GARDEN[1]), gd = S.garden.days;
   tag(gx, gardenH() + .5, gz, gd ? 'ready' : '', 'o-sprout', S.garden.waits && !gd ? 'Сад ждёт тебя' : `Сад: серия ${gd} дн.`,
       () => { location.href = '/student/garden'; }, gd || null);
+  const [wx, wz] = W(-8.8, -.6); tag(wx, 2.0, wz, '', 'o-drop', 'Колодец', openWell);
+  const [mx, mz] = W(9.4, -9.6); tag(mx, 4.8, mz, '', 'o-check', 'Мельница', openMill);
+  const [hx, hz] = W(KITCHEN[0], KITCHEN[1]); tag(hx, 4.05, hz, '', 'o-flame', 'Кухня', openKitchen);
   placeLabels();
 }
 
@@ -297,7 +300,7 @@ function fit() {
   const w = box.clientWidth, h = box.clientHeight;
   focus.length = 0;                                                  // грядки, что есть (и место под следующую), курятник, загон
   for (const [x, z] of PLOT_POS.slice(0, S.plots.length + (S.plot_cost ? 1 : 0))) for (const dx of [-1, 1]) for (const dz of [-1, 1]) focus.push(new THREE.Vector3(x + dx * BED / 2, 0, z + dz * BED / 2));
-  for (const [u, v, y] of [[COOP[0] - 1.4, COOP[1] - .6, 2.8], [PEN[0] + 2.4, PEN[1], 1.2], [PEN[0], PEN[1] - 2, 1.2], [GARDEN[0] + 1.4, GARDEN[1] + 2.4, 0], [GARDEN[0], GARDEN[1] - 1.6, 2], [KITCHEN[0], KITCHEN[1], 2.2], [-8.8, -.6, 1.2], [9.4, -9.6, 4]]) { const [x, z] = W(u, v); focus.push(new THREE.Vector3(x, y, z)); }
+  for (const [u, v, y] of [[COOP[0] - 1.4, COOP[1] - .6, 2.8], [PEN[0] + 2.4, PEN[1], 1.2], [PEN[0], PEN[1] - 2, 1.2], [GARDEN[0] + 1.4, GARDEN[1] + 2.4, 0], [GARDEN[0], GARDEN[1] - 1.6, 2], [KITCHEN[0] - 1.35, KITCHEN[1] - 1.25, 0], [KITCHEN[0] + 1.35, KITCHEN[1] - 1.25, 0], [KITCHEN[0] - 1.35, KITCHEN[1] + 1.25, 0], [KITCHEN[0] + 1.35, KITCHEN[1] + 1.25, 0], [KITCHEN[0], KITCHEN[1], 2.7], [-8.8, -.6, 1.2], [9.4, -9.6, 4]]) { const [x, z] = W(u, v); focus.push(new THREE.Vector3(x, y, z)); }
   if (w >= 700) for (const [u, v, y] of [[0, -10.5, 4], [-5.2, -12, 5.2], [9.4, -9.6, 5]]) {                 // на широком экране — ещё амбар, силос и мельница
     const [x, z] = W(u, v); focus.push(new THREE.Vector3(x, y, z)); }
   renderer.setSize(w, h, false);
@@ -426,31 +429,82 @@ const gardenH = () => 1 + 2.4 * Math.min(S.garden.grown, S.garden.cap) / S.garde
 // ── кухня: домик во дворе, внутри — готовка сыра и соусов ──
 async function buildKitchen() {
   const [x, z] = W(KITCHEN[0], KITCHEN[1]);
-  const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g);
-  const box = (w, h, d, c, px, py, pz, ry = 0) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), lam(c));
-    m.position.set(px, py, pz); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; g.add(m); return m;
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = Math.PI / 4; scene.add(g);
+  const mesh = (geo, color, px, py, pz, rx = 0, ry = 0, rz = 0) => {
+    const m = new THREE.Mesh(geo, lam(color));
+    m.position.set(px, py, pz); m.rotation.set(rx, ry, rz);
+    m.castShadow = m.receiveShadow = true; g.add(m); return m;
   };
-  box(3.2, 2.2, 2.8, '#f1dfbc', 0, 1.1, 0);                         // стены
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(2.5, 1.35, 4), lam('#b85b4a'));
-  roof.position.set(0, 2.85, 0); roof.rotation.y = Math.PI / 4; roof.castShadow = true; g.add(roof);
-  box(.45, 1.0, .45, '#a9a49a', 1.0, 2.9, -.4);                     // труба
-  box(.85, 1.25, .12, '#7b522f', 0, .63, 1.42);                     // дверь
-  box(.75, .55, .08, '#c6e9f4', -1.05, 1.35, 1.41);                 // окно
-  box(.75, .55, .08, '#c6e9f4', 1.05, 1.35, 1.41);
-  box(2.6, .16, 1.5, '#8b5a35', 0, 1.25, 1.9);                      // стол у дома
-  box(.5, .35, .45, '#7b522f', -.6, 1.47, 1.9);                     // кастрюля-декор
-  hitBox(4.2, 3.4, 4.2, x, 1.7, z, { kind: 'kitchen' });
-  tag(x, 3.6, z, '', 'o-drop', 'Кухня', openKitchen);
+  const box = (w, h, d, color, px, py, pz, rx = 0, ry = 0, rz = 0) =>
+    mesh(new THREE.BoxGeometry(w, h, d), color, px, py, pz, rx, ry, rz);
+
+  // каменный цоколь и красные дощатые стены, как у амбара
+  box(2.25, .16, 1.95, '#8d877e', 0, .08, 0);
+  box(2.0, 1.62, 1.7, '#7a3f37', 0, .97, 0);
+  // светлая обвязка: углы и пояс
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) box(.13, 1.66, .13, '#f0e3c8', sx * .97, .97, sz * .83);
+  box(2.06, .12, 1.76, '#f0e3c8', 0, 1.72, 0);
+  box(2.04, .1, 1.74, '#f0e3c8', 0, .36, 0);
+
+  // двускатная крыша с нормальными свесами, графитовая как у фермы
+  box(.32, .12, 2.32, '#4c4b49', 0, 2.7, 0);                        // конёк
+  box(1.55, .12, 2.3, '#5b5a58', -.7, 2.2, 0, 0, 0, .7);
+  box(1.55, .12, 2.3, '#555451', .7, 2.2, 0, 0, 0, -.7);
+  box(.12, .12, 2.32, '#5b5a58', 0, 2.6, 0);                        // гребень
+  const tri = new THREE.Shape();
+  tri.moveTo(-1.0, 0); tri.lineTo(1.0, 0); tri.lineTo(0, .95); tri.closePath();
+  const triGeo = new THREE.ShapeGeometry(tri);
+  for (const zz of [.86, -.86]) mesh(triGeo, '#7a3f37', 0, 1.72, zz, 0, zz > 0 ? 0 : Math.PI, 0);
+
+  // дверь с ручкой и тёплое окно
+  box(.7, 1.12, .08, '#5b3927', 0, .72, .88);
+  box(.8, .1, .12, '#f0e3c8', 0, 1.32, .88);
+  mesh(new THREE.SphereGeometry(.045, 8, 6), '#e0b75a', .24, .72, .94);
+  box(.6, .5, .06, '#ffd98a', -.72, 1.08, .87);
+  const glow = new THREE.Mesh(new THREE.BoxGeometry(.6, .5, .02), new THREE.MeshLambertMaterial({ color: '#ffd98a', emissive: '#ffb84d', emissiveIntensity: .6 }));
+  glow.position.set(-.72, 1.08, .92); g.add(glow);
+  box(.78, .11, .13, '#f0e3c8', -.72, 1.38, .93);          // рама-свес: верх
+  box(.78, .11, .13, '#f0e3c8', -.72, .78, .93);           // низ
+  box(.11, .66, .13, '#f0e3c8', -1.06, 1.08, .93);         // левая
+  box(.11, .66, .13, '#f0e3c8', -.38, 1.08, .93);          // правая
+  box(.06, .5, .1, '#f0e3c8', -.72, 1.08, .95);            // вертикальный переплёт
+  box(.6, .06, .1, '#f0e3c8', -.72, 1.08, .95);            // горизонтальный переплёт
+
+  // труба-камень и дым
+  box(.34, .9, .34, '#8d877e', .56, 2.75, .42);
+  box(.42, .12, .42, '#6f6a64', .56, 3.24, .42);
+  for (const [dx, dy, dz, r] of [[.56, 3.42, .42, .12], [.62, 3.6, .46, .16], [.56, 3.82, .42, .2]]) {
+    const puff = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), new THREE.MeshLambertMaterial({
+      color: '#f7f4ee', transparent: true, opacity: .32 }));
+    puff.position.set(dx, dy, dz); g.add(puff);
+  }
+
+  // бочка, ящик и горшок с базиликом — чтобы дом жил, а не «приклеен»
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(.22, .25, .52, 10), lam('#8a5a35'));
+  barrel.position.set(-1.38, .26, .55); barrel.castShadow = true; g.add(barrel);
+  box(.1, .54, .02, '#6b4527', -1.38, .26, .78);
+  box(.1, .54, .02, '#6b4527', -1.38, .26, .32);
+  box(.46, .4, .46, '#b28b60', 1.32, .2, .5);
+  box(.5, .06, .5, '#8d6a44', 1.32, .42, .5);
+  const pot = new THREE.Mesh(new THREE.CylinderGeometry(.14, .11, .24, 8), lam('#b5654a'));
+  pot.position.set(1.1, .12, .85); pot.castShadow = true; g.add(pot);
+  for (let i = 0; i < 5; i++) {
+    const leaf = new THREE.Mesh(new THREE.SphereGeometry(.1, 7, 5), lam('#4caf50'));
+    const a = i / 5 * Math.PI * 2;
+    leaf.position.set(1.1 + Math.cos(a) * .08, .3 + (i % 2) * .06, .85 + Math.sin(a) * .08);
+    leaf.scale.y = .7; g.add(leaf);
+  }
+  // дорожка из плит к двери
+  for (let i = 0; i < 5; i++) box(.32, .05, .26, '#c9c1ae', -.05 + i * .03, .03, 1.18 + i * .3);
+
+  hitBox(3.0, 2.8, 3.0, x, 1.4, z, { kind: 'kitchen' });
 }
 
 function buildUtilityPoints() {
   const [wx, wz] = W(-8.8, -.6);
   hitBox(1.9, 2.2, 1.9, wx, 1.1, wz, { kind: 'well' });
-  tag(wx, 2.1, wz, '', 'o-drop', 'Колодец', openWell);
   const [mx, mz] = W(9.4, -9.6);
   hitBox(3.2, 4.5, 3.2, mx, 2.2, mz, { kind: 'mill' });
-  tag(mx, 5.0, mz, '', 'o-check', 'Мельница', openMill);
 }
 
 async function buildGarden() {
