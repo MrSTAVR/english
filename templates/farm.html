@@ -9,6 +9,7 @@
     <span class="fm-chip" title="Капли — за уроки и цель дня"><svg class="ico fm-drop-ico" aria-hidden="true"><use href="#o-drop"/></svg><b id="fm-drops">{{ data.drops }}</b><span class="sr-only"> капель</span></span>
     <span class="fm-chip" title="Монетки"><svg class="ico" aria-hidden="true"><use href="#i-coin"/></svg><b id="fm-coins">{{ data.coins }}</b><span class="sr-only"> монеток</span></span>
     <button type="button" class="fm-chip fm-chip-btn" data-open="seeds"><svg class="ico" aria-hidden="true"><use href="#o-sprout"/></svg>Семена</button>
+    <a class="fm-chip fm-chip-btn" href="{{ url_for('pizza.pizza_page') }}" title="Испечь пиццу"><svg class="ico" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3l9 16H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="14" r="1.6" fill="currentColor"/></svg>Пиццерия</a>
   </div>
   <p class="fm-loading" id="fm-loading">Ферма загружается…</p>
   {% if moved is not none %}

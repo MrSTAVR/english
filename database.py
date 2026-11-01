@@ -430,6 +430,12 @@ CREATE TABLE IF NOT EXISTS farm_orders (              -- заказы герое
     done_at    TEXT,
     UNIQUE (student_id, day, k)
 );
+CREATE TABLE IF NOT EXISTS pizza_history (            -- пиццерия: первый приготовленный рецепт даёт монетки один раз
+    student_id INTEGER NOT NULL,
+    recipe     TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (student_id, recipe)
+);
 """
 
 

@@ -22,7 +22,7 @@ _SKIP = re.compile(r"^/(offline|healthz|static/|api/lesson/\d+/progress|parent/|
 SECTIONS = [
     (r"^/lesson/|^/student/theory", "Уроки"), (r"^/student/games|^/api/game", "Игры"), (r"^/student/dialogs|^/api/dialog", "Диалоги"),
     (r"^/student/stories|^/api/story", "Истории"), (r"^/student/review|^/api/review", "Повторение"), (r"^/student/speak|^/api/speak", "Скажи вслух"),
-    (r"^/student/writing|^/api/writing", "Письмо"), (r"^/student/farm|^/api/farm", "Ферма"), (r"^/student/castle|^/api/castle|^/student/house", "Замок"),
+    (r"^/student/writing|^/api/writing", "Письмо"), (r"^/student/farm|^/api/farm", "Ферма"), (r"^/student/pizza|^/api/pizza", "Пиццерия"), (r"^/student/castle|^/api/castle|^/student/house", "Замок"),
     (r"^/student/garden", "Сад"), (r"^/student/wardrobe", "Гардероб"), (r"^/student/friends", "Друзья"),
     (r"^/student/(weekly|boss)|^/api/boss", "Неделя и босс"), (r"^/student/achievements|^/student/stickers", "Награды"),
     (r"^/student/map", "Карта"), (r"^/student/words", "Словарь"), (r"^/student/?$", "Главная"),
