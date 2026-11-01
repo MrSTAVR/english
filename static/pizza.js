@@ -4,6 +4,7 @@
   if (!root) return;
   const DATA = JSON.parse(document.getElementById("pz-data").textContent);
   const BASE = root.dataset.static || "/static/pizza/";
+  const withVer = (name) => BASE + name + "?v=2";
   const $ = (id) => document.getElementById(id);
 
   const menu = $("pz-menu");
@@ -42,12 +43,12 @@
 
   function imageFor(s, recipe) {
     if (s <= 2) {
-      if (s === 2 && recipe.key === "caesar") return BASE + "pizza_dough_sauce_caesar.png";
-      return BASE + STAGE_IMAGES[s];
+      if (s === 2 && recipe.key === "caesar") return withVer("pizza_dough_sauce_caesar.png");
+      return withVer(STAGE_IMAGES[s]);
     }
-    if (s === 3) return BASE + "pizza_" + recipe.key + "_toppings.png";
-    if (s === 4) return BASE + "pizza_" + recipe.key + "_cheese.png";
-    return BASE + "pizza_" + recipe.key + "_baked.png";
+    if (s === 3) return withVer("pizza_" + recipe.key + "_top" + picked.size + ".png");
+    if (s === 4) return withVer("pizza_" + recipe.key + "_cheese.png");
+    return withVer("pizza_" + recipe.key + "_baked.png");
   }
 
   function clearBake() {
@@ -68,7 +69,7 @@
       btn.dataset.recipe = r.key;
       const ing = r.ingredients.map(function (i) { return i.en; }).join(" · ");
       btn.innerHTML =
-        '<img src="' + BASE + "pizza_" + r.key + '_baked.png" alt="">' +
+        '<img src="' + withVer("pizza_" + r.key + "_baked.png") + '" alt="">' +
         (done ? '<span class="pz-done">готово</span>' : '<span class="pz-new">+ ' + DATA.reward + '</span>') +
         "<h3>" + r.en + '<span class="pz-card-ru">' + r.ru + "</span></h3>" +
         '<span class="pz-card-ing">' + ing + "</span>";
@@ -80,14 +81,14 @@
   function renderIngredients() {
     ingredientsBox.innerHTML = "";
     if (step !== 2 && step !== 3) return;
-    current.ingredients.forEach(function (i) {
+    current.toppings.forEach(function (i) {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "pz-ing" + (picked.has(i.key) ? " on" : "");
       b.dataset.key = i.key;
       b.setAttribute("aria-pressed", picked.has(i.key) ? "true" : "false");
       b.title = i.en + " — " + i.ru;
-      b.innerHTML = '<img src="' + BASE + i.key + '.png" alt=""><span>' + i.en + '</span><small>' + i.ru + "</small>";
+      b.innerHTML = '<img src="' + withVer(i.key + ".png") + '" alt=""><span>' + i.en + '</span><small>' + i.ru + "</small>";
       b.addEventListener("click", function () {
         if (!current) return;
         if (step === 2) { step = 3; picked.add(i.key); paint(); return; }
@@ -99,7 +100,7 @@
   }
 
   function allPicked() {
-    return current && picked.size >= current.ingredients.length;
+    return current && picked.size >= current.toppings.length;
   }
 
   function updateAction() {
@@ -111,7 +112,7 @@
       action.textContent = "Выбери продукты";
       action.disabled = true;
     } else if (step === 3) {
-      action.textContent = allPicked() ? "Посыпать сыром" : "Сначала выбери все продукты";
+      action.textContent = allPicked() ? "Посыпать сыром" : "Выбери все продукты";
       action.disabled = !allPicked();
     } else if (step === 4) {
       action.textContent = cooking ? "Печётся…" : "Поставить в печь";
@@ -121,7 +122,7 @@
 
   function hintText() {
     if (step === 2) return "Нажми на каждый продукт из рецепта — это начинка.";
-    if (step === 3) return "Начинки: " + picked.size + " из " + current.ingredients.length + ". " + (allPicked() ? "Всё на месте!" : "Нажми на оставшиеся продукты.");
+    if (step === 3) return "Начинки: " + picked.size + " из " + current.toppings.length + ". " + (allPicked() ? "Всё на месте!" : "Нажми на оставшиеся продукты.");
     if (step === 4) return cooking ? "Печётся… Подожди немного." : "Сыр сверху. Пора в печь!";
     if (step === 5) return "Пицца готова. Подай её Тому!";
     if (step === 0) return "Перед тобой кусок теста. Раскатай его скалкой.";
@@ -214,7 +215,7 @@
   function showResult(gained, already) {
     cook.hidden = true;
     result.hidden = false;
-    $("pz-result-img").src = BASE + "pizza_" + current.key + "_baked.png";
+    $("pz-result-img").src = withVer("pizza_" + current.key + "_baked.png");
     $("pz-result-title").textContent = "Готово! " + current.en;
     let text;
     if (gained > 0) {
@@ -239,6 +240,6 @@
     }
   });
 
-  $("pz-kitchen").src = BASE + "kitchen.webp";
+  $("pz-kitchen").src = withVer("kitchen.webp");
   renderMenu();
 })();

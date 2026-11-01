@@ -26,6 +26,7 @@ def test_page_available_and_has_four_recipes(make_student):
     c = make_student()
     data = page_data(c)
     assert [x["key"] for x in data["recipes"]] == ["margherita", "pepperoni", "mushroom", "caesar"]
+    assert [len(x["toppings"]) for x in data["recipes"]] == [2, 1, 2, 4]
     assert data["reward"] == 3
 
 
