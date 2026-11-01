@@ -43,7 +43,7 @@ def api_finish():
     recipe = str(data.get("recipe", ""))
     if recipe not in pizza.RECIPES:
         abort(400)
-    ok, gained, already, coins = pizza.finish(db, student["id"], recipe)
+    ok, gained, already, coins, missing = pizza.finish(db, student["id"], recipe)
     if not ok:
-        abort(400)
+        return jsonify(ok=False, missing=missing), 400
     return jsonify(ok=True, gained=gained, already=already, coins=coins)

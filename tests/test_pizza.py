@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Пиццерия v1: страница, завершение рецепта и награда один раз (pizza.py)."""
+"""Пиццерия: страница, расход продуктов, награда и блокировка (pizza.py)."""
 import json
+import sqlite3
 
+import database
 from tests.helpers import db_scalar
 
 
@@ -13,8 +15,24 @@ def history_of(sid):
     return db_scalar("SELECT COUNT(*) FROM pizza_history WHERE student_id=?", (sid,)) or 0
 
 
+def barn_of(sid, item):
+    return db_scalar("SELECT qty FROM farm_barn WHERE student_id=? AND item=?", (sid, item)) or 0
+
+
 def last_sid():
     return db_scalar("SELECT id FROM students ORDER BY id DESC LIMIT 1")
+
+
+def give(sid, **items):
+    conn = sqlite3.connect(database.DB_PATH)
+    try:
+        for item, qty in items.items():
+            conn.execute("INSERT INTO farm_barn (student_id, item, qty) VALUES (?, ?, ?) "
+                         "ON CONFLICT(student_id, item) DO UPDATE SET qty=qty+excluded.qty",
+                         (sid, item, qty))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def page_data(client):
@@ -27,17 +45,31 @@ def test_page_available_and_has_four_recipes(make_student):
     data = page_data(c)
     assert [x["key"] for x in data["recipes"]] == ["margherita", "pepperoni", "mushroom", "caesar"]
     assert [len(x["toppings"]) for x in data["recipes"]] == [2, 1, 2, 4]
+    assert all(x["can"] for x in data["recipes"])          # стартового набора хватает на все 4
     assert data["reward"] == 3
 
 
-def test_first_recipe_gives_coins_once(make_student):
+def test_starter_given_once(make_student):
     c = make_student()
     sid = last_sid()
+    page_data(c)
+    assert barn_of(sid, "dough") == 4
+    page_data(c)
+    assert barn_of(sid, "dough") == 4
+
+
+def test_first_recipe_spends_stock_and_gives_coins_once(make_student):
+    c = make_student()
+    sid = last_sid()
+    page_data(c)
     r = c.post("/api/pizza/finish", json={"recipe": "margherita"})
     assert r.status_code == 200
     got = r.get_json()
     assert got["gained"] == 3 and got["already"] is False
     assert coins_of(sid) == 3 and history_of(sid) == 1
+    assert barn_of(sid, "dough") == 3 and barn_of(sid, "mozzarella") == 6
+    # повторное приготовление тратит продукты, но монет не даёт
+    give(sid, dough=1, tomato_sauce=1, mozzarella=2, basil=1, cherry_tomato=2)
     got = c.post("/api/pizza/finish", json={"recipe": "margherita"}).get_json()
     assert got["gained"] == 0 and got["already"] is True
     assert coins_of(sid) == 3 and history_of(sid) == 1
@@ -46,10 +78,26 @@ def test_first_recipe_gives_coins_once(make_student):
 def test_each_recipe_gives_once(make_student):
     c = make_student()
     sid = last_sid()
+    page_data(c)
     for key in ("margherita", "pepperoni", "mushroom", "caesar"):
         assert c.post("/api/pizza/finish", json={"recipe": key}).get_json()["gained"] == 3
     assert coins_of(sid) == 12 and history_of(sid) == 4
-    assert c.post("/api/pizza/finish", json={"recipe": "caesar"}).get_json()["gained"] == 0
+    assert c.post("/api/pizza/finish", json={"recipe": "caesar"}).status_code == 400
+
+
+def test_missing_products_block_without_spending(make_student):
+    c = make_student()
+    sid = last_sid()
+    page_data(c)
+    conn = sqlite3.connect(database.DB_PATH)
+    conn.execute("DELETE FROM farm_barn WHERE student_id=? AND item='dough'", (sid,))
+    conn.commit()
+    conn.close()
+    before = coins_of(sid)
+    r = c.post("/api/pizza/finish", json={"recipe": "margherita"})
+    assert r.status_code == 400
+    assert "dough" in r.get_json()["missing"]
+    assert coins_of(sid) == before and history_of(sid) == 0
 
 
 def test_second_student_has_own_history(make_student):
@@ -80,7 +128,9 @@ def test_anonymous_and_parent_cannot_open(anon, parent):
 def test_delete_student_cleans_pizza(make_student, parent):
     c = make_student()
     sid = last_sid()
+    page_data(c)
     c.post("/api/pizza/finish", json={"recipe": "caesar"})
     assert history_of(sid) == 1
     parent.post(f"/parent/students/{sid}/delete")
     assert db_scalar("SELECT COUNT(*) FROM pizza_history WHERE student_id=?", (sid,)) == 0
+    assert db_scalar("SELECT COUNT(*) FROM pizza_starter WHERE student_id=?", (sid,)) == 0

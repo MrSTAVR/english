@@ -68,11 +68,18 @@
       btn.className = "pz-card";
       btn.dataset.recipe = r.key;
       const ing = r.ingredients.map(function (i) { return i.en; }).join(" · ");
+      const can = r.can !== false;
+      const missing = (r.need || []).filter(function (n) { return n.have < n.need; })
+        .map(function (n) { return n.ru; }).join(", ");
+      btn.disabled = !can;
+      btn.title = can ? "" : "Не хватает: " + missing;
       btn.innerHTML =
         '<img src="' + withVer("pizza_" + r.key + "_baked.png") + '" alt="">' +
         (done ? '<span class="pz-done">готово</span>' : '<span class="pz-new">+ ' + DATA.reward + '</span>') +
+        (can ? '' : '<span class="pz-no">нет продуктов</span>') +
         "<h3>" + r.en + '<span class="pz-card-ru">' + r.ru + "</span></h3>" +
-        '<span class="pz-card-ing">' + ing + "</span>";
+        '<span class="pz-card-ing">' + ing + "</span>" +
+        (can ? "" : '<span class="pz-card-ing">нужно: ' + missing + "</span>");
       btn.addEventListener("click", function () { start(r); });
       menu.appendChild(btn);
     });
@@ -198,17 +205,27 @@
       headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf() },
       body: JSON.stringify({ recipe: current.key })
     }).then(function (r) {
-      if (!r.ok) throw new Error("finish");
-      return r.json();
+      return r.json().catch(function () { return null; }).then(function (body) {
+        if (!r.ok) throw body || { missing: [] };
+        return body;
+      });
     }).then(function (res) {
       setCoins(res.coins);
       const key = current.key;
       if (DATA.completed.indexOf(key) === -1) DATA.completed.push(key);
       showResult(res.gained, res.already);
-    }).catch(function () {
+    }).catch(function (err) {
       action.disabled = false;
       action.textContent = "Подать Тому";
-      hint.textContent = "Не получилось подать пиццу. Попробуй ещё раз.";
+      const miss = err && err.missing && err.missing.length
+        ? err.missing.map(function (k) {
+          const n = (current.need || []).find(function (x) { return x.key === k; });
+          return n ? n.ru : k;
+        }).join(", ")
+        : "";
+      hint.textContent = miss
+        ? "Не хватает продуктов: " + miss + ". Собери их на ферме."
+        : "Не получилось подать пиццу. Попробуй ещё раз.";
     });
   }
 
@@ -233,7 +250,7 @@
     if (!action.disabled) next();
   });
   switchBtn.addEventListener("click", backToMenu);
-  $("pz-more").addEventListener("click", backToMenu);
+  $("pz-more").addEventListener("click", function () { location.reload(); });
   $("pz-audio").addEventListener("click", function () {
     if (current && window.ttsSpeak) {
       window.ttsSpeak("Can I have a " + current.en + " pizza, please?", 0.9);
