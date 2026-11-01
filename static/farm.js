@@ -577,11 +577,11 @@ function openBarn() {
 }
 function openKitchen() {
   const rows = (S.process || []).map(p => {
-    const need = p.need.map(n => `<span class="fm-pic">${pic(S.pics[n.key] || '')}</span>${esc(n.ru)} ×${n.qty}`).join(' + ');
-    const give = p.give.map(n => `<span class="fm-pic">${pic(S.pics[n.key] || '')}</span>${esc(n.ru)} ×${n.qty}`).join(', ');
+    const need = p.need.map(n => `${esc(n.ru)} ×${n.qty}`).join(' + ');
+    const give = p.give.map(n => `${esc(n.ru)} ×${n.qty}`).join(', ');
     return `<div class="fm-row"><span class="fm-pic">${ico('o-drop')}</span>
       <span class="fm-row-text"><b>${esc(p.ru)}</b><small>${need} → ${give}</small></span>
-      <button type="button" class="btn btn-small btn-primary" data-process="${p.key}" ${p.can ? '' : 'disabled'}>${p.can ? 'Сделать' : 'Нет продуктов'}</button></div>`;
+      <button type="button" class="btn btn-small fm-process-btn ${p.can ? 'btn-primary' : ''}" data-process="${p.key}" ${p.can ? '' : 'disabled'}>${p.can ? 'Сделать' : 'Нет'}</button></div>`;
   }).join('');
   sheet('Кухня', '<p class="fm-note">Переработай урожай в продукты для пиццы. Что не растёт на ферме — лежит в кладовой бесплатно.</p>' +
     (rows ? '<div class="fm-list">' + rows + '</div>' : '<p class="fm-note">Пока нечего готовить.</p>'));

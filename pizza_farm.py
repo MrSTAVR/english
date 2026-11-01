@@ -30,19 +30,19 @@ PRODUCTS = {
 # пепперони, курица), доступно в кладовой бесплатно.
 PROCESS = {
     "flour": {"station": "mill", "need": {"wheat": 2}, "give": {"flour": 1},
-              "en": "mill the wheat", "ru": "смели пшеницу в муку"},
+              "en": "mill the wheat", "ru": "Смелить пшеницу в муку"},
     "dough": {"station": "kitchen", "need": {"flour": 2, "egg": 1}, "give": {"dough": 1},
-              "en": "make the dough", "ru": "замесили тесто"},
+              "en": "make the dough", "ru": "Замесить тесто"},
     "tomato_sauce": {"station": "kitchen", "need": {"tomato": 2}, "give": {"tomato_sauce": 1},
-                     "en": "make tomato sauce", "ru": "сделали томатный соус"},
+                     "en": "make tomato sauce", "ru": "Сделать томатный соус"},
     "cheese": {"station": "kitchen", "need": {"milk": 2}, "give": {"cheese": 1},
-               "en": "make cheese", "ru": "сделали сыр"},
+               "en": "make cheese", "ru": "Сделать сыр"},
     "mozzarella": {"station": "kitchen", "need": {"milk": 2}, "give": {"mozzarella": 1},
-                   "en": "make mozzarella", "ru": "сделали моцареллу"},
+                   "en": "make mozzarella", "ru": "Сделать моцареллу"},
     "parmesan": {"station": "kitchen", "need": {"milk": 3}, "give": {"parmesan": 1},
-                 "en": "make parmesan", "ru": "сделали пармезан"},
+                 "en": "make parmesan", "ru": "Сделать пармезан"},
     "caesar_sauce": {"station": "kitchen", "need": {"egg": 1, "parmesan": 1}, "give": {"caesar_sauce": 1},
-                     "en": "make caesar sauce", "ru": "сделали соус цезарь"},
+                     "en": "make caesar sauce", "ru": "Сделать соус цезарь"},
 }
 
 # Бесплатная кладовая: этого на ферме не бывает (или не растим).
