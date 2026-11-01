@@ -113,3 +113,5 @@ html[data-theme="dark"] .fm { --farm-grass: #4d6e33; --farm-grass-ink: #e6f2d5; 
   .fm-btn .ico { width: 19px; height: 19px; }
   .fm-chip { padding: 5px 9px; }
 }
+
+.fm-row .fm-process-btn { flex: 0 0 auto; width: auto; max-width: 42%; padding: 7px 9px; font-size: .82rem; white-space: nowrap; }

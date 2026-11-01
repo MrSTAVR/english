@@ -273,11 +273,21 @@ def test_words_appear_only_after_their_lesson(make_student, db):
     done = {"lessons_completed": 40, "completed_ids": {farm.WORDS_LESSON, farm.ANIMALS_LESSON}}
     st = farm.state(db, sid, done)
     crops = {c["key"]: c for c in st["crops"]}
-    assert all(c["known"] and c["open"] for c in crops.values())
+    old_crops = {"carrot", "tomato", "potato", "apple", "peach"}
+    assert all(c["known"] and c["open"] for k, c in crops.items() if k in old_crops)
+    assert all(c["open"] for c in crops.values())                           # пиццевые культуры сажаем сразу
     assert all(a["known"] for a in st["animals"])
     assert st["known"]["milk"] is False                                     # молоко — слово из урока 67
-    st = farm.state(db, sid, {"lessons_completed": 70, "completed_ids": {farm.WORDS_LESSON, farm.ANIMALS_LESSON, 67}})
-    assert all(st["known"].values())
+    assert st["known"]["flour"] is False                                    # мука — слово из урока 70
+    st = farm.state(db, sid, {"lessons_completed": 70, "completed_ids": {farm.WORDS_LESSON, farm.ANIMALS_LESSON, 67, 70}})
+    assert st["known"]["flour"] is True
+    assert st["known"]["mozzarella"] is False                               # слова пока нет в курсе
+
+
+def test_order_text_supports_all_crops():
+    for key in farm.CROPS:
+        assert farm.order_text("Tom", {key: 2}, True)
+        assert farm.order_ru("Tom", {key: 2})
 
 
 def test_milk_is_uncountable_and_waits_for_its_lesson(make_student, db):

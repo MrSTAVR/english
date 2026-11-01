@@ -436,6 +436,16 @@ CREATE TABLE IF NOT EXISTS pizza_history (            -- пиццерия: пе�
     created_at TEXT NOT NULL,
     PRIMARY KEY (student_id, recipe)
 );
+CREATE TABLE IF NOT EXISTS pizza_starter (            -- пиццерия: стартовый набор бабушкиной кухни (один раз)
+    student_id INTEGER PRIMARY KEY,
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS pizza_daily (              -- пиццерия: бабушкин запас раз в день (можно играть без фермы)
+    student_id INTEGER NOT NULL,
+    day        TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (student_id, day)
+);
 """
 
 
