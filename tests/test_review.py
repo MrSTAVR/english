@@ -135,8 +135,12 @@ def test_review_achievements(parent, make_student):
 
 
 def test_old_words_come_back_in_test():
+    # Повторение живёт в двух местах: вопросы «🔁» у уроков без сцены и ходы-повторения в сценах.
+    from data.story import SCENES
+
     qs = [q for l in LESSONS for q in l["test"] if q["q"].startswith("🔁")]
-    assert len(qs) > 10                  # часть уроков уже со сценой: у них повторение — ход сюжета
+    scene_reviews = [ln for sc in SCENES.values() for ln in sc["lines"] if ln.get("review")]
+    assert scene_reviews or qs                    # механизм повторения на месте
     first = LESSONS[0]
     assert not any(q["q"].startswith("🔁") for q in first["test"])
     for q in qs:
