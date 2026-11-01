@@ -10,6 +10,7 @@ ship 🚢|fish 🐟|chat 💬|chip 🍟|think 🤔|phone 📱|photo 📷|tree �
 mother 👩|father 👨|sister 👧|brother 👦|grandmother 👵|grandfather 👴|family 👨‍👩‍👧‍👦|man 👨|woman 👩|child 🧒|children 🧒
 horse 🐴|sheep 🐑|cow 🐮|duck 🦆|chicken 🐔|lion 🦁|tiger 🐯|bear 🐻|fox 🦊|elephant 🐘|monkey 🐵|giraffe 🦒|zebra 🦓|crocodile 🐊|mouse 🐭|mice 🐭
 apple 🍎|banana 🍌|grape 🍇|grapes 🍇|peach 🍑|carrot 🥕|tomato 🍅|potato 🥔|corn 🌽|pumpkin 🎃|bread 🍞|milk 🥛|water 💧|juice 🧃|cheese 🧀|egg 🥚|ice cream 🍦
+wheat 🌾|flour 🌾|dough 🍞|mushroom 🍄|mushrooms 🍄|basil 🌿|oregano 🌿|lettuce 🥬|cherry tomato 🍒|cherry tomatoes 🍒|tomato sauce 🥫|mozzarella 🧀|parmesan 🧀|caesar sauce 🥣|pepperoni 🍕
 head 🙂|face 😀|eye 👁️|ear 👂|nose 👃|mouth 👄|hair 💇|hand ✋|arm 💪|leg 🦵|foot 🦶|feet 🦶|finger ☝️|tooth 🦷|teeth 🦷
 t-shirt 👕|shirt 👔|jeans 👖|trousers 👖|shoes 👟|socks 🧦|coat 🧥|dress 👗
 kitchen 🍳|bedroom 🛏️|bathroom 🛁|living room 🛋️|garden 🌷

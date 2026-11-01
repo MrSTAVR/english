@@ -13,6 +13,8 @@ import math
 import random
 from datetime import date, datetime, timedelta
 
+import pizza_farm
+
 DROPS_PASS = 12          # урок/сцена сдана впервые
 DROPS_PERFECT = 3        # + за 100% с первой попытки (не после «Исправь ошибки»)
 DROPS_GOAL = 4           # цель дня
@@ -56,6 +58,9 @@ PRODUCTS = {"egg": {"en": "egg", "plural": "eggs", "ru": "яйцо", "lesson": A
             # milk неисчисляемое: в заказе пишем «needs milk» без числа, количество — значком ×N.
             # Слово вводится в уроке 67 «Еда и напитки», поэтому до него молоко в заказы не попадает.
             "milk": {"en": "milk", "ru": "молоко", "lesson": 67, "uncountable": True}}
+# Пиццерия: новые культуры и продукты переработки (см. pizza_farm.py).
+CROPS.update(pizza_farm.CROPS)
+PRODUCTS.update(pizza_farm.PRODUCTS)
 # Кукуруза и тыква сняты с фермы (их слов нет в курсе), но в базах учеников остались старые заказы и грядки:
 # показываем и досчитываем их по-старому, чтобы не ронять экран. В посадку они больше не попадают.
 RETIRED = {
@@ -644,6 +649,18 @@ def state(db, student_id, stats):
         "barn": [{"item": k, "en": item_info(k)["en"], "ru": item_info(k)["ru"], "qty": have[k],
                   "pic": emoji_for(item_info(k)["en"])} for k in items if have.get(k)],
         "orders": orders(db, student_id, done, stats),
+        "process": [
+            {
+                "key": key,
+                "en": r["en"],
+                "ru": r["ru"],
+                "station": r["station"],
+                "can": pizza_farm.can_process(db, student_id, key),
+                "need": [{"key": k, "ru": item_info(k)["ru"], "qty": n} for k, n in r["need"].items()],
+                "give": [{"key": k, "ru": item_info(k)["ru"], "qty": n} for k, n in r["give"].items()],
+            }
+            for key, r in pizza_farm.PROCESS.items()
+        ],
         "week": {"done": week_done(db, student_id), "goal": WEEK_GOAL, "coins": WEEK_COINS},
         "slots_today": order_slots(db, student_id),
         "numbers": _numbers_known(db, student_id, stats),

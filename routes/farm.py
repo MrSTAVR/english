@@ -2,6 +2,7 @@
 """Ферма бабушки Тома: страница /student/farm и действия /api/farm/<action> (логика — farm.py)."""
 
 import farm
+import pizza_farm
 from database import get_db
 from flask import Blueprint, abort, jsonify, redirect, render_template, request, session, url_for
 from mascot import build_mascot_ctx
@@ -77,6 +78,8 @@ def api_action(action):
         ok, msg = farm.buy_plot(db, sid)
     elif action == "cow":
         ok, msg = farm.buy_cow(db, sid, stats)
+    elif action == "process":
+        ok, msg = pizza_farm.process(db, sid, str(data.get("key", "")))
     elif action == "order":
         given = data.get("items")
         if not isinstance(given, dict):

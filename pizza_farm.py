@@ -17,13 +17,13 @@ CROPS = {
 }
 
 PRODUCTS = {
-    "flour": {"en": "flour", "ru": "мука"},
-    "dough": {"en": "dough", "ru": "тесто"},
-    "tomato_sauce": {"en": "tomato sauce", "ru": "томатный соус"},
-    "cheese": {"en": "cheese", "ru": "сыр"},
-    "mozzarella": {"en": "mozzarella", "ru": "моцарелла"},
-    "parmesan": {"en": "parmesan", "ru": "пармезан"},
-    "caesar_sauce": {"en": "caesar sauce", "ru": "соус цезарь"},
+    "flour": {"en": "flour", "ru": "мука", "lesson": 70},
+    "dough": {"en": "dough", "ru": "тесто", "lesson": 70},
+    "tomato_sauce": {"en": "tomato sauce", "ru": "томатный соус", "lesson": 70},
+    "cheese": {"en": "cheese", "ru": "сыр", "lesson": 70},
+    "mozzarella": {"en": "mozzarella", "ru": "моцарелла", "lesson": 72},
+    "parmesan": {"en": "parmesan", "ru": "пармезан", "lesson": 72},
+    "caesar_sauce": {"en": "caesar sauce", "ru": "соус цезарь", "lesson": 72},
 }
 
 # Что производится на кухне/мельнице. Всё, чего нет на ферме (соль, дрожжи, масло,

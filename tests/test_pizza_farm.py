@@ -106,3 +106,14 @@ def test_known_items_include_pantry_and_early_crops():
     known = pizza_farm.known_items(set())
     for item in ("salt", "yeast", "oil", "pepperoni", "chicken", "wheat", "mushroom", "basil"):
         assert item in known
+
+
+def test_process_api_route(make_student):
+    c = make_student()
+    sid = sid_of()
+    give(sid, wheat=2)
+    r = c.post("/api/farm/process", json={"key": "flour"})
+    assert r.status_code == 200
+    data = r.get_json()
+    assert data["ok"] is True
+    assert have(sid, "flour") == 1

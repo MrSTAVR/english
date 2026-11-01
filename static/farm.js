@@ -169,6 +169,50 @@ function fruits(parent, tree, color, blush, n, seed) {
 }
 const FRUIT = { apple: ['#e53935', '#5a0d06'], peach: ['#ffa36c', '#ff5a5f'] };
 const HEIGHT = { carrot: .75, tomato: .55 };   // на телефоне видно даже помидор
+const PIZZA_CROPS = new Set(['wheat', 'mushroom', 'basil', 'oregano', 'lettuce', 'cherry_tomato']);
+function drawPizzaCrop(parent, x, z, crop, ready, seed) {
+  let s = seed;
+  const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const mat = c => { const m = new THREE.MeshLambertMaterial({ color: c }); m.userData.own = true; return m; };
+  const add = (geo, color, px, py, pz, sx = 1, sy = 1, sz = 1) => {
+    geo.userData.own = true;
+    const m = new THREE.Mesh(geo, mat(color));
+    m.position.set(x + px, py, z + pz); m.scale.set(sx, sy, sz);
+    m.castShadow = true; parent.add(m); return m;
+  };
+  const k = ready ? 1 : .62;
+  if (crop === 'wheat') {
+    for (let i = 0; i < 9; i++) {
+      const dx = (r() - .5) * 1.2, dz = (r() - .5) * 1.1;
+      add(new THREE.CylinderGeometry(.025, .035, .85 * k, 5), '#c9a54a', dx, .42 * k, dz);
+      add(new THREE.ConeGeometry(.1 * k, .24 * k, 5), '#e3c05d', dx, .95 * k, dz);
+    }
+    return;
+  }
+  if (crop === 'mushroom') {
+    for (let i = 0; i < 7; i++) {
+      const dx = (r() - .5) * 1.2, dz = (r() - .5) * 1.1;
+      add(new THREE.CylinderGeometry(.06 * k, .08 * k, .24 * k, 6), '#f2e2bd', dx, .14 * k, dz);
+      add(new THREE.SphereGeometry(.2 * k, 8, 6), '#b98b6a', dx, .34 * k, dz, 1, .55, 1);
+    }
+    return;
+  }
+  if (crop === 'cherry_tomato') {
+    for (let i = 0; i < 5; i++) {
+      const dx = (r() - .5) * 1.1, dz = (r() - .5) * 1.0;
+      add(new THREE.SphereGeometry(.32 * k, 7, 5), '#4e8b36', dx, .34 * k, dz, 1, .8, 1);
+      for (let j = 0; j < 3; j++) add(new THREE.SphereGeometry(.09 * k, 7, 5), '#d94a3a', dx + (r() - .5) * .4, .45 * k + r() * .15, dz + (r() - .5) * .4);
+    }
+    return;
+  }
+  // базилик, орегано, салат — кустики листьев
+  const color = crop === 'lettuce' ? '#5bbb6b' : crop === 'basil' ? '#4caf50' : '#8fa03a';
+  for (let i = 0; i < 9; i++) {
+    const dx = (r() - .5) * 1.25, dz = (r() - .5) * 1.15;
+    add(new THREE.SphereGeometry((crop === 'lettuce' ? .22 : .17) * k, 7, 5), color, dx, .26 * k + r() * .2, dz, 1, .65, 1);
+  }
+}
+
 async function drawPlot(i, p) {
   const b = beds[i], key = `${p.state}:${p.crop || ''}`;
   if (b.key === key) return;
@@ -188,6 +232,7 @@ async function drawPlot(i, p) {
   }
   const ready = p.state === 'ready';
   if (p.crop === 'potato') { let s = 11 + i * 97; for (let a = -1; a <= 1; a++) for (let c = -1; c <= 1; c++) potato(b.crop, x + a * .6, z + c * .62, p.state, s += 7); return; }
+  if (PIZZA_CROPS.has(p.crop)) { drawPizzaCrop(b.crop, x, z, p.crop, ready, 7 + i * 97); return; }
   if (FRUIT[p.crop]) {
     const t = await put('fruittree', x, z, ready ? 2.4 : 1.1, i, { parent: b.crop, y0: .22 });
     if (ready) fruits(b.crop, t, FRUIT[p.crop][0], FRUIT[p.crop][1], 9, 5 + i);
@@ -530,6 +575,17 @@ function openBarn() {
     <span class="fm-row-text">${enName(S.known[b.item], b.en)}<small>${esc(b.ru)}</small></span><b>×${b.qty}</b>
     ${sayBtn(S.known[b.item], b.en)}</div>`).join('') + '</div>');
 }
+function openKitchen() {
+  const rows = (S.process || []).map(p => {
+    const need = p.need.map(n => `<span class="fm-pic">${pic(S.pics[n.key] || '')}</span>${esc(n.ru)} ×${n.qty}`).join(' + ');
+    const give = p.give.map(n => `<span class="fm-pic">${pic(S.pics[n.key] || '')}</span>${esc(n.ru)} ×${n.qty}`).join(', ');
+    return `<div class="fm-row"><span class="fm-pic">${ico('o-drop')}</span>
+      <span class="fm-row-text"><b>${esc(p.ru)}</b><small>${need} → ${give}</small></span>
+      <button type="button" class="btn btn-small btn-primary" data-process="${p.key}" ${p.can ? '' : 'disabled'}>${p.can ? 'Сделать' : 'Нет продуктов'}</button></div>`;
+  }).join('');
+  sheet('Кухня', '<p class="fm-note">Переработай урожай в продукты для пиццы. Что не растёт на ферме — лежит в кладовой бесплатно.</p>' +
+    (rows ? '<div class="fm-list">' + rows + '</div>' : '<p class="fm-note">Пока нечего готовить.</p>'));
+}
 const WHO = { Grandma: 'Бабушка', Tom: 'Том', Anna: 'Анна' };
 const tries = {};
 function openOrders() {
@@ -595,8 +651,10 @@ document.addEventListener('click', async e => {
   if (d.say) return say(d.say);
   if (d.open === 'seeds') return openSeeds();
   if (d.open === 'orders') return openOrders();
+  if (d.open === 'kitchen') return openKitchen();
   if (d.open === 'barn') return openBarn();
   if (d.plant) { closeSheet(); const r = await api('plant', { slot: +d.slot, crop: d.plant }); if (r && !r.ok) toast(r.msg); else if (r) { say(CROP(d.plant).en); openPlot(+d.slot); } return; }
+  if (d.process) { const r = await api('process', { key: d.process }); if (!r) return; if (!r.ok) return toast(r.msg); toast(r.msg); openKitchen(); return; }
   if (d.act) {
     const body = d.slot != null ? { slot: +d.slot } : d.kind ? { kind: d.kind } : {};
     const r = await api(d.act, body); if (!r) return;
