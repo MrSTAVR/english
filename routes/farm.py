@@ -23,8 +23,6 @@ def farm_page():
     if not student:
         session.clear()
         return redirect(url_for("auth.index"))
-    if not student["farm_enabled"]:
-        return redirect(url_for("student.student_home"))
     farm.move_from_castle(db, student["id"])
     moved = farm.take_move_note(db, student["id"])
     stats = compute_stats(db, student["id"])

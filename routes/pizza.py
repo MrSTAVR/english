@@ -21,6 +21,8 @@ def pizza_page():
     if not student:
         session.clear()
         return redirect(url_for("auth.index"))
+    if not student["pizza_enabled"]:
+        return redirect(url_for("student.student_home"))
     return render_template("pizza.html", data=pizza.state(db, student["id"]), mascot=build_mascot_ctx())
 
 
@@ -29,7 +31,7 @@ def _api_student():
         abort(403)
     db = get_db()
     student = get_student_or_none(db)
-    if not student:
+    if not student or not student["pizza_enabled"]:
         abort(403)
     return db, student
 

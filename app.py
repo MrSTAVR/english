@@ -110,14 +110,14 @@ def inject_admin_switch():
 
 
 @app.context_processor
-def inject_farm_enabled():
-    """Ферма у ученика включается в админке; по умолчанию скрыта."""
+def inject_pizza_enabled():
+    """Пиццерия у ученика включается в админке; по умолчанию скрыта. Ферма видна всегда."""
     if session.get("role") != "student":
-        return {"farm_enabled": False}
+        return {"pizza_enabled": False}
     from database import get_db
-    row = get_db().execute("SELECT farm_enabled FROM students WHERE id=?",
+    row = get_db().execute("SELECT pizza_enabled FROM students WHERE id=?",
                            (session.get("student_id"),)).fetchone()
-    return {"farm_enabled": bool(row and row["farm_enabled"])}
+    return {"pizza_enabled": bool(row and row["pizza_enabled"])}
 
 
 @app.context_processor
