@@ -34,7 +34,7 @@
 {% if drops_earned %}
 <section class="card coins-card">
   <h2><svg class="ico" aria-hidden="true"><use href="#o-drop"/></svg> Капли для фермы!</h2>
-  <p>Получено <b>+{{ drops_earned }}</b> {{ 'капля' if drops_earned % 10 == 1 and drops_earned % 100 != 11 else ('капли' if drops_earned % 10 in (2, 3, 4) and drops_earned % 100 not in (12, 13, 14) else 'капель') }}. <a href="{{ url_for('farm.farm_page') }}">Полей грядки на ферме</a>!</p>
+  <p>Получено <b>+{{ drops_earned }}</b> {{ 'капля' if drops_earned % 10 == 1 and drops_earned % 100 != 11 else ('капли' if drops_earned % 10 in (2, 3, 4) and drops_earned % 100 not in (12, 13, 14) else 'капель') }}.{% if farm_enabled %} <a href="{{ url_for('farm.farm_page') }}">Полей грядки на ферме</a>!{% endif %}</p>
 </section>
 {% endif %}
 

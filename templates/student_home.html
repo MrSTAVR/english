@@ -134,7 +134,7 @@
 <section>
   <div class="section-head"><h2 class="section-title">Мой мир</h2></div>
   <div class="tile-grid">
-    {{ tile(url_for('farm.farm_page'), 'barn', 'Ферма', 'грядки, курица и заказы') }}
+    {% if farm_enabled %}{{ tile(url_for('farm.farm_page'), 'barn', 'Ферма', 'грядки, курица и заказы') }}{% endif %}
     {{ tile(url_for('garden.garden_page'), 'sprout', 'Мой сад', tree_stage.name|noemoji ~ ' · ' ~ tree_count ~ ' дер.') }}
     {{ tile(url_for('wardrobe.wardrobe_page'), 'hanger', 'Гардероб', 'наряды для Чик-чика') }}
     {{ tile(url_for('house.stickers_page'), 'tag', 'Наклейки', 'за каждую тему') }}
