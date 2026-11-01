@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS students (
     birthday     TEXT,                                 -- 'ГГГГ-ММ-ДД' — личный праздник
     competitions INTEGER DEFAULT 1,                    -- участвует в «Друзьях» (рекорды, дуэли, лента)
     tg_remind    INTEGER DEFAULT 0,                    -- вечернее напоминание администратору в Telegram (remind.py)
-    farm_enabled INTEGER DEFAULT 0                     -- ферма видна ученику (включается в админке)
+    farm_enabled INTEGER DEFAULT 0,                    -- исторический флаг; ферма теперь видна всегда
+    pizza_enabled INTEGER DEFAULT 0                    -- пиццерия видна ученику (включается в админке)
 );
 CREATE TABLE IF NOT EXISTS push_subs (                -- Web Push: подписки устройств ученика (push.py)
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -488,6 +489,8 @@ def init_db():
         conn.execute("ALTER TABLE students ADD COLUMN tg_remind INTEGER DEFAULT 0")
     if "farm_enabled" not in st_cols:
         conn.execute("ALTER TABLE students ADD COLUMN farm_enabled INTEGER DEFAULT 0")
+    if "pizza_enabled" not in st_cols:
+        conn.execute("ALTER TABLE students ADD COLUMN pizza_enabled INTEGER DEFAULT 0")
     sp_cols = {r[1] for r in conn.execute("PRAGMA table_info(sp_sessions)")}
     if sp_cols and "cancelled_by" not in sp_cols:
         conn.execute("ALTER TABLE sp_sessions ADD COLUMN cancelled_by TEXT")   # logoped / family

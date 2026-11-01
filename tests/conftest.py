@@ -40,15 +40,18 @@ def parent(flask_app):
 @pytest.fixture
 def make_student(flask_app, parent):
     """Фабрика: родитель создаёт аккаунт, возвращается клиент, уже вошедший как ученик."""
-    def _make(username="masha", name="Маша", password="secret1", emoji="🦄", farm=False):
+    def _make(username="masha", name="Маша", password="secret1", emoji="🦄", farm=False, pizza=False):
         r = parent.post("/parent/students/add", data={
             "display_name": name, "username": username,
             "password": password, "emoji": emoji}, follow_redirects=True)
         assert f"Аккаунт для {name} создан" in r.get_data(as_text=True)
-        if farm:
+        if farm or pizza:
             import sqlite3
             conn = sqlite3.connect(database.DB_PATH)
-            conn.execute("UPDATE students SET farm_enabled=1 WHERE username=?", (username,))
+            if farm:
+                conn.execute("UPDATE students SET farm_enabled=1 WHERE username=?", (username,))
+            if pizza:
+                conn.execute("UPDATE students SET pizza_enabled=1 WHERE username=?", (username,))
             conn.commit()
             conn.close()
         c = flask_app.test_client()

@@ -523,21 +523,23 @@ def test_garden_waits_by_best_streak(make_student, db):
     assert v["stage"]["min"] > 0                                         # дерево не уменьшилось
 
 
-def test_farm_hidden_by_default(make_student):
+def test_farm_visible_but_pizza_hidden_by_default(make_student):
     c = make_student()
     home = c.get("/student").get_data(as_text=True)
-    assert "Ферма" not in home.split('class="tabbar"', 1)[1].split("</div>", 1)[0]
-    r = c.get("/student/farm")
+    assert "Ферма" in home.split('class="tabbar"', 1)[1].split("</div>", 1)[0]
+    assert c.get("/student/farm").status_code == 200
+    assert "Пиццерия" not in c.get("/student/farm").get_data(as_text=True)
+    r = c.get("/student/pizza")
     assert r.status_code == 302
     assert r.headers["Location"].endswith("/student")
 
 
-def test_admin_can_enable_farm(make_student, parent):
+def test_admin_can_enable_pizza(make_student, parent):
     c = make_student()
     sid = sid_of()
-    assert c.get("/student/farm").status_code == 302
-    parent.post(f"/parent/students/{sid}/farm", data={"on": "1"})
-    assert c.get("/student/farm").status_code == 200
-    assert "Ферма" in c.get("/student").get_data(as_text=True)
-    parent.post(f"/parent/students/{sid}/farm", data={"on": "0"})
-    assert c.get("/student/farm").status_code == 302
+    assert c.get("/student/pizza").status_code == 302
+    parent.post(f"/parent/students/{sid}/pizza", data={"on": "1"})
+    assert c.get("/student/pizza").status_code == 200
+    assert "Пиццерия" in c.get("/student/farm").get_data(as_text=True)
+    parent.post(f"/parent/students/{sid}/pizza", data={"on": "0"})
+    assert c.get("/student/pizza").status_code == 302

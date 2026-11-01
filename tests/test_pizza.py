@@ -41,7 +41,7 @@ def page_data(client):
 
 
 def test_page_available_and_has_four_recipes(make_student):
-    c = make_student()
+    c = make_student(pizza=True)
     data = page_data(c)
     assert [x["key"] for x in data["recipes"]] == ["margherita", "pepperoni", "mushroom", "caesar"]
     assert [len(x["toppings"]) for x in data["recipes"]] == [2, 1, 2, 4]
@@ -50,7 +50,7 @@ def test_page_available_and_has_four_recipes(make_student):
 
 
 def test_starter_given_once(make_student):
-    c = make_student()
+    c = make_student(pizza=True)
     sid = last_sid()
     page_data(c)
     assert barn_of(sid, "dough") == 4
@@ -59,7 +59,7 @@ def test_starter_given_once(make_student):
 
 
 def test_grandma_daily_stock_once_per_day(make_student):
-    c = make_student()
+    c = make_student(pizza=True)
     sid = last_sid()
     page_data(c)
     assert barn_of(sid, "milk") == 16          # 12 стартовых + 4 бабушкиных
@@ -68,7 +68,7 @@ def test_grandma_daily_stock_once_per_day(make_student):
 
 
 def test_first_recipe_spends_stock_and_gives_coins_once(make_student):
-    c = make_student()
+    c = make_student(pizza=True)
     sid = last_sid()
     page_data(c)
     r = c.post("/api/pizza/finish", json={"recipe": "margherita"})
@@ -85,7 +85,7 @@ def test_first_recipe_spends_stock_and_gives_coins_once(make_student):
 
 
 def test_each_recipe_gives_once(make_student):
-    c = make_student()
+    c = make_student(pizza=True)
     sid = last_sid()
     page_data(c)
     for key in ("margherita", "pepperoni", "mushroom", "caesar"):
@@ -95,7 +95,7 @@ def test_each_recipe_gives_once(make_student):
 
 
 def test_missing_products_block_without_spending(make_student):
-    c = make_student()
+    c = make_student(pizza=True)
     sid = last_sid()
     page_data(c)
     conn = sqlite3.connect(database.DB_PATH)
@@ -110,10 +110,10 @@ def test_missing_products_block_without_spending(make_student):
 
 
 def test_second_student_has_own_history(make_student):
-    a = make_student("masha", "Маша")
+    a = make_student("masha", "Маша", pizza=True)
     sid_a = last_sid()
     assert a.post("/api/pizza/finish", json={"recipe": "pepperoni"}).get_json()["gained"] == 3
-    b = make_student("masha2", "Маша 2")
+    b = make_student("masha2", "Маша 2", pizza=True)
     sid_b = last_sid()
     data = page_data(b)
     assert data["completed"] == [] and data["coins"] == 0
@@ -122,7 +122,7 @@ def test_second_student_has_own_history(make_student):
 
 
 def test_unknown_recipe_and_bad_json_rejected(make_student):
-    c = make_student()
+    c = make_student(pizza=True)
     assert c.post("/api/pizza/finish", json={"recipe": "hawaii"}).status_code == 400
     assert c.post("/api/pizza/finish", json=[]).status_code == 400
     assert c.post("/api/pizza/finish", data="not-json", content_type="application/json").status_code == 400
@@ -135,7 +135,7 @@ def test_anonymous_and_parent_cannot_open(anon, parent):
 
 
 def test_delete_student_cleans_pizza(make_student, parent):
-    c = make_student()
+    c = make_student(pizza=True)
     sid = last_sid()
     page_data(c)
     c.post("/api/pizza/finish", json={"recipe": "caesar"})

@@ -291,15 +291,15 @@ def parent_competitions(sid):
     return redirect(_student_page())
 
 
-@bp.route("/parent/students/<int:sid>/farm", methods=["POST"])
-def parent_farm(sid):
-    """Показать/скрыть ферму у ученика (пока полируем — по умолчанию скрыта)."""
+@bp.route("/parent/students/<int:sid>/pizza", methods=["POST"])
+def parent_pizza(sid):
+    """Показать/скрыть пиццерию у ученика (пока полируем — по умолчанию скрыта)."""
     err = require_role("parent")
     if err:
         return err
     on = 1 if request.form.get("on") == "1" else 0
     db = get_db()
-    db.execute("UPDATE students SET farm_enabled=? WHERE id=?", (on, sid))
+    db.execute("UPDATE students SET pizza_enabled=? WHERE id=?", (on, sid))
     db.commit()
     return redirect(_student_page())
 
