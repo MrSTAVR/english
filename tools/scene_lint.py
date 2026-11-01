@@ -20,6 +20,7 @@ sys.path.insert(0, ROOT)
 os.chdir(ROOT)
 
 import curriculum as C  # noqa: E402
+from data.course import ORDER  # noqa: E402
 from data.story import SCENES  # noqa: E402
 
 MIN_STEPS, MAX_STEPS = 24, 34
@@ -143,12 +144,22 @@ def check(lid):
         errors.append("нет вопроса с озвучкой")
     if not any(q["type"] in ("order", "type_in") for q in qs):
         errors.append("нет order/type_in")
-    if not any(ln.get("review") for _, ln in asks):
+    # у первой сцены курса повторять ещё нечего
+    if (not ORDER or ORDER[0] != lid) and not any(ln.get("review") for _, ln in asks):
         errors.append("нет хода-повторения (review)")
 
     text, hero = scene_text(sc), say_text(sc)
     for w in C.LESSONS_BY_ID[lid]["material"]:
-        if norm(w["en"]) not in text:
+        variants = []
+        for part in re.split(r"[/|]", w["en"]):
+            part = part.strip()
+            if not part:
+                continue
+            m = re.search(r"\(([^)]+)\)", part)
+            variants.append(norm(re.sub(r"\([^)]*\)", "", part)))
+            if m:
+                variants.append(norm(m.group(1)))
+        if not any(v and v in text for v in variants):
             errors.append(f"слово урока не звучит в сцене: {w['en']}")
         elif not card_shown(norm(material_key(w["en"])), hero):
             warns.append(f"нет карточки: {w['en']} (слово есть только в вариантах)")
