@@ -82,3 +82,8 @@ def db_all(sql, args=()):
 def db_scalar(sql, args=()):
     rows = db_all(sql, args)
     return rows[0][0] if rows else None
+
+
+def plain_lesson():
+    """Первый урок без сцены (для проверки легаси-поведения) или None, если весь курс уже со сценой."""
+    return next((l for l in LESSONS if not l.get("scene")), None)

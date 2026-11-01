@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Цель дня (урок + повторение), эмодзи-картинки к словам."""
+import pytest
 import sqlite3
 from datetime import date, timedelta
 
@@ -83,7 +84,9 @@ def test_emoji_for_words():
 def test_flashcards_and_dictionary_show_pictures(parent, make_student):
     c = make_student()
     from curriculum import LESSONS, LESSONS_BY_ID
-    lid = next(l["id"] for l in LESSONS if not l.get("scene"))     # у урока со сценой слова — в репликах
+    lid = next((l["id"] for l in LESSONS if not l.get("scene")), None)  # у урока со сценой слова — в репликах
+    if lid is None:
+        pytest.skip("весь курс уже со сценой")
     parent.post(f"/parent/students/{_sid()}/credit", data={"upto": str(LESSONS.index(LESSONS_BY_ID[lid])), "action": "add"})
     html = c.get(f"/lesson/{lid}").get_data(as_text=True)
     assert 'id="wd-data"' in html and '"pic"' in html

@@ -3,6 +3,8 @@
 import json
 import re
 
+import pytest
+
 import scenes
 from curriculum import LESSONS, LESSONS_BY_ID, validate_scenes
 from data.story import SCENES
@@ -52,7 +54,7 @@ def test_island3_starts_with_story():
     """Острова 3–4: все слова урока звучат в тексте сцены (реплики или варианты —
     иначе карточки слов не появятся), вопросов не больше десяти, есть ход-повторение."""
     assert SCENES[16]["title"] == "Первый день на ферме"
-    for lid in (16, 42, 5, 18, 6, 69, 70, 19, 67, 20, 46, 51, 21, 40, 39, 63, 64, 22, 23, 47, 24, 48, 55, 37, 65, 66, 25, 26, 31, 27, 28, 29, 30, 32, 38, 49, 43, 50, 54, 56, 52, 53, 8, 59, 57, 58):
+    for lid in (16, 42, 5, 18, 6, 69, 70, 19, 67, 20, 46, 51, 21, 40, 39, 63, 64, 22, 23, 47, 24, 48, 55, 37, 65, 66, 25, 26, 31, 27, 28, 29, 30, 32, 38, 49, 43, 50, 54, 56, 52, 53, 8, 59, 57, 58, 60):
         sc = SCENES[lid]
         text = _scene_text(sc)
         for w in LESSONS_BY_ID[lid]["material"]:
@@ -155,7 +157,9 @@ def test_half_points_can_pass(make_student):
 def test_second_try_ignored_without_scene(make_student, parent):
     """У обычного теста второй попытки нет — поля _2 не дают баллов."""
     from tests.helpers import open_lesson
-    lid = next(l["id"] for l in LESSONS if not l.get("scene"))
+    lid = next((l["id"] for l in LESSONS if not l.get("scene")), None)
+    if lid is None:
+        pytest.skip("все уроки курса уже со сценой")
     c = make_student()
     parent.post("/parent/students/1/credit", data={"upto": str(LESSONS.index(LESSONS_BY_ID[lid])), "action": "add"})
     c.post(f"/lesson/{lid}/submit", data=_second_try_form(LESSONS_BY_ID[lid], open_lesson(c, lid), 0))
@@ -208,7 +212,9 @@ def test_lesson_steps_without_training(make_student, parent):
     html = c.get(f"/lesson/{N(1)}").get_data(as_text=True)          # сцена: теория → слова → история
     assert 'id="step-exercises"' not in html and 'id="step-material"' in html and "1/3" in html
     assert 'id="wd-data"' in html and "<span>История</span>" in html
-    lid = next(l["id"] for l in LESSONS if not l.get("scene"))
+    lid = next((l["id"] for l in LESSONS if not l.get("scene")), None)
+    if lid is None:
+        pytest.skip("все уроки курса уже со сценой")
     parent.post("/parent/students/1/credit", data={"upto": str(LESSONS.index(LESSONS_BY_ID[lid])), "action": "add"})
     html = c.get(f"/lesson/{lid}").get_data(as_text=True)            # обычный: теория → слова → тест
     assert 'id="step-exercises"' not in html and 'id="step-material"' in html and "1/3" in html
