@@ -105,7 +105,16 @@ def _form_change(g, e):
             for i in range(1, len(b)):
                 if b[i] == b[i - 1] and b[:i] + b[i + 1:] == a:
                     return True
-    return False
+    # одна и та же основа с разными окончаниями: watches / watched, playing / played
+    return _suffix_stem(g) == _suffix_stem(e) and _suffix_stem(g) != g
+
+
+def _suffix_stem(w):
+    """Основа слова без типового окончания (-s, -es, -ed, -d, -ing, -'s)."""
+    for suf in ("'s", "ing", "es", "ed", "s", "d"):
+        if w.endswith(suf) and len(w) - len(suf) >= 3:
+            return w[:-len(suf)]
+    return w
 
 
 def word_typo(g, e, words):
