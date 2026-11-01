@@ -32,7 +32,7 @@ def _fail_half(lesson, aid):
 
 def test_fix_mistakes_asks_only_wrong_questions(parent, make_student):
     c = make_student()
-    parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
+    parent.post("/parent/students/1/credit", data={"upto": "100", "action": "add"})
     l = next(x for x in LESSONS if not x.get("scene"))      # обычный тест (сцены — tests/test_scenes.py)
     aid = open_lesson(c, l["id"])
     form, wrong = _fail_half(l, aid)
@@ -50,7 +50,7 @@ def test_fix_mistakes_asks_only_wrong_questions(parent, make_student):
 
 def test_fix_from_other_or_passed_attempt_is_ignored(parent, make_student):
     c = make_student()
-    parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
+    parent.post("/parent/students/1/credit", data={"upto": "100", "action": "add"})
     l = next(x for x in LESSONS if not x.get("scene"))      # обычный тест (сцены — tests/test_scenes.py)
     aid = open_lesson(c, l["id"])
     c.post(f"/lesson/{l['id']}/submit", data=build_form(l, aid))       # сдан — исправлять нечего

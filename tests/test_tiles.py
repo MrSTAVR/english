@@ -48,7 +48,7 @@ def _english_typein_lesson(early, part="test"):
 
 def test_lesson_page_has_tiles(parent, make_student):
     c = make_student()
-    parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
+    parent.post("/parent/students/1/credit", data={"upto": "100", "action": "add"})
     # первые уроки курса идут со сценой (с 31.10.2026 урок 16 тоже) — плитки в вопросах сцены открыты сразу
     early = next(l for l in LESSONS if l["num"] <= TILES_UPTO and l.get("scene") and any(
         q["type"] == "type_in" and not re.search("[а-яё]", str(q["answer"]), re.I) for q in l["test"]))
