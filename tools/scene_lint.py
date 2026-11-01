@@ -94,7 +94,9 @@ def split_material(lid):
     earlier, later = set(ALLOW), {}
     seen_later = False
     for l in C.LESSONS:
-        if l["id"] == lid:
+        if l["id"] == lid:                     # слова текущего урока сцена уже вводит
+            for w in l.get("material", []):
+                earlier.update(tokens(w["en"]))
             seen_later = True
             continue
         for w in l.get("material", []):
