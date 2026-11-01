@@ -79,7 +79,7 @@ def test_review_is_part_of_the_story():
     assert l["test"] == asks and not any("Повторение" in q["q"] for q in l["test"])
     steps = scenes.steps(l)
     rev = [s for s in steps if s["t"] == "q" and s.get("review")]
-    assert rev and any(s["options"] and "Nice to meet you!" in [o[1] for o in s["options"]] for s in rev)
+    assert rev and any(s["options"] and "I'm fine, thank you." in [o[1] for o in s["options"]] for s in rev)
     assert not any(s["t"] == "note" and "повторение" in s["text"] for s in steps)
 
 
