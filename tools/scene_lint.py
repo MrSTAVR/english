@@ -157,7 +157,8 @@ def check(lid):
     for ln in lines:
         if "ask" in ln:
             q = ln["ask"]
-            hit = sorted(content_words(right(q)) & set(" ".join(prev[-2:]).split()))
+            # «прямо над вопросом» — последняя английская реплика; русская заметка между ними — уже событие
+            hit = sorted(content_words(right(q)) & set(prev[-1].split() if prev else []))
             if hit:
                 msg = f"эхо {hit} перед «{q['q'][:50]}»"
                 (errors if q["type"] == "choice" and not ln.get("review") else warns).append(msg)
@@ -166,7 +167,7 @@ def check(lid):
 
     for _, ln in asks:
         q = ln["ask"]
-        if q["type"] == "choice" and len(set(map(norm, q["options"]))) != len(q["options"]):
+        if q["type"] == "choice" and len(set(q["options"])) != len(q["options"]):
             errors.append(f"повторяющиеся варианты: «{q['q'][:40]}»")
 
     earlier, later = split_material(lid)
