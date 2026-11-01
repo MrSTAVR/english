@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Пиццерия — English Fun{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='pizza.css') }}?v=1">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='pizza.css') }}?v=2">{% endblock %}
 {% block content %}
 <section class="pz" id="pz" data-static="{{ url_for('static', filename='pizza/') }}" aria-label="Пиццерия бабушки">
   <div class="pz-head">
@@ -64,4 +64,4 @@
   <script type="application/json" id="pz-data">{{ data|tojson }}</script>
 </section>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='pizza.js') }}?v=1"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='pizza.js') }}?v=2"></script>{% endblock %}

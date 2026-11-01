@@ -20,6 +20,10 @@ RECIPES = {
             {"key": "tomato_sauce", "en": "tomato sauce", "ru": "томатный соус"},
             {"key": "basil", "en": "basil", "ru": "базилик"},
         ],
+        "toppings": [
+            {"key": "basil", "en": "basil", "ru": "базилик"},
+            {"key": "cherry_tomato", "en": "cherry tomato", "ru": "черри"},
+        ],
     },
     "pepperoni": {
         "en": "Pepperoni",
@@ -29,6 +33,9 @@ RECIPES = {
             {"key": "tomato_sauce", "en": "tomato sauce", "ru": "томатный соус"},
             {"key": "pepperoni", "en": "pepperoni", "ru": "пепперони"},
         ],
+        "toppings": [
+            {"key": "pepperoni", "en": "pepperoni", "ru": "пепперони"},
+        ],
     },
     "mushroom": {
         "en": "Mushroom",
@@ -36,6 +43,10 @@ RECIPES = {
         "ingredients": [
             {"key": "mozzarella", "en": "mozzarella", "ru": "моцарелла"},
             {"key": "tomato_sauce", "en": "tomato sauce", "ru": "томатный соус"},
+            {"key": "mushroom", "en": "mushrooms", "ru": "грибы"},
+            {"key": "oregano", "en": "oregano", "ru": "орегано"},
+        ],
+        "toppings": [
             {"key": "mushroom", "en": "mushrooms", "ru": "грибы"},
             {"key": "oregano", "en": "oregano", "ru": "орегано"},
         ],
@@ -50,6 +61,12 @@ RECIPES = {
             {"key": "lettuce", "en": "lettuce", "ru": "салат"},
             {"key": "parmesan", "en": "parmesan", "ru": "пармезан"},
         ],
+        "toppings": [
+            {"key": "chicken", "en": "chicken", "ru": "курица"},
+            {"key": "lettuce", "en": "lettuce", "ru": "салат"},
+            {"key": "parmesan", "en": "parmesan", "ru": "пармезан"},
+            {"key": "cherry_tomato", "en": "cherry tomato", "ru": "черри"},
+        ],
     },
 }
 
@@ -63,6 +80,7 @@ def recipes_view():
             "en": r["en"],
             "ru": r["ru"],
             "ingredients": [dict(i) for i in r["ingredients"]],
+            "toppings": [dict(i) for i in r["toppings"]],
         })
     return out
 
