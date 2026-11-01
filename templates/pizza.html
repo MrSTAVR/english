@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Пиццерия — English Fun{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='pizza.css') }}?v=1">{% endblock %}
+{% block content %}
+<section class="pz" id="pz" data-static="{{ url_for('static', filename='pizza/') }}" aria-label="Пиццерия бабушки">
+  <div class="pz-head">
+    <a class="pz-back" href="{{ url_for('farm.farm_page') }}" aria-label="На ферму">‹</a>
+    <div class="pz-head-text">
+      <h1>Пиццерия</h1>
+      <p>Кухня бабушки Тома</p>
+    </div>
+    <span class="pz-coins" title="Монетки"><svg class="ico" aria-hidden="true"><use href="#i-coin"/></svg><b id="pz-coins">{{ data.coins }}</b></span>
+  </div>
+
+  <div class="pz-intro">
+    <h2>Что будем готовить?</h2>
+    <p>Выбери пиццу — и собери её по шагам. За первый раз каждого рецепта дают <b>{{ data.reward }}</b> монетки.</p>
+  </div>
+
+  <div class="pz-menu" id="pz-menu"></div>
+
+  <div class="pz-cook" id="pz-cook" hidden>
+    <div class="pz-stage">
+      <img class="pz-kitchen" id="pz-kitchen" alt="">
+      <div class="pz-order">
+        <span class="pz-ava" aria-hidden="true">T</span>
+        <div class="pz-order-body">
+          <b>Tom</b>
+          <span id="pz-order-en">Can I have a pizza, please?</span>
+          <span class="pz-order-ru" id="pz-order-ru"></span>
+        </div>
+        <button type="button" class="pz-audio" id="pz-audio" aria-label="Послушать заказ"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></button>
+      </div>
+      <img class="pz-pizza" id="pz-pizza" alt="Пицца на столе">
+    </div>
+
+    <div class="pz-panel">
+      <ol class="pz-steps" id="pz-steps" aria-label="Этапы приготовления">
+        <li data-step="0">Тесто</li>
+        <li data-step="1">Раскатка</li>
+        <li data-step="2">Соус</li>
+        <li data-step="3">Начинки</li>
+        <li data-step="4">Сыр</li>
+        <li data-step="5">Готово</li>
+      </ol>
+      <h2 class="pz-title" id="pz-title">Маргарита</h2>
+      <p class="pz-hint" id="pz-hint" aria-live="polite"></p>
+      <div class="pz-ingredients" id="pz-ingredients"></div>
+      <button type="button" class="btn btn-primary pz-action" id="pz-action">Раскатать тесто</button>
+      <button type="button" class="pz-switch" id="pz-switch">Выбрать другую пиццу</button>
+    </div>
+  </div>
+
+  <div class="pz-result" id="pz-result" hidden>
+    <img class="pz-result-img" id="pz-result-img" alt="">
+    <h2 id="pz-result-title">Готово!</h2>
+    <p id="pz-result-text" aria-live="polite"></p>
+    <div class="pz-result-buttons">
+      <button type="button" class="btn btn-primary" id="pz-more">Ещё пиццу</button>
+      <a class="btn" href="{{ url_for('farm.farm_page') }}">На ферму</a>
+    </div>
+  </div>
+
+  <script type="application/json" id="pz-data">{{ data|tojson }}</script>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='pizza.js') }}?v=1"></script>{% endblock %}
