@@ -31,7 +31,7 @@ PRODUCTS = {
 PROCESS = {
     "flour": {"station": "mill", "need": {"wheat": 2}, "give": {"flour": 1},
               "en": "mill the wheat", "ru": "Смелить пшеницу в муку"},
-    "dough": {"station": "kitchen", "need": {"flour": 2, "egg": 1}, "give": {"dough": 1},
+    "dough": {"station": "kitchen", "need": {"flour": 2, "egg": 1, "water": 1}, "give": {"dough": 1},
               "en": "make the dough", "ru": "Замесить тесто"},
     "tomato_sauce": {"station": "kitchen", "need": {"tomato": 2}, "give": {"tomato_sauce": 1},
                      "en": "make tomato sauce", "ru": "Сделать томатный соус"},

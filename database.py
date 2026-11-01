@@ -418,6 +418,12 @@ CREATE TABLE IF NOT EXISTS farm_moves (               -- переезд из з�
     note_seen  INTEGER NOT NULL DEFAULT 0,
     at         TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS farm_well (             -- колодец: вода раз в день
+    student_id INTEGER NOT NULL,
+    day        TEXT NOT NULL,
+    qty        INTEGER NOT NULL,
+    PRIMARY KEY (student_id, day)
+);
 CREATE TABLE IF NOT EXISTS farm_orders (              -- заказы героев: k — номер заказа за день, done_at — выполнен
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL,

@@ -117,3 +117,33 @@ def test_process_api_route(make_student):
     data = r.get_json()
     assert data["ok"] is True
     assert have(sid, "flour") == 1
+
+
+def test_well_gives_water_once_per_day(make_student):
+    c = make_student()
+    sid = sid_of()
+    r = c.post("/api/farm/well")
+    assert r.get_json()["ok"] is True
+    assert r.get_json()["got"] == 5
+    assert have(sid, "water") == 5
+    assert c.post("/api/farm/well").get_json()["ok"] is False
+    assert have(sid, "water") == 5
+
+
+def test_dough_needs_water(make_student):
+    make_student()
+    sid = sid_of()
+    give(sid, flour=2, egg=1)
+    conn = sqlite3.connect(database.DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        assert not pizza_farm.process(conn, sid, "dough")[0]
+    finally:
+        conn.close()
+    give(sid, water=1)
+    conn = sqlite3.connect(database.DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        assert pizza_farm.process(conn, sid, "dough")[0]
+    finally:
+        conn.close()

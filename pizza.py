@@ -84,11 +84,11 @@ NEEDS = {
 STARTER = {
     "dough": 4, "tomato_sauce": 3, "mozzarella": 8, "caesar_sauce": 1,
     "basil": 1, "cherry_tomato": 4, "mushroom": 3, "oregano": 1, "lettuce": 2, "parmesan": 1,
-    "egg": 6, "milk": 12,
+    "egg": 6, "milk": 12, "water": 4,
 }
 
 # Бабушкин запас раз в день: хватает на одну простую пиццу без коровы/фермы.
-DAILY = {"milk": 4, "egg": 2, "flour": 2, "tomato": 2}
+DAILY = {"milk": 4, "egg": 2, "flour": 2, "tomato": 2, "water": 2}
 
 
 def _barn(db, student_id):

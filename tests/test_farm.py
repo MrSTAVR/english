@@ -290,6 +290,11 @@ def test_order_text_supports_all_crops():
         assert farm.order_ru("Tom", {key: 2})
 
 
+def test_cherry_tomato_has_own_picture():
+    from data.emoji import emoji_for
+    assert emoji_for("cherry tomato") == "@cherrytomato"
+
+
 def test_milk_is_uncountable_and_waits_for_its_lesson(make_student, db):
     """milk неисчисляемое: в заказе «needs milk» без числа (количество — значком ×N),
     а пока слово из урока 67 не пройдено, молоко в заказы не попадает вовсе."""

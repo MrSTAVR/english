@@ -78,6 +78,9 @@ def api_action(action):
         ok, msg = farm.buy_plot(db, sid)
     elif action == "cow":
         ok, msg = farm.buy_cow(db, sid, stats)
+    elif action == "well":
+        ok, n = farm.well(db, sid)
+        msg, extra = ("" if ok else "Сегодня вода уже набрана."), {"got": n}
     elif action == "process":
         ok, msg = pizza_farm.process(db, sid, str(data.get("key", "")))
     elif action == "order":
