@@ -279,8 +279,15 @@ def test_words_appear_only_after_their_lesson(make_student, db):
     assert all(a["known"] for a in st["animals"])
     assert st["known"]["milk"] is False                                     # молоко — слово из урока 67
     assert st["known"]["flour"] is False                                    # мука — слово из урока 70
-    st = farm.state(db, sid, {"lessons_completed": 70, "completed_ids": {farm.WORDS_LESSON, farm.ANIMALS_LESSON, 67, 70, 72}})
-    assert all(st["known"].values())
+    st = farm.state(db, sid, {"lessons_completed": 70, "completed_ids": {farm.WORDS_LESSON, farm.ANIMALS_LESSON, 67, 70}})
+    assert st["known"]["flour"] is True
+    assert st["known"]["mozzarella"] is False                               # слова пока нет в курсе
+
+
+def test_order_text_supports_all_crops():
+    for key in farm.CROPS:
+        assert farm.order_text("Tom", {key: 2}, True)
+        assert farm.order_ru("Tom", {key: 2})
 
 
 def test_milk_is_uncountable_and_waits_for_its_lesson(make_student, db):

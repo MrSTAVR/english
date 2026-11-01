@@ -84,7 +84,11 @@ NEEDS = {
 STARTER = {
     "dough": 4, "tomato_sauce": 3, "mozzarella": 8, "caesar_sauce": 1,
     "basil": 1, "cherry_tomato": 4, "mushroom": 3, "oregano": 1, "lettuce": 2, "parmesan": 1,
+    "egg": 6, "milk": 12,
 }
+
+# Бабушкин запас раз в день: хватает на одну простую пиццу без коровы/фермы.
+DAILY = {"milk": 4, "egg": 2, "flour": 2, "tomato": 2}
 
 
 def _barn(db, student_id):
@@ -106,6 +110,20 @@ def ensure_starter(db, student_id):
     if cur.rowcount != 1:
         return False
     for item, qty in STARTER.items():
+        _add(db, student_id, item, qty)
+    db.commit()
+    return True
+
+
+def ensure_daily(db, student_id):
+    """Раз в день бабушка оставляет молоко, яйца, муку и помидоры — на одну пиццу."""
+    day = datetime.now().date().isoformat()
+    now = datetime.now().isoformat(timespec="seconds")
+    cur = db.execute("INSERT OR IGNORE INTO pizza_daily (student_id, day, created_at) VALUES (?, ?, ?)",
+                     (student_id, day, now))
+    if cur.rowcount != 1:
+        return False
+    for item, qty in DAILY.items():
         _add(db, student_id, item, qty)
     db.commit()
     return True
@@ -155,6 +173,7 @@ def completed(db, student_id):
 
 def state(db, student_id):
     ensure_starter(db, student_id)
+    ensure_daily(db, student_id)
     g = garden.get_garden(db, student_id)
     return {
         "coins": g["coins"],
@@ -174,6 +193,7 @@ def finish(db, student_id, recipe):
     if recipe not in RECIPES:
         return False, 0, False, 0, []
     ensure_starter(db, student_id)
+    ensure_daily(db, student_id)
     missing = []
     have = _barn(db, student_id)
     for item, qty in NEEDS[recipe].items():
@@ -204,3 +224,4 @@ def finish(db, student_id, recipe):
 def forget_student(db, student_id):
     db.execute("DELETE FROM pizza_history WHERE student_id=?", (student_id,))
     db.execute("DELETE FROM pizza_starter WHERE student_id=?", (student_id,))
+    db.execute("DELETE FROM pizza_daily WHERE student_id=?", (student_id,))

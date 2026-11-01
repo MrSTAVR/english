@@ -8,12 +8,12 @@
 # Культуры, которых не было на ферме. early=True — доступны сразу: пицца уже открыта
 # с первого дня, и нечестно запирать её за уроками, которые ребёнок ещё не прошёл.
 CROPS = {
-    "wheat": {"en": "wheat", "ru": "пшеница", "minutes": 8, "yield": 3, "early": True, "lesson": 70},
-    "mushroom": {"en": "mushroom", "plural": "mushrooms", "ru": "гриб", "minutes": 25, "yield": 3, "early": True, "lesson": 72},
-    "basil": {"en": "basil", "ru": "базилик", "minutes": 20, "yield": 3, "early": True, "lesson": 72},
-    "oregano": {"en": "oregano", "ru": "орегано", "minutes": 20, "yield": 3, "early": True, "lesson": 72},
-    "lettuce": {"en": "lettuce", "ru": "салат", "minutes": 15, "yield": 3, "early": True, "lesson": 72},
-    "cherry_tomato": {"en": "cherry tomato", "plural": "cherry tomatoes", "ru": "черри", "minutes": 12, "yield": 4, "early": True, "lesson": 72},
+    "wheat": {"en": "wheat", "plural": "wheat", "one": "wheat", "ru": "пшеница", "minutes": 8, "yield": 3, "early": True, "lesson": 70, "uncountable": True},
+    "mushroom": {"en": "mushroom", "plural": "mushrooms", "one": "mushroom", "ru": "гриб", "minutes": 25, "yield": 3, "early": True, "lesson": 999},
+    "basil": {"en": "basil", "plural": "basil", "one": "basil", "ru": "базилик", "minutes": 20, "yield": 3, "early": True, "lesson": 999, "uncountable": True},
+    "oregano": {"en": "oregano", "plural": "oregano", "one": "oregano", "ru": "орегано", "minutes": 20, "yield": 3, "early": True, "lesson": 999, "uncountable": True},
+    "lettuce": {"en": "lettuce", "plural": "lettuce", "one": "lettuce", "ru": "салат", "minutes": 15, "yield": 3, "early": True, "lesson": 999, "uncountable": True},
+    "cherry_tomato": {"en": "cherry tomato", "plural": "cherry tomatoes", "one": "cherry tomato", "ru": "черри", "minutes": 12, "yield": 4, "early": True, "lesson": 999},
 }
 
 PRODUCTS = {
@@ -21,9 +21,9 @@ PRODUCTS = {
     "dough": {"en": "dough", "ru": "тесто", "lesson": 70},
     "tomato_sauce": {"en": "tomato sauce", "ru": "томатный соус", "lesson": 70},
     "cheese": {"en": "cheese", "ru": "сыр", "lesson": 70},
-    "mozzarella": {"en": "mozzarella", "ru": "моцарелла", "lesson": 72},
-    "parmesan": {"en": "parmesan", "ru": "пармезан", "lesson": 72},
-    "caesar_sauce": {"en": "caesar sauce", "ru": "соус цезарь", "lesson": 72},
+    "mozzarella": {"en": "mozzarella", "ru": "моцарелла", "lesson": 999},
+    "parmesan": {"en": "parmesan", "ru": "пармезан", "lesson": 999},
+    "caesar_sauce": {"en": "caesar sauce", "ru": "соус цезарь", "lesson": 999},
 }
 
 # Что производится на кухне/мельнице. Всё, чего нет на ферме (соль, дрожжи, масло,

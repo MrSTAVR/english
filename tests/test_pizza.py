@@ -58,6 +58,15 @@ def test_starter_given_once(make_student):
     assert barn_of(sid, "dough") == 4
 
 
+def test_grandma_daily_stock_once_per_day(make_student):
+    c = make_student()
+    sid = last_sid()
+    page_data(c)
+    assert barn_of(sid, "milk") == 16          # 12 стартовых + 4 бабушкиных
+    page_data(c)
+    assert barn_of(sid, "milk") == 16
+
+
 def test_first_recipe_spends_stock_and_gives_coins_once(make_student):
     c = make_student()
     sid = last_sid()
@@ -134,3 +143,4 @@ def test_delete_student_cleans_pizza(make_student, parent):
     parent.post(f"/parent/students/{sid}/delete")
     assert db_scalar("SELECT COUNT(*) FROM pizza_history WHERE student_id=?", (sid,)) == 0
     assert db_scalar("SELECT COUNT(*) FROM pizza_starter WHERE student_id=?", (sid,)) == 0
+    assert db_scalar("SELECT COUNT(*) FROM pizza_daily WHERE student_id=?", (sid,)) == 0

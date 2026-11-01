@@ -75,7 +75,7 @@
       btn.title = can ? "" : "Не хватает: " + missing;
       btn.innerHTML =
         '<img src="' + withVer("pizza_" + r.key + "_baked.png") + '" alt="">' +
-        (done ? '<span class="pz-done">готово</span>' : '<span class="pz-new">+ ' + DATA.reward + '</span>') +
+        (done ? '<span class="pz-done">готово</span>' : (can ? '<span class="pz-new">+ ' + DATA.reward + '</span>' : '')) +
         (can ? '' : '<span class="pz-no">нет продуктов</span>') +
         "<h3>" + r.en + '<span class="pz-card-ru">' + r.ru + "</span></h3>" +
         '<span class="pz-card-ing">' + ing + "</span>" +
