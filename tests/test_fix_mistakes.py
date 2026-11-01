@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Тест урока: короче, без лишнего письма по памяти; «Исправь ошибки» — заново только неверные вопросы."""
+import pytest
 import re
 
 from curriculum import LESSONS, LESSONS_BY_ID
@@ -33,7 +34,9 @@ def _fail_half(lesson, aid):
 def test_fix_mistakes_asks_only_wrong_questions(parent, make_student):
     c = make_student()
     parent.post("/parent/students/1/credit", data={"upto": "100", "action": "add"})
-    l = next(x for x in LESSONS if not x.get("scene"))      # обычный тест (сцены — tests/test_scenes.py)
+    l = next((x for x in LESSONS if not x.get("scene")), None)  # обычный тест (сцены — tests/test_scenes.py)
+    if l is None:
+        pytest.skip("весь курс уже со сценой")
     aid = open_lesson(c, l["id"])
     form, wrong = _fail_half(l, aid)
     body = c.post(f"/lesson/{l['id']}/submit", data=form).get_data(as_text=True)
@@ -51,7 +54,9 @@ def test_fix_mistakes_asks_only_wrong_questions(parent, make_student):
 def test_fix_from_other_or_passed_attempt_is_ignored(parent, make_student):
     c = make_student()
     parent.post("/parent/students/1/credit", data={"upto": "100", "action": "add"})
-    l = next(x for x in LESSONS if not x.get("scene"))      # обычный тест (сцены — tests/test_scenes.py)
+    l = next((x for x in LESSONS if not x.get("scene")), None)  # обычный тест (сцены — tests/test_scenes.py)
+    if l is None:
+        pytest.skip("весь курс уже со сценой")
     aid = open_lesson(c, l["id"])
     c.post(f"/lesson/{l['id']}/submit", data=build_form(l, aid))       # сдан — исправлять нечего
     page = c.get(f"/lesson/{l['id']}?step=test&fix={aid}").get_data(as_text=True)

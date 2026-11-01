@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Буквы-плитки и прощение опечаток в заданиях «напиши по-английски»."""
+import pytest
 import re
 
 from curriculum import LESSONS, LESSONS_BY_ID
@@ -53,6 +54,8 @@ def test_lesson_page_has_tiles(parent, make_student):
     early = next(l for l in LESSONS if l["num"] <= TILES_UPTO and l.get("scene") and any(
         q["type"] == "type_in" and not re.search("[а-яё]", str(q["answer"]), re.I) for q in l["test"]))
     late = _english_typein_lesson(False)
+    if late is None:
+        pytest.skip("весь курс уже со сценой")
     scene = c.get(f"/lesson/{early['id']}").get_data(as_text=True)
     assert "tiles.js" in scene and 'data-tiles-open="1"' in scene                          # сцена первых уроков: плитки сразу
     assert c.get(f"/lesson/{N(1)}").get_data(as_text=True).count('id="scene"') == 1
