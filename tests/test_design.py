@@ -58,7 +58,7 @@ def test_student_tabbar(make_student):
 
 def test_lesson_test_has_progress_bar(parent, make_student):
     c = make_student()
-    parent.post("/parent/students/1/credit", data={"upto": "60", "action": "add"})
+    parent.post("/parent/students/1/credit", data={"upto": "100", "action": "add"})
     lid = next(x for x in LESSONS if not x.get("scene"))["id"]     # у уроков-сцен своя форма
     html = c.get(f"/lesson/{lid}").get_data(as_text=True)
     assert 'id="test-progress"' in html and "function unansweredQuestions()" in html
