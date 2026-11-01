@@ -46,6 +46,18 @@
   </section>
 
   <section class="card">
+    <h3>Ферма</h3>
+    <p class="hint">Пока ферма и кухня скрыты у ученика. Включи, когда закончим полировку — появится пункт «Ферма» и домик кухни.</p>
+    <form method="post" action="{{ url_for('parent.parent_farm', sid=st.id) }}" class="sp-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if st.farm_enabled %}<span class="pill pill-soft">Видна ученику</span>
+      <button class="btn btn-small sp-wide" type="submit" name="on" value="0">Скрыть ферму</button>
+      {% else %}<span class="pill pill-warn">Скрыта</span>
+      <button class="btn btn-small sp-wide" type="submit" name="on" value="1">Включить ферму</button>{% endif %}
+    </form>
+  </section>
+
+  <section class="card">
     <h3>Аватарка</h3>
     <p class="hint">Картинка рядом с именем на главной странице ученика.</p>
     <form method="post" action="{{ url_for('parent.parent_avatar', sid=st.id) }}" class="sp-form">

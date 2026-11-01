@@ -237,7 +237,7 @@ def test_delete_student_clears_farm(make_student, parent, db):
 
 
 def test_farm_page_and_api(make_student, db, anon):
-    c = make_student(); sid = sid_of()
+    c = make_student(farm=True); sid = sid_of()
     html = c.get("/student/farm").get_data(as_text=True)
     assert 'id="fm-data"' in html and "vendor/three/three.module.min.js" in html and "farm.js" in html
     assert anon.get("/api/farm").status_code == 403
@@ -400,7 +400,7 @@ def test_decor_does_not_stand_on_plots():
 
 def test_move_from_castle_refunds_once(make_student, db):
     import castle
-    c = make_student(); sid = sid_of()
+    c = make_student(farm=True); sid = sid_of()
     castle.ensure(db, sid, ())
     from garden import get_garden
     get_garden(db, sid)
@@ -419,7 +419,7 @@ def test_move_from_castle_refunds_once(make_student, db):
 
 
 def test_new_student_has_no_move_note(make_student, db):
-    c = make_student(); sid = sid_of()
+    c = make_student(farm=True); sid = sid_of()
     assert "переехал на ферму" not in c.get("/student/farm").get_data(as_text=True)
     assert db.execute("SELECT coins FROM farm_moves WHERE student_id=?", (sid,)).fetchone()[0] == 0
 
@@ -496,7 +496,7 @@ def test_order_coins_less_than_lesson():
 
 
 def test_move_without_castle_returns_house_items(make_student, db):
-    c = make_student(); sid = sid_of()
+    c = make_student(farm=True); sid = sid_of()
     from garden import get_garden
     get_garden(db, sid)
     db.execute("UPDATE garden SET coins=5 WHERE student_id=?", (sid,))
@@ -521,3 +521,23 @@ def test_garden_waits_by_best_streak(make_student, db):
     db.execute("UPDATE garden SET streak_days=0, best_streak=12, broken=1 WHERE student_id=?", (sid,)); db.commit()
     v = garden_view(db, sid)
     assert v["stage"]["min"] > 0                                         # дерево не уменьшилось
+
+
+def test_farm_hidden_by_default(make_student):
+    c = make_student()
+    home = c.get("/student").get_data(as_text=True)
+    assert "Ферма" not in home.split('class="tabbar"', 1)[1].split("</div>", 1)[0]
+    r = c.get("/student/farm")
+    assert r.status_code == 302
+    assert r.headers["Location"].endswith("/student")
+
+
+def test_admin_can_enable_farm(make_student, parent):
+    c = make_student()
+    sid = sid_of()
+    assert c.get("/student/farm").status_code == 302
+    parent.post(f"/parent/students/{sid}/farm", data={"on": "1"})
+    assert c.get("/student/farm").status_code == 200
+    assert "Ферма" in c.get("/student").get_data(as_text=True)
+    parent.post(f"/parent/students/{sid}/farm", data={"on": "0"})
+    assert c.get("/student/farm").status_code == 302

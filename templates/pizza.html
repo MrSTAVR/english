@@ -4,7 +4,7 @@
 {% block content %}
 <section class="pz" id="pz" data-static="{{ url_for('static', filename='pizza/') }}" aria-label="Пиццерия бабушки">
   <div class="pz-head">
-    <a class="pz-back" href="{{ url_for('farm.farm_page') }}" aria-label="На ферму">‹</a>
+    <a class="pz-back" href="{{ url_for('farm.farm_page') if farm_enabled else url_for('student.student_home') }}" aria-label="{{ 'На ферму' if farm_enabled else 'На главную' }}">‹</a>
     <div class="pz-head-text">
       <h1>Пиццерия</h1>
       <p>Кухня бабушки Тома</p>
@@ -14,7 +14,7 @@
 
   <div class="pz-intro">
     <h2>Что будем готовить?</h2>
-    <p>Выбери пиццу — и собери её по шагам. За первый раз каждого рецепта дают <b>{{ data.reward }}</b> монетки. Продукты растут на <a href="{{ url_for('farm.farm_page') }}">ферме</a> и готовятся на кухне.</p>
+    <p>Выбери пиццу — и собери её по шагам. За первый раз каждого рецепта дают <b>{{ data.reward }}</b> монетки. {% if farm_enabled %}Продукты растут на <a href="{{ url_for('farm.farm_page') }}">ферме</a> и готовятся на кухне.{% else %}Продукты для пиццы лежат на бабушкиной кухне.{% endif %}</p>
   </div>
 
   <div class="pz-menu" id="pz-menu"></div>
@@ -57,7 +57,7 @@
     <p id="pz-result-text" aria-live="polite"></p>
     <div class="pz-result-buttons">
       <button type="button" class="btn btn-primary" id="pz-more">Ещё пиццу</button>
-      <a class="btn" href="{{ url_for('farm.farm_page') }}">На ферму</a>
+      <a class="btn" href="{{ url_for('farm.farm_page') if farm_enabled else url_for('student.student_home') }}">{{ 'На ферму' if farm_enabled else 'На главную' }}</a>
     </div>
   </div>
 

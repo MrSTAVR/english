@@ -45,7 +45,7 @@ def test_manifest_colors(anon):
 
 
 def test_student_tabbar(make_student):
-    c = make_student()
+    c = make_student(farm=True)
     body = c.get("/student").get_data(as_text=True)
     assert 'class="has-tabbar"' in body and 'class="tabbar"' in body
     for label in ("Главная", "Карта", "Ферма", "Игры", "Награды"):
@@ -70,7 +70,7 @@ def test_lesson_test_has_progress_bar(parent, make_student):
 
 
 def test_castle_moved_to_farm(make_student):
-    c = make_student()
+    c = make_student(farm=True)
     assert c.get("/student/castle").headers["Location"].endswith("/student/farm")      # замок закрыт — ферма
     html = c.get("/student/farm").get_data(as_text=True)
     assert 'href="/student/farm" class="tab on"' in html and "Замок" not in html.split("<main")[0]

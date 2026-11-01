@@ -291,6 +291,19 @@ def parent_competitions(sid):
     return redirect(_student_page())
 
 
+@bp.route("/parent/students/<int:sid>/farm", methods=["POST"])
+def parent_farm(sid):
+    """Показать/скрыть ферму у ученика (пока полируем — по умолчанию скрыта)."""
+    err = require_role("parent")
+    if err:
+        return err
+    on = 1 if request.form.get("on") == "1" else 0
+    db = get_db()
+    db.execute("UPDATE students SET farm_enabled=? WHERE id=?", (on, sid))
+    db.commit()
+    return redirect(_student_page())
+
+
 @bp.route("/parent/students/<int:sid>/avatar", methods=["POST"])
 def parent_avatar(sid):
     """Аватарка ученика (эмодзи из STUDENT_EMOJIS)."""
