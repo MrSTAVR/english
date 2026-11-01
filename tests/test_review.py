@@ -136,7 +136,7 @@ def test_review_achievements(parent, make_student):
 
 def test_old_words_come_back_in_test():
     qs = [q for l in LESSONS for q in l["test"] if q["q"].startswith("🔁")]
-    assert len(qs) > 20
+    assert len(qs) > 10                  # часть уроков уже со сценой: у них повторение — ход сюжета
     first = LESSONS[0]
     assert not any(q["q"].startswith("🔁") for q in first["test"])
     for q in qs:
