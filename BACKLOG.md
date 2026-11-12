@@ -65,6 +65,59 @@
 - Фоны за помощником, питомец Чик-чика.
 - Соревнования (когда детей станет больше): недельная лига с очками за старание (сброс по понедельникам, награды топ-3 и всем, кто набрал минимум), общая цель на всех за неделю, турниры к праздникам. Основа уже есть — `friends.py`.
 
+## Рекомендации по моделям для субагентов (аудит 12.11.2026)
+
+Доступные модели (полный список — `opencode.models`). Для проекта (русский, код, длинный контекст, UX-скриншоты) рекомендую:
+
+### Бесплатные (цена 0/0) — подходящие
+- `opencode/deepseek-v4.1-flash-free` (variants: low/high/max) — код, правила, русский. Лучший бесплатный для code-critic и бэкенд-аудитов.
+- `opencode/nemotron-3.5-super-vl-free` (variants: none/minimal/low/medium/high/xhigh) — **vision + длинный контекст**. Уникальная возможность: ревью скриншотов UI/дизайна на 360px бесплатно.
+- `opencode/big-pickle` — бесплатный, большой контекст. Для дешёвого обзора больших кусков кода.
+- `opencode/flint-40b-free`, `opencode/minimax-m3.1-flash-free`, `opencode/glm-5.3-flash-free`, `opencode/nemotron-3.5-lightning-free`, `opencode/mimo-v2.6-flash-free`, `opencode/iceman-free`, `opencode/inkling-2-small-free`, `opencode/longcat-2.5-free` — запасные.
+
+### Дешёвые платные (≤ $0.20 вход)
+- `opencode/muse-ember-1.0` ($0.10/$0.50, 200k контекст) — лучший дешёвый для длинных аудитов целых модулей.
+- `opencode/gpt-6-luna` ($0.10/$0.50, 272k tier) — дешёвый, сильный.
+- `opencode/claude-haiku-5-5` ($0.10/$0.50, 100k tier) — хорош для кода и структуры.
+- `opencode-go/mimo-v2.5` ($0.14/$0.28) — самый дешёвый вывод.
+- `opencode-go/qwen3.8-flash` ($0.15/$0.47), `opencode-go/glm-5.3-flash` ($0.15/$0.50), `opencode-go/deepseek-v4.1-flash` ($0.15/$0.60) — русский, код.
+- `opencode/gpt-5.4-nano` ($0.20/$1.25), `opencode/gemini-3.5-flash-lite` ($0.30/$2.50).
+
+### Генерация изображений
+- `opencode/gpt-image-2.5-sunburst` — единственная image-модель. Для ассетов (иконки, спрайты, topping pieces).
+
+### Рекомендованное распределение по агентам (проверено на аудите пиццерии)
+
+| Задача | Агент | Модель | Почему |
+|---|---|---|---|
+| Backend (код, логика, SQL, миграции) | general | `opencode-go/deepseek-v4.1-flash#high` | сильный код, дешёвый, in-region |
+| Frontend/UX (JS/CSS/HTML, дизайн-токены) | general | `opencode-go/deepseek-v4.1-flash#high` | код + структура |
+| Assets/Design (картинки, спрайты, cleanup) | general | `opencode-go/claude-haiku-5-5#high` + генерация через `opencode/gpt-image-2.5-sunburst` | визуальная логика + генерация |
+| Docs (README, BACKLOG, AGENTS) | general | `opencode-go/claude-haiku-5-5` | текст, дёшево |
+| Tests/QA | general | `opencode-go/deepseek-v4.1-flash#high` | код тестов |
+| Game balance (экономика, числа) | general | `opencode-go/glm-5.3-flash` | текстовый анализ, дёшево |
+| code-critic (правила кода, pyflakes/ruff) | general | `opencode/deepseek-v4.1-flash-free#high` | бесплатно, понимает код |
+| design-critic / kid-ux / game-balance | general | `opencode/deepseek-v4.1-flash-free#high` | бесплатно, достаточно для ревью |
+| UX-ревью со скриншотами (vision) | general | `opencode/nemotron-3.5-super-vl-free` | единственная бесплатная vision-модель |
+| Сложные архитектурные решения | general | `opencode-go/deepseek-v4-pro` или `opencode/claude-sonnet-5-5` | по необходимости, платно |
+
+### Важно: регион (privacy)
+
+Некоторые модели OpenCode Go хостятся вне Европы/США и требуют «Global» в настройках privacy (https://opencode.ai/console/.../privacy#regions). Проверено in-region:
+- `opencode-go/claude-haiku-5-5`, `opencode-go/gpt-6-luna`, `opencode-go/glm-5.3-flash`, `opencode-go/qwen3.8-flash`, `opencode-go/deepseek-v4.1-flash` (платный) — доступны.
+- `opencode-go/deepseek-v4.1-flash` (платный) и `opencode-go/longcat-2.5-free` — **недоступны** в регионе Europe/US (нужен Global).
+- `opencode/*` (Personal) провайдер — все доступны in-region, включая бесплатные (`deepseek-v4.1-flash-free`, `nemotron-3.5-super-vl-free`, `big-pickle` и др.).
+
+### План запуска агентов (проверенный на аудите пиццерии)
+
+Фаза 0 — решения владельца (блокируют код).
+Фаза 1 — параллельно, непересекающиеся файлы: Backend + Frontend + Assets + Docs.
+Фаза 2 — после Фазы 1: Tests/QA + Game balance.
+Фаза 3 — критики (code-critic на DeepSeek, design/kid-ux/game-balance на GLM или бесплатный DeepSeek).
+Фаза 4 — интеграция: ревью диффа, прогон критиков, коммит → push → PR → CI → merge.
+
+Агенты работают в фоне (`background=true`), файлы не пересекаются — параллельно безопасно. После завершения — отчёт по каждому, затем следующая фаза.
+
 ## Бэклог: кабинет логопеда
 Решения владельца: окна — конкретные слоты; занятие 45 мин; стоимость своя у каждого ребёнка, абонементов нет; семья записывается и отменяет не позже чем за сутки; дети сами не заходят.
 Сделано:
