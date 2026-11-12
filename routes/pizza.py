@@ -3,10 +3,10 @@
 
 import pizza
 from database import get_db
-from flask import Blueprint, abort, jsonify, redirect, render_template, request, session, url_for
+from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
 from mascot import build_mascot_ctx
 
-from routes.common import get_student_or_none, require_role
+from routes.common import api_student, get_student_or_none, require_role
 
 bp = Blueprint("pizza", __name__)
 
@@ -26,26 +26,14 @@ def pizza_page():
     return render_template("pizza.html", data=pizza.state(db, student["id"]), mascot=build_mascot_ctx())
 
 
-def _api_student():
-    if session.get("role") != "student":
-        abort(403)
-    db = get_db()
-    student = get_student_or_none(db)
-    if not student or not student["pizza_enabled"]:
-        abort(403)
-    return db, student
-
-
 @bp.route("/api/pizza/finish", methods=["POST"])
 def api_finish():
-    db, student = _api_student()
+    # 403, если ученик не вошёл или пиццерия выключена в админке.
+    db, student = api_student("pizza_enabled")
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
-        abort(400)
-    recipe = str(data.get("recipe", ""))
-    if recipe not in pizza.RECIPES:
-        abort(400)
-    ok, gained, already, coins, missing = pizza.finish(db, student["id"], recipe)
-    if not ok:
-        return jsonify(ok=False, missing=missing), 400
-    return jsonify(ok=True, gained=gained, already=already, coins=coins)
+        return jsonify(ok=False, error="bad_request", message="Нужен JSON с рецептом."), 400
+    recipe = str(data.get("recipe") or "")
+    # pieces не обязателен: сколько кусков рисовать, решает фронтенд (1..20 проверит pizza.finish).
+    res = pizza.finish(db, student["id"], recipe, pieces=data.get("pieces"))
+    return jsonify(res), 200 if res["ok"] else 400

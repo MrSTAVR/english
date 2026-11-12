@@ -28,11 +28,12 @@
   --radius: 24px;
   --shadow: 0 4px 0 var(--shade);
   --shadow-lg: 0 6px 0 var(--line-deep), 0 14px 26px rgba(30, 42, 69, .08);
-  --ok-bg: #DDF5E7; --ok-ink: #146C3E;
+  --ok-bg: #DDF5E7; --ok-ink: #146C3E; --ok-line: #BFE6CD;
   --on-primary: #FFFFFF;        /* текст на синем акценте */
   --on-yellow: #1E2A45;         /* текст на жёлтом — жёлтый не темнеет в тёмной теме */
   --scrim: rgba(30, 42, 69, .35); /* затемнение под шторкой */
-  --oops-bg: #FFE9D6; --oops-ink: #9A3B00;
+  --oops-bg: #FFE9D6; --oops-ink: #9A3B00; --oops-line: #F2C9A8;
+  --shadow-soft: rgba(30, 42, 69, .18); /* мягкая тень картинок и предметов */
 }
 
 body { background: var(--page); color: var(--ink); background-attachment: scroll; }
@@ -107,6 +108,7 @@ html[data-theme="dark"] {
   --surface: #221E3D; --border: #322C57; --page: #16132B;
   --shadow: 0 4px 0 #0E0B1F; --shadow-lg: 0 6px 0 #0E0B1F, 0 14px 26px rgba(0, 0, 0, .35);
   --ok-bg: #183D2A; --ok-ink: #8FE3B0; --oops-bg: #45260F; --oops-ink: #FFB27A;
+  --ok-line: #2E6B49; --oops-line: #7A4426; --shadow-soft: rgba(0, 0, 0, .55);
   --scrim: rgba(0, 0, 0, .5);
 }
 html[data-theme="dark"] body { background: var(--page); color: var(--ink); }
@@ -138,6 +140,7 @@ body.area-speech {
   --tint: #E2F0EC; --surface: #FFFFFF; --border: #E6E3DB; --page: #F5F4F0;
   --radius: 20px; --shadow: none; --shadow-lg: 0 8px 20px rgba(28, 34, 48, .08);
   --ok-bg: #DDF5E7; --ok-ink: #146C3E; --oops-bg: #FCE4DC; --oops-ink: #8A3612;
+  --ok-line: #BFE6CD; --oops-line: #F0CDBE; --shadow-soft: rgba(28, 34, 48, .12);
   font-family: Manrope, system-ui, sans-serif;
 }
 body.area-speech h1, body.area-speech h2, body.area-speech h3 { font-weight: 800; }
@@ -157,6 +160,7 @@ html[data-theme="dark"] body.area-speech {
   --line: #2E363F; --line-deep: #3A444E; --tint: #183A36;
   --surface: #1E242B; --border: #2E363F; --page: #14181D;
   --ok-bg: #1F3D27; --ok-ink: #9FE0AD; --oops-bg: #3D2219; --oops-ink: #F4B49A;
+  --ok-line: #2E6B49; --oops-line: #7A4426; --shadow-soft: rgba(0, 0, 0, .5);
 }
 html[data-theme="dark"] body.area-speech .topbar { background: #1A2026; }
 html[data-theme="dark"] body.area-speech .btn-primary, html[data-theme="dark"] body.area-speech .topbar nav a.on { color: #0E1A18; }

@@ -256,8 +256,7 @@ def water(db, student_id, slot):
 
 
 def _add_barn(db, student_id, item, qty):
-    db.execute("INSERT INTO farm_barn (student_id, item, qty) VALUES (?, ?, ?) "
-               "ON CONFLICT(student_id, item) DO UPDATE SET qty=qty+excluded.qty", (student_id, item, qty))
+    pizza_farm.add(db, student_id, item, qty)
 
 
 def well(db, student_id):
@@ -377,8 +376,7 @@ def collect(db, student_id, kind):
 
 
 def barn(db, student_id):
-    return {r["item"]: r["qty"] for r in db.execute("SELECT item, qty FROM farm_barn WHERE student_id=? AND qty>0",
-                                                     (student_id,)).fetchall()}
+    return pizza_farm.barn(db, student_id)
 
 
 # ── заказы ──

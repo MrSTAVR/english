@@ -57,11 +57,13 @@ PANTRY = {
 
 
 def barn(db, student_id):
+    """Амбар ученика (только непустые позиции) — общий для фермы и пиццерии."""
     return {r["item"]: r["qty"] for r in db.execute(
         "SELECT item, qty FROM farm_barn WHERE student_id=? AND qty>0", (student_id,)).fetchall()}
 
 
-def _add(db, student_id, item, qty):
+def add(db, student_id, item, qty):
+    """Положить продукты в амбар (ферма и пиццерия пишут через этот хелпер)."""
     db.execute("INSERT INTO farm_barn (student_id, item, qty) VALUES (?, ?, ?) "
                "ON CONFLICT(student_id, item) DO UPDATE SET qty=qty+excluded.qty",
                (student_id, item, qty))
@@ -89,13 +91,16 @@ def process(db, student_id, key, qty=1):
             db.rollback()
             return False, "Не хватает продуктов."
     for item, give in recipe["give"].items():
-        _add(db, student_id, item, give * qty)
+        add(db, student_id, item, give * qty)
     db.commit()
     return True, recipe["ru"]
 
 
 def known_items(ids):
-    """Какие новые продукты уже знакомы ребёнку (по урокам; early — всегда)."""
+    """Какие продукты уже знакомы ребёнку (по урокам; кладовая и early — всегда).
+
+    ids — сданные уроки (farm.completed_ids); пиццерия показывает EN только для known.
+    """
     out = set(PANTRY)
     for key, c in CROPS.items():
         if c.get("early") or c["lesson"] in ids:

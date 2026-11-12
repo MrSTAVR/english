@@ -275,7 +275,7 @@ function drawLabels() {
     }
     else tag(x, y, z, 'ready', 'o-check', 'Собери урожай', () => openPlot(i));
   });
-  if (S.plot_cost) { const [x, z] = PLOT_POS[S.plots.length]; tag(x, .3, z, 'lock', 'o-lock', `Новая грядка — ${S.plot_cost} монеток`, openBuyPlot, S.plot_cost); }
+  if (S.plot_cost) { const [x, z] = PLOT_POS[S.plots.length]; tag(x, .3, z, 'lock', 'o-lock', `Новая грядка — ${coinsW(S.plot_cost)}`, openBuyPlot, S.plot_cost); }
   const animal = (a, x, z, y, lx = x, lz = z) => {                     // lx, lz — где висит замок «ещё не построено»
     if (a.state === 'none') tag(lx, 1.4, lz, 'lock', 'o-lock', a.kind === 'cow' ? 'Коровник' : 'Курятник', () => openAnimal(a.kind));
     else if (a.state === 'hungry') tag(x, y, z, 'water', 'o-grain', 'Покорми', () => openAnimal(a.kind));
@@ -600,7 +600,8 @@ async function refresh() { const r = await fetch('/api/farm'); if (r.ok) { S = a
 
 const plural = (n, a, b, c) => n % 10 === 1 && n % 100 !== 11 ? a : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? b : c;
 const dropsW = n => `${n} ${plural(n, 'капля', 'капли', 'капель')}`;
-const noDrops = need => `<p class="fm-msg bad">Нужно ${dropsW(need)}, а у тебя ${S.drops}. Капли дают за уроки и цель дня!</p>
+const coinsW = n => `${n} ${plural(n, 'монетка', 'монетки', 'монеток')}`;
+const noDrops = need => `<p class="fm-msg bad">Не хватает: ${dropsW(need - S.drops)}. Капли дают за уроки и цель дня!</p>
   <div class="fm-actions"><a class="btn btn-primary" href="/student">К урокам</a></div>`;
 
 function openSeeds(slot) {
@@ -637,9 +638,9 @@ function openAnimal(kind) {
   if (a.state === 'none') {
     const can = S.cow.can, enough = S.coins >= S.cow.cost;
     return sheet('Коровник', head + (can
-      ? `<p class="fm-note">Корова даёт молоко. Коровник стоит ${S.cow.cost} монеток.</p>` + (enough
+      ? `<p class="fm-note">Корова даёт молоко. Коровник стоит ${coinsW(S.cow.cost)}.</p>` + (enough
         ? `<div class="fm-actions"><button type="button" class="btn btn-primary" data-act="cow">Построить коровник</button></div>`
-        : `<p class="fm-msg bad">Пока не хватает: у тебя ${S.coins} монеток. Выполняй заказы!</p>`)
+        : `<p class="fm-msg bad">Не хватает: ${coinsW(S.cow.cost - S.coins)}. Выполняй заказы!</p>`)
       : '<p class="fm-note">Коровник откроется после урока «Домашние животные».</p>'));
   }
   if (a.state === 'hungry') sheet(a.ru[0].toUpperCase() + a.ru.slice(1), head + (S.drops >= S.feed
@@ -650,8 +651,8 @@ function openAnimal(kind) {
 }
 function openBuyPlot() {
   sheet('Новая грядка', S.coins >= S.plot_cost
-    ? `<p class="fm-note">Ещё одна грядка — ${S.plot_cost} монеток.</p><div class="fm-actions"><button type="button" class="btn btn-primary" data-act="plot">Купить грядку</button></div>`
-    : `<p class="fm-note">Ещё одна грядка стоит ${S.plot_cost} монеток, а у тебя ${S.coins}. Выполняй заказы!</p>`);
+    ? `<p class="fm-note">Ещё одна грядка — ${coinsW(S.plot_cost)}.</p><div class="fm-actions"><button type="button" class="btn btn-primary" data-act="plot">Купить грядку</button></div>`
+    : `<p class="fm-msg bad">Не хватает: ${coinsW(S.plot_cost - S.coins)}. Грядка стоит ${coinsW(S.plot_cost)}. Выполняй заказы!</p>`);
 }
 function openBarn() {
   if (!S.barn.length) return sheet('Амбар', '<p class="fm-note">Пока пусто. Собери урожай или яйца — и они появятся здесь.</p>');
@@ -660,14 +661,19 @@ function openBarn() {
     ${sayBtn(S.known[b.item], b.en)}</div>`).join('') + '</div>');
 }
 function processRows(station) {
+  const have = {};
+  S.barn.forEach(b => { have[b.item] = b.qty; });
   const rows = (S.process || []).filter(p => p.station === station).map(p => {
     const need = p.need.map(n => `${esc(n.ru)} ×${n.qty}`).join(' + ');
     const give = p.give.map(n => `${esc(n.ru)} ×${n.qty}`).join(', ');
+    const miss = p.need.filter(n => (have[n.key] || 0) < n.qty)
+      .map(n => `${esc(n.ru)} ${have[n.key] || 0}/${n.qty}`).join(', ');
     return `<div class="fm-row"><span class="fm-pic">${ico(station === 'mill' ? 'o-sprout' : 'o-drop')}</span>
-      <span class="fm-row-text"><b>${esc(p.ru)}</b><small>${need} → ${give}</small></span>
+      <span class="fm-row-text"><b>${esc(p.ru)}</b><small>${need} → ${give}</small>
+      ${p.can ? '' : `<small class="fm-miss">Не хватает: ${miss}</small>`}</span>
       ${station === 'kitchen'
-        ? `<button type="button" class="btn btn-small fm-process-btn ${p.can ? 'btn-primary' : ''}" data-cook="${p.key}" ${p.can ? '' : 'disabled'}>${p.can ? 'Готовить' : 'Нет'}</button>`
-        : `<button type="button" class="btn btn-small fm-process-btn ${p.can ? 'btn-primary' : ''}" data-process="${p.key}" data-station="${p.station}" ${p.can ? '' : 'disabled'}>${p.can ? 'Смолоть' : 'Нет'}</button>`}</div>`;
+        ? `<button type="button" class="btn btn-small fm-process-btn ${p.can ? 'btn-primary' : ''}" data-cook="${p.key}" ${p.can ? '' : 'disabled'}>${p.can ? 'Готовить' : 'Мало'}</button>`
+        : `<button type="button" class="btn btn-small fm-process-btn ${p.can ? 'btn-primary' : ''}" data-process="${p.key}" data-station="${p.station}" ${p.can ? '' : 'disabled'}>${p.can ? 'Смолоть' : 'Мало'}</button>`}</div>`;
   }).join('');
   return rows ? '<div class="fm-list">' + rows + '</div>' : '<p class="fm-note">Пока нечего готовить.</p>';
 }
@@ -700,18 +706,17 @@ async function startCook(key) {
   if (btn) { btn.disabled = true; btn.textContent = 'Варится…'; }
   if (bar) bar.hidden = false;
   if (pot) pot.classList.add('on');
-  await new Promise(r => setTimeout(r, 1800));
   const r = await api('process', { key });
-  if (!r) return;
-  if (!r.ok) { toast(r.msg); openKitchen(); return; }
+  if (!r) { if (bar) bar.hidden = true; if (pot) pot.classList.remove('on'); openKitchen(); return; }
+  if (!r.ok) { if (bar) bar.hidden = true; if (pot) pot.classList.remove('on'); toast(r.msg); openKitchen(); return; }
   toast('Готово!');
   openKitchen();
 }
 function openKitchen() {
-  sheet('Кухня', '<p class="fm-note">Сыр, соусы и тесто готовятся здесь. Нажми «Сделать» — и продукты из амбара превратятся в пиццевые ингредиенты.</p>' + processRows('kitchen'));
+  sheet('Кухня', '<p class="fm-note">Сыр, соусы и тесто готовятся здесь. Нажми «Готовить» — и продукты из амбара превратятся в пиццевые ингредиенты.</p>' + processRows('kitchen'));
 }
 function openMill() {
-  sheet('Мельница', '<p class="fm-note">Смели пшеницу в муку — она понадобится для теста.</p>' + processRows('mill'));
+  sheet('Мельница', '<p class="fm-note">Нажми «Смолоть» — мука понадобится для теста.</p>' + processRows('mill'));
 }
 function openWell() {
   const w = S.well || {};
@@ -750,13 +755,13 @@ function openPick(id) {
       ${enName(S.known[b.item], b.en)}<span class="fm-step"><button type="button" data-dec="${b.item}" aria-label="Меньше">−</button><b data-n="${b.item}">0</b>
       <button type="button" data-inc="${b.item}" data-max="${b.qty}" aria-label="Больше">+</button><small>из ${b.qty}</small></span></div>`).join('') + '</div>'
     : '<p class="fm-note">В амбаре пока пусто — сначала вырасти урожай.</p>';
-  sheet('Собери заказ', `<div class="fm-order"><span class="fm-order-who">${esc(WHO[o.giver] || o.giver)}</span>
+  sheet('Собрать заказ', `<div class="fm-order"><span class="fm-order-who">${esc(WHO[o.giver] || o.giver)}</span>
     ${o.names ? `<div class="fm-order-en"><span lang="en">${esc(o.en)}</span><button type="button" class="fm-say" data-say="${esc(o.en)}" aria-label="Послушать">${ico('o-sound')}</button></div>${uncLine(o.items)}`
     : `<div class="fm-order-pics">${Object.entries(o.items).map(([k, n]) => `<span>${pic(itemPic(k))}${S.numbers ? '' : ' ' + n}</span>`).join('')}</div>`}
     <div class="fm-order-ru"${(tries[id] || 0) >= 2 ? '' : ' hidden'}>${esc(o.ru)}</div></div>
     <p class="fm-note">Выбери из амбара то, что просят, — и сколько.</p>${items}<div id="fm-pick-msg"></div>
     <div class="fm-actions"><button type="button" class="btn" data-open="orders">Назад</button>
-    <button type="button" class="btn btn-primary" data-give="${id}"${S.barn.length ? '' : ' disabled'}>Отдать</button></div>`);
+    <button type="button" class="btn btn-primary" data-give="${id}"${S.barn.length ? '' : ' disabled'}>Отдать заказ</button></div>`);
 }
 async function give(id) {
   const d = await api('order', { id, items: picked });
@@ -772,7 +777,7 @@ async function give(id) {
   openPick(id);
   const keep = picked;
   $('fm-pick-msg').innerHTML = d.why === 'short'
-    ? '<p class="fm-msg bad">Всё верно, но в амбаре не хватает. Вырасти ещё!</p>'
+    ? '<p class="fm-msg bad">Не хватает продуктов в амбаре. Вырасти ещё!</p>'
     : `<p class="fm-msg bad">Не совсем то. Прочитай заказ ещё раз${tries[id] >= 2 ? ' — вот и перевод' : ''}.</p>`;
   picked = keep;
   Object.entries(picked).forEach(([k, n]) => { const el = document.querySelector(`[data-n="${k}"]`); if (el) { el.textContent = n; el.closest('.fm-pick-item').classList.toggle('on', n > 0); } });
