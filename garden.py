@@ -231,6 +231,22 @@ def refresh_garden(db, student_id):
     return get_garden(db, student_id)
 
 
+def credit_coins(db, student_id, amount, commit=True):
+    """Начислить монетки разово (не за урок: пицца, подарок) в общем учёте garden.coins.
+
+    commit=False — когда вызывающий сам завершает транзакцию (пицца списывает продукты
+    и пишет историю одной транзакцией: награда не должна уехать отдельным коммитом).
+    """
+    amount = int(amount)
+    if amount <= 0:
+        return 0
+    db.execute("INSERT OR IGNORE INTO garden (student_id) VALUES (?)", (student_id,))
+    db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?", (amount, student_id))
+    if commit:
+        db.commit()
+    return amount
+
+
 def award_coins(db, student_id, percent, passed, lesson_id=None, attempt_id=None, fixed=False):
     """Начисляет монетки за тест урока (попытка attempt_id уже записана). Возвращает (монет, за что).
     Первая сдача — COIN_PASS (+COIN_PERFECT за первые 100%); пересдача — COIN_RETRY, только за новый
@@ -254,10 +270,7 @@ def award_coins(db, student_id, percent, passed, lesson_id=None, attempt_id=None
                                            for r in others):
         earned, why = COIN_EFFORT, "effort"
     if earned:
-        get_garden(db, student_id)                  # создаёт строку сада, если её ещё нет
-        db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?",
-                   (earned, student_id))
-        db.commit()
+        credit_coins(db, student_id, earned)         # создаёт строку сада, если её ещё нет
     return earned, why
 
 

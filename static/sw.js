@@ -4,6 +4,9 @@ const CACHE = "english-" + VERSION;
 const OFFLINE_URL = "/offline";
 const PAGES = "english-pages";   // страницы, посещённые ребёнком: доступны без сети
 // Что можно открыть офлайн: уроки, игры, истории, письмо, повторение, слова, теория, главная ученика.
+// Пиццерии здесь нет намеренно (решение 12.11.2026): без сети подача не пройдёт —
+// /api/pizza/finish уходит POST-ом, а показывать «готово» без ответа сервера нельзя.
+// Поэтому при обрыве связи /student/pizza показывает офлайн-страницу, а не полусобранную пиццу.
 const OFFLINE_OK = [/^\/student$/, /^\/lesson\/\d+$/, /^\/student\/(games|dialogs|stories|writing|review|words|theory|wardrobe|weekly|boss|halloween|newyear|march8|easter|birthday|advent|stickers|map)(\/.*)?$/];
 const okOffline = (path) => OFFLINE_OK.some((re) => re.test(path));
 const PRECACHE = __PRECACHE__;

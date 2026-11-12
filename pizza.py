@@ -4,12 +4,13 @@
 Ассеты — PNG из low-poly движка (analytics/pizza-mockup/engine/out), лежат в static/pizza.
 """
 
-from datetime import datetime
-
+import farm
 import garden
 import pizza_farm
 
 COINS_FIRST = 3          # монеток за первый раз приготовленный рецепт
+PIECES_MIN = 1           # сколько кусков на пицце — рисует фронтенд; бэкенд только проверяет
+PIECES_MAX = 20
 
 # Ключ -> название, ингредиенты для подсказки и начинки на пицце.
 RECIPES = {
@@ -91,51 +92,42 @@ STARTER = {
 DAILY = {"milk": 4, "egg": 2, "flour": 2, "tomato": 2, "water": 2}
 
 
-def _barn(db, student_id):
-    return {r["item"]: r["qty"] for r in db.execute(
-        "SELECT item, qty FROM farm_barn WHERE student_id=? AND qty>0", (student_id,)).fetchall()}
-
-
-def _add(db, student_id, item, qty):
-    db.execute("INSERT INTO farm_barn (student_id, item, qty) VALUES (?, ?, ?) "
-               "ON CONFLICT(student_id, item) DO UPDATE SET qty=qty+excluded.qty",
-               (student_id, item, qty))
-
-
 def ensure_starter(db, student_id):
     """Один раз выдать стартовый набор, чтобы пиццу можно было приготовить сразу."""
-    now = datetime.now().isoformat(timespec="seconds")
+    now = farm.now().isoformat(timespec="seconds")
     cur = db.execute("INSERT OR IGNORE INTO pizza_starter (student_id, created_at) VALUES (?, ?)",
                      (student_id, now))
     if cur.rowcount != 1:
         return False
     for item, qty in STARTER.items():
-        _add(db, student_id, item, qty)
+        pizza_farm.add(db, student_id, item, qty)
     db.commit()
     return True
 
 
 def ensure_daily(db, student_id):
     """Раз в день бабушка оставляет молоко, яйца, муку и помидоры — на одну пиццу."""
-    day = datetime.now().date().isoformat()
-    now = datetime.now().isoformat(timespec="seconds")
+    t = farm.now()                               # farm.now() — чтобы тест мог подменить дату
+    day = t.date().isoformat()
+    now = t.isoformat(timespec="seconds")
     cur = db.execute("INSERT OR IGNORE INTO pizza_daily (student_id, day, created_at) VALUES (?, ?, ?)",
                      (student_id, day, now))
     if cur.rowcount != 1:
         return False
     for item, qty in DAILY.items():
-        _add(db, student_id, item, qty)
+        pizza_farm.add(db, student_id, item, qty)
     db.commit()
     return True
 
 
 def stock(db, student_id):
-    have = _barn(db, student_id)
-    return {k: have.get(k, 0) for k in {i for n in NEEDS.values() for i in n}}
+    """Амбар для пиццерии: все продукты из рецептов (даже нулевые — фронтенду проще)."""
+    have = pizza_farm.barn(db, student_id)
+    return {k: have.get(k, 0) for k in sorted({i for n in NEEDS.values() for i in n})}
 
 
 def recipe_status(db, student_id, key):
-    have = _barn(db, student_id)
+    have = pizza_farm.barn(db, student_id)
     need = []
     for item, qty in NEEDS[key].items():
         info = pizza_farm.PRODUCTS.get(item) or pizza_farm.CROPS.get(item) or {}
@@ -144,8 +136,10 @@ def recipe_status(db, student_id, key):
     return need, all(n["have"] >= n["need"] for n in need)
 
 
-def recipes_view(db, student_id):
-    """Список рецептов для страницы и JS (с наличием продуктов)."""
+def recipes_view(db, student_id, known=None):
+    """Список рецептов для страницы и JS (с наличием продуктов и знакомством слов)."""
+    if known is None:
+        known = pizza_farm.known_items(farm.completed_ids(db, student_id))
     out = []
     for key, r in RECIPES.items():
         need, can = recipe_status(db, student_id, key)
@@ -154,16 +148,12 @@ def recipes_view(db, student_id):
             "en": r["en"],
             "ru": r["ru"],
             "ingredients": [dict(i) for i in r["ingredients"]],
-            "toppings": [dict(i) for i in r["toppings"]],
+            # EN и RU показываем всегда, known — можно ли уже показывать слово как знакомое
+            "toppings": [dict(i, known=i["key"] in known) for i in r["toppings"]],
             "need": need,
             "can": can,
         })
     return out
-
-
-def recipes_config():
-    """Статическая часть рецептов (для тестов и данных)."""
-    return [{"key": k, "en": r["en"], "ru": r["ru"]} for k, r in RECIPES.items()]
 
 
 def completed(db, student_id):
@@ -175,50 +165,73 @@ def state(db, student_id):
     ensure_starter(db, student_id)
     ensure_daily(db, student_id)
     g = garden.get_garden(db, student_id)
+    known = pizza_farm.known_items(farm.completed_ids(db, student_id))
     return {
         "coins": g["coins"],
         "completed": sorted(completed(db, student_id)),
-        "recipes": recipes_view(db, student_id),
+        "recipes": recipes_view(db, student_id, known),
         "stock": stock(db, student_id),
         "reward": COINS_FIRST,
     }
 
 
-def finish(db, student_id, recipe):
+def _pieces_ok(pieces):
+    """Кусков на пицце: не передали — пусть решает фронтенд; передали — только 1..20."""
+    if pieces is None:
+        return True
+    return isinstance(pieces, int) and not isinstance(pieces, bool) and PIECES_MIN <= pieces <= PIECES_MAX
+
+
+def finish(db, student_id, recipe, pieces=None):
     """Приготовить рецепт: списать фермерские продукты, начислить монетки за первый раз.
 
-    Возвращает (ok, gained, already, coins, missing). Продукты списываются всегда,
-    даже при повторе; при нехватке — откат и список missing.
+    Повторный запрос по уже приготовленному рецепту (pizza_history) — идемпотентный:
+    продукты не списываются, монетки не начисляются, ответ ok с already_done=True.
+    При нехватке продуктов — ничего не списываем (rollback) и отдаём missing.
     """
+    if not _pieces_ok(pieces):
+        return {"ok": False, "error": "bad_pieces",
+                "message": f"Кусков должно быть от {PIECES_MIN} до {PIECES_MAX}."}
     if recipe not in RECIPES:
-        return False, 0, False, 0, []
+        return {"ok": False, "error": "unknown_recipe", "message": "Такого рецепта нет."}
+
+    coins = garden.get_garden(db, student_id)["coins"]
+    if recipe in completed(db, student_id):
+        # Уже готовили: второй раз ничего не тратим и не награждаем (двойное нажатие, ретрай).
+        return {"ok": True, "gained": 0, "already": True, "already_done": True,
+                "coins": coins, "missing": []}
+
     ensure_starter(db, student_id)
     ensure_daily(db, student_id)
-    missing = []
-    have = _barn(db, student_id)
-    for item, qty in NEEDS[recipe].items():
-        if have.get(item, 0) < qty:
-            missing.append(item)
+
+    have = pizza_farm.barn(db, student_id)
+    missing = [item for item, qty in NEEDS[recipe].items() if have.get(item, 0) < qty]
     if missing:
-        return False, 0, False, 0, missing
+        return {"ok": False, "error": "missing_products", "missing": missing,
+                "message": "Не хватает продуктов для пиццы."}
+
     for item, qty in NEEDS[recipe].items():
         if db.execute("UPDATE farm_barn SET qty=qty-? WHERE student_id=? AND item=? AND qty>=?",
                       (qty, student_id, item, qty)).rowcount != 1:
-            db.rollback()
-            return False, 0, False, 0, [item]
-    now = datetime.now().isoformat(timespec="seconds")
+            db.rollback()                   # не хватило между проверкой и списанием — всё вернуть
+            return {"ok": False, "error": "missing_products", "missing": [item],
+                    "message": "Не хватает продуктов для пиццы."}
+
+    now = farm.now().isoformat(timespec="seconds")
     cur = db.execute(
         "INSERT OR IGNORE INTO pizza_history (student_id, recipe, created_at) VALUES (?, ?, ?)",
         (student_id, recipe, now))
-    if cur.rowcount != 1:
-        db.commit()
-        coins = db.execute("SELECT coins FROM garden WHERE student_id=?", (student_id,)).fetchone()
-        return True, 0, True, coins["coins"] if coins else 0, []
-    db.execute("INSERT OR IGNORE INTO garden (student_id) VALUES (?)", (student_id,))
-    db.execute("UPDATE garden SET coins=coins+? WHERE student_id=?", (COINS_FIRST, student_id))
+    if cur.rowcount != 1:                   # параллельный запрос уже записал рецепт
+        db.rollback()                       # вернуть списанные продукты
+        return {"ok": True, "gained": 0, "already": True, "already_done": True,
+                "coins": garden.get_garden(db, student_id)["coins"], "missing": []}
+
+    # award_coins — только про тесты (COIN_PASS/PERFECT по attempts) и дал бы 10 монеток вместо 3,
+    # поэтому разовую награду пишем через общий учёт garden.credit_coins (одно место смены coins).
+    garden.credit_coins(db, student_id, COINS_FIRST, commit=False)
     db.commit()
-    row = db.execute("SELECT coins FROM garden WHERE student_id=?", (student_id,)).fetchone()
-    return True, COINS_FIRST, False, row["coins"], []
+    return {"ok": True, "gained": COINS_FIRST, "already": False, "already_done": False,
+            "coins": garden.get_garden(db, student_id)["coins"], "missing": []}
 
 
 def forget_student(db, student_id):

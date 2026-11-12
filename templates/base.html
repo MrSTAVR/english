@@ -24,7 +24,7 @@ window.picHtml=function(p){p=String(p||'');if(/^@[a-z]+$/.test(p))return '<img c
 <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=32">
 <link rel="stylesheet" href="{{ url_for('static', filename='achievements.css') }}?v=3">
 <link rel="stylesheet" href="{{ url_for('static', filename='mascot.css') }}?v=3">
-<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}?v=34">
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}?v=35">
 {% block head %}{% endblock %}
 </head>
 <body{% if speech_area %} class="area-speech{{ ' has-tabbar sp-logoped' if session.get('role') == 'logoped' }}"{% elif session.get('role') == 'student' and request.endpoint not in ('student.lesson_page', 'student.submit_test') %} class="has-tabbar"{% elif request.endpoint == 'student.lesson_page' %} class="lesson-focus"{% endif %}>
@@ -86,6 +86,7 @@ window.picHtml=function(p){p=String(p||'');if(/^@[a-z]+$/.test(p))return '<img c
   <symbol id="o-mountain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20l7-12 4 6 3-4 6 10z"/><path d="M9 4v4M9 4h4l-1 1.5L13 7H9"/></symbol>
   <symbol id="o-erase" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M12 9l6 6M18 9l-6 6"/></symbol>
   <symbol id="o-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="o-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
   <symbol id="o-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></symbol>
   <symbol id="o-turtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15c0-4 3.6-7 8-7s8 3 8 7z"/><path d="M20 13h1.5a1.5 1.5 0 0 0 0-3H19M7 15l-1 3M17 15l1 3M9 11l6 4M15 11l-6 4"/></symbol>
   <symbol id="o-castle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l3 2V6l3 2V4h4v4l3-2v5l3-2v12z"/><path d="M10 21v-5h4v5"/></symbol>

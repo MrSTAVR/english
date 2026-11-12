@@ -77,11 +77,14 @@ def test_first_recipe_spends_stock_and_gives_coins_once(make_student):
     assert got["gained"] == 3 and got["already"] is False
     assert coins_of(sid) == 3 and history_of(sid) == 1
     assert barn_of(sid, "dough") == 3 and barn_of(sid, "mozzarella") == 6
-    # повторное приготовление тратит продукты, но монет не даёт
+    # повторное приготовление не тратит продукты и не даёт монет (идемпотентно)
     give(sid, dough=1, tomato_sauce=1, mozzarella=2, basil=1, cherry_tomato=2)
+    items = ("dough", "tomato_sauce", "mozzarella", "basil", "cherry_tomato")
+    before = {item: barn_of(sid, item) for item in items}
     got = c.post("/api/pizza/finish", json={"recipe": "margherita"}).get_json()
-    assert got["gained"] == 0 and got["already"] is True
+    assert got["gained"] == 0 and got["already"] is True and got["already_done"] is True
     assert coins_of(sid) == 3 and history_of(sid) == 1
+    assert {item: barn_of(sid, item) for item in items} == before, "повтор списал продукты"
 
 
 def test_each_recipe_gives_once(make_student):
@@ -91,7 +94,10 @@ def test_each_recipe_gives_once(make_student):
     for key in ("margherita", "pepperoni", "mushroom", "caesar"):
         assert c.post("/api/pizza/finish", json={"recipe": key}).get_json()["gained"] == 3
     assert coins_of(sid) == 12 and history_of(sid) == 4
-    assert c.post("/api/pizza/finish", json={"recipe": "caesar"}).status_code == 400
+    # повторная подача уже готового рецепта идемпотентна: ok, без монеток и без списания
+    again = c.post("/api/pizza/finish", json={"recipe": "caesar"})
+    assert again.status_code == 200
+    assert again.get_json()["already_done"] is True
 
 
 def test_missing_products_block_without_spending(make_student):
@@ -126,6 +132,16 @@ def test_unknown_recipe_and_bad_json_rejected(make_student):
     assert c.post("/api/pizza/finish", json={"recipe": "hawaii"}).status_code == 400
     assert c.post("/api/pizza/finish", json=[]).status_code == 400
     assert c.post("/api/pizza/finish", data="not-json", content_type="application/json").status_code == 400
+
+
+def test_unknown_recipe_spends_nothing(make_student):
+    c = make_student(pizza=True)
+    sid = last_sid()
+    page_data(c)
+    before = barn_of(sid, "dough")
+    r = c.post("/api/pizza/finish", json={"recipe": "hawaii"})
+    assert r.status_code == 400 and r.get_json()["error"] == "unknown_recipe"
+    assert barn_of(sid, "dough") == before and coins_of(sid) == 0 and history_of(sid) == 0
 
 
 def test_anonymous_and_parent_cannot_open(anon, parent):

@@ -8,7 +8,7 @@ from flask import Blueprint, abort, jsonify, redirect, render_template, request,
 from mascot import build_mascot_ctx
 from stats import compute_stats
 
-from routes.common import get_student_or_none, require_role
+from routes.common import api_student, get_student_or_none, require_role
 
 bp = Blueprint("farm", __name__)
 
@@ -29,23 +29,25 @@ def farm_page():
     return render_template("farm.html", data=farm.state(db, student["id"], stats), moved=moved, mascot=build_mascot_ctx())
 
 
-def _api_student():
-    if session.get("role") != "student":
-        abort(403)
-    db = get_db()
-    student = get_student_or_none(db)
-    if not student:
-        abort(403)
-    return db, student
+def _qty(data):
+    """Сколько порций переработать за раз (по умолчанию одна)."""
+    if not isinstance(data, dict):
+        abort(400)
+    try:
+        return int(data.get("qty", 1))
+    except (TypeError, ValueError):
+        abort(400)
 
 
 @bp.route("/api/farm")
 def api_state():
-    db, student = _api_student()
+    db, student = api_student()
     return jsonify(farm.state(db, student["id"], compute_stats(db, student["id"])))
 
 
 def _int(data, key):
+    if not isinstance(data, dict):
+        abort(400)
     try:
         return int(data.get(key))
     except (TypeError, ValueError):
@@ -54,7 +56,7 @@ def _int(data, key):
 
 @bp.route("/api/farm/<action>", methods=["POST"])
 def api_action(action):
-    db, student = _api_student()
+    db, student = api_student()
     sid = student["id"]
     data = request.get_json(silent=True) or {}
     stats = compute_stats(db, sid)
@@ -82,7 +84,7 @@ def api_action(action):
         ok, n = farm.well(db, sid)
         msg, extra = ("" if ok else "Сегодня вода уже набрана."), {"got": n}
     elif action == "process":
-        ok, msg = pizza_farm.process(db, sid, str(data.get("key", "")))
+        ok, msg = pizza_farm.process(db, sid, str(data.get("key", "")), _qty(data))
     elif action == "order":
         given = data.get("items")
         if not isinstance(given, dict):

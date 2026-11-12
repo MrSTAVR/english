@@ -1,10 +1,16 @@
 {% extends "base.html" %}
+{% set PZ_V = 5 %}
+{% set rw = data.reward %}
+{% set rw_word = 'монетку' if rw % 10 == 1 and rw % 100 != 11 else ('монетки' if rw % 10 in (2, 3, 4) and rw % 100 not in (12, 13, 14) else 'монеток') %}
 {% block title %}Пиццерия — English Fun{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='pizza.css') }}?v=4">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='pizza.css') }}?v={{ PZ_V }}">{% endblock %}
 {% block content %}
-<section class="pz" id="pz" data-static="{{ url_for('static', filename='pizza/') }}" aria-label="Пиццерия бабушки">
+<section class="pz" id="pz" data-static="{{ url_for('static', filename='pizza/') }}" data-ver="{{ PZ_V }}"
+         data-farm="{{ url_for('farm.farm_page') }}" aria-label="Пиццерия бабушки">
   <div class="pz-head">
-    <a class="pz-back" href="{{ url_for('farm.farm_page') }}" aria-label="На ферму">‹</a>
+    <a class="pz-back" href="{{ url_for('farm.farm_page') }}" aria-label="На ферму" title="На ферму">
+      <svg class="ico" aria-hidden="true"><use href="#o-back"/></svg>
+    </a>
     <div class="pz-head-text">
       <h1>Пиццерия</h1>
       <p>Кухня бабушки Тома</p>
@@ -14,7 +20,9 @@
 
   <div class="pz-intro">
     <h2>Что будем готовить?</h2>
-    <p>Выбери пиццу — и собери её по шагам. За первый раз каждого рецепта дают <b>{{ data.reward }}</b> монетки. Продукты растут на <a href="{{ url_for('farm.farm_page') }}">ферме</a> и готовятся на кухне.</p>
+    <p>Выбери пиццу — и собери её по шагам. За первый раз каждого рецепта дают
+      <b class="pz-reward"><svg class="ico" aria-hidden="true"><use href="#i-coin"/></svg>+{{ rw }}</b> {{ rw_word }}.
+      Продукты растут на <a href="{{ url_for('farm.farm_page') }}">ферме</a> и готовятся на кухне.</p>
   </div>
 
   <div class="pz-menu" id="pz-menu"></div>
@@ -26,33 +34,53 @@
         <span class="pz-ava" aria-hidden="true">T</span>
         <div class="pz-order-body">
           <b>Tom</b>
-          <span id="pz-order-en">Can I have a pizza, please?</span>
+          <span id="pz-order-en" lang="en">Can I have a pizza, please?</span>
           <span class="pz-order-ru" id="pz-order-ru"></span>
         </div>
         <button type="button" class="pz-audio" id="pz-audio" aria-label="Послушать заказ"><svg class="ico" aria-hidden="true"><use href="#o-sound"/></svg></button>
       </div>
-      <img class="pz-pizza" id="pz-pizza" alt="Пицца на столе">
+      <div class="pz-pizza" id="pz-pizza-wrap">
+        <img class="pz-pizza-img" id="pz-pizza" alt="Пицца на столе">
+        <div class="pz-pieces" id="pz-pieces" aria-hidden="true"></div>
+        <div class="pz-current" id="pz-current" hidden>
+          <img id="pz-current-img" alt="">
+          <span class="pz-current-text"><b lang="en" id="pz-current-en"></b><small id="pz-current-ru"></small></span>
+          <span class="pz-current-count" id="pz-current-count"></span>
+        </div>
+      </div>
+      <div class="pz-oven" id="pz-oven" hidden>
+        <svg viewBox="0 0 434 334" aria-hidden="true">
+          <ellipse class="pz-oven-bg" cx="217" cy="167" rx="206" ry="156"/>
+          <ellipse class="pz-oven-fg" id="pz-oven-fg" cx="217" cy="167" rx="206" ry="156"/>
+        </svg>
+      </div>
     </div>
 
     <div class="pz-panel">
       <ol class="pz-steps" id="pz-steps" aria-label="Этапы приготовления">
-        <li data-step="0">Тесто</li>
-        <li data-step="1">Раскатка</li>
-        <li data-step="2">Соус</li>
-        <li data-step="3">Начинки</li>
-        <li data-step="4">Сыр</li>
-        <li data-step="5">Готово</li>
+        <li data-step="0" data-label="Тесто"><span class="sr-only">Тесто</span></li>
+        <li data-step="1" data-label="Соус"><span class="sr-only">Соус</span></li>
+        <li data-step="2" data-label="Начинки"><span class="sr-only">Начинки</span></li>
+        <li data-step="3" data-label="Сыр"><span class="sr-only">Сыр</span></li>
+        <li data-step="4" data-label="Печь"><span class="sr-only">Печь</span></li>
+        <li data-step="5" data-label="Готово"><span class="sr-only">Готово</span></li>
       </ol>
+      <p class="pz-step-line" id="pz-step-line"></p>
       <h2 class="pz-title" id="pz-title">Маргарита</h2>
       <p class="pz-hint" id="pz-hint" aria-live="polite"></p>
-      <div class="pz-ingredients" id="pz-ingredients"></div>
+      <div class="pz-toppings" id="pz-ingredients"></div>
+      <div class="pz-tools" id="pz-tools" hidden>
+        <button type="button" class="pz-tool" id="pz-fill">Разложить всё</button>
+      </div>
+      <div class="pz-alert" id="pz-alert" hidden></div>
       <button type="button" class="btn btn-primary pz-action" id="pz-action">Раскатать тесто</button>
       <button type="button" class="pz-switch" id="pz-switch">Выбрать другую пиццу</button>
     </div>
   </div>
 
-  <div class="pz-result" id="pz-result" hidden>
+  <div class="pz-result" id="pz-result" tabindex="-1" hidden>
     <img class="pz-result-img" id="pz-result-img" alt="">
+    <p class="pz-say"><b lang="en">Here you are!</b><span>Вот, пожалуйста!</span></p>
     <h2 id="pz-result-title">Готово!</h2>
     <p id="pz-result-text" aria-live="polite"></p>
     <div class="pz-result-buttons">
@@ -64,4 +92,4 @@
   <script type="application/json" id="pz-data">{{ data|tojson }}</script>
 </section>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='pizza.js') }}?v=4"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='pizza.js') }}?v={{ PZ_V }}"></script>{% endblock %}
